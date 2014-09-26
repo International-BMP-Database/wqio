@@ -1,0 +1,7 @@
+bmptype,bmptype_desc,bmpcategory,bmpcategory_desc,Comment,analysiscategory,analysiscategory_desc,mdtype,mdtype_desc
+BI,Biofilter - Grass Strip,GS,Biofilter,,BI,Biofilter - Grass Strip,,
+BR,Bioretention,BR,Bioretention,Added 2009.,BR,Bioretention,,
+BS,Biofilter - Grass Swale,GS,Biofilter,,BS,Biofilter - Grass Swale,,
+HD,"Hydrodynamic Devices (e.g. Swirl Concentrators, Separation Systems, etc..)",MD,Manufactured Device,"Retired and moved to manufactured device, 2009.",MD,Manufactured Device,MD-HD,
+MD,Manufactured Device,MD,Manufactured Device,Added 2009.,MD,Manufactured Device,MD-MD,
+OS,Oil & Water Separator,MD,Manufactured Device,"Moved to manufactured device, 2009.",MD,Manufactured Device,MD-OS,
