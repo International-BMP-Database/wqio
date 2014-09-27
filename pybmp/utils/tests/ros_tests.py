@@ -4,7 +4,7 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-import testing
+from pybmp import testing
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
