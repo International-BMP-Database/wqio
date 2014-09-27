@@ -18,6 +18,18 @@ from numpy.testing.noseclasses import NumpyTestProgram
 def assert_timestamp_equal(x, y):
     nptest.assert_equal(x.strftime('%x %X'), y.strftime('%x %X'))
 
+def setup_prefix(folder):
+    for imgdir in ['baseline_images', 'results_images']:
+        subdir = os.path.join('.', imgdir)
+        subsubdir = os.path.join(subdir, folder)
+
+        if not os.path.exists(subdir):
+            os.mkdir(subdir)
+
+        if not os.path.exists(subsubdir):
+            os.mkdir(subsubdir)
+
+
 def fail(message):
     raise AssertionError(message)
 

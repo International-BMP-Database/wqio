@@ -4,7 +4,8 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-import testing
+from pybmp import testing
+from pybmp.testing.testutils import setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -14,7 +15,7 @@ import matplotlib.pyplot as plt
 import pandas
 import pandas.util.testing as pdtest
 
-from core.features import (
+from pybmp.core.features import (
     Parameter,
     DrainageArea,
     Location,
@@ -22,7 +23,7 @@ from core.features import (
     DataCollection
 )
 
-import utils
+from pybmp import utils
 
 @nottest
 def testfilter(data):
@@ -124,10 +125,8 @@ class _base_LocationMixin(object):
     @nottest
     def main_setup(self):
         # path stuff
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'core', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'core', 'tests', 'result_images')
+        self.prefix = setup_prefix('core.features')
+
 
         # basic test data
         self.tolerance = 0.05
@@ -547,10 +546,7 @@ class test_Dataset(object):
     def setup(self):
         self.maxDiff = None
         # path stuff
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'core', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'core', 'tests', 'result_images')
+        self.prefix = setup_prefix('core.features')
 
         # basic test data
         self.tolerance = 0.05
