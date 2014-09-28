@@ -1,0 +1,11 @@
+siteid,bmpid,msid,station,storm,paramgroup,parameter,units,res,DL,qual,BMPCatAnalysis,WQAnalysis
+-2113439463,-470200441,1557,Inflow,5,General,"Calcium, Total",mg/L,21.8,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Nutrients,Kjeldahl nitrogen (TKN),mg/L,1.34,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,General,"Magnesium, Total",mg/L,8.5,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Nutrients,"Nitrogen, Nitrite (NO2) + Nitrate (NO3) as N",mg/L,1.69,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Nutrients,"Phosphorus as P, Dissolved",mg/L,0.012,0.01,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Nutrients,"Phosphorus as P, Total",mg/L,0.061,0.01,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Solids,Suspended Sediment Concentration (SSC),mg/L,31,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Solids,Total dissolved solids,mg/L,160,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Solids,Total suspended solids,mg/L,32,0.1,=,Yes,Yes
+-2113439463,-470200441,1557,Inflow,5,Metals,"Zinc, Total",ug/L,72,0.01,=,Yes,Yes
