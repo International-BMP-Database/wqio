@@ -31,7 +31,7 @@ class base_wqsampleMixin(object):
         self.known_endtime_type = pandas.Timestamp
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
-        datafile = os.path.join('testing', 'data', 'test_wqsample_data.csv')
+        datafile = os.path.join(sys.prefix, 'pybmp_data', 'testing', 'test_wqsample_data.csv')
         self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
 
     @nottest
@@ -177,7 +177,7 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
 
 class base_defineStormsMixin(object):
     def teardown(self):
-        pass
+        plt.close('all')
 
     def test_check_type_and_columns(self):
         assert_true(isinstance(self.parsed_record, pandas.DataFrame))
@@ -324,7 +324,7 @@ class test_storm:
         self.fig, self.ax = plt.subplots()
 
     def teardown(self):
-        plt.close(self.fig)
+        plt.close('all')
         pass
 
     @nottest
