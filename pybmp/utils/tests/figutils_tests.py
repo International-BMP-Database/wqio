@@ -31,11 +31,8 @@ class test_axes_methods:
         self.mean = self.ros.data.final_data.mean()
         self.median = self.ros.data.final_data.median()
         self.median_ci = [(self.median * 0.75, self.median * 1.25)]
-        #self.stats = analysis.Statsummary(self.ros.data)
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'utils', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'utils', 'tests', 'result_images')
+        self.prefix = testing.testutils.setup_prefix('utils.figutils')
+
 
     @nottest
     def makePath(self, filename):
@@ -134,6 +131,7 @@ class test_axes_methods:
     def test_formatStatAxes_raises(self):
         figutils.formatStatAxes(self.ax, 'junk', pos=2)
 
+    @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
     def test_logLabelFormatter(self):
         self.ax.plot([1, 5], [0.0005, 5e6])
         self.ax.set_yscale('log')
@@ -149,6 +147,7 @@ class test_axes_methods:
         ]
         assert_list_equal(rendered_labels, expected_labels)
 
+    @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
     def test_alt_logLabelFormatter(self):
         self.ax.plot([1, 5], [0.0005, 5e6])
         self.ax.set_yscale('log')
@@ -197,10 +196,7 @@ class test_scatterHistogram:
             5.0613945 , 4.63739907, 1.58679716,  1.91932307,
             3.32511911
             ])
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'utils', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'utils', 'tests', 'result_images')
+        self.prefix = testing.testutils.setup_prefix('utils.figutils')
 
     @nottest
     def makePath(self, filename):
