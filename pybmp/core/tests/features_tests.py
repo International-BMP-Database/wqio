@@ -53,6 +53,9 @@ class _base_Parameter_Mixin(object):
     def test_paramunit_comma(self):
         assert_equal(self.known_pu_comma, self.param.paramunit(usecomma=True))
 
+    def teardown(self):
+        plt.close('all')
+
 
 class test_Parameter_simple(_base_Parameter_Mixin):
     def setup(self):
@@ -115,6 +118,9 @@ class test_DrainageArea(object):
         runoff = self.da.simple_method(1, annualFactor=self.annualFactor)
         nptest.assert_almost_equal(self.known_annual_runoff, runoff, decimal=3)
         assert_greater(self.storm_volume, runoff)
+
+    def teardown(self):
+        plt.close('all')
 
 
 class _base_LocationMixin(object):
@@ -989,6 +995,9 @@ class _base_DataCollecionMixin(object):
             np.round(self.dc._generic_stat(np.min), 3),
             check_names=False
         )
+
+    def teardown(self):
+        plt.close('all')
 
 
 class test_DataCollection_baseline(_base_DataCollecionMixin):
