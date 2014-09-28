@@ -29,6 +29,8 @@ def setup_prefix(folder):
         if not os.path.exists(subsubdir):
             os.mkdir(subsubdir)
 
+    return subsubdir
+
 
 def fail(message):
     raise AssertionError(message)
