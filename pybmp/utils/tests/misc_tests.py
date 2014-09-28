@@ -206,7 +206,7 @@ def test_makeTexFigure():
 class tests_with_paths(object):
     @nottest
     def makePath(self, filename):
-        return os.path.join(self.prefix, filename)
+        return os.path.join(sys.prefix, 'pybmp_data', 'testing', filename)
 
     def setup(self):
         if os.path.split(os.getcwd())[-1] == 'src':
