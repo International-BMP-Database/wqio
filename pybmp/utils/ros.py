@@ -475,9 +475,6 @@ class MR(object):
                 axis=1
             )
 
-
-        # join the Z-scores into the main DataFrame
-        #self.data = self.data.join(final_data)
         return self.data
 
     def plot(self, filename):
