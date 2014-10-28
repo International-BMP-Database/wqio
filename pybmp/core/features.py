@@ -352,14 +352,12 @@ class Location(object):
         if self.hasData:
             if self.useROS:
                 output = self.ros.data[['final_data', 'qual']]
-                output.rename(columns={'final_data':'res'}, inplace=True)
+                rename_dict = {'final_data': 'res'}
             else:
                 output = self.filtered_data[[self._rescol, self._qualcol]]
-                output.rename(
-                    columns={self._qualcol:'qual', self._rescol:'res'},
-                    inplace=True
-                )
-            return output
+                rename_dict = {self._qualcol: 'qual', self._rescol: 'res'}
+
+            return output.rename(columns=rename_dict)
 
     @property
     def name(self):
@@ -1462,7 +1460,6 @@ class Dataset(object):
                 jg.ax_joint.legend(loc='upper left')
 
         return jg
-
 
     def scatterplot(self, ax=None, xscale='log', yscale='log', one2one=False,
                     useROS=False, xlabel=None, ylabel=None, showlegend=True):
