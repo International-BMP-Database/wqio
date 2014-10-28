@@ -427,16 +427,18 @@ def addExternalValueToOutputSummary(csvpath, comparedict, comparecol,
 
 
 def sanitizeTex(texstring):
-    newstring = texstring.replace(r'\\%', r'\%') \
-                         .replace(r'\\', r'\tabularnewline') \
-                         .replace('\$', '$') \
-                         .replace('\_', '_') \
-                         .replace('ug/L', '\si[per-mode=symbol]{\micro\gram\per\liter}') \
-                         .replace(r'\textbackslashtimes', r'\times') \
-                         .replace(r'\textbackslash', '') \
-                         .replace(r'\textasciicircum', r'^') \
-                         .replace('\{', '{') \
-                         .replace('\}', '}')
+    newstring = (
+        texstring.replace(r'\\%', r'\%')
+                 .replace(r'\\', r'\tabularnewline')
+                 .replace('\$', '$')
+                 .replace('\_', '_')
+                 .replace('ug/L', '\si[per-mode=symbol]{\micro\gram\per\liter}')
+                 .replace(r'\textbackslashtimes', r'\times')
+                 .replace(r'\textbackslash', '')
+                 .replace(r'\textasciicircum', r'^')
+                 .replace('\{', '{')
+                 .replace('\}', '}')
+    )
     return newstring
 
 
