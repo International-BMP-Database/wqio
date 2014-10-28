@@ -756,14 +756,14 @@ class test_Dataset(object):
     def test_boxplot_baseline(self):
         assert_true(hasattr(self.ds, 'boxplot'))
         fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                               showmean=True, width=0.8, ylabel='Test Label')
+                              showmean=True, width=0.8, ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_Box_BothLocs_NoName.png'))
 
     def test_boxplot_baseline_withName(self):
         self.ds.name = 'Test Dataset'
         fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                               showmean=True, width=0.8, ylabel='Test Label')
+                              showmean=True, width=0.8, ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_Box_BothLocs_Name.png'))
 
@@ -775,7 +775,7 @@ class test_Dataset(object):
     @raises(ValueError)
     def test_boxplot_badYscale(self):
         fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
-                               showmean=True, width=0.8)
+                              showmean=True, width=0.8)
 
     def test_probplot_baseline(self):
         assert_true(hasattr(self.ds, 'probplot'))
