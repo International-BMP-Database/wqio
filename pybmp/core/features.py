@@ -635,7 +635,11 @@ class Location(object):
                 ax.plot(pos, self.mean, **meankwargs)
 
         ax.set_yscale(yscale)
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if yscale == 'log':
+            ax.yaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
+
         if ylabel:
             ax.set_ylabel(ylabel)
 
@@ -697,10 +701,13 @@ class Location(object):
             ax.set_xlabel('Z-score')
 
         ax.set_yscale(yscale)
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if yscale == 'log':
+            ax.xaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
+
         if clearYLabels:
             ax.set_yticklabels([])
-
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -935,10 +942,22 @@ class Dataset(object):
 
     @cache_readonly
     def data(self):
-        if self.influent.hasData and self.effluent.hasData:
-            infl = utils.addSecondColumnLevel('inflow', 'station', self.influent.full_data)
-            effl = utils.addSecondColumnLevel('outflow', 'station', self.effluent.full_data)
-            return infl.join(effl, how='outer')
+        if self.effluent.hasData:
+            effl = self.effluent.full_data.copy()
+        else:
+            raise ValueError("effluent must have data")
+
+        if self.influent.hasData:
+            infl = self.influent.full_data.copy()
+        else:
+            infl = pandas.DataFrame(
+                index=self.effluent.full_data.index,
+                columns=self.effluent.full_data.columns
+            )
+
+        infl = utils.addSecondColumnLevel('inflow', 'station', infl)
+        effl = utils.addSecondColumnLevel('outflow', 'station', effl)
+        return infl.join(effl, how='outer')
 
     @cache_readonly
     def paired_data(self):
@@ -954,7 +973,7 @@ class Dataset(object):
 
     @cache_readonly
     def _non_paired_stats(self):
-        return self.influent is not None and self.effluent is not None
+        return self.influent.data is not None and self.effluent.data is not None
 
     @cache_readonly
     def _paired_stats(self):
@@ -1296,7 +1315,11 @@ class Dataset(object):
                             patch_artist=patch_artist)
 
         ax.set_yscale(yscale)
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if yscale == 'log':
+            ax.xaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
+
         if ylabel:
             ax.set_ylabel(ylabel)
 
@@ -1364,7 +1387,11 @@ class Dataset(object):
             ax.set_xlabel('Z-score')
 
         ax.set_yscale(yscale)
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if yscale == 'log':
+            ax.xaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
+
         if clearYLabels:
             ax.set_yticklabels([])
 

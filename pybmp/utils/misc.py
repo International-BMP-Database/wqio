@@ -1,9 +1,11 @@
 from __future__ import print_function, division
+
 import types
 import pdb
 import time
 import sys
 import os
+import warnings
 if sys.version_info.major == 3:
     from io import StringIO
 else:
@@ -24,7 +26,7 @@ __all__ = ['sigFigs', 'makeBoxplotLegend', 'processFilename', 'constructPath',
            'stringify', 'pH2concentration', 'addSecondColumnLevel',
            '_boxplot_legend', 'makeLongLandscapeTexTable',
            'estimateFromLineParams', 'redefineIndexLevel', 'sanitizeTex',
-           'checkIntervalOverlap', 'ProgressBar']
+           'checkIntervalOverlap', 'ProgressBar', 'makeTimestamp']
 
 leg_data = np.array([[
     1.71176747025, 2.54701331804, 3.28171165797, 2.33036103386, 2.70661099194, 4.20248978178,
@@ -591,11 +593,11 @@ def normalize_units2(data, normFxn, convFxn, unitFxn, paramcol='parameter',
                      rescol='res', unitcol='unit', dlcol=None):
     normalization = data[unitcol].apply(normFxn)
     conversion = data[paramcol].apply(convFxn)
-    data[rescol] = data[rescol] * normalization / conversion
+    data.loc[:, rescol] = data[rescol] * normalization / conversion
     if dlcol is not None:
-        data[dlcol] = data[dlcol] * normalization / conversion
+        data.loc[:, dlcol] = data[dlcol] * normalization / conversion
 
-    data[unitcol] = data[paramcol].apply(unitFxn)
+    data.loc[:, unitcol] = data[paramcol].apply(unitFxn)
     return data
 
 
@@ -877,6 +879,58 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
         test3 = checkIntervalOverlap(interval2, interval1, oneway=True)
         return test1 or test2 or test3
 
+
+def makeTimestamp(row, datecol='sampledate', timecol='sampletime'):
+    '''Makes a pandas.Timestamp from separate date/time columns
+
+    Parameters
+    ----------
+
+    row : dict-like (ideallty a row in a dataframe)
+    datecol : optional string (default = 'sampledate')
+        Name of the column containing the dates
+    timecol : optional string (default = 'sampletime')
+        Name of the column containing the times
+
+    Returns
+    -------
+
+    tstamp : pandas.Timestamp
+
+    '''
+
+    fallback_datetime = pandas.Timestamp('1901-01-01 00:00')
+
+    if row[datecol] is None or pandas.isnull(row[datecol]):
+        fb_date = True
+    else:
+        fb_date = False
+        try:
+            date = pandas.Timestamp(row[datecol]).date()
+        except ValueError:
+            fb_date = True
+
+    if fb_date:
+        warnings.warn("Using fallback date from {}".format(row[datecol]))
+        date = fallback_datetime.date()
+
+    if row[timecol] is None or pandas.isnull(row[timecol]):
+        fb_time = True
+    else:
+        fb_time = False
+        try:
+            time = pandas.Timestamp(row[timecol]).time()
+        except ValueError:
+            fb_time = True
+
+    if fb_time:
+        warnings.warn("Using fallback time from {}".format(row[timecol]))
+        time = fallback_datetime.time()
+
+    dtstring = '{} {}'.format(date, time)
+    tstamp = pandas.Timestamp(dtstring)
+
+    return tstamp
 
 
 class ProgressBar:
