@@ -559,3 +559,41 @@ def test_sanitizeTex():
     """
 
     assert_equal(misc.sanitizeTex(inputstring), desiredstring)
+
+
+class test_makeTimestamp(object):
+    def setup(self):
+        warnings.resetwarnings()
+        warnings.simplefilter("always")
+        self.known_tstamp = pandas.Timestamp('2012-05-25 16:54')
+        self.known_tstamp_fbdate = pandas.Timestamp('1901-01-01 16:54')
+        self.known_tstamp_fbtime = pandas.Timestamp('2012-05-25 00:00')
+        self.known_tstamp_fbboth = pandas.Timestamp('1901-01-01 00:00')
+
+    def teardown(self):
+        warnings.resetwarnings()
+
+    def test_default_cols(self):
+        row = {'sampledate': '2012-05-25', 'sampletime': '16:54'}
+        tstamp = misc.makeTimestamp(row)
+        assert_equal(self.known_tstamp, tstamp)
+
+    def test_custom_cols(self):
+        row = {'mydate': '2012-05-25', 'mytime': '16:54'}
+        tstamp = misc.makeTimestamp(row, datecol='mydate', timecol='mytime')
+        assert_equal(self.known_tstamp, tstamp)
+
+    def test_fallback_date(self):
+        row = {'sampledate': None, 'sampletime': '16:54'}
+        tstamp = misc.makeTimestamp(row)
+        assert_equal(self.known_tstamp_fbdate, tstamp)
+
+    def test_fallback_time(self):
+        row = {'sampledate': '2012-05-25', 'sampletime': None}
+        tstamp = misc.makeTimestamp(row)
+        assert_equal(self.known_tstamp_fbtime, tstamp)
+
+    def test_fallback_both(self):
+        row = {'sampledate': None, 'sampletime': None}
+        tstamp = misc.makeTimestamp(row)
+        assert_equal(self.known_tstamp_fbboth, tstamp)
