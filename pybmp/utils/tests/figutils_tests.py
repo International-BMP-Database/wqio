@@ -195,7 +195,7 @@ class test_scatterHistogram:
             3.14951288, -1.64253263, 1.52852978, 1.60945809,
             5.0613945 , 4.63739907, 1.58679716,  1.91932307,
             3.32511911
-            ])
+        ])
         self.prefix = testing.testutils.setup_prefix('utils.figutils')
 
     @nottest
