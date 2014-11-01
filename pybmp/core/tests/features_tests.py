@@ -136,7 +136,7 @@ class _base_LocationMixin(object):
 
         # basic test data
         self.tolerance = 0.05
-        self.known_bsIter = 10000
+        self.known_bsIter = 750
         self.data = utils.ros.getTestData()
 
         # Location stuff
@@ -556,7 +556,7 @@ class test_Dataset(object):
 
         # basic test data
         self.tolerance = 0.05
-        self.known_bsIter = 10000
+        self.known_bsIter = 750
 
         in_data = utils.ros.getTestData()
         in_data['res'] += 3
