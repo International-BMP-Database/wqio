@@ -7,7 +7,7 @@ if sys.version_info.major == 3:
 else:
     from StringIO import StringIO
 
-from nose.tools import *
+import nose.tools as nt
 import numpy as np
 import numpy.testing as nptest
 
@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 import pandas
 
-from .. import misc
+from pybmp.utils import misc
 
 
 testcsv = StringIO("""\
@@ -31,21 +31,21 @@ Z,9,0,1,2
 """)
 
 
-@nottest
+@nt.nottest
 class Dataset(object):
     def __init__(self, inflow, outflow):
         self.inflow = Location(inflow)
         self.outflow = Location(outflow)
 
 
-@nottest
+@nt.nottest
 class Location(object):
     def __init__(self, data):
         self.data = data
         self.stats = Summary(data)
 
 
-@nottest
+@nt.nottest
 class Summary(object):
     def __init__(self, data):
         self.N = len(data)
@@ -68,7 +68,7 @@ Z,9,0,1,2
 
     def test_normal(self):
         newdata = misc.addSecondColumnLevel('test', 'testlevel', self.data)
-        assert_list_equal(self.known.tolist(), newdata.columns.tolist())
+        nt.assert_list_equal(self.known.tolist(), newdata.columns.tolist())
 
     @nptest.raises(ValueError)
     def test_error(self):
@@ -76,65 +76,73 @@ Z,9,0,1,2
         newdata2 = misc.addSecondColumnLevel('test2', 'testlevel2', newdata1)
 
 
-def test_sigFigs_baseline_gt1():
-    x1 = 1234.56
-    assert_equal(misc.sigFigs(x1, 3), '1,230')
-    assert_equal(misc.sigFigs(x1, 4), '1,235')
+class base_sigfigsMixin(object):
+    def teardown(self):
+        pass
 
-def test_sigFigs_baseline_lt1():
-    x2 = 0.12345
-    assert_equal(misc.sigFigs(x2, 3), '0.123')
-    assert_equal(misc.sigFigs(x2, 4), '0.1235')
+    def test_baseline(self):
+        nt.assert_equal(misc.sigFigs(self.x, 3), self.known_3)
+        nt.assert_equal(misc.sigFigs(self.x, 4), self.known_4)
 
-def test_sigFigs_bad_n():
-    with assert_raises(ValueError):
-        misc.sigFigs(1.234, 0)
+    def test_trailing_zeros(self):
+        nt.assert_equal(misc.sigFigs(self.x, 8), self.known_8)
 
-def test_sigFigs_trailing_zeros_gt1():
-    x1 = 1234.56
-    assert_equal(misc.sigFigs(x1, 8), '1,234.5600')
+    @nptest.raises(ValueError)
+    def test_sigFigs_zero_n(self):
+        misc.sigFigs(self.x, 0)
 
-def test_sigFigs_trailing_zeros_lt1():
-    x2 = 0.12345
-    assert_equal(misc.sigFigs(x2, 8), '0.12345000')
+    @nptest.raises(ValueError)
+    def test_sigFigs_negative_n(self):
+        misc.sigFigs(self.x, -1)
 
-def test_sigFigs_exponents_notex_gt1():
-    x1 = 123456789.123456789
-    assert_equal(misc.sigFigs(x1, 3, tex=False), '1.23e+08')
+    def test_exp_notex(self):
+        nt.assert_equal(
+            misc.sigFigs(self.x * self.factor, 3, tex=False),
+            self.known_exp3
+        )
 
-def test_sigFigs_exponents_notex_lt1():
-    x2 = 0.000000123
-    assert_equal(misc.sigFigs(x2, 3, tex=False), '1.23e-07')
+    def test_exp_notex(self):
+        nt.assert_equal(
+            misc.sigFigs(self.x * self.factor, 3, tex=True),
+            self.known_exp3_tex
+        )
 
-def test_sigFigs_exponents_tex_gt1():
-    x1 = 123456789.123456789
-    assert_equal(misc.sigFigs(x1, 3, tex=True), r'$1.23 \times 10 ^ {8}$')
+    def test__sig_figs_help(self):
+        nt.assert_equal(misc._sig_figs(self.x), self.known_3)
 
-def test_sigFigs_exponents_tex_lt1():
-    x2 = 0.000000123
-    assert_equal(misc.sigFigs(x2, 3, tex=True), r'$1.23 \times 10 ^ {-7}$')
 
-def test_sigFigs_pvals_noop():
-    p = 0.001
-    assert_equal(misc.sigFigs(p, 1, pval=True), '0.001')
+class test_sigfig_gt1(base_sigfigsMixin):
+    def setup(self):
+        self.x = 1234.56
+        self.known_3 = '1,230'
+        self.known_4 = '1,235'
+        self.known_8 = '1,234.5600'
+        self.known_exp3 = '1.23e+08'
+        self.known_exp3_tex = r'$1.23 \times 10 ^ {8}$'
+        self.factor = 10**5
 
-def test_sigFigs_pvals_op():
-    p = 0.0005
-    assert_equal(misc.sigFigs(p, 3, pval=True), '<0.001')
 
-def test_sigFigs_pvals_op_tex():
-    p = 0.0005
-    assert_equal(misc.sigFigs(p, 3, tex=True, pval=True), '$<0.001$')
+class test_sigfig_lt1(base_sigfigsMixin):
+    def setup(self):
+        self.x = 0.123456
+        self.known_3 = '0.123'
+        self.known_4 = '0.1235'
+        self.known_8 = '0.12345600'
+        self.known_exp3 = '1.23e-07'
+        self.known_exp3_tex = r'$1.23 \times 10 ^ {-7}$'
+        self.factor = 10**-6
 
-@raises
-def test_sigFigs_exception():
-    misc.sigFigs(199, -1)
+    def test_sigFigs_pvals_noop(self):
+        p = 0.001
+        nt.assert_equal(misc.sigFigs(p, 1, pval=True), '0.001')
 
-def test__sig_figs():
-    x1 = 1234.56
-    x2 = 0.12345
-    assert_equal(misc.sigFigs(x1, 3), misc._sig_figs(x1))
-    assert_equal(misc.sigFigs(x2, 3), misc._sig_figs(x2))
+    def test_sigFigs_pvals_op(self):
+        p = 0.0005
+        nt.assert_equal(misc.sigFigs(p, 3, pval=True), '<0.001')
+
+    def test_sigFigs_pvals_op_tex(self):
+        p = 0.0005
+        nt.assert_equal(misc.sigFigs(p, 3, tex=True, pval=True), '$<0.001$')
 
 
 def test__boxplot_legend():
@@ -145,7 +153,7 @@ def test__boxplot_legend():
 def test_processFilename():
     startname = 'This-is a, very+ &dumb$_{test/name}'
     endname = 'This-isaverydumbtestname'
-    assert_equal(endname, misc.processFilename(startname))
+    nt.assert_equal(endname, misc.processFilename(startname))
 
 
 def test_makeTexTable_normal():
@@ -153,7 +161,7 @@ def test_makeTexTable_normal():
             '    \\caption{test caption}\n        \\centering\n        \\input{fake.tex}\n    ' \
             '\\end{table}\n    \n    \n    '
     test = misc.makeTexTable('fake.tex', 'test caption')
-    assert_equal(known, test)
+    nt.assert_equal(known, test)
 
 
 def test_makeTexTable_allOptions():
@@ -162,7 +170,7 @@ def test_makeTexTable_allOptions():
             '\\end{sidewaystable}\n    test footnote\n    \\clearpage\n    '
     test = misc.makeTexTable('fake.tex', 'test caption', sideways=True,
            footnotetext='test footnote', clearpage=True, pos='bt')
-    assert_equal(known, test)
+    nt.assert_equal(known, test)
 
 
 class test_makeLongLandscapeTexTable(object):
@@ -188,11 +196,11 @@ class test_makeLongLandscapeTexTable(object):
 
     def test_makeLongLandscapeTexTable_noFootnote(self):
         test = misc.makeLongLandscapeTexTable(self.df, 'test caption', 'label')
-        assert_equal(self.known_nofootnote, test)
+        nt.assert_equal(self.known_nofootnote, test)
 
     def test_makeLongLandscapeTexTable_Footnote(self):
         test = misc.makeLongLandscapeTexTable(self.df, 'test caption', 'label', 'test note')
-        assert_equal(self.known_withfootnote, test)
+        nt.assert_equal(self.known_withfootnote, test)
 
 
 def test_makeTexFigure():
@@ -200,11 +208,11 @@ def test_makeTexFigure():
              '\\includegraphics[scale=1.00]{fake.pdf}\n        \\caption{test caption}\n    ' \
              '\\end{figure}         % FIGURE\n    \\clearpage\n    '
     test = misc.makeTexFigure('fake.pdf', 'test caption')
-    assert_equal(known, test)
+    nt.assert_equal(known, test)
 
 
-class tests_with_paths(object):
-    @nottest
+class testss_with_paths(object):
+    @nt.nottest
     def makePath(self, filename):
         return os.path.join(sys.prefix, 'pybmp_data', 'testing', filename)
 
@@ -226,7 +234,7 @@ class tests_with_paths(object):
     def test_constructPath(self):
         testpath = misc.constructPath('test1 2', 'pdf', 'cvc', 'output')
         expectedpath = os.path.join('cvc', 'output', 'img', 'test12.pdf')
-        assert_equal(testpath, expectedpath)
+        nt.assert_equal(testpath, expectedpath)
 
     def test_makeTablesFromCSVStrings(self):
         misc.makeTablesFromCSVStrings(self.tablestring,
@@ -238,8 +246,8 @@ class tests_with_paths(object):
         summary = misc.addStatsToOutputSummary(self.testcsvpath)
         known_index = ['X', 'Y', 'Z', 'count', 'mean', 'std',
                        'min', '25%', '50%', '75%', 'max']
-        assert_list_equal(summary.index.tolist(), known_index)
-        assert_list_equal(inputcols[1:], summary.columns.tolist())
+        nt.assert_list_equal(summary.index.tolist(), known_index)
+        nt.assert_list_equal(inputcols[1:], summary.columns.tolist())
 
     def test_csvToTex(self):
         testfile = 'testtable_toTex.tex'
@@ -252,7 +260,7 @@ class tests_with_paths(object):
 
         with open(self.makePath(testfile), 'r') as test, \
              open(self.makePath(knownfile), 'r') as known:
-             assert_equal(test.read(), known.read())
+             nt.assert_equal(test.read(), known.read())
 
     def test_csvToXlsx(self):
         misc.csvToXlsx(self.testcsvpath,
@@ -270,10 +278,10 @@ class tests_with_paths(object):
         with open(self.testcsvpath, 'r') as outfile:
             test = outfile.read()
 
-        assert_equal(test, known)
+        nt.assert_equal(test, known)
 
 
-class test_with_objects(object):
+class tests_with_objects(object):
     def setup(self):
         self.known_N = 50
         self.known_float = 123.4567
@@ -282,23 +290,23 @@ class test_with_objects(object):
         self.dataset = Dataset(self.inflow, self.outflow)
 
     def test_nested_getattr(self):
-        assert_almost_equal(misc.nested_getattr(self.dataset, 'inflow.stats.max'),
+        nt.assert_almost_equal(misc.nested_getattr(self.dataset, 'inflow.stats.max'),
                             self.dataset.inflow.stats.max)
 
     def test_stringify_int(self):
         test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.N')
         known_val = '%d' % self.known_N
-        assert_equal(test_val, known_val)
+        nt.assert_equal(test_val, known_val)
 
     def test_stringify_float(self):
         test_val = misc.stringify(self.known_float, '%0.2f', attribute=None)
         known_val = '123.46'
-        assert_equal(test_val, known_val)
+        nt.assert_equal(test_val, known_val)
 
     def test_stringify_None(self):
         test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.nonething')
         known_val = '--'
-        assert_equal(test_val, known_val)
+        nt.assert_equal(test_val, known_val)
 
 
 class test_normalize_units(object):
@@ -371,7 +379,7 @@ class test_uniqueIndex(object):
         def test_getUniqueDataframeIndexVal():
             test = misc.getUniqueDataframeIndexVal(self.data.select(lambda x: x[0]=='0'), 'date')
             known = '0'
-            assert_equal(test, known)
+            nt.assert_equal(test, known)
 
         @nptest.raises(misc.DataError)
         def test_getUniqueDataframeIndexVal_error():
@@ -382,7 +390,7 @@ class test_uniqueIndex(object):
 def test_pH2concentration_normal():
     test_val = misc.pH2concentration(4)
     known_val = 0.10072764682551091
-    assert_almost_equal(test_val, known_val)
+    nt.assert_almost_equal(test_val, known_val)
 
 
 @nptest.raises(ValueError)
@@ -485,7 +493,7 @@ class test_redefineIndexLevel(object):
             ]),
             columns=['a', 'b']
         )
-        assert_true(newdf.equals(knowndf))
+        nt.assert_true(newdf.equals(knowndf))
 
     def test_nocriteria_dropoldTrue(self):
         crit = None
@@ -501,7 +509,7 @@ class test_redefineIndexLevel(object):
             ]),
             columns=['a', 'b']
         )
-        assert_true(newdf.equals(knowndf))
+        nt.assert_true(newdf.equals(knowndf))
 
     def test_criteria_dropoldFalse(self):
         crit = lambda row: row[0] in ['A', 'B']
@@ -519,7 +527,7 @@ class test_redefineIndexLevel(object):
             ]),
             columns=['a', 'b']
         )
-        assert_true(newdf.equals(knowndf))
+        nt.assert_true(newdf.equals(knowndf))
 
     def test_nocriteria_dropoldFalse(self):
         crit = None
@@ -537,18 +545,20 @@ class test_redefineIndexLevel(object):
             ]),
             columns=['a', 'b']
         )
-        assert_true(newdf.equals(knowndf))
+        nt.assert_true(newdf.equals(knowndf))
 
 
 def test_checkIntervalOverlap_oneway():
-    assert_true(not misc.checkIntervalOverlap([1, 2], [3, 4], oneway=True))
-    assert_true(not misc.checkIntervalOverlap([1, 4], [2, 3], oneway=True))
-    assert_true(misc.checkIntervalOverlap([1, 3], [2, 4], oneway=True))
+    nt.assert_true(not misc.checkIntervalOverlap([1, 2], [3, 4], oneway=True))
+    nt.assert_true(not misc.checkIntervalOverlap([1, 4], [2, 3], oneway=True))
+    nt.assert_true(misc.checkIntervalOverlap([1, 3], [2, 4], oneway=True))
+
 
 def test_checkIntervalOverlap_twoway():
-    assert_true(not misc.checkIntervalOverlap([1, 2], [3, 4], oneway=False))
-    assert_true(misc.checkIntervalOverlap([1, 4], [2, 3], oneway=False))
-    assert_true(misc.checkIntervalOverlap([1, 3], [2, 4], oneway=False))
+    nt.assert_true(not misc.checkIntervalOverlap([1, 2], [3, 4], oneway=False))
+    nt.assert_true(misc.checkIntervalOverlap([1, 4], [2, 3], oneway=False))
+    nt.assert_true(misc.checkIntervalOverlap([1, 3], [2, 4], oneway=False))
+
 
 def test_sanitizeTex():
     inputstring = r""" \
@@ -558,7 +568,7 @@ def test_sanitizeTex():
     $x_{4}^{2} \times \% \si[per-mode=symbol]{\micro\gram\per\liter}$  \tabularnewline
     """
 
-    assert_equal(misc.sanitizeTex(inputstring), desiredstring)
+    nt.assert_equal(misc.sanitizeTex(inputstring), desiredstring)
 
 
 class test_makeTimestamp(object):
@@ -576,24 +586,197 @@ class test_makeTimestamp(object):
     def test_default_cols(self):
         row = {'sampledate': '2012-05-25', 'sampletime': '16:54'}
         tstamp = misc.makeTimestamp(row)
-        assert_equal(self.known_tstamp, tstamp)
+        nt.assert_equal(self.known_tstamp, tstamp)
 
     def test_custom_cols(self):
         row = {'mydate': '2012-05-25', 'mytime': '16:54'}
         tstamp = misc.makeTimestamp(row, datecol='mydate', timecol='mytime')
-        assert_equal(self.known_tstamp, tstamp)
+        nt.assert_equal(self.known_tstamp, tstamp)
 
     def test_fallback_date(self):
         row = {'sampledate': None, 'sampletime': '16:54'}
         tstamp = misc.makeTimestamp(row)
-        assert_equal(self.known_tstamp_fbdate, tstamp)
+        nt.assert_equal(self.known_tstamp_fbdate, tstamp)
 
     def test_fallback_time(self):
         row = {'sampledate': '2012-05-25', 'sampletime': None}
         tstamp = misc.makeTimestamp(row)
-        assert_equal(self.known_tstamp_fbtime, tstamp)
+        nt.assert_equal(self.known_tstamp_fbtime, tstamp)
 
     def test_fallback_both(self):
         row = {'sampledate': None, 'sampletime': None}
         tstamp = misc.makeTimestamp(row)
-        assert_equal(self.known_tstamp_fbboth, tstamp)
+        nt.assert_equal(self.known_tstamp_fbboth, tstamp)
+
+
+class base_whiskers_and_fliersMixin(object):
+    def teardown(self):
+        pass
+
+    def setup(self):
+        self.base_setup()
+        self.decimal = 3
+        self.data = [
+            2.20e-01, 2.70e-01, 3.08e-01, 3.20e-01, 4.10e-01, 4.44e-01,
+            4.82e-01, 5.46e-01, 6.05e-01, 6.61e-01, 7.16e-01, 7.70e-01,
+            8.24e-01, 1.00e-03, 4.90e-02, 5.60e-02, 1.40e-01, 1.69e-01,
+            1.83e-01, 2.06e-01, 2.10e-01, 2.13e-01, 2.86e-01, 3.16e-01,
+            3.40e-01, 3.57e-01, 3.71e-01, 3.72e-01, 3.78e-01, 3.81e-01,
+            3.86e-01, 3.89e-01, 3.90e-01, 3.93e-01, 4.00e-01, 4.03e-01,
+            4.10e-01, 4.10e-01, 4.29e-01, 4.40e-01, 4.40e-01, 4.40e-01,
+            4.46e-01, 4.46e-01, 4.50e-01, 4.51e-01, 4.52e-01, 4.56e-01,
+            4.60e-01, 4.66e-01, 4.72e-01, 4.78e-01, 4.81e-01, 4.83e-01,
+            4.86e-01, 4.89e-01, 4.98e-01, 5.00e-01, 5.00e-01, 5.03e-01,
+            5.18e-01, 5.32e-01, 5.37e-01, 5.38e-01, 5.68e-01, 5.69e-01,
+            5.78e-01, 5.88e-01, 5.94e-01, 5.96e-01, 6.02e-01, 6.10e-01,
+            6.10e-01, 6.10e-01, 6.19e-01, 6.20e-01, 6.20e-01, 6.28e-01,
+            6.38e-01, 6.39e-01, 6.42e-01, 6.61e-01, 6.71e-01, 6.75e-01,
+            6.80e-01, 6.96e-01, 7.00e-01, 7.01e-01, 7.09e-01, 7.16e-01,
+            7.17e-01, 7.30e-01, 7.62e-01, 7.64e-01, 7.69e-01, 7.70e-01,
+            7.77e-01, 7.80e-01, 8.06e-01, 8.10e-01, 8.23e-01, 8.30e-01,
+            8.50e-01, 8.50e-01, 8.56e-01, 8.56e-01, 8.80e-01, 8.80e-01,
+            8.93e-01, 8.96e-01, 8.97e-01, 8.99e-01, 9.22e-01, 9.28e-01,
+            9.30e-01, 9.64e-01, 9.65e-01, 9.76e-01, 9.79e-01, 9.90e-01,
+            9.99e-01, 1.00e+00, 1.00e+00, 1.01e+00, 1.02e+00, 1.03e+00,
+            1.03e+00, 1.03e+00, 1.04e+00, 1.05e+00, 1.05e+00, 1.05e+00,
+            1.06e+00, 1.07e+00, 1.08e+00, 1.08e+00, 1.10e+00, 1.10e+00,
+            1.11e+00, 1.12e+00, 1.12e+00, 1.13e+00, 1.14e+00, 1.14e+00,
+            1.14e+00, 1.15e+00, 1.16e+00, 1.17e+00, 1.17e+00, 1.17e+00,
+            1.19e+00, 1.19e+00, 1.20e+00, 1.20e+00, 1.21e+00, 1.22e+00,
+            1.22e+00, 1.23e+00, 1.23e+00, 1.23e+00, 1.25e+00, 1.25e+00,
+            1.26e+00, 1.26e+00, 1.27e+00, 1.27e+00, 1.28e+00, 1.29e+00,
+            1.29e+00, 1.30e+00, 1.30e+00, 1.30e+00, 1.31e+00, 1.31e+00,
+            1.31e+00, 1.32e+00, 1.33e+00, 1.34e+00, 1.35e+00, 1.35e+00,
+            1.35e+00, 1.36e+00, 1.36e+00, 1.36e+00, 1.36e+00, 1.37e+00,
+            1.38e+00, 1.39e+00, 1.39e+00, 1.40e+00, 1.41e+00, 1.43e+00,
+            1.44e+00, 1.44e+00, 1.47e+00, 1.47e+00, 1.48e+00, 1.51e+00,
+            1.51e+00, 1.53e+00, 1.55e+00, 1.55e+00, 1.55e+00, 1.57e+00,
+            1.57e+00, 1.57e+00, 1.59e+00, 1.59e+00, 1.60e+00, 1.60e+00,
+            1.61e+00, 1.62e+00, 1.62e+00, 1.62e+00, 1.62e+00, 1.63e+00,
+            1.63e+00, 1.63e+00, 1.64e+00, 1.66e+00, 1.68e+00, 1.68e+00,
+            1.68e+00, 1.68e+00, 1.70e+00, 1.70e+00, 1.71e+00, 1.71e+00,
+            1.71e+00, 1.74e+00, 1.75e+00, 1.75e+00, 1.75e+00, 1.76e+00,
+            1.76e+00, 1.77e+00, 1.77e+00, 1.77e+00, 1.78e+00, 1.78e+00,
+            1.79e+00, 1.79e+00, 1.80e+00, 1.81e+00, 1.81e+00, 1.82e+00,
+            1.82e+00, 1.82e+00, 1.83e+00, 1.85e+00, 1.85e+00, 1.85e+00,
+            1.85e+00, 1.86e+00, 1.86e+00, 1.86e+00, 1.86e+00, 1.87e+00,
+            1.87e+00, 1.89e+00, 1.90e+00, 1.91e+00, 1.92e+00, 1.92e+00,
+            1.92e+00, 1.94e+00, 1.95e+00, 1.95e+00, 1.95e+00, 1.96e+00,
+            1.96e+00, 1.97e+00, 1.97e+00, 1.97e+00, 1.97e+00, 1.98e+00,
+            1.99e+00, 1.99e+00, 1.99e+00, 2.00e+00, 2.00e+00, 2.00e+00,
+            2.01e+00, 2.01e+00, 2.01e+00, 2.02e+00, 2.04e+00, 2.05e+00,
+            2.06e+00, 2.06e+00, 2.06e+00, 2.07e+00, 2.08e+00, 2.09e+00,
+            2.09e+00, 2.10e+00, 2.10e+00, 2.11e+00, 2.11e+00, 2.12e+00,
+            2.12e+00, 2.12e+00, 2.13e+00, 2.13e+00, 2.13e+00, 2.14e+00,
+            2.14e+00, 2.14e+00, 2.14e+00, 2.14e+00, 2.15e+00, 2.16e+00,
+            2.17e+00, 2.18e+00, 2.18e+00, 2.18e+00, 2.19e+00, 2.19e+00,
+            2.19e+00, 2.19e+00, 2.19e+00, 2.21e+00, 2.23e+00, 2.23e+00,
+            2.23e+00, 2.25e+00, 2.25e+00, 2.25e+00, 2.25e+00, 2.26e+00,
+            2.26e+00, 2.26e+00, 2.26e+00, 2.26e+00, 2.27e+00, 2.27e+00,
+            2.28e+00, 2.28e+00, 2.28e+00, 2.29e+00, 2.29e+00, 2.29e+00,
+            2.30e+00, 2.31e+00, 2.32e+00, 2.33e+00, 2.33e+00, 2.33e+00,
+            2.33e+00, 2.34e+00, 2.36e+00, 2.38e+00, 2.38e+00, 2.39e+00,
+            2.39e+00, 2.39e+00, 2.41e+00, 2.42e+00, 2.43e+00, 2.45e+00,
+            2.45e+00, 2.47e+00, 2.48e+00, 2.49e+00, 2.49e+00, 2.49e+00,
+            2.50e+00, 2.51e+00, 2.51e+00, 2.52e+00, 2.53e+00, 2.53e+00,
+            2.54e+00, 2.54e+00, 2.56e+00, 2.58e+00, 2.59e+00, 2.59e+00,
+            2.60e+00, 2.61e+00, 2.61e+00, 2.61e+00, 2.62e+00, 2.62e+00,
+            2.63e+00, 2.65e+00, 2.65e+00, 2.66e+00, 2.66e+00, 2.68e+00,
+            2.69e+00, 2.69e+00, 2.70e+00, 2.72e+00, 2.72e+00, 2.73e+00,
+            2.75e+00, 2.77e+00, 2.78e+00, 2.79e+00, 2.81e+00, 2.81e+00,
+            2.82e+00, 2.84e+00, 2.84e+00, 2.85e+00, 2.85e+00, 2.86e+00,
+            2.86e+00, 2.88e+00, 2.92e+00, 2.93e+00, 2.93e+00, 2.95e+00,
+            2.96e+00, 2.96e+00, 2.99e+00, 3.00e+00, 3.01e+00, 3.02e+00,
+            3.03e+00, 3.03e+00, 3.14e+00, 3.15e+00, 3.16e+00, 3.17e+00,
+            3.17e+00, 3.18e+00, 3.18e+00, 3.19e+00, 3.20e+00, 3.22e+00,
+            3.24e+00, 3.25e+00, 3.29e+00, 3.31e+00, 3.32e+00, 3.32e+00,
+            3.34e+00, 3.35e+00, 3.36e+00, 3.38e+00, 3.44e+00, 3.45e+00,
+            3.46e+00, 3.48e+00, 3.49e+00, 3.53e+00, 3.59e+00, 3.63e+00,
+            3.70e+00, 3.70e+00, 3.76e+00, 3.80e+00, 3.80e+00, 3.80e+00,
+            3.83e+00, 3.84e+00, 3.88e+00, 3.90e+00, 3.91e+00, 3.96e+00,
+            3.97e+00, 3.97e+00, 4.02e+00, 4.03e+00, 4.06e+00, 4.12e+00,
+            4.19e+00, 4.21e+00, 4.53e+00, 4.56e+00, 4.61e+00, 4.62e+00,
+            4.73e+00, 5.13e+00, 5.21e+00, 5.40e+00, 5.98e+00, 6.12e+00,
+            6.94e+00, 7.38e+00, 7.56e+00, 8.06e+00, 1.38e+01, 1.51e+01,
+            1.82e+01
+        ]
+        self.q1 = np.percentile(self.data, 25)
+        self.q3 = np.percentile(self.data, 75)
+
+
+        self.bs = misc.whiskers_and_fliers(
+            self.transformin(self.data),
+            self.transformin(self.q1),
+            self.transformin(self.q3),
+            transformout=self.transformout
+        )
+
+    def test_hi_whiskers(self):
+        nptest.assert_almost_equal(
+            self.known_bs['whishi'],
+            self.bs['whishi'],
+            decimal=self.decimal
+        )
+
+    def test_hi_whiskers(self):
+        nptest.assert_almost_equal(
+            self.known_bs['whislo'],
+            self.bs['whislo'],
+            decimal=self.decimal
+        )
+
+    def test_fliers(self):
+        nptest.assert_array_almost_equal(
+            self.known_bs['fliers'],
+            self.bs['fliers'],
+            decimal=self.decimal
+        )
+
+
+class test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
+    @nt.nottest
+    def base_setup(self):
+        self.known_bs = {
+            'whishi': 4.7300000190734863,
+            'fliers': np.array([
+                4.730,   5.130,   5.210,   5.400,
+                5.980,   6.120,   6.940,   7.380,
+                7.560,   8.060,  13.800,  15.100,
+               18.200
+            ]),
+            'whislo': 0.0011100000143051147
+        }
+        self.transformin = lambda x: x
+        self.transformout = lambda x: x
+
+
+class test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):
+    @nt.nottest
+    def base_setup(self):
+        self.known_bs = {
+            'whishi': 8.0606803894042987,
+            'fliers': np.array([
+                2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
+                1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
+                1.380e+01, 1.510e+01, 1.820e+01
+            ]),
+            'whislo': 0.27031713639148325
+        }
+        self.transformin = lambda x: np.log(x)
+        self.transformout = lambda x: np.exp(x)
+
+
+class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
+    @nt.nottest
+    def base_setup(self):
+        self.known_bs = {
+            'whishi': 0.3741651859057793,
+            'fliers': np.array([
+                2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
+                1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
+                1.380e+01, 1.510e+01, 1.820e+01
+            ]),
+            'whislo':  0.27000000000000002
+        }
+        self.transformin = lambda x: np.log10(x)
+        self.transformout = lambda x: 10**x
