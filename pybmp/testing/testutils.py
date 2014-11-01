@@ -6,6 +6,7 @@ import re
 import os
 
 from functools import wraps
+import nose.tools as nt
 from nose.plugins.attrib import attr
 from nose.plugins.skip import SkipTest
 
@@ -17,6 +18,7 @@ from numpy.testing.noseclasses import NumpyTestProgram
 
 def assert_timestamp_equal(x, y):
     nptest.assert_equal(x.strftime('%x %X'), y.strftime('%x %X'))
+
 
 def setup_prefix(folder):
     for imgdir in ['baseline_images', 'results_images']:
@@ -74,6 +76,7 @@ def compare_versions(utility='latex'):
 def _show_package_info(package, name):
     packagedir = os.path.dirname(package.__file__)
     print("%s version %s is installed in %s" % (name, package.__version__, packagedir))
+
 
 def _show_system_info():
     import nose
@@ -175,3 +178,15 @@ def checkdep_tex():
     except (IndexError, ValueError, AttributeError, OSError):
         return None
 
+
+def assert_bigstring_equal(input_string, known_string, input_out, known_out):
+    try:
+        nt.assert_equal(input_string, known_string)
+    except:
+        with open(input_out, 'w') as f:
+            f.write(input_string)
+
+        with open(known_out, 'w') as f:
+            f.write(known_string)
+
+        raise
