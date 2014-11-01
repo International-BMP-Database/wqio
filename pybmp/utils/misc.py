@@ -26,7 +26,8 @@ __all__ = ['sigFigs', 'makeBoxplotLegend', 'processFilename', 'constructPath',
            'stringify', 'pH2concentration', 'addSecondColumnLevel',
            '_boxplot_legend', 'makeLongLandscapeTexTable',
            'estimateFromLineParams', 'redefineIndexLevel', 'sanitizeTex',
-           'checkIntervalOverlap', 'ProgressBar', 'makeTimestamp']
+           'checkIntervalOverlap', 'ProgressBar', 'makeTimestamp',
+           'whiskers_and_fliers']
 
 leg_data = np.array([[
     1.71176747025, 2.54701331804, 3.28171165797, 2.33036103386, 2.70661099194, 4.20248978178,
@@ -931,6 +932,38 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime'):
     tstamp = pandas.Timestamp(dtstring)
 
     return tstamp
+
+
+def whiskers_and_fliers(x, q1, q3, transformout=None):
+    wnf = {}
+    if transformout is None:
+        transformout = lambda x: x
+
+    iqr = q3 - q1
+    # get low extreme
+    loval = q1 - (1.5 * iqr)
+    whislo = np.compress(x >= loval, x)
+    if len(whislo) == 0 or np.min(whislo) > q1:
+        whislo = q1
+    else:
+        whislo = np.min(whislo)
+
+    # get high extreme
+    hival = q3 + (1.5 * iqr)
+    whishi = np.compress(x <= hival, x)
+    if len(whishi) == 0 or np.max(whishi) < q3:
+        whishi = q3
+    else:
+        whishi = np.max(whishi)
+
+    wnf['fliers'] = np.hstack([
+        transformout(np.compress(x < whislo, x)),
+        transformout(np.compress(x > whishi, x))
+    ])
+    wnf['whishi'] = transformout(whishi)
+    wnf['whislo'] = transformout(whislo)
+
+    return wnf
 
 
 class ProgressBar:

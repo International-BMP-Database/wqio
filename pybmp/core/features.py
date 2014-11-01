@@ -192,8 +192,9 @@ class DrainageArea(object):
 
 
 class Location(object):
-    def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND', bsIter=10000,
-                 station_type='inflow', useROS=True, include=True):
+    def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND',
+                 bsIter=10000, station_type='inflow', useROS=True,
+                 include=True):
         '''
         Object providing convenient access to statics for data
 
@@ -565,6 +566,35 @@ class Location(object):
         if self.all_positive and self.hasData:
             return utils.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
 
+    def boxplot_stats(self, log=True, bacteria=False):
+        bxpstats = {
+            'label': self.name,
+            'mean': self.geomean if bacteria else self.mean,
+            'med': self.median,
+            'q1': self.pctl25,
+            'q3': self.pctl75,
+            'cilo': self.median_conf_interval[0],
+            'cihi': self.median_conf_interval[1],
+        }
+
+        if log:
+            wnf = utils.whiskers_and_fliers(
+                np.log(self.data),
+                np.log(self.pctl25),
+                np.log(self.pctl75),
+                transformout=np.exp
+            )
+        else:
+            wnf = utils.whiskers_and_fliers(
+                self.data,
+                self.pctl25,
+                self.pctl75,
+                transformout=None
+            )
+
+        bxpstats.update(wnf)
+        return [bxpstats]
+
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
                 width=0.8, bacteria=False, ylabel=None, minPoints=5,
@@ -615,24 +645,23 @@ class Location(object):
         else:
             raise ValueError("`ax` must be a matplotlib Axes instance or None")
 
+        meankwargs = dict(
+            marker=self.plot_marker, markersize=5,
+            markerfacecolor=self.color, markeredgecolor='Black'
+        )
+
         if self.N >= minPoints:
-            bp = ax.boxplot(self.data.values, notch=notch, positions=[pos],
-                            usermedians=[self.median], widths=width,
-                            conf_intervals=[self.median_conf_interval],
-                            sym='r'+self.plot_marker, patch_artist=patch_artist)
+            bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
+            bp = ax.bxp(bxpstats, positions=[pos], widths=width,
+                        showmeans=showmean, shownotches=notch, showcaps=False,
+                        manage_xticks=False, patch_artist=patch_artist,
+                        meanprops=meankwargs)
+
             utils.figutils.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
                                          patch_artist=patch_artist)
         else:
             self.verticalScatter(ax=ax, pos=pos, width=width*0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
-
-        if showmean:
-            meankwargs = dict(marker=self.plot_marker, markersize=5,
-                              markerfacecolor=self.color, markeredgecolor='Black')
-            if bacteria:
-                ax.plot(pos, self.geomean, **meankwargs)
-            else:
-                ax.plot(pos, self.mean, **meankwargs)
 
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
@@ -703,7 +732,7 @@ class Location(object):
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
-            ax.xaxis.set_major_formatter(label_format)
+            ax.yaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
 
         if clearYLabels:
@@ -1317,7 +1346,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
-            ax.xaxis.set_major_formatter(label_format)
+            ax.yaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
 
         if ylabel:
@@ -1389,7 +1418,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
-            ax.xaxis.set_major_formatter(label_format)
+            ax.yaxis.set_major_formatter(label_format)
         utils.figutils.gridlines(ax, yminor=True)
 
         if clearYLabels:
