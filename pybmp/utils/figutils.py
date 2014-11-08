@@ -5,6 +5,20 @@ import matplotlib.ticker as mticker
 import matplotlib.gridspec as gridspec
 import scipy.stats as stats
 
+from . import misc
+
+
+def _check_ax(ax):
+    if ax is None:
+        fig, ax = plt.subplots()
+    elif isinstance(ax, plt.Axes):
+        fig = ax.figure
+    else:
+        msg = "`ax` must be a matplotlib Axes instance or None"
+        raise ValueError(msg)
+
+    return fig, ax
+
 
 def _probability_axis(axes, probdist, probs, axis='y', fs=8):
     '''
@@ -30,73 +44,14 @@ def _probability_axis(axes, probdist, probs, axis='y', fs=8):
     if axis not in ['x', 'y', 'both']:
         raise ValueError("axis must be 'x', 'y', or 'both'")
 
-    # get the z-scores of the probabilities
-    # (this is where the ticks go)
-    axis_vals = probdist.ppf(probs)
-
     # format y axis if necessary
     if axis == 'y' or axis == 'both':
-        axes.set_yticks(axis_vals)
-        axes.set_yticklabels(probs*100)
-        axes.set_ylim([axis_vals.min(), axis_vals.max()])
+        axes.set_yscale('prob')
 
     # format x axis if necessary
     if axis == 'x' or axis == 'both':
-        axes.set_xticks(axis_vals)
-        axes.set_xticklabels(probs*100, fontsize=fs, rotation=45,
-                             ha='right', va='center',
-                             rotation_mode='anchor')
-        axes.set_xlim([axis_vals.min(), axis_vals.max()])
+        axes.set_yscale('prob')
 
-
-def greyAxes(axes, bgcolor='0.90'):
-    '''
-    Makes an axes gray like in ggplot2
-
-    Input:
-        axes (matplotlib axes object) : the axes to format
-
-    Writes:
-        None
-
-    Returns:
-        None
-    '''
-    grayAxes(axes, bgcolor=bgcolor)
-
-
-def grayAxes(axes, bgcolor='0.90'):
-    '''
-    Makes an axes gray like in ggplot2
-
-    Input:
-        axes (matplotlib axes object) : the axes to format
-
-    Writes:
-        None
-
-    Returns:
-        None
-    '''
-    # set the background color
-    axes.set_axis_bgcolor(bgcolor)
-
-    # format all of the gridlines
-    axes.xaxis.grid(True, which='major', ls='-', color='w',
-                    alpha=0.65, zorder=-5)
-
-    axes.yaxis.grid(True, which='major', ls='-', color='w',
-                    alpha=0.65, zorder=-5)
-
-    axes.xaxis.grid(True, which='minor', ls='-', color='w',
-                    alpha=0.35, zorder=-5)
-
-    axes.yaxis.grid(True, which='minor', ls='-', color='w',
-                    alpha=0.35, zorder=-5)
-
-    # gray out the border around the axes:
-    for spine in axes.spines:
-        axes.spines[spine].set_color(bgcolor)
 
 
 def gridlines(axes, xlabel=None, ylabel=None, xscale=None, yscale=None,
@@ -250,64 +205,72 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
                  markerfacecolor='none', markeredgecolor=color, alpha=1)
 
 
-def probplot(axes, zscores, data, color, marker, label):
+def probplot(data, ax=None, axtype='prob', color='b', marker='o',
+             linestyle='none', xlabel=None, ylabel=None, yscale='log',
+             **plotkwds):
+    '''Probability, percentile, and quantile plots.
+
+    Parameters
+    ----------
+    data : sequence or array-like
+        1-dimensional data to be plotted
+    ax : optional matplotlib axes object or None (default).
+        The Axes on which to plot. If None is provided, one will be
+        created.
+    axtype : string (default = 'pp')
+        Type of plot to be created. Options are:
+            - 'prob': probabilty plot
+            - 'pp': percentile plot
+            - 'qq': quantile plot
+    color : color string or three tuple (default = 'b')
+        Just needs to be any valid matplotlib color representation.
+    marker : string (default = 'o')
+        String representing a matplotlib marker style.
+    linestyle : string (default = 'none')
+        String representing a matplotlib line style. No line is shown by
+        default.
+    [x|y]label : string or None (default)
+        Axis label for the plot.
+    yscale : string (default = 'log')
+        Scale for the y-axis. Use 'log' for logarithmic (default) or
+        'linear'.
+    **plotkwds : optional arguments passed directly to plt.plot(...)
+
+    Returns
+    -------
+    fig : matplotlib.Figure instance
+
     '''
-    Properly does a probability plots on an axes object with ROS'd data in a
-        Location object.
 
-    Input:
-        axes (matplotlib axes object) : the axes to format
-        zscores (array-like) : Z-scores of the data
-        data (array-like) : data to plot
-        color (matplotlib color string) : color of the markers
-        marker (matplotlib marker string) : marker shape
-        label (string) : label of the series to appear in the legend
+    fig, ax = _check_ax(ax)
+    if axtype not in ['pp', 'qq', 'prob']:
+        raise ValueError("invalid axtype: {}".format(axtype))
 
-    Writes:
-        None
-
-    Returns:
-        None
-    '''
-    # plot the final ROS data versus the Z-scores
-    axes.plot(zscores, data, linestyle='none', marker=marker,
-              markeredgecolor=color, markerfacecolor='none', markersize=4,
-              label=label)
-
-
-def _get_probs(N):
-    '''
-    Return the probabilty labels for an axes based on the number of results
-        in a dataset
-
-    Input:
-        N (int) : number of results in the dataset
-
-    Writes:
-        None
-
-    Returns:
-        None
-    '''
-    # small datasets
-    if N < 90:
-        prob = np.array([1, 2, 5, 10, 25, 50, 75, 90, 95, 98, 99])/100.0
-
-    # medium datasets
-    elif N < 900:
-        prob = np.array([
-            0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50,
-            75, 90, 95, 98, 99, 99.5, 99.8, 99.9
-        ])/100.0
-
-    # large datasets
+    qntls, ranked = stats.probplot(data, fit=False)
+    if axtype == 'qq':
+        xdata = qntls
     else:
-        prob = np.array([
-            0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 75,
-            90, 95, 98, 99, 99.5, 99.8, 99.9, 99.95, 99.98, 99.99
-        ])/100.0
+        xdata = stats.norm.cdf(qntls) * 100
 
-    return prob
+    markerfacecolor = plotkwds.pop('markerfacecolor', 'none')
+    markersize = plotkwds.pop('markersize', 4)
+
+    # plot the final ROS data versus the Z-scores
+    ax.plot(xdata, ranked, linestyle=linestyle, marker=marker,
+            markeredgecolor=color, markerfacecolor=markerfacecolor,
+            markersize=markersize, **plotkwds)
+
+    ax.set_yscale(yscale)
+    if axtype == 'prob':
+        ax.set_xscale('prob')
+
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    return fig
 
 
 def formatStatAxes(axes, axtype, pos=None, datalabels=None, parameter=None,
@@ -353,9 +316,7 @@ def formatStatAxes(axes, axtype, pos=None, datalabels=None, parameter=None,
         axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
         # probability scale on the x-axis
-        prob = _get_probs(N)
-        _probability_axis(axes, stats.norm, prob, axis='x', fs=fs)
-
+        axes.set_xscale('prob')
         # x-grid
         axes.xaxis.grid(True, which='major', ls='-', alpha=0.50)
 

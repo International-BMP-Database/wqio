@@ -599,51 +599,49 @@ class Location(object):
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
                 width=0.8, bacteria=False, ylabel=None, minPoints=5,
                 patch_artist=False):
+        '''Adds a boxplot to a matplotlib figure
+
+        Parameters
+        ----------
+        ax : optional matplotlib axes object or None (default)
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+
+        pos : optional int (default=1)
+            Location along x-axis where boxplot will be placed.
+
+        yscale : optional string ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+
+        notch : optional bool (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+
+        showmean : optional bool (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+
+        width : optional float (default=0.8)
+            Width of boxplot on the axes (data units)
+
+        bacteria : optional bool (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+
+        ylabel : string or None (default):
+            Label for y-axis
+
+        patch_artist : optional bool (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
+
+        Returns
+        -------
+        fig : matplotlib Figure
+
         '''
-        Adds a boxplot to a matplotlib figure
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
-
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
+        fig, ax = utils.figutils._check_ax(ax)
 
         meankwargs = dict(
             marker=self.plot_marker, markersize=5,
@@ -678,73 +676,62 @@ class Location(object):
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', probAxis=True, ylabel=None,
-                 clearYLabels=False):
+    def probplot(self, ax=None, yscale='log', axtype='prob',
+                 ylabel=None, clearYLabels=False, managegrid=True):
+        '''Adds a probability plot to a matplotlib figure
+
+        Parameters
+        ----------
+        ax : optional matplotlib axes object or None (default).
+            The Axes on which to plot. If None is provided, one will be
+            created.
+        axtype : string (default = 'pp')
+            Type of plot to be created. Options are:
+                - 'prob': probabilty plot
+                - 'pp': percentile plot
+                - 'qq': quantile plot
+        color : color string or three tuple (default = 'b')
+            Just needs to be any valid matplotlib color representation.
+        marker : string (default = 'o')
+            String representing a matplotlib marker style.
+        linestyle : string (default = 'none')
+            String representing a matplotlib line style. No line is shown by
+            default.
+        [x|y]label : string or None (default)
+            Axis label for the plot.
+        yscale : string (default = 'log')
+            Scale for the y-axis. Use 'log' for logarithmic (default) or
+            'linear'.
+        clearYLabels : bool (default = False)
+            If True, removed y-*tick* labels from `ax`
+
+        Returns
+        -------
+        fig : matplotlib.Figure instance
+
         '''
-        Adds a probability plot to a matplotlib figure
+        fig, ax = utils.figutils._check_ax(ax)
+        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype,
+                                      yscale=yscale, ylabel=ylabel,
+                                      color=self.color, label=self.name,
+                                      marker=self.plot_marker)
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            clearYLabels : bool (default = False)
-                If True, removed y-*tick* label from `ax`
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
-
-        # these column names come from the utils.ros.MR object
-        if self.useROS:
-            probcol = 'final_data'
-        else:
-            probcol = 'res'
-
-        z, prob = stats.probplot(self.ros.data[probcol].values, fit=False)
-
-        ax.plot(z, prob, linestyle='none', label=self.name,
-                marker=self.plot_marker, markeredgecolor=self.color,
-                markerfacecolor='none', markersize=4)
-
-        if probAxis:
-            utils.figutils.formatStatAxes(ax, 'probplot', N=self.N, doLegend=False,
-                                          clearYLabels=False)
-        else:
-            ax.set_xlabel('Z-score')
-
-        ax.set_yscale(yscale)
-        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
+            label_format = mticker.FuncFormatter(
+                utils.figutils.alt_logLabelFormatter
+            )
             ax.yaxis.set_major_formatter(label_format)
-        utils.figutils.gridlines(ax, yminor=True)
+
+        if managegrid:
+            utils.figutils.gridlines(ax, yminor=True)
 
         if clearYLabels:
             ax.set_yticklabels([])
 
-        if ylabel:
-            ax.set_ylabel(ylabel)
-
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, probAxis=True,
+                 width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
         '''
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
@@ -801,7 +788,7 @@ class Location(object):
                      showmean=showmean, width=width, bacteria=bacteria,
                      ylabel=ylabel, patch_artist=patch_artist)
 
-        self.probplot(ax=ax2, yscale=yscale, probAxis=probAxis,
+        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True)
 
         ax1.yaxis.tick_left()
@@ -846,12 +833,7 @@ class Location(object):
         Returns:
             fig : matplotlib Figure instance
         '''
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
+        fig, ax = utils.figutils._check_ax(ax)
 
         low = pos - width*0.5
         high = pos + width*0.5
@@ -1330,12 +1312,7 @@ class Dataset(object):
         Returns:
             fig : matplotlib Figure instance
         '''
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
+        fig, ax = utils.figutils._check_ax(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
             if loc.include:
@@ -1371,7 +1348,7 @@ class Dataset(object):
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', probAxis=True, ylabel=None,
+    def probplot(self, ax=None, yscale='log', axtype='qq', ylabel=None,
                  clearYLabels=False):
         '''
         Adds probability plots to a matplotlib figure
@@ -1397,42 +1374,26 @@ class Dataset(object):
         Returns:
             fig : matplotlib Figure instance
         '''
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
+        fig, ax = utils.figutils._check_ax(ax)
 
         for loc in [self.influent, self.effluent]:
             if loc.include:
-                loc.probplot(ax=ax, clearYLabels=False, probAxis=False)
+                loc.probplot(ax=ax, clearYLabels=False, axtype=axtype,
+                             yscale=yscale)
 
-        maxN = np.max([self.influent.N, self.effluent.N])
-        if probAxis:
-            utils.figutils.formatStatAxes(ax, 'probplot', N=maxN, doLegend=False,
-                                          clearYLabels=False)
-        else:
-            ax.set_xlabel('Z-score')
+        xlabels = {
+            'pp': 'Theoretical percentiles',
+            'qq': 'Theoretical quantiles',
+            'prop': 'Non-exceedance probability (\%)'
+        }
 
-        ax.set_yscale(yscale)
-        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
-        if yscale == 'log':
-            ax.yaxis.set_major_formatter(label_format)
-        utils.figutils.gridlines(ax, yminor=True)
-
-        if clearYLabels:
-            ax.set_yticklabels([])
-
-        if ylabel:
-            ax.set_ylabel(ylabel)
-
+        ax.set_xlabel(xlabels[axtype])
         ax.legend(loc='upper left', frameon=True)
 
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, probAxis=True,
+                 width=0.8, bacteria=False, ylabel=None, axtype='qq',
                  patch_artist=False):
         '''
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
@@ -1490,7 +1451,7 @@ class Dataset(object):
                      showmean=showmean, width=width, bacteria=bacteria,
                      ylabel=ylabel, patch_artist=patch_artist)
 
-        self.probplot(ax=ax2, yscale=yscale, probAxis=probAxis,
+        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True)
 
         ax1.yaxis.tick_left()
@@ -1550,12 +1511,7 @@ class Dataset(object):
             fig : matplotlib Figure instance
         '''
         # set up the figure/axes
-        if ax is None:
-            fig, ax = plt.subplots()
-        elif isinstance(ax, plt.Axes):
-            fig = ax.figure
-        else:
-            raise ValueError("`ax` must be a matplotlib Axes instance or None")
+        fig, ax = utils.figutils._check_ax(ax)
 
         # set the scales
         ax.set_xscale(xscale)
