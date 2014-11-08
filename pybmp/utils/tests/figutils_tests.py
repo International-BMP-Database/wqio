@@ -21,7 +21,8 @@ import matplotlib.ticker as mticker
 from matplotlib.testing.decorators import image_comparison
 import scipy.stats as stats
 
-from .. import figutils, ros
+from pybmp.utils import figutils, ros
+
 
 class test_axes_methods:
     def setup(self):
@@ -32,7 +33,6 @@ class test_axes_methods:
         self.median = self.ros.data.final_data.median()
         self.median_ci = [(self.median * 0.75, self.median * 1.25)]
         self.prefix = testing.testutils.setup_prefix('utils.figutils')
-
 
     @nottest
     def makePath(self, filename):
@@ -45,6 +45,7 @@ class test_axes_methods:
     def teardown(self):
         plt.close(self.fig)
 
+    @nptest.dec.skipif(True)
     def test__probability_axis(self):
         probs = figutils._get_probs(25)
         self.ax.plot([0.05, 0.15], [0.05, 0.15])
@@ -63,16 +64,6 @@ class test_axes_methods:
             assert_equal(xlabel.get_verticalalignment(), 'center')
             assert_equal(xlabel.get_rotation_mode(), 'anchor')
             assert_equal(xlabel.get_rotation(), 45.0)
-
-    def test_grayAxes(self):
-        self.ax.plot(self.ros.data.final_data)
-        figutils.grayAxes(self.ax)
-        self.savefig('grayAxes.png')
-
-    def test_greyAxes(self):
-        self.ax.plot(self.ros.data.final_data)
-        figutils.greyAxes(self.ax)
-        self.savefig('greyAxes.png')
 
     def test_gridlines(self):
         self.ax.plot(self.ros.data.final_data)
@@ -103,8 +94,7 @@ class test_axes_methods:
         self.savefig('formatted_boxplot.png')
 
     def test_probplot(self):
-        z, prob = stats.probplot(self.ros.data.final_data.values, fit=False)
-        figutils.probplot(self.ax, z, prob, 'b', 'o', 'influent')
+        fig = figutils.probplot(self.ros.data.final_data, ax=self.ax)
         self.savefig('probplot.png')
 
     def test_formatStatAxes_prob(self):
@@ -162,10 +152,6 @@ class test_axes_methods:
         ]
         assert_list_equal(rendered_labels, expected_labels)
 
-def test__get_probs():
-    assert_tuple_equal(figutils._get_probs(25).shape, (11,))
-    assert_tuple_equal(figutils._get_probs(250).shape, (17,))
-    assert_tuple_equal(figutils._get_probs(2500).shape, (23,))
 
 class test_scatterHistogram:
     def setup(self):
