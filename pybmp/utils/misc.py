@@ -592,14 +592,18 @@ def normalize_units(dataframe, units_map, targetunit, paramcol='parameter',
 
 def normalize_units2(data, normFxn, convFxn, unitFxn, paramcol='parameter',
                      rescol='res', unitcol='unit', dlcol=None):
-    normalization = data[unitcol].apply(normFxn)
-    conversion = data[paramcol].apply(convFxn)
-    data.loc[:, rescol] = data[rescol] * normalization / conversion
-    if dlcol is not None:
-        data.loc[:, dlcol] = data[dlcol] * normalization / conversion
+    d = data.copy()
+    normalization = d[unitcol].apply(normFxn)
+    conversion = d[paramcol].apply(convFxn)
 
-    data.loc[:, unitcol] = data[paramcol].apply(unitFxn)
-    return data
+    factor = normalization / conversion
+
+    d[rescol] *= factor
+    if dlcol is not None:
+        d[dlcol] *= factor
+
+    d.loc[:, unitcol] = d[paramcol].apply(unitFxn)
+    return d
 
 
 def makeTexTable(tablefile, caption, sideways=False, footnotetext=None,
@@ -881,7 +885,8 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
         return test1 or test2 or test3
 
 
-def makeTimestamp(row, datecol='sampledate', timecol='sampletime'):
+def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
+                  issuewarnings=False):
     '''Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
@@ -912,8 +917,9 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime'):
             fb_date = True
 
     if fb_date:
-        warnings.warn("Using fallback date from {}".format(row[datecol]))
         date = fallback_datetime.date()
+        if issuewarnings:
+            warnings.warn("Using fallback date from {}".format(row[datecol]))
 
     if row[timecol] is None or pandas.isnull(row[timecol]):
         fb_time = True
@@ -925,8 +931,9 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime'):
             fb_time = True
 
     if fb_time:
-        warnings.warn("Using fallback time from {}".format(row[timecol]))
         time = fallback_datetime.time()
+        if issuewarnings:
+            warnings.warn("Using fallback time from {}".format(row[timecol]))
 
     dtstring = '{} {}'.format(date, time)
     tstamp = pandas.Timestamp(dtstring)
