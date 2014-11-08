@@ -238,7 +238,7 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
     Returns
     -------
-    fig : matplotlib.Figure
+    fig : matplotlib.Figure instance
 
     '''
 

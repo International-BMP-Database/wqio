@@ -208,15 +208,27 @@ class _base_LocationMixin(object):
 
     def test_geomean_conf_interval(self):
         assert_true(hasattr(self.loc, 'geomean_conf_interval'))
-        nptest.assert_allclose(self.loc.geomean_conf_interval, self.known_geomean_conf_interval, rtol=self.tolerance)
+        nptest.assert_allclose(
+            self.loc.geomean_conf_interval,
+            self.known_geomean_conf_interval,
+            rtol=self.tolerance
+        )
 
     def test_geostd(self):
         assert_true(hasattr(self.loc, 'geostd'))
-        nptest.assert_allclose(self.loc.geostd, self.known_geostd, rtol=self.tolerance)
+        nptest.assert_allclose(
+            self.loc.geostd,
+            self.known_geostd,
+            rtol=self.tolerance
+        )
 
     def test_logmean(self):
         assert_true(hasattr(self.loc, 'logmean'))
-        nptest.assert_allclose(self.loc.logmean, self.known_logmean, rtol=self.tolerance)
+        nptest.assert_allclose(
+            self.loc.logmean,
+            self.known_logmean,
+            rtol=self.tolerance
+        )
 
     def test_logmean_conf_interval(self):
         assert_true(hasattr(self.loc, 'logmean_conf_interval'))
@@ -349,7 +361,9 @@ class _base_LocationMixin(object):
         fig = self.loc.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
                                showmean=True, width=0.8, ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Box_useROS_{0}.png'.format(self.loc.useROS)))
+        fig.savefig(self.makePath(
+            'test_Loc_Box_useROS_{0}.png'.format(self.loc.useROS)
+        ))
 
     @raises(ValueError)
     def test_boxplot_badAxes(self):
@@ -371,7 +385,7 @@ class _base_LocationMixin(object):
     def test_probplot_baseline_QQ(self):
         assert_true(hasattr(self.loc, 'probplot'))
         self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', probAxis=False)
+        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='qq')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_QQ_useROS_{0}.png'.format(self.loc.useROS)))
 
@@ -385,20 +399,20 @@ class _base_LocationMixin(object):
 
     def test_statplot_baseline(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', probAxis=True, ylabel='Test Label')
+        fig = self.loc.statplot(yscale='log', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_StatProb_useROS_{0}.png'.format(self.loc.useROS)))
 
     def test_statplot_baseline_QQ(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', probAxis=False, ylabel='Test Label')
+        fig = self.loc.statplot(yscale='log', axtype='qq', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_StatQQ_useROS_{0}.png'.format(self.loc.useROS)))
 
     @raises(ValueError)
     def test_statplot_badYScale(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='JUNK', probAxis=False, ylabel='Test Label')
+        fig = self.loc.statplot(yscale='JUNK', axtype='qq', ylabel='Test Label')
 
     def test_verticalScatter_baseline(self):
         assert_true(hasattr(self.loc, 'verticalScatter'))
@@ -779,7 +793,6 @@ class test_Dataset(object):
 
     def test_probplot_baseline(self):
         assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
         fig = self.ds.probplot(ax=self.ax, yscale='log', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_Prob.png'))
@@ -787,14 +800,13 @@ class test_Dataset(object):
     def test_probplot_baseline_QQ(self):
         assert_true(hasattr(self.ds, 'probplot'))
         self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', probAxis=False)
+        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='qq')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_QQ'))
 
     @raises(ValueError)
     def test_probplot_badAxes(self):
         assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
         fig = self.ds.probplot(ax=3, yscale='log')
         assert_true(isinstance(fig, plt.Figure))
 
@@ -805,20 +817,20 @@ class test_Dataset(object):
 
     def test_statplot_baseline(self):
         assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', probAxis=True, ylabel='Test Label')
+        fig = self.ds.statplot(yscale='log', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_StatProb'))
 
     def test_statplot_baseline_QQ(self):
         assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', probAxis=False, ylabel='Test Label')
+        fig = self.ds.statplot(yscale='log', axtype='qq', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_DS_StatQQ'))
 
     @raises(ValueError)
     def test_statplot_badYScale(self):
         assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='JUNK', probAxis=False, ylabel='Test Label')
+        fig = self.ds.statplot(yscale='JUNK',  ylabel='Test Label')
 
     def test_joinplot(self):
         assert_true(hasattr(self.ds, 'jointplot'))
