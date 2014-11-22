@@ -9,6 +9,7 @@ from pybmp.testing.testutils import setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
+matplotlib.use('agg')
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
 
@@ -24,6 +25,7 @@ from pybmp.core.features import (
 )
 
 from pybmp import utils
+import warnings
 
 @nottest
 def testfilter(data):
@@ -137,7 +139,7 @@ class _base_LocationMixin(object):
         # basic test data
         self.tolerance = 0.05
         self.known_bsIter = 750
-        self.data = utils.ros.getTestData()
+        self.data = testing.getTestROSData()
 
         # Location stuff
         self.known_station_name = 'Influent'
@@ -572,10 +574,10 @@ class test_Dataset(object):
         self.tolerance = 0.05
         self.known_bsIter = 750
 
-        in_data = utils.ros.getTestData()
+        in_data = testing.getTestROSData()
         in_data['res'] += 3
 
-        out_data = utils.ros.getTestData()
+        out_data = testing.getTestROSData()
         out_data['res'] -= 1.5
 
         self.influent = Location(in_data, station_type='inflow', bsIter=self.known_bsIter,
@@ -915,6 +917,7 @@ class test_Dataset(object):
         self.ds.__repr__
 
     def test_reset_useROS(self):
+        #warnings.simplefilter("error")
         self.ds.useROS = True
         infl_ros_mean = self.ds.influent.data.iloc[0]
         effl_ros_mean = self.ds.effluent.data.iloc[0]
