@@ -3,8 +3,8 @@ import numpy.testing as nptest
 import numpy as np
 import scipy.optimize as opt
 
-from .. import bootstrap
-from .. import ros
+from pybmp import testing
+from pybmp.utils import bootstrap
 
 
 def test__boot_strap():
@@ -18,7 +18,7 @@ def test__boot_strap():
 
 class test_Stat:
     def setup(self):
-        self.data = ros.getTestData()
+        self.data = testing.getTestROSData()
         self.statfxn = np.mean
         self.alpha = 0.10
         self.NIter = 10000
@@ -77,7 +77,7 @@ class test_Stat:
 
 class test_Fit:
     def setup(self):
-        self.data = ros.getTestData()
+        self.data = testing.getTestROSData()
         self.alpha = 0.10
         self.NIter = 10000
 

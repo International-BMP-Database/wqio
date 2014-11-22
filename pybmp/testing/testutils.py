@@ -12,8 +12,34 @@ from nose.plugins.skip import SkipTest
 
 from numpy import errstate
 import numpy.testing as nptest
-
 from numpy.testing.noseclasses import NumpyTestProgram
+import pandas
+
+if sys.version_info.major == 3:
+    from io import StringIO
+else:
+    from StringIO import StringIO
+
+
+def getTestROSData():
+    '''
+    Generates test data for an ROS estimate.
+    Input:
+        None
+
+    Output:
+        Structured array with the values (results or DLs) and qualifers
+        (blank or "ND" for non-detects)
+    '''
+    raw_csv = StringIO(
+        "res,qual\n2.00,=\n4.20,=\n4.62,=\n5.00,ND\n5.00,ND\n5.50,ND\n"
+        "5.57,=\n5.66,=\n5.75,ND\n5.86,=\n6.65,=\n6.78,=\n6.79,=\n7.50,=\n"
+        "7.50,=\n7.50,=\n8.63,=\n8.71,=\n8.99,=\n9.50,ND\n9.50,ND\n9.85,=\n"
+        "10.82,=\n11.00,ND\n11.25,=\n11.25,=\n12.20,=\n14.92,=\n16.77,=\n"
+        "17.81,=\n19.16,=\n19.19,=\n19.64,=\n20.18,=\n22.97,=\n"
+    )
+
+    return pandas.read_csv(raw_csv)
 
 
 def assert_timestamp_equal(x, y):

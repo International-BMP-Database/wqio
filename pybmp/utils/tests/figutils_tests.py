@@ -27,7 +27,7 @@ from pybmp.utils import figutils, ros
 class test_axes_methods:
     def setup(self):
         self.fig, self.ax = plt.subplots()
-        self.data = ros.getTestData()
+        self.data = testing.getTestROSData()
         self.ros = ros.MR(self.data)
         self.mean = self.ros.data.final_data.mean()
         self.median = self.ros.data.final_data.median()
