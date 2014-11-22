@@ -44,7 +44,7 @@ class ProbFormatter(Formatter):
         elif x <= 99:
             out =  sigFigs(x, 2)
         else:
-            order = np.ceil(np.abs(np.log10(100 - x)))
+            order = np.ceil(np.round(np.abs(np.log10(100 - x)), 6))
             out = sigFigs(x, order + 2)
 
         return '{}'.format(out)
