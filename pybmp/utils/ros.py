@@ -388,7 +388,7 @@ class MR(object):
             ND_plotpos.values.sort()
 
             NDs = (self.data.qual == 'ND').index
-            self.data.loc[ND_plotpos.index, 'plot_pos'] = ND_plotpos.values
+            self.data['plot_pos'].replace(ND_plotpos, inplace=True)
 
             # estimate a preliminary value of the Z-scores
             self.data['Zprelim'] = self.dist.ppf(self.data['plot_pos'])
