@@ -138,7 +138,7 @@ class _base_LocationMixin(object):
 
         # basic test data
         self.tolerance = 0.05
-        self.known_bsIter = 750
+        self.known_bsIter = 1500
         self.data = testing.getTestROSData()
 
         # Location stuff
@@ -377,19 +377,26 @@ class _base_LocationMixin(object):
         fig = self.loc.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
                                showmean=True, width=0.8)
 
-    def test_probplot_baseline(self):
+    def test_probplot_QQ(self):
         assert_true(hasattr(self.loc, 'probplot'))
         self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', ylabel='Test Label')
+        fig = self.loc.probplot(ax=self.ax, yscale='log', ylabel='Test Label', axtype='qq')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Prob_useROS_{0}.png'.format(self.loc.useROS)))
+        fig.savefig(self.makePath('test_Loc_Prob-QQ_useROS_{0}.png'.format(self.loc.useROS)))
 
-    def test_probplot_baseline_QQ(self):
+    def test_probplot_baseline_PP(self):
         assert_true(hasattr(self.loc, 'probplot'))
         self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='qq')
+        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='pp')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_QQ_useROS_{0}.png'.format(self.loc.useROS)))
+        fig.savefig(self.makePath('test_Loc_Prob-PP_useROS_{0}.png'.format(self.loc.useROS)))
+
+    def test_probplot_baseline_Prob(self):
+        assert_true(hasattr(self.loc, 'probplot'))
+        self.loc.probplot(yscale='log')
+        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='prob')
+        assert_true(isinstance(fig, plt.Figure))
+        fig.savefig(self.makePath('test_Loc_Prob-prob_useROS_{0}.png'.format(self.loc.useROS)))
 
     @raises(ValueError)
     def test_probplot_badAxes(self):
@@ -399,17 +406,23 @@ class _base_LocationMixin(object):
     def test_probplot_badYscale(self):
         self.loc.probplot(yscale='JUNK')
 
-    def test_statplot_baseline(self):
+    def test_statplot_PP(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', ylabel='Test Label')
+        fig = self.loc.statplot(yscale='log', ylabel='Test Label', axtype='pp')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_StatProb_useROS_{0}.png'.format(self.loc.useROS)))
+        fig.savefig(self.makePath('test_Loc_Stat-PP_useROS_{0}.png'.format(self.loc.useROS)))
 
     def test_statplot_baseline_QQ(self):
         assert_true(hasattr(self.loc, 'statplot'))
         fig = self.loc.statplot(yscale='log', axtype='qq', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_StatQQ_useROS_{0}.png'.format(self.loc.useROS)))
+        fig.savefig(self.makePath('test_Loc_Stat-QQ_useROS_{0}.png'.format(self.loc.useROS)))
+
+    def test_statplot_baseline_prob(self):
+        assert_true(hasattr(self.loc, 'statplot'))
+        fig = self.loc.statplot(yscale='log', axtype='prob', ylabel='Test Label')
+        assert_true(isinstance(fig, plt.Figure))
+        fig.savefig(self.makePath('test_Loc_Stat-Prob_useROS_{0}.png'.format(self.loc.useROS)))
 
     @raises(ValueError)
     def test_statplot_badYScale(self):
@@ -793,18 +806,25 @@ class test_Dataset(object):
         fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
                               showmean=True, width=0.8)
 
-    def test_probplot_baseline(self):
+    def test_probplot_QQ(self):
         assert_true(hasattr(self.ds, 'probplot'))
-        fig = self.ds.probplot(ax=self.ax, yscale='log', ylabel='Test Label')
+        fig = self.ds.probplot(ax=self.ax, yscale='log', ylabel='Test Label', axtype='qq')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob.png'))
+        fig.savefig(self.makePath('test_DS_Prob-QQ.png'))
 
-    def test_probplot_baseline_QQ(self):
+    def test_probplot_baseline_PP(self):
         assert_true(hasattr(self.ds, 'probplot'))
         self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='qq')
+        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='pp')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_QQ'))
+        fig.savefig(self.makePath('test_DS_Prob-PP.png'))
+
+    def test_probplot_baseline_Prob(self):
+        assert_true(hasattr(self.ds, 'probplot'))
+        self.ds.probplot(yscale='log')
+        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='prob')
+        assert_true(isinstance(fig, plt.Figure))
+        fig.savefig(self.makePath('test_DS_Prob-prob.png'))
 
     @raises(ValueError)
     def test_probplot_badAxes(self):
@@ -817,17 +837,23 @@ class test_Dataset(object):
         assert_true(hasattr(self.ds, 'probplot'))
         self.ds.probplot(yscale='JUNK')
 
-    def test_statplot_baseline(self):
+    def test_statplot_PP(self):
         assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', ylabel='Test Label')
+        fig = self.ds.statplot(yscale='log', ylabel='Test Label', axtype='pp')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_StatProb'))
+        fig.savefig(self.makePath('test_DS_Stat-PP'))
 
     def test_statplot_baseline_QQ(self):
         assert_true(hasattr(self.ds, 'statplot'))
         fig = self.ds.statplot(yscale='log', axtype='qq', ylabel='Test Label')
         assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_StatQQ'))
+        fig.savefig(self.makePath('test_DS_Stat-QQ'))
+
+    def test_statplot_baseline_prob(self):
+        assert_true(hasattr(self.ds, 'statplot'))
+        fig = self.ds.statplot(yscale='log', axtype='prob', ylabel='Test Label')
+        assert_true(isinstance(fig, plt.Figure))
+        fig.savefig(self.makePath('test_DS_Stat-Prob'))
 
     @raises(ValueError)
     def test_statplot_badYScale(self):
