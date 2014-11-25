@@ -384,11 +384,11 @@ class MR(object):
             self.data['plot_pos'] = self.data.apply(_ros_plotting_pos, axis=1)
 
             # correctly sort the plotting positions of the ND data:
-            ND_plotpos = self.data['plot_pos'][self.data['qual'] == 'ND']
-            ND_plotpos.values.sort()
+            # ND_plotpos = self.data['plot_pos'][self.data['qual'] == 'ND']
+            # ND_plotpos.values.sort()
 
-            NDs = (self.data.qual == 'ND').index
-            self.data['plot_pos'].replace(ND_plotpos, inplace=True)
+            # NDs = (self.data.qual == 'ND').index
+            # self.data['plot_pos'].replace(ND_plotpos, inplace=True)
 
             # estimate a preliminary value of the Z-scores
             self.data['Zprelim'] = self.dist.ppf(self.data['plot_pos'])
