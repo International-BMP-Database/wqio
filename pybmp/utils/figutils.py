@@ -263,6 +263,8 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     ax.set_yscale(yscale)
     if axtype == 'prob':
         ax.set_xscale('prob')
+        #left, right = ax.get_xlim()
+        #ax.set_xlim(left=left*0.96, right=right*1.04)
 
     if xlabel is not None:
         ax.set_xlabel(xlabel)
