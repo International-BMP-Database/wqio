@@ -1267,7 +1267,7 @@ class Dataset(object):
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
                 width=0.8, bacteria=False, ylabel=None, xlims=None, bothTicks=True,
-                offset=0.35, patch_artist=False):
+                offset=0.5, patch_artist=False):
         '''
         Adds a boxplot to a matplotlib figure
 
@@ -1384,7 +1384,7 @@ class Dataset(object):
         xlabels = {
             'pp': 'Theoretical percentiles',
             'qq': 'Theoretical quantiles',
-            'prop': 'Non-exceedance probability (\%)'
+            'prob': 'Non-exceedance probability (\%)'
         }
 
         ax.set_xlabel(xlabels[axtype])
