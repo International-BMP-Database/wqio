@@ -258,7 +258,7 @@ class _base_LocationMixin(object):
 
     def test_median_conf_interval(self):
         assert_true(hasattr(self.loc, 'median_conf_interval'))
-        nptest.assert_allclose(self.loc.median_conf_interval, self.known_median_conf_interval, rtol=self.tolerance)
+        nptest.assert_allclose(self.loc.median_conf_interval, self.known_median_conf_interval, rtol=self.tolerance*1.5)
 
     def test_min(self):
         assert_true(hasattr(self.loc, 'min'))
