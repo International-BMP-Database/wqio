@@ -72,7 +72,7 @@ def getUniqueDataframeIndexVal(df, indexlevel):
     return index[0]
 
 
-def sigFigs(x, n, expthresh=5, tex=False, pval=False):
+def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     '''
     Formats a number into a string with the correct number of sig figs.
 
@@ -81,6 +81,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False):
         n (int) : the number of sig figs it should have
         tex (bool) : toggles the scientific formatting of the number
         pval (bool) : if True and x < 0.001, will return "<0.001"
+        forceint : if true, simply returns int(x)
 
     Typical Usage:
         >>> print(sigFigs(1247.15, 3))
@@ -104,6 +105,9 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False):
             out = "<0.001"
             if tex:
                 out = '${}$'.format(out)
+
+        elif forceint:
+            out = '{:,.0f}'.format(x)
 
         # logic to do all of the rounding
         elif x != 0.0:

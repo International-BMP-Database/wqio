@@ -101,13 +101,19 @@ class base_sigfigsMixin(object):
             self.known_exp3
         )
 
-    def test_exp_notex(self):
+    def test_exp_tex(self):
         nt.assert_equal(
             misc.sigFigs(self.x * self.factor, 3, tex=True),
             self.known_exp3_tex
         )
 
-    def test__sig_figs_help(self):
+    def test_forceint(self):
+        nt.assert_equal(
+            misc.sigFigs(self.x, 3, forceint=True),
+            self.known_int
+        )
+
+    def test__sig_figs_helper(self):
         nt.assert_equal(misc._sig_figs(self.x), self.known_3)
 
 
@@ -119,6 +125,7 @@ class test_sigfig_gt1(base_sigfigsMixin):
         self.known_8 = '1,234.5600'
         self.known_exp3 = '1.23e+08'
         self.known_exp3_tex = r'$1.23 \times 10 ^ {8}$'
+        self.known_int = '1,235'
         self.factor = 10**5
 
 
@@ -130,6 +137,7 @@ class test_sigfig_lt1(base_sigfigsMixin):
         self.known_8 = '0.12345600'
         self.known_exp3 = '1.23e-07'
         self.known_exp3_tex = r'$1.23 \times 10 ^ {-7}$'
+        self.known_int = '0'
         self.factor = 10**-6
 
     def test_sigFigs_pvals_noop(self):
