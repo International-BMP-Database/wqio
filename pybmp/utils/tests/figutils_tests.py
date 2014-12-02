@@ -34,6 +34,9 @@ class test_axes_methods:
         self.median_ci = [(self.median * 0.75, self.median * 1.25)]
         self.prefix = testing.testutils.setup_prefix('utils.figutils')
 
+    def teardown(self):
+        plt.close(self.fig)
+
     @nottest
     def makePath(self, filename):
         return os.path.join(self.prefix, filename)
@@ -42,28 +45,37 @@ class test_axes_methods:
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
 
-    def teardown(self):
-        plt.close(self.fig)
+    def test_rotateTickLabels_xaxis(self):
+        self.ax.set_xticks([1, 2, 3])
+        self.ax.set_xticklabels(['AAA', 'BBB', 'CCC'])
+        figutils.rotateTickLabels(self.ax, 60, 'x')
+        self.savefig('rotate_xticks.png')
 
-    @nptest.dec.skipif(True)
-    def test__probability_axis(self):
-        probs = figutils._get_probs(25)
-        self.ax.plot([0.05, 0.15], [0.05, 0.15])
-        figutils._probability_axis(self.ax, stats.norm, probs, axis='both')
-        self.savefig('prob_axis_test.png')
-        for ylabel, prob in zip(self.ax.get_yticklabels(), probs):
-            assert_equal(ylabel.get_text(), str(prob*100))
-            assert_equal(ylabel.get_horizontalalignment(), 'right')
-            assert_equal(ylabel.get_verticalalignment(), 'center')
-            assert_equal(ylabel.get_rotation_mode(), None)
-            assert_equal(ylabel.get_rotation(), 0.0)
+    def test_rotateTickLabels_yaxis(self):
+        self.ax.set_yticks([1, 2, 3])
+        self.ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
+        figutils.rotateTickLabels(self.ax, -30, 'y')
+        self.savefig('rotate_yticks.png')
 
-        for xlabel, prob in zip(self.ax.get_xticklabels(), probs):
-            assert_equal(xlabel.get_text(), str(prob*100))
-            assert_equal(xlabel.get_horizontalalignment(), 'right')
-            assert_equal(xlabel.get_verticalalignment(), 'center')
-            assert_equal(xlabel.get_rotation_mode(), 'anchor')
-            assert_equal(xlabel.get_rotation(), 45.0)
+    def test_setProblimits_x_ax_LT50(self):
+        self.ax.set_xscale('prob')
+        figutils.setProbLimits(self.ax, 37, which='x')
+        self.savefig('problimts_xaxLT50.png')
+
+    def test_setProblimits_y_ax_LT50(self):
+        self.ax.set_yscale('prob')
+        figutils.setProbLimits(self.ax, 37, which='y')
+        self.savefig('problimts_yaxLT50.png')
+
+    def test_setProblimits_y_ax_GT50(self):
+        self.ax.set_yscale('prob')
+        figutils.setProbLimits(self.ax, 98, which='y')
+        self.savefig('problimts_yaxGT50.png')
+
+    def test_setProblimits_y_ax_GT100(self):
+        self.ax.set_yscale('prob')
+        figutils.setProbLimits(self.ax, 457, which='y')
+        self.savefig('problimts_yaxGT100.png')
 
     def test_gridlines(self):
         self.ax.plot(self.ros.data.final_data)
@@ -96,30 +108,6 @@ class test_axes_methods:
     def test_probplot(self):
         fig = figutils.probplot(self.ros.data.final_data, ax=self.ax)
         self.savefig('probplot.png')
-
-    def test_formatStatAxes_prob(self):
-        figutils.formatStatAxes(self.ax, 'probplot', N=37, doLegend=False)
-        self.savefig('formatStatAxes_prob.png')
-
-    @nptest.raises(ValueError)
-    def test_formatStatAxes_prob_raises(self):
-        figutils.formatStatAxes(self.ax, 'probplot')
-
-    def test_formatStatAxes_box(self):
-        figutils.formatStatAxes(self.ax, 'boxplot', datalabels=['1', '2'], pos=2)
-        self.savefig('formatStatAxes_box.png')
-
-    @nptest.raises(ValueError)
-    def test_formatStatAxes_box_raises_pos(self):
-        figutils.formatStatAxes(self.ax, 'boxplot', datalabels=['1', '2'])
-
-    @nptest.raises(ValueError)
-    def test_formatStatAxes_box_raises_labels(self):
-        figutils.formatStatAxes(self.ax, 'boxplot', pos=2)
-
-    @nptest.raises(ValueError)
-    def test_formatStatAxes_raises(self):
-        figutils.formatStatAxes(self.ax, 'junk', pos=2)
 
     @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
     def test_logLabelFormatter(self):
