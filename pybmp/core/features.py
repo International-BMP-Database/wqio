@@ -677,7 +677,8 @@ class Location(object):
         return fig
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
-                 ylabel=None, clearYLabels=False, managegrid=True):
+                 ylabel=None, clearYLabels=False, managegrid=True,
+                 rotateticklabels=True, setxlimits=True):
         '''Adds a probability plot to a matplotlib figure
 
         Parameters
@@ -727,6 +728,12 @@ class Location(object):
 
         if clearYLabels:
             ax.set_yticklabels([])
+
+        if rotateticklabels:
+            utils.figutils.rotateTickLabels(ax, 45, 'x', ha='right')
+
+        if setxlimits:
+            utils.figutils.setProbLimits(ax, self.N, 'x')
 
         return fig
 
@@ -1349,7 +1356,7 @@ class Dataset(object):
         return fig
 
     def probplot(self, ax=None, yscale='log', axtype='qq', ylabel=None,
-                 clearYLabels=False):
+                 clearYLabels=False, rotateticklabels=True, setxlimits=True):
         '''
         Adds probability plots to a matplotlib figure
 
@@ -1360,10 +1367,6 @@ class Dataset(object):
 
             yscale : optional string ['linear' or 'log' (default)]
                 Scale formatting of the y-axis
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
 
             ylabel : string or None (default):
                 Label for y-axis
@@ -1389,6 +1392,13 @@ class Dataset(object):
 
         ax.set_xlabel(xlabels[axtype])
         ax.legend(loc='upper left', frameon=True)
+
+        if rotateticklabels:
+            utils.figutils.rotateTickLabels(ax, 45, 'x')
+
+        if setxlimits:
+            N = np.max([self.influent.N, self.effluent.N])
+            utils.figutils.setProbLimits(ax, N, 'x')
 
         return fig
 
@@ -1452,7 +1462,8 @@ class Dataset(object):
                      ylabel=ylabel, patch_artist=patch_artist)
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
-                      ylabel=None, clearYLabels=True)
+                      ylabel=None, clearYLabels=True,
+                      rotateticklabels=True, setxlimits=True)
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
