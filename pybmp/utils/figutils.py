@@ -20,38 +20,27 @@ def _check_ax(ax):
     return fig, ax
 
 
-def _probability_axis(axes, probdist, probs, axis='y', fs=8):
-    '''
-    Format a matplotlib axes object to display the ticks on
-        a probability scale.
+def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
+    axes = []
+    if which in ['x', 'both']:
+        axes.append(ax.xaxis)
 
-    Input:
-        axes (matplotlib axes object) : the axes to format
-        probdist (scipy.stats.distributions object) : the distribution of the
-            data (normal, typically)
-        probs (numpy array) : the probabilities that will be shown on the axis
-        axis (string, default "y") : which axis to format
-            ('x', 'y', or 'both')
-        fs (int, default 8) : the font size of the tick labels
+    elif which in ['y', 'both']:
+        axes.append(ax.yaxis)
 
-    Writes:
-        None
+    for axis in axes:
+        for t in axis.get_ticklabels():
+            t.set_horizontalalignment(ha)
+            t.set_rotation(rotation)
+            t.set_rotation_mode(rotation_mode)
 
-    Returns:
-        None
-    '''
-    # raise error if invalid axis is provided
-    if axis not in ['x', 'y', 'both']:
-        raise ValueError("axis must be 'x', 'y', or 'both'")
 
-    # format y axis if necessary
-    if axis == 'y' or axis == 'both':
-        axes.set_yscale('prob')
-
-    # format x axis if necessary
-    if axis == 'x' or axis == 'both':
-        axes.set_yscale('prob')
-
+def setProbLimits(ax, N, which):
+    minval = 10 ** (-1 *np.ceil(np.log10(N) - 2))
+    if which in ['x', 'both']:
+        ax.set_xlim(left=minval, right=100-minval)
+    elif which in ['y', 'both']:
+        ax.set_ylim(bottom=minval, top=100-minval)
 
 
 def gridlines(axes, xlabel=None, ylabel=None, xscale=None, yscale=None,
@@ -273,112 +262,6 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
         ax.set_ylabel(ylabel)
 
     return fig
-
-
-def formatStatAxes(axes, axtype, pos=None, datalabels=None, parameter=None,
-                   N=None, rotation=0, clearYLabels=True, doLegend=True,
-                   labelsize=9):
-    '''
-    Format the axes of a stat plot with tick labels, grids, etc
-
-    Input:
-        axes (matplotlib axes object) : the axes to format
-        axtype (string) : "boxplot" or "probplot"
-        pos (int) : position of last boxplot on x-axis
-        datalabels (list of strings) : xticklabels for a boxplot
-        parameter (Parameter object) : Parameter object representing the
-            pollant being plotted
-        N (int, default None) : number of data points
-        rotation (float, default 0) : how much to rotate the xticklabels
-
-    Writes:
-        None
-
-    Returns:
-        None
-    '''
-
-    # formatting probplots
-    if axtype == 'probplot':
-        # some logic for input parsing and fontsizes
-        if N is None:
-            raise ValueError('need an N for prob plots')
-        #elif N > 500:
-        #    fs = 7
-        else:
-            fs = 7
-
-        # x-label and y-scale
-        axes.set_xlabel(r'Non-Exceedance Probability (\%)')
-        axes.set_yscale('log')
-        axes.tick_params('y', labelsize=labelsize)
-
-        # y-grids
-        axes.yaxis.grid(True, which='major', ls='-', alpha=0.50)
-        axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
-
-        # probability scale on the x-axis
-        axes.set_xscale('prob')
-        # x-grid
-        axes.xaxis.grid(True, which='major', ls='-', alpha=0.50)
-
-        # "bounding box to axes"
-        #bb_2_a = (0.05, 1.02)
-
-        # legend stuff
-        if doLegend:
-            #leg = axes.legend(loc='lower right', bbox_to_anchor=bb_2_a)
-            leg = axes.legend(loc='lower right')
-            if leg is not None:
-                leg.get_frame().set_alpha(0.50)
-
-        # clear out the tick labels
-        # (we use the boxplot for those)
-        if clearYLabels:
-            axes.set_yticklabels([])
-        else:
-            axes.yaxis.set_major_formatter(mticker.FuncFormatter(logLabelFormatter))
-
-    # formatting boxplots
-    elif axtype == 'boxplot':
-
-        # checking input
-        if datalabels is None:
-            raise ValueError("Boxplots require datalables")
-
-        if pos is None:
-            raise ValueError("position (pos) argument req'd to set x-limits")
-
-        # some logic for rotation
-        if rotation != 0:
-            ha = 'right'
-            va = 'center'
-        else:
-            ha = 'center'
-            va = 'top'
-
-        # y-scale and label
-        axes.set_yscale('log')
-        axes.tick_params('y', labelsize=labelsize)
-
-        # x-limits and ticks
-        axes.set_xlim([0.5, pos+0.5])
-        axes.set_xticks(np.arange(1, pos+1))
-        axes.set_xticklabels(datalabels, rotation=rotation, ha=ha,
-                             va=va, rotation_mode='anchor', size=labelsize)
-
-        # y-grid
-        axes.yaxis.grid(True, which='major', ls='-', alpha=0.50)
-        axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
-        axes.xaxis.grid(False, which='major')
-        axes.xaxis.grid(False, which='minor')
-        axes.yaxis.set_major_formatter(mticker.FuncFormatter(logLabelFormatter))
-
-    else:
-        raise ValueError("axtype must be 'probplot' or 'boxplot'")
-
-    if parameter is not None:
-        axes.set_ylabel(parameter.paramunit(usetex=True), size=labelsize)
 
 
 def logLabelFormatter(tick, pos=None):
