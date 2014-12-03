@@ -32,11 +32,14 @@ colors = {
     'Reference Flow': palette[2]
 }
 
+
 def sanitizeTexParam(x):
     return x
 
+
 def sanitizeTexUnit(x):
     return x
+
 
 def _process_p_vals(pval):
     if pval is None:
@@ -48,6 +51,7 @@ def _process_p_vals(pval):
         out = '%0.3f' % pval
 
     return out
+
 
 class Parameter(object):
     def __init__(self, name=None, units=None, usingTex=False):
@@ -1750,17 +1754,17 @@ class DataCollection(object):
         for names, data in self.data.groupby(level=groupcols):
             ds_dict = dict(zip(groupcols, names))
 
-            ds_dict[self.stationcol] = 'Inflow'
+            ds_dict[self.stationcol] = 'inflow'
             infl = self.selectLocations(squeeze=True, **ds_dict)
 
-            ds_dict[self.stationcol] = 'Outflow'
+            ds_dict[self.stationcol] = 'outflow'
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
             dsname = '_'.join(names).replace(', ','')
-            ds_dict['dataset'] = Dataset(
-                infl['location'], effl['location'], useROS=False, name=dsname
-            )
+            ds = Dataset(infl['location'], effl['location'],
+                         useROS=False, name=dsname)
+            ds_dict['dataset'] = ds
 
             _datasets.append(ds_dict)
 
@@ -1849,7 +1853,7 @@ class DataCollection(object):
                   log=True):
         df = self.tidy.copy()
         if log:
-            plotcol = 'Log of {}'.format(self.rescol)
+            plotcol = 'Log of {}'.format(self.rescol.replace('_', ' '))
             df[plotcol] = np.log(df[self.rescol])
         else:
             pltcol = self.rescol
