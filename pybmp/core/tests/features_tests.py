@@ -1037,9 +1037,6 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
-    def teardown(self):
-        plt.close('all')
-
 
 class test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
