@@ -35,7 +35,7 @@ class test_axes_methods:
         self.prefix = testing.testutils.setup_prefix('utils.figutils')
 
     def teardown(self):
-        plt.close(self.fig)
+        plt.close('all')
 
     @nottest
     def makePath(self, filename):
@@ -244,7 +244,7 @@ class test_shiftedColorMap:
         pass
 
     def teardown(self):
-        pass
+        plt.close('all')
 
     @raises(ValueError)
     def test_bad_start_low(self):
