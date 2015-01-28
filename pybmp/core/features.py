@@ -295,11 +295,12 @@ class Location(object):
         self.station_name = station_names[station_type]
         self.plot_marker = markers[self.station_name][0]
         self.scatter_marker = markers[self.station_name][1]
-        self.color = colors[self.station_name]
+        self._color = colors[self.station_name]
 
         # basic stuff
         self._name = self.station_name
         self._include = include
+        self._definition = {}
 
         # parameters of the stats analysis
         self._cache = resettable_cache()
@@ -314,6 +315,13 @@ class Location(object):
         # original data and quantity
         self._raw_data = dataframe
         self._filtered_data = self._raw_data.copy()
+
+    @property
+    def color(self):
+        return self._color
+    @color.setter
+    def color(self, value):
+        self._color = value
 
     @property
     def bsIter(self):
@@ -349,8 +357,7 @@ class Location(object):
                output = self.ros.data['final_data']
             else:
                 output = self.filtered_data[self._rescol]
-            output.name = 'res'
-            return output
+            return output.values
 
     @property
     def full_data(self):
@@ -370,6 +377,13 @@ class Location(object):
     @name.setter
     def name(self, value):
         self._name = value
+
+    @property
+    def definition(self):
+        return self._definition
+    @definition.setter
+    def definition(self, value):
+        self._definition = value
 
     @property
     def include(self):
@@ -419,15 +433,16 @@ class Location(object):
     def pnorm(self):
         if self.hasData:
             return stats.shapiro(self.data)[1]
-        else:
-            return None
 
     @cache_readonly
     def plognorm(self):
         if self.hasData:
             return stats.shapiro(np.log(self.data))[1]
-        else:
-            return None
+
+    @cache_readonly
+    def lilliefors_p(self):
+        if self.hasData:
+            return sm.stats.lillifors(self.data)[1]
 
     @cache_readonly
     def analysis_space(self):
@@ -850,14 +865,14 @@ class Location(object):
         high = pos + width*0.5
 
         if not ignoreROS and self.useROS:
-            xvals = np.random.uniform(size=self.N, low=low, high=high)
+            xvals = self.N * [pos]
             ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
                     markerfacecolor=self.color, markeredgecolor='white',
                     linestyle='none', alpha=alpha)
         else:
-            x_nondet = np.random.uniform(size=self.ND, low=low, high=high)
+            x_nondet = xvals = self.ND * [pos]
             y_nondet = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]==self._ndval]
-            x_detect = np.random.uniform(size=self.N-self.ND, low=low, high=high)
+            x_detect = xvals = (self.N - self.ND) * [pos]
             y_detect = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]!=self._ndval]
 
             ax.plot(x_detect, y_detect, marker=self.plot_marker, markersize=markersize,
@@ -965,16 +980,16 @@ class Dataset(object):
     @cache_readonly
     def data(self):
         if self.effluent.hasData:
-            effl = self.effluent.full_data.copy()
+            effl = self.effluent._raw_data.copy()
         else:
             raise ValueError("effluent must have data")
 
         if self.influent.hasData:
-            infl = self.influent.full_data.copy()
+            infl = self.influent._raw_data.copy()
         else:
             infl = pandas.DataFrame(
-                index=self.effluent.full_data.index,
-                columns=self.effluent.full_data.columns
+                index=self.effluent._raw_data.index,
+                columns=self.effluent._raw_data.columns
             )
 
         infl = utils.addSecondColumnLevel('inflow', 'station', infl)
@@ -1175,6 +1190,22 @@ class Dataset(object):
             return self._spearman_stats[1]
 
     @cache_readonly
+    def ttest_t(self):
+        return self._ttest_stats[0]
+
+    @cache_readonly
+    def ttest_p(self):
+        return self._ttest_stats[1]
+
+    @cache_readonly
+    def levene_ks(self):
+        return self._levene_stats[0]
+
+    @cache_readonly
+    def levene_p(self):
+        return self._levene_stats[1]
+
+    @cache_readonly
     def theil_medslope(self):
         return self._theil_stats['medslope']
 
@@ -1218,6 +1249,16 @@ class Dataset(object):
         self.effluent.fractionND <= 0.5:
             return stats.spearmanr(self.paired_data.inflow.res.values,
                                    self.paired_data.outflow.res.values)
+
+    @cache_readonly
+    def _ttest_stats(self):
+        if self._non_paired_stats:
+            return stats.ttest_ind(self.influent.data, self.effluent.data, False)
+
+    @cache_readonly
+    def _levene_stats(self):
+        if self._non_paired_stats:
+            return stats.levene(self.influent.data, self.effluent.data, center='median')
 
     @cache_readonly
     def _theil_stats(self):
@@ -1348,12 +1389,8 @@ class Dataset(object):
         if bothTicks:
             ax.set_xticks([pos-offset, pos+offset])
             ax.set_xticklabels([self.influent.name, self.effluent.name])
-            if self.name is not None:
-                ax.set_xlabel(self.name)
         else:
             ax.set_xticks([pos])
-            if self.name is not None:
-                ax.set_xticklabels([self.name])
 
         ax.xaxis.grid(False, which='major')
 
@@ -1630,23 +1667,22 @@ class Dataset(object):
         # store the original useROS value
         use_ros_cache = self.useROS
 
-        # set it to False to ensure that we're showing detection limits
-        self.useROS = False
+
         if which == 'both':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
+            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
 
         elif which == 'influent':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
+            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
 
         elif which == 'effluent':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
+            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
 
         elif which == 'neither':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
+            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
 
         else:
             msg = '`which` must be "both", "influent", ' \
@@ -1656,9 +1692,6 @@ class Dataset(object):
         x = self.paired_data.loc[index][('inflow', 'res')]
         y = self.paired_data.loc[index][('outflow', 'res')]
         ax.plot(x, y, label=label, **markerkwargs)
-
-        # restore the original useROS values
-        self.useROS = use_ros_cache
 
 
 class DataCollection(object):
@@ -1735,13 +1768,16 @@ class DataCollection(object):
         )
         for names, data in groups:
             loc_dict = dict(zip(self.groupby, names))
-            loc_dict['location'] = Location(
-                data, station_type=loc_dict[self.stationcol].lower(),
+            locdata = data.copy()
+            locdata.index = locdata.index.droplevel(level=self.stationcol)
+            loc = Location(
+                locdata, station_type=loc_dict[self.stationcol].lower(),
                 rescol=self._raw_rescol, qualcol=self.qualcol,
-                ndval=self.ndval, bsIter=self.bsIter,
-                useROS=self.useROS
+                ndval=self.ndval, bsIter=self.bsIter, useROS=self.useROS
             )
-            _locations.append(loc_dict)
+
+            loc.definition = loc_dict
+            _locations.append(loc)
 
         return _locations
 
@@ -1761,12 +1797,12 @@ class DataCollection(object):
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
-            dsname = '_'.join(names).replace(', ','')
-            ds = Dataset(infl['location'], effl['location'],
-                         useROS=False, name=dsname)
-            ds_dict['dataset'] = ds
+            dsname = '_'.join(names).replace(', ', '')
 
-            _datasets.append(ds_dict)
+            ds = Dataset(infl, effl, useROS=self.useROS, name=dsname)
+            ds.definition = ds_dict
+
+            _datasets.append(ds)
 
         return _datasets
 
@@ -1788,23 +1824,27 @@ class DataCollection(object):
                                   bootstrap=False)
     @cache_readonly
     def logmean(self):
-        return self._generic_stat(lambda x: np.mean(np.log(x)), statname='Log-mean')
+        return self._generic_stat(lambda x, axis=0: np.mean(np.log(x), axis=axis), statname='Log-mean')
 
     @cache_readonly
-    def logmean(self):
-        return self._generic_stat(lambda x: np.std(np.log(x)), statname='Log-std. dev.')
+    def logstd(self):
+        return self._generic_stat(lambda x, axis=0: np.std(np.log(x), axis=axis), statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
         geomean = np.exp(self.logmean)
-        geomean.columns.names = ['Geo-mean']
+        geomean.columns.names = ['station', 'Geo-mean']
         return geomean
 
     @cache_readonly
     def geostd(self):
         geostd = np.exp(self.logstd)
-        geostd.columns.names = ['Geo-std. dev.']
+        geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
+
+    @cache_readonly
+    def count(self):
+        return self._generic_stat(lambda x: x.count(), bootstrap=False, statname='Count')
 
     def _generic_stat(self, statfxn, bootstrap=True, statname=None):
         def CIs(x):
@@ -1813,12 +1853,21 @@ class DataCollection(object):
             statnames = ['lower', 'stat', 'upper']
             return pandas.Series([lci, stat, uci], index=statnames)
 
-        stat = (
-            self.tidy
-                .groupby(by=self.groupby)
-                .apply(CIs if bootstrap else {self.rescol: statfxn})
-                .unstack(level=self.stationcol)
-        )
+        if bootstrap:
+            stat = (
+                self.tidy
+                    .groupby(by=self.groupby)
+                    .apply(CIs)
+                    .unstack(level=self.stationcol)
+            )
+        else:
+            stat = (
+                self.tidy
+                    .groupby(by=self.groupby)
+                    .agg({self.rescol: statfxn})
+                    .unstack(level=self.stationcol)
+            )
+
         stat.columns = stat.columns.swaplevel(0, 1)
         if statname is not None:
             stat.columns.names = ['station', statname]
@@ -1830,7 +1879,7 @@ class DataCollection(object):
     def _filter_collection(collection, squeeze, **kwargs):
         items = collection.copy()
         for key, value in kwargs.items():
-            items = [r for r in filter(lambda x: x[key] == value, items)]
+            items = [r for r in filter(lambda x: x.definition[key] == value, items)]
 
         if squeeze and len(items) == 1:
             items = items[0]
@@ -1848,6 +1897,24 @@ class DataCollection(object):
             self.datasets.copy(), squeeze=squeeze, **kwargs
         )
         return datasets
+
+    def stat_summary(self, groupcols=None, useROS=True):
+        if useROS:
+            col = self.roscol
+        else:
+            col = self.rescol
+
+        if groupcols is None:
+            groupcols = self.groupby
+
+        ptiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+        summary = (
+            self.tidy
+                .groupby(by=groupcols)
+                .apply(lambda g: g[col].describe(percentiles=ptiles).T)
+                .unstack(level='station')
+        )
+        return summary
 
     def facet_kde(self, row='category', col='parameter', hue='station',
                   log=True):
