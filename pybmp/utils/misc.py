@@ -241,7 +241,7 @@ def _boxplot_legend(ax, notch=False, shrink=2.5, fontsize=10, showmean=False):
     # label the mean
     if showmean:
         ax.annotate(legText['mean'], (1, x.mean()), xycoords='data',
-                    xytext=(0.45, y05), textcoords='data', va='center',
+                    xytext=(1.15, 5.75), textcoords='data', va='center',
                     arrowprops=ap, fontsize=fontsize)
 
     # label the lower whisker
@@ -982,9 +982,10 @@ class ProgressBar:
         '''Progress bar for notebookes:
 
         Basic Usage:
-        >>> x = range(1000)
-        >>> pbar = utils.ProgressBar(x)
-        >>> for n, _ in enumerate(x, 1):
+        >>> X = range(1000)
+        >>> pbar = utils.ProgressBar(X)
+        >>> for n, x in enumerate(X, 1):
+        >>>     # do stuff with x
         >>>     pbar.animate(n)
 
 
