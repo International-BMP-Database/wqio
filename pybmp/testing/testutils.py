@@ -129,6 +129,7 @@ def _show_system_info():
     import openpyxl
     _show_package_info(openpyxl, 'openpyxl')
 
+
 class NoseWrapper(nptest.Tester):
     '''
     This is simply a monkey patch for numpy.testing.Tester.
