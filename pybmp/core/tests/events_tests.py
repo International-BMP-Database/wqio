@@ -128,7 +128,6 @@ class test_GrabSample_NoStorm(base_wqsample_NoStorm):
 
     def teardown(self):
         self.basic_teardown()
-        pass
 
 
 class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
@@ -147,7 +146,6 @@ class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
                                           endtime=self.known_endtime,
                                           samplefreq=self.known_samplefreq,
                                           storm=None)
-        pass
 
     def teardown(self):
         self.basic_teardown()
