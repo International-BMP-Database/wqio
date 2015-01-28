@@ -330,8 +330,7 @@ class _base_LocationMixin(object):
 
     def test_data(self):
         assert_true(hasattr(self.loc, 'data'))
-        assert_true(isinstance(self.loc.data, pandas.Series))
-        assert_equal(self.loc.data.name, 'res')
+        assert_true(isinstance(self.loc.data, np.ndarray))
 
     def test_full_data(self):
         assert_true(hasattr(self.loc, 'full_data'))
@@ -945,12 +944,12 @@ class test_Dataset(object):
     def test_reset_useROS(self):
         #warnings.simplefilter("error")
         self.ds.useROS = True
-        infl_ros_mean = self.ds.influent.data.iloc[0]
-        effl_ros_mean = self.ds.effluent.data.iloc[0]
+        infl_ros_mean = self.ds.influent.mean
+        effl_ros_mean = self.ds.effluent.mean
 
         self.ds.useROS = False
-        infl_raw_mean = self.ds.influent.data.iloc[0]
-        effl_raw_mean = self.ds.effluent.data.iloc[0]
+        infl_raw_mean = self.ds.influent.mean
+        effl_raw_mean = self.ds.effluent.mean
 
         assert_true(infl_ros_mean != infl_raw_mean)
         assert_true(effl_ros_mean != effl_raw_mean)

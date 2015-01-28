@@ -245,18 +245,18 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
     # pull out the rain and flow data
     if precipcol is None:
         precipcol = 'precip'
-        hydrodata[precipcol] = np.nan
+        hydrodata.loc[:, precipcol] = np.nan
 
     if inflowcol is None:
         inflowcol = 'inflow'
-        hydrodata[inflowcol] = np.nan
+        hydrodata.loc[:, inflowcol] = np.nan
 
     if outflowcol is None:
         outflowcol = 'outflow'
-        hydrodata[outflowcol] = np.nan
+        hydrodata.loc[:, outflowcol] = np.nan
 
     # bool column where True means there's rain or flow of some kind
-    hydrodata['wet'] = hydrodata.apply(
+    hydrodata.loc[:, 'wet'] = hydrodata.apply(
         lambda r: (r[precipcol] >= minprecip or
                    r[inflowcol] >= minflow or
                    r[outflowcol] >= minflow),
@@ -265,7 +265,7 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
 
     # copy the bool column into its own df and add a bunch
     # shifted columns so each row looks backwards and forwards
-    hydrodata['windiff'] = pandas.rolling_apply(
+    hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
         hydrodata['wet'],
         intereventperiods,
         lambda x: x.any(),
@@ -276,8 +276,8 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
     if firstrow['wet']:
         hydrodata.loc[firstrow.name, 'windiff'] = 1
 
-    hydrodata['event_start'] = False
-    hydrodata['event_end'] = False
+    hydrodata.loc[:, 'event_start'] = False
+    hydrodata.loc[:, 'event_end'] = False
 
     starts = hydrodata['windiff'] == 1
     hydrodata.loc[starts, 'event_start'] = True
@@ -286,10 +286,10 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
     hydrodata.loc[stops, 'event_end'] = True
 
     # initialize the new column as zeros
-    hydrodata['storm'] = 0
+    hydrodata.loc[:, 'storm'] = 0
 
     # each time a storm starts, incriment the storm number + 1
-    hydrodata['storm'] = hydrodata['event_start'].cumsum()
+    hydrodata.loc[:, 'storm'] = hydrodata['event_start'].cumsum()
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
@@ -309,7 +309,7 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
     #hydrodata['storm'] = iswet['storm']
     if not debug:
         cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
-        hydrodata.drop(cols_to_drop, axis=1, inplace=True)
+        hydrodata = hydrodata.drop(cols_to_drop, axis=1)
 
     return hydrodata
 
