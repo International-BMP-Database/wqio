@@ -433,6 +433,26 @@ class test_storm:
         assert_true(hasattr(self.storm, 'centroid_lag_hours'))
         nptest.assert_almost_equal(self.storm.centroid_lag_hours, self.known_centroid_lag_time)
 
+    def test_summary_dict(self):
+        assert_true(hasattr(self.storm, 'summary_dict'))
+        assert_true(isinstance(self.storm.summary_dict, dict))
+        known_keys = [
+            'Storm Number',
+            'Antecedent Days',
+            'Start Date',
+            'End Date',
+            'Duration Hours',
+            'Peak Precip Intensity',
+            'Total Precip Depth',
+            'Total Inflow Volume',
+            'Peak Inflow',
+            'Total Outflow Volume',
+            'Peak Outflow',
+            'Peak Lag Hours'
+        ]
+        keys = list(self.storm.summary_dict.keys())
+        assert_list_equal(sorted(keys), sorted(known_keys))
+
     def test_summaryPlot(self):
         assert_true(hasattr(self.storm, 'summaryPlot'))
         output = self.makePath('test_basicstorm.png')
