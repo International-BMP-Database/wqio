@@ -175,7 +175,7 @@ class GrabSample(_basic_wq_sample):
 def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
                  minprecip=0.01, minflow=0.01, intereventperiods=36,
                  standardizeColNames=True, outputfreqMinutes=10,
-                 debug=False):
+                 debug=False, stormcol='storm', inplace=True):
     '''
     Loops through the hydrologic records and parses the data into storms.
         In this context, a storm is defined as starting whenever the
@@ -237,6 +237,8 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
 
     '''
 
+    if not inplace:
+        hydrodata = hydrodata.copy()
     # validate input
     if precipcol is None and inflowcol is None and outflowcol is None:
         msg = '`hydrodata` must have at least a precip or in/outflow column'
@@ -286,17 +288,17 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
     hydrodata.loc[stops, 'event_end'] = True
 
     # initialize the new column as zeros
-    hydrodata.loc[:, 'storm'] = 0
+    hydrodata.loc[:, stormcol] = 0
 
     # each time a storm starts, incriment the storm number + 1
-    hydrodata.loc[:, 'storm'] = hydrodata['event_start'].cumsum()
+    hydrodata.loc[:, stormcol] = hydrodata['event_start'].cumsum()
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
     # number of storms that have started.
     # Stack Overflow: http://tinyurl.com/lsjkr9x
-    nostorm = hydrodata['storm'] == hydrodata['event_end'].shift(2).cumsum()
-    hydrodata.loc[nostorm, 'storm'] = 0
+    nostorm = hydrodata[stormcol] == hydrodata['event_end'].shift(2).cumsum()
+    hydrodata.loc[nostorm, stormcol] = 0
 
     if standardizeColNames:
         coldict = {
@@ -306,7 +308,7 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
         }
         hydrodata.rename(columns=coldict, inplace=True)
 
-    #hydrodata['storm'] = iswet['storm']
+    #hydrodata[stormcol] = iswet[stormcol]
     if not debug:
         cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
         hydrodata = hydrodata.drop(cols_to_drop, axis=1)
@@ -322,10 +324,11 @@ class Storm(object):
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
         self.precipcol = precipcol
+        self.stormnumber = stormnumber
 
         # basic data
         self.full_record = dataframe.copy()
-        self.data = dataframe[dataframe[stormcol] == stormnumber].copy()
+        self.data = dataframe[dataframe[stormcol] == self.stormnumber].copy()
 
         self.freqMinutes = freqMinutes
         self.hydrofreq_label = '{0} min'.format(self.freqMinutes)
@@ -340,13 +343,14 @@ class Storm(object):
         self.duration_hours = duration.total_seconds() / sec_per_hr
 
         # antecedent dry period (hours)
-        prev_storm_selector = self.full_record[stormcol] == stormnumber - 1
-        previous_storm_end = self.full_record[prev_storm_selector].index[-1]
+        prev_storm_mask = self.full_record[stormcol] == self.stormnumber - 1
+        previous_storm_end = self.full_record[prev_storm_mask].index[-1]
         antecedent_timedelta = self.storm_start - previous_storm_end
         sec_per_day = 60.0 * 60.0 * 24.0
         self.antecedent_period_days = \
             antecedent_timedelta.total_seconds() / sec_per_day
 
+        # starts and stop
         self._precip_start = None
         self._precip_end = None
         self._inflow_start = None
@@ -432,7 +436,10 @@ class Storm(object):
         self.peak_inflow = self.data[inflowcol].max()
         self.peak_outflow = self.data[outflowcol].max()
 
-    # starts adn stops
+        # summaries
+        self._summary_dict = None
+
+    # starts and stops
     @property
     def precip_start(self):
         if self._precip_start is None:
@@ -788,3 +795,23 @@ class Storm(object):
             fig.savefig(filename, dpi=300, transparent=True, bbox_inches='tight')
 
         return fig
+
+    @property
+    def summary_dict(self):
+        if self._summary_dict is None:
+            self._summary_dict = {
+                'Storm Number': self.stormnumber,
+                'Antecedent Days': self.antecedent_period_days,
+                'Start Date': self.storm_start,
+                'End Date': self.storm_end,
+                'Duration Hours': self.duration_hours,
+                'Peak Precip Intensity': self.peak_precip_intensity,
+                'Total Precip Depth': self.total_precip_depth,
+                'Total Inflow Volume': self.total_inflow_volume,
+                'Peak Inflow': self.peak_inflow,
+                'Total Outflow Volume': self.total_outflow_volume,
+                'Peak Outflow': self.peak_outflow,
+                'Peak Lag Hours': self.peak_lag_hours
+            }
+
+        return self._summary_dict
