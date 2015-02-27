@@ -1016,23 +1016,26 @@ class _base_DataCollecionMixin(object):
         assert_list_equal(sorted(tidycols), sorted(knowncols))
 
     def test_means(self):
+        np.random.seed(0)
         pdtest.assert_frame_equal(
-            self.known_means,
             np.round(self.dc.means, 3),
+            self.known_means,
             check_names=False
         )
 
     def test_medians(self):
+        np.random.seed(0)
         pdtest.assert_frame_equal(
-            self.known_medians,
             np.round(self.dc.medians, 3),
+            self.known_medians,
             check_names=False
         )
 
     def test__generic_stat(self):
+        np.random.seed(0)
         pdtest.assert_frame_equal(
-            self.known_genericstat,
             np.round(self.dc._generic_stat(np.min), 3),
+            self.known_genericstat,
             check_names=False
         )
 
@@ -1040,8 +1043,7 @@ class _base_DataCollecionMixin(object):
 class test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
         self._base_setup()
-        self.dc = DataCollection(make_dc_data(),
-                                 paramcol='param',
+        self.dc = DataCollection(make_dc_data(), paramcol='param',
                                  stationcol='loc')
 
         self.known_rescol = 'ros_res'
@@ -1049,80 +1051,80 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
         self.known_columns = ['loc', 'param', 'res', 'qual']
         self.known_bsIter = 10000
         self.known_means = pandas.DataFrame({
-            ('Inflow', 'stat'): {
-                'H': 3.271, 'A': 5.871, 'B': 6.967, 'C': 3.715,
-                'D': 4.227, 'E': 3.894, 'F': 5.338, 'G': 3.882
-            },
-            ('Outflow', 'lower'): {
-                'H': 1.541, 'A': 2.612, 'B': 3.627, 'C': 2.354,
-                'D': 1.916, 'E': 2.571, 'F': 2.492, 'G': 1.699
+            ('Reference', 'upper'): {
+              'A': 3.859, 'D': 5.586, 'F': 9.406, 'C': 6.346,
+              'B': 7.387, 'E': 4.041, 'G': 5.619, 'H': 3.402
+              },
+            ('Inflow', 'upper'): {
+              'A':  9.445, 'D': 7.251, 'F': 8.420, 'C': 6.157,
+              'B': 10.362, 'E': 5.542, 'G': 5.581, 'H': 4.687
             },
             ('Inflow', 'lower'): {
-                'H': 1.947, 'A': 2.801, 'B': 3.894, 'C': 1.568,
-                'D': 1.756, 'E': 2.436, 'F': 2.689, 'G': 2.359
-            },
-            ('Reference', 'upper'): {
-                'H': 3.367, 'A': 3.822, 'B': 7.500, 'C': 6.529,
-                'D': 5.590, 'E': 4.104, 'F': 9.527, 'G': 5.615
+              'A': 2.781, 'D': 1.798, 'F': 2.555, 'C': 1.665,
+              'B': 3.946, 'E': 2.427, 'G': 2.266, 'H': 1.916
             },
             ('Reference', 'lower'): {
-                'H': 1.692, 'A': 1.396, 'B': 2.615, 'C': 1.904,
-                'D': 2.225, 'E': 1.272, 'F': 1.525, 'G': 1.907
-            },
-            ('Reference', 'stat'): {
-                'H': 2.497, 'A': 2.562, 'B': 4.930, 'C': 3.880,
-                'D': 3.838, 'E': 2.600, 'F': 4.990, 'G': 3.619
-            },
-            ('Inflow', 'upper'): {
-                'H': 4.704, 'A': 9.258, 'B': 10.225, 'C': 6.018,
-                'D': 7.488, 'E': 5.471, 'F': 8.529, 'G': 5.655
+              'A': 1.403, 'D': 2.203, 'F': 1.486, 'C': 1.845,
+              'B': 2.577, 'E': 1.240, 'G': 1.829, 'H': 1.710
             },
             ('Outflow', 'stat'): {
-                'H': 2.641, 'A': 4.797, 'B': 6.314, 'C': 3.325,
-                'D': 4.452, 'E': 4.000, 'F': 3.506, 'G': 2.755
+              'A': 4.804, 'D': 4.457, 'F': 3.503, 'C': 3.326,
+              'B': 6.284, 'E': 4.023, 'G': 2.759, 'H': 2.629
+            },
+            ('Outflow', 'lower'): {
+              'A': 2.715, 'D': 1.877, 'F': 2.479, 'C': 2.347,
+              'B': 3.610, 'E': 2.479, 'G': 1.644, 'H': 1.572
+            },
+            ('Reference', 'stat'): {
+              'A': 2.550, 'D': 3.829, 'F': 4.995, 'C': 3.882,
+              'B': 4.917, 'E': 2.605, 'G': 3.653, 'H': 2.515
+            },
+            ('Inflow', 'stat'): {
+              'A': 5.889, 'D': 4.216, 'F': 5.405, 'C': 3.668,
+              'B': 6.944, 'E': 3.872, 'G': 3.912, 'H': 3.248
             },
             ('Outflow', 'upper'): {
-                'H': 3.796, 'A': 7.098, 'B': 9.114, 'C': 4.337,
-                'D': 7.329, 'E': 5.657, 'F': 4.609, 'G': 3.960
+              'A': 7.080, 'D': 7.425, 'F': 4.599, 'C': 4.318,
+              'B': 9.160, 'E': 5.606, 'G': 3.880, 'H': 3.824
             }
         })
 
         self.known_medians = pandas.DataFrame({
-            ('Inflow', 'stat'): {
-                'H': 1.8760, 'A': 2.7040, 'B': 3.8400, 'C': 1.4580,
-                'D': 1.9330, 'E': 2.8010, 'F': 2.6450, 'G': 2.1240
-            },
-            ('Outflow', 'lower'): {
-                'H': 0.6360, 'A': 1.2340, 'B': 0.8890, 'C': 1.3180,
-                'D': 0.8750, 'E': 1.3170, 'F': 1.5000, 'G': 0.8030
-            },
-            ('Inflow', 'lower'): {
-                'H': 1.3050, 'A': 1.3290, 'B': 1.6910, 'C': 0.8940,
-                'D': 0.7660, 'E': 1.3280, 'F': 1.1780, 'G': 0.7730
-            },
             ('Reference', 'upper'): {
-                'H': 2.8460, 'A': 2.0510, 'B': 4.4180, 'C': 2.8300,
-                'D': 3.7190, 'E': 1.9170, 'F': 2.1310, 'G': 2.5130
-            },
-            ('Reference', 'lower'): {
-                'H': 0.9760, 'A': 0.6950, 'B': 0.8320, 'C': 0.8930,
-                'D': 1.1370, 'E': 0.6120, 'F': 0.6860, 'G': 1.0720
-            },
-            ('Reference', 'stat'): {
-                'H': 1.9940, 'A': 1.3280, 'B': 2.2990, 'C': 1.868,
-                'D': 2.3310, 'E': 1.2310, 'F': 1.5720, 'G': 1.9810
+              'A': 2.051, 'D': 3.719, 'F': 2.131, 'C': 2.893,
+              'B': 4.418, 'E': 1.883, 'G': 2.513, 'H': 2.846
             },
             ('Inflow', 'upper'): {
-                'H': 2.8290, 'A': 3.4850, 'B': 6.0830, 'C': 2.0080,
-                'D': 2.9880, 'E': 4.1130, 'F': 4.3450, 'G': 3.8410
+              'A': 3.485, 'D': 2.915, 'F': 4.345, 'C': 2.012,
+              'B': 6.327, 'E': 4.113, 'G': 3.841, 'H': 2.829
+            },
+            ('Inflow', 'lower'): {
+              'A': 1.329, 'D': 0.766, 'F': 1.178, 'C': 0.924,
+              'B': 1.691, 'E': 1.302, 'G': 0.735, 'H': 1.305
+            },
+            ('Reference', 'lower'): {
+              'A': 0.691, 'D': 1.190, 'F': 0.752, 'C': 0.938,
+              'B': 0.833, 'E': 0.612, 'G': 1.137, 'H': 0.976
             },
             ('Outflow', 'stat'): {
-                'H': 1.6270, 'A': 2.5100, 'B': 2.9240, 'C': 2.8590,
-                'D': 1.6220, 'E': 2.3140, 'F': 2.5290, 'G': 1.5280
+              'A': 2.515, 'D': 1.627, 'F': 2.525, 'C': 2.860,
+              'B': 2.871, 'E': 2.364, 'G': 1.525, 'H': 1.618
+            },
+            ('Outflow', 'lower'): {
+              'A': 1.234, 'D': 0.877, 'F': 1.500, 'C': 1.272,
+              'B': 0.889, 'E': 1.317, 'G': 0.817, 'H': 0.662
+            },
+            ('Reference', 'stat'): {
+              'A': 1.313, 'D': 2.314, 'F': 1.564, 'C': 1.856,
+              'B': 2.298, 'E': 1.243, 'G': 1.987, 'H': 2.003
+            },
+            ('Inflow', 'stat'): {
+              'A': 2.712, 'D': 1.934, 'F': 2.671, 'C': 1.439,
+              'B': 3.848, 'E': 2.789, 'G': 2.162, 'H': 1.849
             },
             ('Outflow', 'upper'): {
-                'H': 2.3870, 'A': 3.5540, 'B': 5.1670, 'C': 3.8340,
-                'D': 1.9300, 'E': 3.7200, 'F': 4.2270, 'G': 2.3690
+              'A': 3.554, 'D': 1.930, 'F': 4.227, 'C': 3.736,
+              'B': 5.167, 'E': 3.512, 'G': 2.421, 'H': 2.387
             }
         })
 
