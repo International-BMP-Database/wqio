@@ -1745,15 +1745,11 @@ class DataCollection(object):
                 .apply(lambda g: utils.ros.MR(g).data)
                 .reset_index()
                 .rename(columns={'final_data': self.roscol})
+                .sort(columns=self.groupby)
         )
 
-        for c in _tidy.columns:
-            if c not in self.columns + [self.roscol]:
-                _tidy = (
-                    _tidy.sort(columns=c) \
-                         .reset_index() \
-                         .drop([c, 'index'], axis=1)
-                )
+        keep_cols = self.columns + [self.roscol]
+        _tidy = _tidy[keep_cols]
 
         return _tidy
 
