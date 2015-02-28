@@ -1719,7 +1719,9 @@ class DataCollection(object):
 
         self.groupby = [stationcol, paramcol]
         if othergroups is not None:
-            self.groupby += list([othergroups])
+            if np.isscalar(othergroups):
+                othergroups = [othergroups]
+            self.groupby.extend(othergroups)
 
         self.columns = self.groupby + [self._raw_rescol, self.qualcol]
 
@@ -1780,9 +1782,8 @@ class DataCollection(object):
     @cache_readonly
     def datasets(self):
         _datasets = []
-        groupcols = [
-            c for c in filter(lambda g: g != self.stationcol, self.groupby)
-        ]
+        groupcols = list(filter(lambda g: g != self.stationcol, self.groupby))
+
         for names, data in self.data.groupby(level=groupcols):
             ds_dict = dict(zip(groupcols, names))
 
