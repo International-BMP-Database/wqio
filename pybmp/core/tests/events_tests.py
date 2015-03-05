@@ -134,7 +134,7 @@ class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
     def setup(self):
         self.basic_setup()
         self.test_name = 'CompositeNoStorm'
-        self.known_yfactor = 0.35
+        self.known_yfactor = 0.25
         self.known_starttime = '2013-02-24 16:59'
         self.known_endtime = '2013-02-25 02:59'
         self.known_sample_ts_len = 31
@@ -156,7 +156,7 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
     def setup(self):
         self.basic_setup()
         self.test_name = 'CompositeNoStormnoFreq'
-        self.known_yfactor = 0.35
+        self.known_yfactor = 0.25
         self.known_starttime = '2013-02-24 16:59'
         self.known_endtime = '2013-02-25 02:59'
         self.known_sample_ts_len = 2
