@@ -697,7 +697,7 @@ class Location(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
                  ylabel=None, clearYLabels=False, managegrid=True,
-                 rotateticklabels=True, setxlimits=True):
+                 rotateticklabels=True, setxlimits=True, **plotopts):
         '''Adds a probability plot to a matplotlib figure
 
         Parameters
@@ -731,10 +731,14 @@ class Location(object):
 
         '''
         fig, ax = utils.figutils._check_ax(ax)
+
+        color = plotopts.pop('color', self.color)
+        label = plotopts.pop('label', self.name)
+        marker = plotopts.pop('marker', self.plot_marker)
         fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype,
                                       yscale=yscale, ylabel=ylabel,
-                                      color=self.color, label=self.name,
-                                      marker=self.plot_marker)
+                                      color=color, label=label,
+                                      marker=marker, **plotopts)
 
         if yscale == 'log':
             label_format = mticker.FuncFormatter(
@@ -1738,13 +1742,22 @@ class DataCollection(object):
 
     @cache_readonly
     def tidy(self):
+
+        if self.useROS:
+            def fxn(g):
+                return utils.ros.MR(g).data
+        else:
+            def fxn(g):
+                g[self.roscol] = np.nan
+                return g
+
         _tidy = (
             self.data
                 .reset_index()[self.columns]
                 .groupby(by=self.groupby)
                 .filter(self.filterfxn)
                 .groupby(by=self.groupby)
-                .apply(lambda g: utils.ros.MR(g).data)
+                .apply(fxn)
                 .reset_index()
                 .rename(columns={'final_data': self.roscol})
                 .sort(columns=self.groupby)

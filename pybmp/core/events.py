@@ -6,6 +6,7 @@ import matplotlib.dates as mdates
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+import seaborn.apionly as seaborn
 import pandas
 
 from ..utils import figutils
@@ -59,19 +60,44 @@ class _basic_wq_sample(object):
     def samplefreq(self, value):
         self._samplefreq = value
 
-    def plot_ts(self, ax, isFocus=True):
+    @property
+    def linestyle(self):
+        if self._linestyle is None:
+            self._linestyle = 'none'
+        return self._linestyle
+    @linestyle.setter
+    def linestyle(self, value):
+        self._linestyle = value
+
+    @property
+    def yfactor(self):
+        if self._yfactor is None:
+            self._yfactor = 0.25
+        return self._yfactor
+    @yfactor.setter
+    def yfactor(self, value):
+        self._yfactor = value
+
+    def plot_ts(self, ax, isFocus=True, asrug=False):
         if self.sample_ts is not None:
             if isFocus:
-                alpha = 1.00
+                alpha = 0.75
             else:
                 alpha = 0.35
 
         ymax = ax.get_ylim()[-1]
         yposition = [self.yfactor * ymax] * len(self.sample_ts)
 
-        ax.plot(self.sample_ts, yposition, marker=self.marker,
-                markersize=4, linestyle=self.linestyle, color='Black',
-                zorder=10, label='_nolegend', alpha=alpha)
+        if asrug:
+            seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha)
+
+        else:
+            ax.plot(self.sample_ts, yposition, marker=self.marker,
+                    markersize=4, linestyle=self.linestyle, color='Black',
+                    zorder=10, label='_nolegend', alpha=alpha)
+
+        return plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
+                          color='black', alpha=alpha, linestyle='none')
 
 
 class CompositeSample(_basic_wq_sample):
@@ -92,24 +118,6 @@ class CompositeSample(_basic_wq_sample):
     @marker.setter
     def marker(self, value):
         self._marker = value
-
-    @property
-    def linestyle(self):
-        if self._linestyle is None:
-            self._linestyle = 'none'
-        return self._linestyle
-    @linestyle.setter
-    def linestyle(self, value):
-        self._linestyle = value
-
-    @property
-    def yfactor(self):
-        if self._yfactor is None:
-            self._yfactor = 0.35
-        return self._yfactor
-    @yfactor.setter
-    def yfactor(self, value):
-        self._yfactor = value
 
     @property
     def sample_ts(self):
@@ -143,24 +151,6 @@ class GrabSample(_basic_wq_sample):
     @marker.setter
     def marker(self, value):
         self._marker = value
-
-    @property
-    def linestyle(self):
-        if self._linestyle is None:
-            self._linestyle = 'none'
-        return self._linestyle
-    @linestyle.setter
-    def linestyle(self, value):
-        self._linestyle = value
-
-    @property
-    def yfactor(self):
-        if self._yfactor is None:
-            self._yfactor = 0.25
-        return self._yfactor
-    @yfactor.setter
-    def yfactor(self, value):
-        self._yfactor = value
 
     @property
     def sample_ts(self):
@@ -324,6 +314,7 @@ class Storm(object):
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
         self.precipcol = precipcol
+        self.tempcol = tempcol
         self.stormnumber = stormnumber
 
         # basic data
@@ -389,7 +380,7 @@ class Storm(object):
         self.has_outflow = self.outflow.shape[0] > 0
 
         self.meta = {
-            'outflow': {
+            self.outflowcol: {
                 'name': 'Flow (calculated, L/s)',
                 'ylabel': 'Effluent flow (L/s)',
                 'color': 'CornFlowerBlue',
@@ -397,7 +388,7 @@ class Storm(object):
                 'alpha': 0.5,
                 'ymin': 0
             },
-            'inflow': {
+            self.inflowcol: {
                 'name': 'Inflow (estimated, L/s)',
                 'ylabel': 'Estimated influent flow (L/s)',
                 'color': 'Maroon',
@@ -405,7 +396,7 @@ class Storm(object):
                 'alpha': 0.5,
                 'ymin': 0
             },
-            'precip': {
+            self.precipcol: {
                 'name': 'Precip (mm)',
                 'ylabel': '%s Precip.\nDepth (mm)' % self.hydrofreq_label,
                 'color': 'DarkGreen',
@@ -413,15 +404,15 @@ class Storm(object):
                 'alpha': 0.4,
                 'ymin': 0
             },
-            'water level': {
-                'name': 'Level (m)',
-                'ylabel': 'Water level in BMP (m)',
-                'color': 'Black',
-                'linewidth': 1.5,
-                'alpha': 0.5,
-                'ymin': 0
-            },
-            'temp': {
+            # self.waterlevelcol: {
+            #     'name': 'Level (m)',
+            #     'ylabel': 'Water level in BMP (m)',
+            #     'color': 'Black',
+            #     'linewidth': 1.5,
+            #     'alpha': 0.5,
+            #     'ymin': 0
+            # },
+            self.tempcol: {
                 'name': 'Air Temp (deg C)',
                 'ylabel': 'Air Temperature (deg. C)',
                 'color': 'DarkGoldenRod',
@@ -639,20 +630,19 @@ class Storm(object):
             raise KeyError('%s not available. Try: %s' % (quantity, colmap.keys()))
 
         # selct data and fill in missing records with 0
-        data = self.data[col]
+        data = self.data[col].copy()
         data.fillna(value=0, inplace=True)
 
         # plot the data
-        ax.fill_between(data.index.to_pydatetime(), data, color=meta['color'],
-                        linewidth=0, alpha=meta['alpha'], zorder=5)
+        ax.fill_between(data.index, data, color=meta['color'],
+                        alpha=meta['alpha'], zorder=5,
+                        linewidth=0, )
 
         # y-label
         if quantity.lower() in ['outflow', 'inflow']:
-            ax.set_ylabel('Flow (L/s)', color='Black', rotation=rotation,
-                          verticalalignment='bottom')
+            ax.set_ylabel('Flow (L/s)', color='Black')
         else:
-            ax.set_ylabel(meta['ylabel'], color=meta['color'], rotation=rotation,
-                          verticalalignment='bottom')
+            ax.set_ylabel(meta['ylabel'], color=meta['color'])
 
         # y-axis minuimum
         if meta['ymin'] is not None:
@@ -673,7 +663,8 @@ class Storm(object):
 
         return proxy
 
-    def summaryPlot(self, axratio=2, filename=None, **figkwargs):
+    def summaryPlot(self, axratio=2, filename=None, showLegend=True,
+                    precip=True, inflow=True, outflow=True, **figkwargs):
         '''
         Creates a figure showing the hydrlogic record (flow and
             precipitation) of the storm
@@ -695,37 +686,45 @@ class Storm(object):
             None
         '''
         fig = plt.figure(**figkwargs)
-        gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio], hspace=0)
+        gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio],
+                               hspace=0.08)
         rainax = fig.add_subplot(gs[0])
-        flowax = fig.add_subplot(gs[1])
+        flowax = fig.add_subplot(gs[1], sharex=rainax)
 
         # create the legend proxy artists
         artists = []
         labels = []
 
         legcols = 0
-        if not np.all(np.isnan(self.data['inflow'])):
-            inflow_proxy = self._plot_hydroquantity('inflow', ax=flowax, inverty=False)
+        if inflow:
+            inflow_proxy = self._plot_hydroquantity(
+                self.inflowcol, ax=flowax, inverty=False
+            )
             artists.append(inflow_proxy)
             labels.append('Influent flow')
             legcols += 1
 
-        if not np.all(np.isnan(self.data['outflow'])):
-            outflow_proxy = self._plot_hydroquantity('outflow', ax=flowax, inverty=False)
+        if outflow:
+            outflow_proxy = self._plot_hydroquantity(
+                self.outflowcol, ax=flowax, inverty=False
+            )
             artists.append(outflow_proxy)
             labels.append('Measured effluent')
             legcols += 1
 
-        if not np.all(np.isnan(self.data['precip'])):
-            precip_proxy = self._plot_hydroquantity('precip', ax=rainax, inverty=True, rotation=270)
+        if precip:
+            precip_proxy = self._plot_hydroquantity(
+                self.precipcol, ax=rainax, inverty=True
+            )
             artists.append(precip_proxy)
             labels.append('Precipitation')
             legcols += 1
 
-        leg = rainax.legend(artists, labels, loc='upper left', fontsize=7,
-                            markerscale=0.75, ncol=legcols, frameon=False,
-                            bbox_to_anchor=(0.00, 1.35))
-        leg.get_frame().set_zorder(25)
+        if showLegend:
+            leg = rainax.legend(artists, labels, loc='upper left', fontsize=7,
+                                markerscale=0.75, ncol=legcols, frameon=False,
+                                bbox_to_anchor=(0.00, 1.35))
+            leg.get_frame().set_zorder(25)
 
         storm_length = 0.2 + flowax.get_xlim()[1] - flowax.get_xlim()[0]
         if storm_length <= 0.75:
@@ -768,33 +767,18 @@ class Storm(object):
 
         # tick tick formats
         flowax.tick_params(axis='both', which='which',
-                                labelsize=7, length=4, pad=4)
-        rainax.tick_params(axis='both', which='which',
-                                labelsize=7, length=4, pad=4)
+                           labelsize=7, length=4, pad=4)
 
-        rainax.xaxis.tick_top()
-        rainax.yaxis.tick_right()
-        rainax.yaxis.set_label_position('right')
-        rainax.set_ylabel('Precipitation\n(mm)', rotation=270, verticalalignment='bottom')
+        rainax.set_ylabel('Precipitation\n(mm)')
         rainax.set_xticklabels([])
 
-        flowax.yaxis.tick_left()
-        flowax.xaxis.tick_bottom()
-
-        rainax.spines['bottom'].set_visible(False)
-        flowax.spines['top'].set_visible(False)
-
         # grid lines and axis background color and layout
-        #figutils.grayAxes(flowax)
-        figutils.gridlines(flowax)
-        figutils.gridlines(rainax)
-        #rainax.yaxis.grid(False, which='both')
-        fig.tight_layout()
+        #fig.tight_layout()
 
         if filename is not None:
             fig.savefig(filename, dpi=300, transparent=True, bbox_inches='tight')
 
-        return fig
+        return fig, artists, labels
 
     @property
     def summary_dict(self):
