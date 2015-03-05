@@ -7,6 +7,44 @@ __all__ = ['Stat', 'Fit']
 
 
 class _bootstrapMixin(object):
+    '''
+    Class for using bootstrap techniques to estimate a statistic and its
+        confidence intervals.
+
+    Parameters
+    ----------
+    inputdata : array-like
+        The data that we're describing
+    statfxn : optional function or lambda (default is numpy.median)
+        Function that takes `inputdata` as the sole argument and return
+        a single float value.
+    alpha : optional float (default = 0.05)
+        The uncertainty level e.g., for 95% confidence intervals,
+        `alpha` = 0.05
+    NIter : optional int (default = 5000)
+        The number of interation to use in the bootstrapping routine
+
+    Attributes
+    ----------
+    data : numpy array
+        Array of the data that we're describing
+    statfxn : function or lambda
+        Function that takes `inputdata` as the sole argument and return
+        a single float value.
+    alpha : float
+        The uncertainty level of the confidence intervals
+    NIter : int
+        The number of interation used in the bootstrapping routine
+    prelim_result : float
+        Estimate of the statistic based on the original dataset
+
+    Methods (see individual docstrings):
+    -----------------------------------
+    _setup
+    BCA
+    percentile
+
+    '''
     def _acceleration(self):
         '''
         Compute the acceleration statistic
@@ -159,42 +197,8 @@ class _bootstrapMixin(object):
 
 
 class Stat(_bootstrapMixin):
+
     def __init__(self, inputdata, statfxn=np.median, alpha=0.05, NIter=5000):
-        '''
-        Class for using bootstrap techniques to estimate a statistic and its
-            confidence intervals.
-
-        Input:
-            inputdata (numpy array) : the data that we're describing
-            statfxn (function, default numpy.median) : function that takes
-                `inputdata` as the sole argument and return a single float value
-            alpha (float, default 0.05) : the uncertainty level e.g., for 95%
-                confidence intervals, `alpha` = 0.05
-            NIter (int, default (5000) : the number of interation to use in the
-                bootstrapping routine
-
-        Writes:
-            None
-
-        Returns:
-            Attributes:
-                data (numpy array) : the data that we're describing
-                statfxn (function) : function that returns
-                    the statistic we're estimating
-                alpha (float) : the uncertainty level
-                NIter (int, : the number of interation used in the bootstrapping
-                    routine
-                _boot_array (numpy array) : array of random subsample sets taken
-                    from `data`
-                prelim_result (float) : estimate of the statistic based on the
-                    original dataset
-                _boot_stats (numpy array) : collection of bootstrap estimates of
-                    the statistic
-            Methods (see individual docstrings):
-                _setup
-                BCA
-                percentile
-        '''
         self.data = inputdata
         self.statfxn = statfxn
         self.alpha = alpha
@@ -224,49 +228,8 @@ class Stat(_bootstrapMixin):
 
 
 class Fit(_bootstrapMixin):
-    def __init__(self, inputdata, outputdata, curvefitfxn, statfxn=opt.curve_fit, alpha=0.05, NIter=5000):
-        '''
-        Class for using bootstrap techniques to estimate a statistic and its
-            confidence intervals.
-
-        Input:
-            inputdata (numpy array) : the domain of data that we're describing
-            outputdata (numpy array) : the data that we're describing
-            curvefitfxn (function) : function that takes domain data and
-                parameters of the curve we want to fit to produce output
-            statfxn (function, default scipy.optimize.curve_fit) : function that
-                takes `curvefitfxn` domain data, and output data to estimatimate
-                the parameters of `curvefitfxn`
-            alpha (float, default 0.05) : the uncertainty level e.g., for 95%
-                confidence intervals, `alpha` = 0.05
-            NIter (int, default (5000) : the number of interation to use in the
-                bootstrapping routine
-
-        Writes:
-            None
-
-        Returns:
-            Attributes:
-                data (numpy array) : the data that we're describing
-                outputdata (numpy array) : the data that we're describing
-                curvefitfxn (function) : function that takes domain data and
-                    parameters of the curve we want to fit to produce output
-                statfxn (function) : function that returns the statistic we're
-                    estimating
-                alpha (float) : the uncertainty level
-                NIter (int, : the number of interation used in the bootstrapping
-                    routine
-                _boot_array (numpy array) : array of random subsample sets taken
-                    from `data`
-                prelim_result (float) : estimate of the statistic based on the
-                    original dataset
-                _boot_stats (numpy array) : collection of bootstrap estimates of
-                    the model prameters.
-            Methods (see individual docstrings):
-                _setup
-                BCA
-                percentile
-        '''
+    def __init__(self, inputdata, outputdata, curvefitfxn,
+                 statfxn=opt.curve_fit, alpha=0.05, NIter=5000):
         self.data = np.array(inputdata, dtype=np.float64)
         self.outputdata = np.array(outputdata, dtype=np.float64)
         self.curvefitfxn = curvefitfxn
