@@ -10,7 +10,7 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-from pybmp import testing
+from wqio import testing
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -21,7 +21,7 @@ import matplotlib.ticker as mticker
 from matplotlib.testing.decorators import image_comparison
 import scipy.stats as stats
 
-from pybmp.utils import figutils, ros
+from wqio.utils import figutils, ros
 
 
 class test_axes_methods:

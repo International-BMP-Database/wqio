@@ -4,8 +4,8 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-from pybmp import testing
-from pybmp.testing.testutils import setup_prefix
+from wqio import testing
+from wqio.testing.testutils import setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import pandas
 import pandas.util.testing as pdtest
 
-from pybmp.core.features import (
+from wqio.core.features import (
     Parameter,
     DrainageArea,
     Location,
@@ -24,7 +24,7 @@ from pybmp.core.features import (
     DataCollection
 )
 
-from pybmp import utils
+from wqio import utils
 import warnings
 
 @nottest
