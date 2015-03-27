@@ -32,6 +32,7 @@ install:
   - source activate test
   #- conda config --add channels phobson
   - conda install --yes seaborn statsmodels numexpr openpyxl nose mock
+  - conda install --yes coverage docopt requests pyyaml
   - pip install coveralls
   - pip install .
 

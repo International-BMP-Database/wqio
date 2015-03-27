@@ -1,3 +1,3 @@
 # wqio - Water Quality, Inflow/Outflow
-[![Build Status](https://travis-ci.org/phobson/wqio.svg?branch=add-infrastructure-files)](https://travis-ci.org/phobson/wqio)
-[![Coverage Status](https://coveralls.io/repos/phobson/wqio/badge.svg?branch=add-infrastructure-files)](https://coveralls.io/r/phobson/wqio?branch=add-infrastructure-files)
+[![Build Status](https://travis-ci.org/geosyntec/wqio.svg?branch=master)](https://travis-ci.org/phobson/wqio)
+[![Coverage Status](https://coveralls.io/repos/geosyntec/wqio/badge.svg?branch=master)](https://coveralls.io/r/phobson/wqio?branch=master)
