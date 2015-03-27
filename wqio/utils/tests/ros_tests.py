@@ -4,7 +4,7 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-from pybmp import testing
+from wqio import testing
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -12,7 +12,7 @@ matplotlib.rcParams['text.usetex'] = usetex
 
 import pandas as pd
 
-from pybmp.utils import ros
+from wqio.utils import ros
 
 
 def test_rosSort():

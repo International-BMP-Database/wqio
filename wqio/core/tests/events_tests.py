@@ -5,8 +5,8 @@ from nose.tools import *
 import numpy as np
 import numpy.testing as nptest
 
-from pybmp import testing
-from pybmp.testing.testutils import assert_timestamp_equal, setup_prefix
+from wqio import testing
+from wqio.testing.testutils import assert_timestamp_equal, setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 
 import pandas
 
-from pybmp.core import events
-from pybmp import utils
+from wqio.core import events
+from wqio import utils
 
 class base_wqsampleMixin(object):
     @nottest
@@ -33,7 +33,7 @@ class base_wqsampleMixin(object):
         self.known_endtime_type = pandas.Timestamp
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
-        datafile = os.path.join(sys.prefix, 'pybmp_data', 'testing', 'test_wqsample_data.csv')
+        datafile = os.path.join(sys.prefix, 'wqio_data', 'testing', 'test_wqsample_data.csv')
         self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
 
     @nottest
@@ -223,7 +223,7 @@ class test_defineStorms_Simple(base_defineStormsMixin):
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
         self.storm_file = os.path.join(
-            sys.prefix, 'pybmp_data', 'testing', 'teststorm_simple.csv'
+            sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
         )
 
         self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
@@ -244,7 +244,7 @@ class test_defineStorms_Singular(base_defineStormsMixin):
         self.known_storm2_start = pandas.Timestamp('2013-05-19 07:00')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 07:05')
         self.storm_file = os.path.join(
-            sys.prefix, 'pybmp_data', 'testing', 'teststorm_singular.csv'
+            sys.prefix, 'wqio_data', 'testing', 'teststorm_singular.csv'
         )
         self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
@@ -264,7 +264,7 @@ class test_defineStorms_FirstObservation(base_defineStormsMixin):
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
         self.storm_file = os.path.join(
-            sys.prefix, 'pybmp_data', 'testing', 'teststorm_firstobs.csv'
+            sys.prefix, 'wqio_data', 'testing', 'teststorm_firstobs.csv'
         )
         self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
@@ -282,7 +282,7 @@ class test_storm:
         self.prefix = setup_prefix('core.events')
 
 
-        self.storm_file = os.path.join(sys.prefix, 'pybmp_data', 'testing', 'teststorm_simple.csv')
+        self.storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)

@@ -3,8 +3,8 @@ import numpy.testing as nptest
 import numpy as np
 import scipy.optimize as opt
 
-from pybmp import testing
-from pybmp.utils import bootstrap
+from wqio import testing
+from wqio.utils import bootstrap
 
 
 def test__boot_strap():
