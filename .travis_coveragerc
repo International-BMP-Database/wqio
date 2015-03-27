@@ -1,0 +1,22 @@
+# .coveragerc to control coverage.py
+[run]
+source = wqio
+branch = True
+include = wqio/*.py
+omit = tests/*
+
+[report]
+include = wqio/*.py
+omit = wqio/tests/*
+ignore_errors = True
+
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise NotImplementedError
+    except NotImplementedError
+    # Ignore pass
+    pass

@@ -11,7 +11,7 @@ import nose.tools as nt
 import numpy as np
 import numpy.testing as nptest
 
-from pybmp import testing
+from wqio import testing
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 import pandas
 
-from pybmp.utils import misc
+from wqio.utils import misc
 
 
 testcsv = StringIO("""\
@@ -222,7 +222,7 @@ def test_makeTexFigure():
 class testss_with_paths(object):
     @nt.nottest
     def makePath(self, filename):
-        return os.path.join(sys.prefix, 'pybmp_data', 'testing', filename)
+        return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
 
     def setup(self):
         if os.path.split(os.getcwd())[-1] == 'src':
