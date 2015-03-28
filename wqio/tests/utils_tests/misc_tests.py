@@ -2,10 +2,7 @@ import warnings
 import random
 import sys
 import os
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from six import StringIO
 
 import nose.tools as nt
 import numpy as np
