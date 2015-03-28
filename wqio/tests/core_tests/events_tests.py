@@ -10,7 +10,6 @@ from wqio.testing.testutils import assert_timestamp_equal, setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
-matplotlib.use('agg')
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
 

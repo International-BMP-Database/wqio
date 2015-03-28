@@ -1,10 +1,7 @@
 import sys
 import os
 import subprocess
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from six import StringIO
 
 from nose.tools import *
 import numpy as np
