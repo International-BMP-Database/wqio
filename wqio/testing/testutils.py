@@ -178,8 +178,8 @@ class NoseWrapper(nptest.Tester):
         argv, plugins = self.prepare_test_args(label, verbose, extra_argv,
                                                doctests, coverage)
 
+        # with catch_warnings():
         with errstate(**kwargs):
-##            with catch_warnings():
             simplefilter('ignore', category=DeprecationWarning)
             t = NumpyTestProgram(argv=argv, exit=False, plugins=plugins)
         return t.result
