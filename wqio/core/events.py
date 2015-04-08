@@ -532,12 +532,13 @@ class Storm(object):
     def peak_outflow_time(self):
         if self._peak_outflow_time is None:
             PEff_selector = self.data[self.outflowcol] == self.peak_outflow
-            self._peak_outflow_time = self.data[PEff_selector].index[0]
+            if PEff_selector.sum() > 0:
+                self._peak_outflow_time = self.data[PEff_selector].index[0]
         return self._peak_outflow_time
 
     @property
     def peak_lag_hours(self):
-        if self._peak_lag_hours is None:
+        if self._peak_lag_hours is None and self.peak_outflow_time is not None and self.peak_inflow_time is not None:
             self._peak_lag_hours = (self.peak_outflow_time - self.peak_inflow_time).total_seconds() / 60. / 60.
         return self._peak_lag_hours
 
@@ -799,3 +800,33 @@ class Storm(object):
             }
 
         return self._summary_dict
+
+
+def summarizeStorms(dataframe, **storm_kws):
+    stormcol = storm_kws.pop('stormcol', None)
+    if stormcol is None:
+        raise ValueError("`dataframe` must have storms defined.")
+
+    storms = [
+        Storm(dataframe, sn, **storm_kws)
+        for sn in dataframe[stormcol].unique() if sn > 0
+    ]
+
+    stats = pandas.DataFrame([s.summary_dict for s in storms])
+
+    col_order = [
+        'Storm Number',
+        'Antecedent Days',
+        'Start Date',
+        'End Date',
+        'Duration Hours',
+        'Peak Precip Intensity',
+        'Total Precip Depth',
+        'Total Inflow Volume',
+        'Peak Inflow',
+        'Total Outflow Volume',
+        'Peak Outflow',
+        'Peak Lag Hours'
+    ]
+
+    return storms, stats[col_order]
