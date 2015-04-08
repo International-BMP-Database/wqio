@@ -3,12 +3,16 @@
 source = wqio
 branch = True
 include = wqio/*.py
-omit = tests/*
+omit =
+    wqio/tests/*
+    wqio/testutils/*
 
 [report]
 include = wqio/*.py
-omit = wqio/tests/*
 ignore_errors = True
+omit =
+    wqio/tests/*
+    wqio/testutils/*
 
 # Regexes for lines to exclude from consideration
 exclude_lines =
