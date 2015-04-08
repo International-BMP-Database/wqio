@@ -126,9 +126,6 @@ def _show_system_info():
     import pandas
     _show_package_info(pandas, 'pandas')
 
-    import openpyxl
-    _show_package_info(openpyxl, 'openpyxl')
-
 
 class NoseWrapper(nptest.Tester):
     '''
@@ -140,8 +137,9 @@ class NoseWrapper(nptest.Tester):
     '''
 
 
-    def test(self, label='fast', verbose=1, extra_argv=['--exe', '--with-id'],
-             doctests=False, coverage=False, packageinfo=True, **kwargs):
+    def test(self, label='fast', verbose=1, with_id=True, exe=True,
+             doctests=False, coverage=False, packageinfo=True, extra_argv=[],
+             **kwargs):
         '''
         Run tests for module using nose
 
@@ -155,6 +153,11 @@ class NoseWrapper(nptest.Tester):
         kwargs
             Passed to numpy.errstate.  See its documentation for details.
         '''
+        if with_id:
+            extra_argv.extend(['--with-id'])
+
+        if exe:
+            extra_argv.extend(['--exe'])
 
         # cap verbosity at 3 because nose becomes *very* verbose beyond that
         verbose = min(verbose, 3)
