@@ -1,9 +1,12 @@
 import os
 import sys
 
-from nose.tools import *
 import numpy as np
+import pandas
+
+from nose.tools import *
 import numpy.testing as nptest
+import pandas.util.testing as pdtest
 
 from wqio import testing
 from wqio.testing.testutils import assert_timestamp_equal, setup_prefix
@@ -13,7 +16,6 @@ import matplotlib
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
 
-import pandas
 
 from wqio.core import events
 from wqio import utils
@@ -457,4 +459,38 @@ class test_storm:
         output = self.makePath('test_basicstorm.png')
         self.storm.summaryPlot(filename=output)
 
+
+def test_summarizeStorms():
+    storm_file = os.path.join(
+        sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
+    )
+
+    orig_record = pandas.read_csv(
+        storm_file, index_col='date', parse_dates=True
+    ).resample('5T').fillna(0)
+
+    parsed_record = events.defineStorms(
+        orig_record, precipcol='rain', inflowcol='influent',
+        outflowcol=None, outputfreqMinutes=5
+    )
+
+    storms, summary = events.summarizeStorms(
+        parsed_record, precipcol='precip',
+        inflowcol='inflow', stormcol='storm',
+        outflowcol='outflow', freqMinutes=5
+    )
+
+    for s in storms:
+        assert_true(isinstance(s, events.Storm))
+
+    assert_true(isinstance(summary, pandas.DataFrame))
+
+    known_subset = pandas.DataFrame({
+        'Storm Number': np.arange(1, 6, dtype=np.int64),
+        'Antecedent Days': [-2.409722, 0.184028, 0.145833, 0.194444, 0.708333],
+        'Peak Precip Intensity': [0.100, 0.110, 0.100, 0.100, 0.100],
+        'Total Precip Depth': [2.76, 1.39, 1.38, 1.38, 4.14]
+    })
+    cols = ['Storm Number', 'Antecedent Days', 'Peak Precip Intensity', 'Total Precip Depth']
+    pdtest.assert_frame_equal(summary[cols], known_subset[cols])
 
