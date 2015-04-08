@@ -1,4 +1,5 @@
 from .core import *
+from . import utils
 
-from .testing import *
+from .testing import NoseWrapper
 test = NoseWrapper().test
