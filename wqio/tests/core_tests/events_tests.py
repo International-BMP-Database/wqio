@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 import numpy as np
 import pandas
@@ -277,7 +278,7 @@ class test_defineStorms_FirstObservation(base_defineStormsMixin):
         )
 
 
-class test_storm:
+class test_storm(object):
     def setup(self):
         # path stuff
         self.prefix = setup_prefix('core.events')
@@ -494,3 +495,33 @@ def test_summarizeStorms():
     cols = ['Storm Number', 'Antecedent Days', 'Peak Precip Intensity', 'Total Precip Depth']
     pdtest.assert_frame_equal(summary[cols], known_subset[cols])
 
+
+class _base_getSeason(object):
+    def setup(self):
+        self.winter = self.makeDate('1998-12-25')
+        self.spring = self.makeDate('2015-03-22')
+        self.summer = self.makeDate('1965-07-04')
+        self.autumn = self.makeDate('1982-11-24')
+
+    def test_winter(self):
+        nt.assert_equal(events.getSeason(self.winter), 'winter')
+
+    def test_spring(self):
+        nt.assert_equal(events.getSeason(self.spring), 'spring')
+
+    def test_summer(self):
+        nt.assert_equal(events.getSeason(self.summer), 'summer')
+
+    def test_autumn(self):
+        nt.assert_equal(events.getSeason(self.autumn), 'autumn')
+
+
+class test_getSeason_Datetime(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return datetime.datetime.strptime(date_string, '%Y-%m-%d')
+
+class test_getSeason_Timestampe(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return pandas.Timestamp(date_string)
