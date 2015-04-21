@@ -24,19 +24,24 @@ class _basic_wq_sample(object):
                  qualcol='qual', dlcol='DL', unitscol='units'):
 
         self._wqdata = dataframe
-
         self._startime = pandas.Timestamp(starttime)
         self._endtime = pandas.Timestamp(endtime)
         self._samplefreq = samplefreq
         self._sample_ts = None
-
-        self.storm = storm
         self._label = None
         self._marker = None
         self._linestyle = None
         self._yfactor = None
+        self._season = getSeason(self.starttime)
+        self.storm = storm
 
-
+    @property
+    def season(self):
+        return self._season
+    @season.setter
+    def season(self, value):
+        self._season = value
+    
     @property
     def wqdata(self):
         return self._wqdata
@@ -330,12 +335,12 @@ class Storm(object):
         # basic data
         self.full_record = dataframe.copy()
         self.data = dataframe[dataframe[stormcol] == self.stormnumber].copy()
-
         self.hydrofreq_label = '{0} min'.format(self.freqMinutes)
 
         # tease out start/stop info
         self.storm_start = self.data.index[0]
         self.storm_end = self.data.index[-1]
+        self._season = getSeason(self.storm_start)
 
         # storm duration (hours)
         duration = self.storm_end - self.storm_start
@@ -435,6 +440,14 @@ class Storm(object):
 
         # summaries
         self._summary_dict = None
+
+
+    @property
+    def season(self):
+        return self._season
+    @season.setter
+    def season(self, value):
+        self._season = value
 
     # starts and stops
     @property
@@ -803,7 +816,8 @@ class Storm(object):
                 'Peak Inflow': self.peak_inflow,
                 'Total Outflow Volume': self.total_outflow_volume,
                 'Peak Outflow': self.peak_outflow,
-                'Peak Lag Hours': self.peak_lag_hours
+                'Peak Lag Hours': self.peak_lag_hours,
+                'Season': self.season
             }
 
         return self._summary_dict
