@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 import numpy as np
 import pandas
@@ -53,6 +54,14 @@ class base_wqsampleMixin(object):
         nt.assert_true(hasattr(self.wqs, 'endtime'))
         nt.assert_true(isinstance(self.wqs.endtime, self.known_endtime_type))
 
+    def test_season(self):
+        nt.assert_true(hasattr(self.wqs, 'season'))
+        nt.assert_equal(self.wqs.season, self.known_season)
+
+    def test_season_setter(self):
+        self.wqs.season = 'spring'
+        nt.assert_equal(self.wqs.season, 'spring')
+    
     def test_samplefreq(self):
         nt.assert_true(hasattr(self.wqs, 'samplefreq'))
         nt.assert_true(isinstance(self.wqs.samplefreq, self.known_samplefreq_type))
@@ -118,6 +127,7 @@ class test_GrabSample_NoStorm(base_wqsample_NoStorm):
         self.known_yfactor = 0.25
         self.known_starttime = '2013-02-24 16:54'
         self.known_endtime = '2013-02-24 16:59'
+        self.known_season = 'winter'
         self.known_sample_ts_len = 2
         self.known_samplefreq = None
         self.known_samplefreq_type = type(None)
@@ -138,6 +148,7 @@ class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
         self.known_yfactor = 0.25
         self.known_starttime = '2013-02-24 16:59'
         self.known_endtime = '2013-02-25 02:59'
+        self.known_season = 'winter'
         self.known_sample_ts_len = 31
         self.known_samplefreq = pandas.tseries.offsets.Minute(20)
         self.known_samplefreq_type = pandas.tseries.offsets.Minute
@@ -160,6 +171,7 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
         self.known_yfactor = 0.25
         self.known_starttime = '2013-02-24 16:59'
         self.known_endtime = '2013-02-25 02:59'
+        self.known_season = 'winter'
         self.known_sample_ts_len = 2
         self.known_samplefreq = None
         self.known_samplefreq_type = type(None)
@@ -277,7 +289,7 @@ class test_defineStorms_FirstObservation(base_defineStormsMixin):
         )
 
 
-class test_storm:
+class test_storm(object):
     def setup(self):
         # path stuff
         self.prefix = setup_prefix('core.events')
@@ -299,6 +311,7 @@ class test_storm:
         self.known_index_type = pandas.DatetimeIndex
         self.known_storm_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm_end = pandas.Timestamp('2013-05-19 11:55')
+        self.known_season = 'spring'
         self.known_precip_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_precip_end = pandas.Timestamp('2013-05-19 09:10')
         self.known_inflow_start = pandas.Timestamp('2013-05-19 06:25')
@@ -345,6 +358,14 @@ class test_storm:
     def test_storm_end(self):
         nt.assert_true(hasattr(self.storm, 'storm_end'))
         assert_timestamp_equal(self.storm.storm_end, self.known_storm_end)
+
+    def test_season(self):
+        nt.assert_true(hasattr(self.storm, 'season'))
+        nt.assert_equal(self.storm.season, self.known_season)
+
+    def test_season_setter(self):
+        self.storm.season = 'spring'
+        nt.assert_equal(self.storm.season, 'spring')
 
     def test_precip_start(self):
         nt.assert_true(hasattr(self.storm, 'precip_start'))
@@ -449,7 +470,8 @@ class test_storm:
             'Peak Inflow',
             'Total Outflow Volume',
             'Peak Outflow',
-            'Peak Lag Hours'
+            'Peak Lag Hours',
+            'Season'
         ]
         keys = list(self.storm.summary_dict.keys())
         nt.assert_list_equal(sorted(keys), sorted(known_keys))
@@ -494,3 +516,33 @@ def test_summarizeStorms():
     cols = ['Storm Number', 'Antecedent Days', 'Peak Precip Intensity', 'Total Precip Depth']
     pdtest.assert_frame_equal(summary[cols], known_subset[cols])
 
+
+class _base_getSeason(object):
+    def setup(self):
+        self.winter = self.makeDate('1998-12-25')
+        self.spring = self.makeDate('2015-03-22')
+        self.summer = self.makeDate('1965-07-04')
+        self.autumn = self.makeDate('1982-11-24')
+
+    def test_winter(self):
+        nt.assert_equal(events.getSeason(self.winter), 'winter')
+
+    def test_spring(self):
+        nt.assert_equal(events.getSeason(self.spring), 'spring')
+
+    def test_summer(self):
+        nt.assert_equal(events.getSeason(self.summer), 'summer')
+
+    def test_autumn(self):
+        nt.assert_equal(events.getSeason(self.autumn), 'autumn')
+
+
+class test_getSeason_Datetime(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return datetime.datetime.strptime(date_string, '%Y-%m-%d')
+
+class test_getSeason_Timestampe(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return pandas.Timestamp(date_string)

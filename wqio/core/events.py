@@ -11,25 +11,37 @@ import pandas
 
 from ..utils import figutils
 
+SEC_PER_MINUTE = 60.
+MIN_PER_HOUR = 60.
+HOUR_PER_DAY = 24.
+SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
+SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
+
+
 class _basic_wq_sample(object):
     def __init__(self, dataframe, starttime, samplefreq=None,
                  endtime=None, storm=None, rescol='res',
                  qualcol='qual', dlcol='DL', unitscol='units'):
 
         self._wqdata = dataframe
-
         self._startime = pandas.Timestamp(starttime)
         self._endtime = pandas.Timestamp(endtime)
         self._samplefreq = samplefreq
         self._sample_ts = None
-
-        self.storm = storm
         self._label = None
         self._marker = None
         self._linestyle = None
         self._yfactor = None
+        self._season = getSeason(self.starttime)
+        self.storm = storm
 
-
+    @property
+    def season(self):
+        return self._season
+    @season.setter
+    def season(self, value):
+        self._season = value
+    
     @property
     def wqdata(self):
         return self._wqdata
@@ -309,37 +321,36 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
 class Storm(object):
     def __init__(self, dataframe, stormnumber, precipcol='precip',
                  inflowcol='inflow', outflowcol='outflow',
-                 tempcol='temp', stormcol='storm', freqMinutes=5):
+                 tempcol='temp', stormcol='storm', freqMinutes=5,
+                 volume_conversion=1):
 
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
         self.precipcol = precipcol
         self.tempcol = tempcol
         self.stormnumber = stormnumber
+        self.freqMinutes = freqMinutes
+        self.volume_conversion = volume_conversion * SEC_PER_MINUTE * self.freqMinutes
 
         # basic data
         self.full_record = dataframe.copy()
         self.data = dataframe[dataframe[stormcol] == self.stormnumber].copy()
-
-        self.freqMinutes = freqMinutes
         self.hydrofreq_label = '{0} min'.format(self.freqMinutes)
 
         # tease out start/stop info
         self.storm_start = self.data.index[0]
         self.storm_end = self.data.index[-1]
+        self._season = getSeason(self.storm_start)
 
         # storm duration (hours)
         duration = self.storm_end - self.storm_start
-        sec_per_hr = 60.0 * 60.0
-        self.duration_hours = duration.total_seconds() / sec_per_hr
+        self.duration_hours = duration.total_seconds() / SEC_PER_HOUR
 
         # antecedent dry period (hours)
         prev_storm_mask = self.full_record[stormcol] == self.stormnumber - 1
         previous_storm_end = self.full_record[prev_storm_mask].index[-1]
         antecedent_timedelta = self.storm_start - previous_storm_end
-        sec_per_day = 60.0 * 60.0 * 24.0
-        self.antecedent_period_days = \
-            antecedent_timedelta.total_seconds() / sec_per_day
+        self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
 
         # starts and stop
         self._precip_start = None
@@ -430,6 +441,14 @@ class Storm(object):
         # summaries
         self._summary_dict = None
 
+
+    @property
+    def season(self):
+        return self._season
+    @season.setter
+    def season(self, value):
+        self._season = value
+
     # starts and stops
     @property
     def precip_start(self):
@@ -477,13 +496,13 @@ class Storm(object):
     @property
     def total_inflow_volume(self):
         if self._total_inflow_volume is None:
-            self._total_inflow_volume = self.data[self.inflowcol].sum() * 60 * self.freqMinutes
+            self._total_inflow_volume = self.data[self.inflowcol].sum() * self.volume_conversion
         return self._total_inflow_volume
 
     @property
     def total_outflow_volume(self):
         if self._total_outflow_volume is None:
-            self._total_outflow_volume = self.data[self.outflowcol].sum() * 60 * self.freqMinutes
+            self._total_outflow_volume = self.data[self.outflowcol].sum() * self.volume_conversion
         return self._total_outflow_volume
 
     # centroids
@@ -510,7 +529,7 @@ class Storm(object):
         if self._centroid_lag_hours is None:
             self._centroid_lag_hours = (
                 self.centroid_outflow_time - self.centroid_inflow_time
-            ).total_seconds() / 60. / 60.
+            ).total_seconds() / SEC_PER_HOUR
         return self._centroid_lag_hours
 
     #times
@@ -538,8 +557,12 @@ class Storm(object):
 
     @property
     def peak_lag_hours(self):
-        if self._peak_lag_hours is None and self.peak_outflow_time is not None and self.peak_inflow_time is not None:
-            self._peak_lag_hours = (self.peak_outflow_time - self.peak_inflow_time).total_seconds() / 60. / 60.
+        if (self._peak_lag_hours is None and
+                self.peak_outflow_time is not None and
+                self.peak_inflow_time is not None):
+
+            time_delta = self.peak_outflow_time - self.peak_inflow_time
+            self._peak_lag_hours = time_delta.total_seconds() / SEC_PER_HOUR
         return self._peak_lag_hours
 
     def _get_event_time(self, column, bound):
@@ -587,12 +610,9 @@ class Storm(object):
             labels.append('Effluent centroid')
 
         if self.centroid_precip is not None and self.centroid_flow is not None:
-            pass
             ax.annotate('', (self.centroid_flow, y_val),
                         arrowprops=dict(arrowstyle="-|>"),
                         xytext=(self.centroid_precip, y_val))
-            #ax.plot([self.centroid_flow, self.centroid_precip], [y_val]*2,
-            #            color='k', linestyle='-', zorder=20)
 
         return artists, labels
 
@@ -730,13 +750,13 @@ class Storm(object):
         storm_length = 0.2 + flowax.get_xlim()[1] - flowax.get_xlim()[0]
         if storm_length <= 0.75:
             hourinterval = 1
-            day_array = np.arange(0, 24, 4)
+            day_array = np.arange(0, HOUR_PER_DAY, 4)
         elif 0.75 < storm_length <= 1.5:
             hourinterval = 2
-            day_array = np.arange(0, 24, 6)
+            day_array = np.arange(0, HOUR_PER_DAY, 6)
         elif 1.5 < storm_length <= 3:
             hourinterval = 4
-            day_array = np.arange(0, 24, 12)
+            day_array = np.arange(0, HOUR_PER_DAY, 12)
         elif 4 < storm_length <= 6:
             hourinterval = 8
             day_array = np.array([0])
@@ -745,7 +765,7 @@ class Storm(object):
             day_array = np.array([0])
 
         # hour tick marks and label format
-        hour_array = np.arange(hourinterval, 24, hourinterval)
+        hour_array = np.arange(hourinterval, HOUR_PER_DAY, hourinterval)
 
         for dhour in day_array[1:]:
             index = np.nonzero(hour_array == dhour)[0][0]
@@ -796,7 +816,8 @@ class Storm(object):
                 'Peak Inflow': self.peak_inflow,
                 'Total Outflow Volume': self.total_outflow_volume,
                 'Peak Outflow': self.peak_outflow,
-                'Peak Lag Hours': self.peak_lag_hours
+                'Peak Lag Hours': self.peak_lag_hours,
+                'Season': self.season
             }
 
         return self._summary_dict
@@ -830,3 +851,45 @@ def summarizeStorms(dataframe, **storm_kws):
     ]
 
     return storms, stats[col_order]
+
+
+
+def getSeason(date):
+    '''Defines the season from a given date.
+
+    Parameters
+    ----------
+    date : datetime.datetime object or similar
+        Any object that represents a date and has `.month` and `.day`
+        attributes
+
+    Returns
+    -------
+    season : str
+
+    Notes
+    -----
+    Assumes that all seasons changed on the 22nd (e.g., all winters
+    start on Decemeber 22). This isn't strictly true, but it's good
+    enough for now.
+
+    '''
+
+    if (date.month == 12 and date.day >= 22) or \
+            (date.month in [1, 2]) or \
+            (date.month == 3 and date.day < 22):
+        return 'winter'
+    elif (date.month == 3 and date.day >= 22) or \
+            (date.month in [4, 5]) or \
+            (date.month == 6 and date.day < 22):
+        return 'spring'
+    elif (date.month == 6 and date.day >= 22) or \
+            (date.month in [7, 8]) or \
+            (date.month == 9 and date.day < 22):
+        return 'summer'
+    elif (date.month == 9 and date.day >= 22) or \
+            (date.month in [10, 11]) or \
+            (date.month == 12 and date.day < 22):
+        return 'autumn'
+    else: # pragma: no cover
+        raise ValueError('could not assign season to  {}'.format(date))
