@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from wqio.core import events
 from wqio import utils
 
+
 class base_wqsampleMixin(object):
     @nt.nottest
     def makePath(self, filename):
@@ -61,7 +62,7 @@ class base_wqsampleMixin(object):
     def test_season_setter(self):
         self.wqs.season = 'spring'
         nt.assert_equal(self.wqs.season, 'spring')
-    
+
     def test_samplefreq(self):
         nt.assert_true(hasattr(self.wqs, 'samplefreq'))
         nt.assert_true(isinstance(self.wqs.samplefreq, self.known_samplefreq_type))
@@ -542,7 +543,59 @@ class test_getSeason_Datetime(_base_getSeason):
     def makeDate(self, date_string):
         return datetime.datetime.strptime(date_string, '%Y-%m-%d')
 
+
 class test_getSeason_Timestampe(_base_getSeason):
     @nt.nottest
     def makeDate(self, date_string):
         return pandas.Timestamp(date_string)
+
+
+class test_getStormFromTimestamp(object):
+    def setup(self):
+        self.storm_date = pandas.Timestamp('2013-05-19 11:11')
+        self.gap_date = pandas.Timestamp('2013-05-19 14:42')
+        self.known_storm = 2
+        self.storm_file = os.path.join(
+            sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
+        )
+
+        self.orig_record = pandas.read_csv(
+            self.storm_file, index_col='date', parse_dates=True
+        ).resample('5T').fillna(0)
+        self.parsed_record = events.defineStorms(
+            self.orig_record, precipcol='rain', inflowcol='influent',
+            outflowcol=None, outputfreqMinutes=5
+        )
+
+    def test_basic(self):
+        sn = events.getStormFromTimestamp(self.storm_date, self.parsed_record)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_string(self):
+        datestring = '{}'.format(self.storm_date)
+        sn = events.getStormFromTimestamp(datestring, self.parsed_record)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_datetime(self):
+        pydt = self.storm_date.to_pydatetime()
+        sn = events.getStormFromTimestamp(pydt, self.parsed_record)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_lookback_6(self):
+        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
+                                          lookback_hours=6)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_lookback_2(self):
+        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
+                                          lookback_hours=2)
+        nt.assert_equal(sn, None)
+
+    @nt.raises(ValueError)
+    def test_bad_date(self):
+        events.getStormFromTimestamp('junk', self.parsed_record)
+
+    @nt.raises(ValueError)
+    def test_bad_lookback(self):
+        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
+                                          lookback_hours=-3)
