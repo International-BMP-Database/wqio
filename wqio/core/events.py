@@ -41,7 +41,7 @@ class _basic_wq_sample(object):
     @season.setter
     def season(self, value):
         self._season = value
-    
+
     @property
     def wqdata(self):
         return self._wqdata
@@ -172,150 +172,6 @@ class GrabSample(_basic_wq_sample):
             else:
                 self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
         return self._sample_ts
-
-
-def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
-                 minprecip=0.01, minflow=0.01, intereventperiods=36,
-                 standardizeColNames=True, outputfreqMinutes=10,
-                 debug=False, stormcol='storm', inplace=True):
-    '''
-    Loops through the hydrologic records and parses the data into storms.
-        In this context, a storm is defined as starting whenever the
-        hydrologic records shows non-zero precipitation or [in|out]flow
-        from the BMP after a minimum inter-event dry period duration
-        specified in the the function call. A new column (`storm`) is
-        added to the DataFrame, of copy of which is returned.
-
-    Input:
-        hydrodata : pandas.DataFrame
-            DataFrame of hydrologic data of the storm. Should contain
-            a unique index of type pandas.DatetimeIndex.
-
-        precipcol : optional string (default = None)
-            Name of column in `hydrodata` containing precipiation data.
-
-        inflowcol : optional string (default = None)
-            Name of column in `hydrodata` containing influent flow data.
-
-        outflowcol : optional string (default = None)
-            Name of column in `hydrodata` containing effluent flow data.
-
-        minprecip : optional float (default = 0.01)
-            The minimum incremental precipiation depth required to be
-            considered part of a storm.
-
-        minflow : optional float (default = 0.01)
-            The minimum incremental volumetric flowrate required to be
-            considered part of a storm.
-
-        intereventperiods : optional int (default = 36)
-            The number of dry records (no flow or rain) required to end
-            a storm.
-
-        standardizeColNames : optional bool (default = True)
-            Toggles renaming columns to standard names in the returned
-            DataFrame.
-
-        outputfreqMinutes : optional int (default = 10)
-            The default frequency (minutes) to which all data will be
-            resampled. Precipitation data will be summed up across '
-            multiple timesteps during resampling, while flow will be
-            averaged.
-
-        debug : bool (default = False)
-            If True, diagnostic columns will not be dropped prior to
-            returning the dataframe of parsed_storms.
-
-    Writes:
-        None
-
-    Returns:
-        parsed_storms : pandas.DataFrame
-            Copy of the origin `hydrodata` DataFrame, but resmapled to
-            a fixed frequency, columns possibly renamed, and a `storm`
-            column added to denote the storm to which each record
-            belongs. Records where `storm` == 0 are not a part of any
-            storm.
-
-    '''
-
-    if not inplace:
-        hydrodata = hydrodata.copy()
-    # validate input
-    if precipcol is None and inflowcol is None and outflowcol is None:
-        msg = '`hydrodata` must have at least a precip or in/outflow column'
-        raise ValueError(msg)
-
-    # pull out the rain and flow data
-    if precipcol is None:
-        precipcol = 'precip'
-        hydrodata.loc[:, precipcol] = np.nan
-
-    if inflowcol is None:
-        inflowcol = 'inflow'
-        hydrodata.loc[:, inflowcol] = np.nan
-
-    if outflowcol is None:
-        outflowcol = 'outflow'
-        hydrodata.loc[:, outflowcol] = np.nan
-
-    # bool column where True means there's rain or flow of some kind
-    hydrodata.loc[:, 'wet'] = hydrodata.apply(
-        lambda r: (r[precipcol] >= minprecip or
-                   r[inflowcol] >= minflow or
-                   r[outflowcol] >= minflow),
-        axis=1
-    )
-
-    # copy the bool column into its own df and add a bunch
-    # shifted columns so each row looks backwards and forwards
-    hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
-        hydrodata['wet'],
-        intereventperiods,
-        lambda x: x.any(),
-        min_periods=1
-    ).diff()
-
-    firstrow = hydrodata.iloc[0]
-    if firstrow['wet']:
-        hydrodata.loc[firstrow.name, 'windiff'] = 1
-
-    hydrodata.loc[:, 'event_start'] = False
-    hydrodata.loc[:, 'event_end'] = False
-
-    starts = hydrodata['windiff'] == 1
-    hydrodata.loc[starts, 'event_start'] = True
-
-    stops = hydrodata['windiff'].shift(-1 * intereventperiods) == -1
-    hydrodata.loc[stops, 'event_end'] = True
-
-    # initialize the new column as zeros
-    hydrodata.loc[:, stormcol] = 0
-
-    # each time a storm starts, incriment the storm number + 1
-    hydrodata.loc[:, stormcol] = hydrodata['event_start'].cumsum()
-
-    # periods between storms are where the cumulative number
-    # of storms that have ended are equal to the cumulative
-    # number of storms that have started.
-    # Stack Overflow: http://tinyurl.com/lsjkr9x
-    nostorm = hydrodata[stormcol] == hydrodata['event_end'].shift(2).cumsum()
-    hydrodata.loc[nostorm, stormcol] = 0
-
-    if standardizeColNames:
-        coldict = {
-            precipcol: 'precip',
-            inflowcol: 'inflow',
-            outflowcol: 'outflow'
-        }
-        hydrodata.rename(columns=coldict, inplace=True)
-
-    #hydrodata[stormcol] = iswet[stormcol]
-    if not debug:
-        cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
-        hydrodata = hydrodata.drop(cols_to_drop, axis=1)
-
-    return hydrodata
 
 
 class Storm(object):
@@ -823,6 +679,150 @@ class Storm(object):
         return self._summary_dict
 
 
+def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
+                 minprecip=0.01, minflow=0.01, intereventperiods=36,
+                 standardizeColNames=True, outputfreqMinutes=10,
+                 debug=False, stormcol='storm', inplace=True):
+    '''
+    Loops through the hydrologic records and parses the data into storms.
+        In this context, a storm is defined as starting whenever the
+        hydrologic records shows non-zero precipitation or [in|out]flow
+        from the BMP after a minimum inter-event dry period duration
+        specified in the the function call. A new column (`storm`) is
+        added to the DataFrame, of copy of which is returned.
+
+    Input:
+        hydrodata : pandas.DataFrame
+            DataFrame of hydrologic data of the storm. Should contain
+            a unique index of type pandas.DatetimeIndex.
+
+        precipcol : optional string (default = None)
+            Name of column in `hydrodata` containing precipiation data.
+
+        inflowcol : optional string (default = None)
+            Name of column in `hydrodata` containing influent flow data.
+
+        outflowcol : optional string (default = None)
+            Name of column in `hydrodata` containing effluent flow data.
+
+        minprecip : optional float (default = 0.01)
+            The minimum incremental precipiation depth required to be
+            considered part of a storm.
+
+        minflow : optional float (default = 0.01)
+            The minimum incremental volumetric flowrate required to be
+            considered part of a storm.
+
+        intereventperiods : optional int (default = 36)
+            The number of dry records (no flow or rain) required to end
+            a storm.
+
+        standardizeColNames : optional bool (default = True)
+            Toggles renaming columns to standard names in the returned
+            DataFrame.
+
+        outputfreqMinutes : optional int (default = 10)
+            The default frequency (minutes) to which all data will be
+            resampled. Precipitation data will be summed up across '
+            multiple timesteps during resampling, while flow will be
+            averaged.
+
+        debug : bool (default = False)
+            If True, diagnostic columns will not be dropped prior to
+            returning the dataframe of parsed_storms.
+
+    Writes:
+        None
+
+    Returns:
+        parsed_storms : pandas.DataFrame
+            Copy of the origin `hydrodata` DataFrame, but resmapled to
+            a fixed frequency, columns possibly renamed, and a `storm`
+            column added to denote the storm to which each record
+            belongs. Records where `storm` == 0 are not a part of any
+            storm.
+
+    '''
+
+    if not inplace:
+        hydrodata = hydrodata.copy()
+    # validate input
+    if precipcol is None and inflowcol is None and outflowcol is None:
+        msg = '`hydrodata` must have at least a precip or in/outflow column'
+        raise ValueError(msg)
+
+    # pull out the rain and flow data
+    if precipcol is None:
+        precipcol = 'precip'
+        hydrodata.loc[:, precipcol] = np.nan
+
+    if inflowcol is None:
+        inflowcol = 'inflow'
+        hydrodata.loc[:, inflowcol] = np.nan
+
+    if outflowcol is None:
+        outflowcol = 'outflow'
+        hydrodata.loc[:, outflowcol] = np.nan
+
+    # bool column where True means there's rain or flow of some kind
+    hydrodata.loc[:, 'wet'] = hydrodata.apply(
+        lambda r: (r[precipcol] >= minprecip or
+                   r[inflowcol] >= minflow or
+                   r[outflowcol] >= minflow),
+        axis=1
+    )
+
+    # copy the bool column into its own df and add a bunch
+    # shifted columns so each row looks backwards and forwards
+    hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
+        hydrodata['wet'],
+        intereventperiods,
+        lambda x: x.any(),
+        min_periods=1
+    ).diff()
+
+    firstrow = hydrodata.iloc[0]
+    if firstrow['wet']:
+        hydrodata.loc[firstrow.name, 'windiff'] = 1
+
+    hydrodata.loc[:, 'event_start'] = False
+    hydrodata.loc[:, 'event_end'] = False
+
+    starts = hydrodata['windiff'] == 1
+    hydrodata.loc[starts, 'event_start'] = True
+
+    stops = hydrodata['windiff'].shift(-1 * intereventperiods) == -1
+    hydrodata.loc[stops, 'event_end'] = True
+
+    # initialize the new column as zeros
+    hydrodata.loc[:, stormcol] = 0
+
+    # each time a storm starts, incriment the storm number + 1
+    hydrodata.loc[:, stormcol] = hydrodata['event_start'].cumsum()
+
+    # periods between storms are where the cumulative number
+    # of storms that have ended are equal to the cumulative
+    # number of storms that have started.
+    # Stack Overflow: http://tinyurl.com/lsjkr9x
+    nostorm = hydrodata[stormcol] == hydrodata['event_end'].shift(2).cumsum()
+    hydrodata.loc[nostorm, stormcol] = 0
+
+    if standardizeColNames:
+        coldict = {
+            precipcol: 'precip',
+            inflowcol: 'inflow',
+            outflowcol: 'outflow'
+        }
+        hydrodata.rename(columns=coldict, inplace=True)
+
+    #hydrodata[stormcol] = iswet[stormcol]
+    if not debug:
+        cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
+        hydrodata = hydrodata.drop(cols_to_drop, axis=1)
+
+    return hydrodata
+
+
 def summarizeStorms(dataframe, **storm_kws):
     stormcol = storm_kws.pop('stormcol', None)
     if stormcol is None:
@@ -851,6 +851,62 @@ def summarizeStorms(dataframe, **storm_kws):
     ]
 
     return storms, stats[col_order]
+
+
+def getStormFromTimestamp(timestamp, stormdata, stormcol='storm', lookback_hours=0):
+    '''Get the storm associdated with a give (sample) date
+
+    Parameters
+    ----------
+    timestamp : pandas.Timestamp
+        The date/time for which to search within the hydrologic record.
+    stormdata : pandas.DataFrame
+        DataFrame of the hydrologic data with storm numbers defined
+        (such as by `wqio.defineStorms`).
+    stormcol : string, optional (default = 'storm')
+        The column of `stormdata` in which the storm numbers are found.
+    lookback_hours : positive int or float, optional (default = 0)
+        If no storm is actively occuring at the provided timestamp, we
+        can optionally look backwards in the hydrologic record a fixed
+        amount of time (specified in hours). Negative values are
+        ignored.
+
+    Returns
+    -------
+    storm_number : int
+
+    See Also
+    --------
+    wqio.events.defineStorms
+
+    '''
+
+    if not isinstance(timestamp, pandas.Timestamp):
+        try:
+            timestamp = pandas.Timestamp(timestamp)
+        except:
+            raise ValueError('{} could not be coerced into a pandas.Timestamp')
+
+    if lookback_hours < 0:
+        raise ValueError('`lookback_hours` must be greater than 0')
+
+    storm_number = int(stormdata.loc[:timestamp, stormcol].iloc[-1])
+
+    if (storm_number == 0 or pandas.isnull(storm_number)) and lookback_hours != 0:
+        offset = timestamp - pandas.offsets.Hour(lookback_hours)
+        storms = stormdata.loc[offset:timestamp, [stormcol]]
+        storms = storms[storms > 0].dropna()
+        if storms.shape[0] == 0:
+            storm_number = None
+        else:
+            storm_number = int(storms.iloc[-1])
+
+    return storm_number
+
+
+
+
+
 
 
 
