@@ -9,7 +9,7 @@ from .features import (
 from .events import (
     CompositeSample,
     GrabSample,
-    defineStorms,
+    HydroRecord,
     Storm,
 )
 
