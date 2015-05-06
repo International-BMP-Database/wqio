@@ -825,7 +825,12 @@ class HydroRecord(object):
         if self._storms is None:
             self._storms = {}
             for snum in self.hydrodata[self.stormcol].unique():
-                if snum > 0 and self.all_storms[snum].total_precip_depth > self.minprecip:
+                small_storm = (
+                    self.all_storms[snum].total_precip_depth >= self.minprecip &
+                    self.all_storms[snum].total_inflow_volume >= self.minflow &
+                    self.all_storms[snum].total_outflow_volume >= self.minflow
+                )
+                if snum > 0 and not small_storm:
                     self._storms[snum] = self.all_storms[snum]
 
         return self._storms
@@ -990,41 +995,6 @@ class HydroRecord(object):
                 storm_number = int(storms.iloc[-1])
 
         return storm_number
-
-    def remove_small_storms(self, minprecip=None, mininflow=None, minoutflow=None,
-                            reset_storms=True):
-        #newhydro = self.hydrodata.copy()
-
-        # compute storm totals
-        newhydro = (
-            self.hydrodata.groupby(by=stormcol)
-                          .filter(lambda g: g[precipcol].sum() < minprecip)
-            )
-
-        # find all storms with precip < minprecip
-        low_rain_selector = stormsums["head_mm"] < self.minprecip
-        smallstorms = stormsums[low_rain_selector].index.tolist()
-
-        # loop through each small storm, if there's no WQ data associated
-        # with it, set it's storm number to zero (i.e., make it a non-storm)
-        smallstorms_no_data = filter(
-            lambda sn: sn not in self.stormswithdata,
-            smallstorms
-        )
-
-        storm_selector = newhydro['storm'].isin(list(smallstorms_no_data))
-        newhydro.loc[storm_selector, 'storm'] = 0
-
-        # make the storms sequential again, use negaive numbers to avoid
-        # conflicts
-        actual_storms = pandas.unique(newhydro['storm'][newhydro['storm'] > 0])
-        for newsn, oldsn in enumerate(actual_storms, 1):
-            newhydro.loc[newhydro['storm'] == oldsn, 'storm'] = newsn * -1
-
-        # make everything positive again
-        newhydro['storm'] *= -1
-
-        return newhydro
 
 
 def getSeason(date):

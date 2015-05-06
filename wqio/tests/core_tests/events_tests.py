@@ -216,10 +216,6 @@ class base_HydroRecordMixin(object):
     def test_check_type_and_columns(self):
         nt.assert_true(isinstance(self.hr.hydrodata, pandas.DataFrame))
 
-    # @nt.raises(ValueError)
-    # def test_defineStorm_no_columns(self):
-    #     data = events.defineStorms(self.orig_record)
-
     def test_check_nan_col(self):
         nt.assert_true(np.all(np.isnan(self.hr.hydrodata['outflow'])))
 
@@ -313,7 +309,6 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
     @nt.raises(ValueError)
     def test_getStormFromTimestamp_bad_lookback(self):
         sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=-3)
-
 
 
 class test_HydroRecord_Singular(base_HydroRecordMixin):
