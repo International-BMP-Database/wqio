@@ -473,6 +473,35 @@ class Storm(object):
             self._peak_lag_hours = time_delta.total_seconds() / SEC_PER_HOUR
         return self._peak_lag_hours
 
+    @property
+    def summary_dict(self):
+        if self._summary_dict is None:
+            self._summary_dict = {
+                'Storm Number': self.stormnumber,
+                'Antecedent Days': self.antecedent_period_days,
+                'Start Date': self.storm_start,
+                'End Date': self.storm_end,
+                'Duration Hours': self.duration_hours,
+                'Peak Precip Intensity': self.peak_precip_intensity,
+                'Total Precip Depth': self.total_precip_depth,
+                'Total Inflow Volume': self.total_inflow_volume,
+                'Peak Inflow': self.peak_inflow,
+                'Total Outflow Volume': self.total_outflow_volume,
+                'Peak Outflow': self.peak_outflow,
+                'Peak Lag Hours': self.peak_lag_hours,
+                'Season': self.season
+            }
+
+        return self._summary_dict
+
+    def is_small(self, minprecip=0.0, mininflow=0.0, minoutflow=0.0):
+        storm_is_small = (
+            (self.total_precip_depth is not None and self.total_precip_depth < minprecip) or
+            (self.total_inflow_volume is not None and self.total_inflow_volume < mininflow) or
+            (self.total_outflow_volume is not None and self.total_outflow_volume < minoutflow)
+        )
+        return storm_is_small
+
     def _get_event_time(self, column, bound):
         index_map = {'start': 0, 'end': -1}
         quantity = self.data[self.data[column] > 0]
@@ -709,27 +738,6 @@ class Storm(object):
 
         return fig, artists, labels
 
-    @property
-    def summary_dict(self):
-        if self._summary_dict is None:
-            self._summary_dict = {
-                'Storm Number': self.stormnumber,
-                'Antecedent Days': self.antecedent_period_days,
-                'Start Date': self.storm_start,
-                'End Date': self.storm_end,
-                'Duration Hours': self.duration_hours,
-                'Peak Precip Intensity': self.peak_precip_intensity,
-                'Total Precip Depth': self.total_precip_depth,
-                'Total Inflow Volume': self.total_inflow_volume,
-                'Peak Inflow': self.peak_inflow,
-                'Total Outflow Volume': self.total_outflow_volume,
-                'Peak Outflow': self.peak_outflow,
-                'Peak Lag Hours': self.peak_lag_hours,
-                'Season': self.season
-            }
-
-        return self._summary_dict
-
 
 class HydroRecord(object):
     '''
@@ -811,10 +819,10 @@ class HydroRecord(object):
             for storm_number in self.hydrodata[self.stormcol].unique():
                 if storm_number > 0:
                     s = Storm(
-                        self.hydrodata, storm_number, precipcol=self.precipcol,
-                        inflowcol=self.inflowcol, outflowcol=self.outflowcol,
-                        tempcol=self.tempcol, stormcol=self.stormcol,
-                        freqMinutes=self.outputfreq.n, volume_conversion=1
+                            self.hydrodata, storm_number, precipcol=self.precipcol,
+                            inflowcol=self.inflowcol, outflowcol=self.outflowcol,
+                            tempcol=self.tempcol, stormcol=self.stormcol,
+                            freqMinutes=self.outputfreq.n, volume_conversion=1
                     )
                     self._all_storms[storm_number] = s
 
@@ -823,16 +831,14 @@ class HydroRecord(object):
     @property
     def storms(self):
         if self._storms is None:
-            self._storms = {}
-            for snum in self.hydrodata[self.stormcol].unique():
-                small_storm = (
-                    self.all_storms[snum].total_precip_depth >= self.minprecip &
-                    self.all_storms[snum].total_inflow_volume >= self.minflow &
-                    self.all_storms[snum].total_outflow_volume >= self.minflow
-                )
-                if snum > 0 and not small_storm:
-                    self._storms[snum] = self.all_storms[snum]
-
+            self._storms = {
+                snum: storm for snum, storm in self.all_storms.items()
+                    if not storm.is_small(
+                        minprecip=self.minprecip,
+                        mininflow=self.mininflow,
+                        minoutflow=self.minoutflow
+                    )
+            }
         return self._storms
 
     @property

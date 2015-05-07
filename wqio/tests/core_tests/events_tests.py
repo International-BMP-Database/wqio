@@ -257,20 +257,21 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         ).resample('5T').fillna(0)
         self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5
+            outflowcol=None, outputfreqMinutes=5, minprecip=1.5
         )
 
         self.storm_date = pandas.Timestamp('2013-05-19 11:11')
         self.gap_date = pandas.Timestamp('2013-05-19 14:42')
         self.known_storm = 2
+        self.known_stats_subset = pandas.DataFrame({
+            'Storm Number': [1, 5],
+            'Antecedent Days': [-2.409722, 0.708333],
+            'Peak Precip Intensity': [0.100, 0.100],
+            'Total Precip Depth': [2.76, 4.14]
+        })
 
     def test_storm_stats(self):
-        known_subset = pandas.DataFrame({
-            'Storm Number': np.arange(1, 6, dtype=np.int64),
-            'Antecedent Days': [-2.409722, 0.184028, 0.145833, 0.194444, 0.708333],
-            'Peak Precip Intensity': [0.100, 0.110, 0.100, 0.100, 0.100],
-            'Total Precip Depth': [2.76, 1.39, 1.38, 1.38, 4.14]
-        })
+
         cols = [
             'Storm Number',
             'Antecedent Days',
@@ -278,7 +279,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
             'Total Precip Depth'
         ]
 
-        pdtest.assert_frame_equal(self.hr.storm_stats[cols], known_subset[cols])
+        pdtest.assert_frame_equal(self.hr.storm_stats[cols], self.known_stats_subset[cols])
 
     def test_getStormFromTimestamp_basic(self):
         sn = self.hr.getStormFromTimestamp(self.storm_date)
@@ -546,6 +547,10 @@ class test_Storm(object):
         nt.assert_true(hasattr(self.storm, 'summaryPlot'))
         output = self.makePath('test_basicstorm.png')
         self.storm.summaryPlot(filename=output)
+
+    def test_is_small(self):
+        nt.assert_true(self.storm.is_small(minprecip=5.0))
+        nt.assert_false(self.storm.is_small(minprecip=1.0))
 
 
 class _base_getSeason(object):
