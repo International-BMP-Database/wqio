@@ -194,15 +194,15 @@ class base_HydroRecordMixin(object):
         plt.close('all')
 
     def test_attributes(self):
-        nt.assert_true(hasattr(self.hr, '_raw_hydrodata'))
-        nt.assert_true(isinstance(self.hr._raw_hydrodata, pandas.DataFrame))
+        nt.assert_true(hasattr(self.hr, '_raw_data'))
+        nt.assert_true(isinstance(self.hr._raw_data, pandas.DataFrame))
 
 
-        nt.assert_true(hasattr(self.hr, 'hydrodata'))
-        nt.assert_true(isinstance(self.hr.hydrodata, pandas.DataFrame))
-        nt.assert_true(isinstance(self.hr.hydrodata.index, pandas.DatetimeIndex))
+        nt.assert_true(hasattr(self.hr, 'data'))
+        nt.assert_true(isinstance(self.hr.data, pandas.DataFrame))
+        nt.assert_true(isinstance(self.hr.data.index, pandas.DatetimeIndex))
         for col in self.known_std_columns:
-            nt.assert_true(col in self.hr.hydrodata.columns.tolist())
+            nt.assert_true(col in self.hr.data.columns.tolist())
 
         nt.assert_true(hasattr(self.hr, 'all_storms'))
         nt.assert_true(isinstance(self.hr.all_storms, dict))
@@ -214,29 +214,29 @@ class base_HydroRecordMixin(object):
         nt.assert_true(isinstance(self.hr.storm_stats, pandas.DataFrame))
 
     def test_check_type_and_columns(self):
-        nt.assert_true(isinstance(self.hr.hydrodata, pandas.DataFrame))
+        nt.assert_true(isinstance(self.hr.data, pandas.DataFrame))
 
     def test_check_nan_col(self):
-        nt.assert_true(np.all(np.isnan(self.hr.hydrodata['outflow'])))
+        nt.assert_true(np.all(np.isnan(self.hr.data['outflow'])))
 
     def test_number_storms(self):
-        last_storm = self.hr.hydrodata['storm'].max()
+        last_storm = self.hr.data['storm'].max()
         nt.assert_equal(last_storm, self.known_number_of_storms)
 
     def test_first_storm_start(self):
-        storm1 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 1]
+        storm1 = self.hr.data[self.hr.data['storm'] == 1]
         assert_timestamp_equal(storm1.index[0], self.known_storm1_start)
 
     def test_first_storm_end(self):
-        storm1 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 1]
+        storm1 = self.hr.data[self.hr.data['storm'] == 1]
         assert_timestamp_equal(storm1.index[-1], self.known_storm1_end)
 
     def test_second_storm_start(self):
-        storm2 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 2]
+        storm2 = self.hr.data[self.hr.data['storm'] == 2]
         assert_timestamp_equal(storm2.index[0], self.known_storm2_start)
 
     def test_second_storm_end(self):
-        storm2 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 2]
+        storm2 = self.hr.data[self.hr.data['storm'] == 2]
         assert_timestamp_equal(storm2.index[-1], self.known_storm2_end)
 
 
@@ -368,7 +368,7 @@ class test_Storm(object):
                                      outflowcol='effluent',
                                      outputfreqMinutes=5,
                                      intereventPeriods=24)
-        self.storm = events.Storm(self.hr.hydrodata, 2,
+        self.storm = events.Storm(self.hr.data, 2,
                                   precipcol=self.hr.precipcol,
                                   inflowcol=self.hr.inflowcol,
                                   outflowcol=self.hr.outflowcol,

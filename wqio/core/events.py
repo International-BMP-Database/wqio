@@ -787,7 +787,7 @@ class HydroRecord(object):
             raise ValueError(msg)
 
         # static input
-        self._raw_hydrodata = hydrodata
+        self._raw_data = hydrodata
         self.precipcol = precipcol
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
@@ -801,25 +801,25 @@ class HydroRecord(object):
         self.volume_conversion = volume_conversion
 
         # properties
-        self._hydrodata = None
+        self._data = None
         self._all_storms = None
         self._storms = None
         self._storm_stats = None
 
     @property
-    def hydrodata(self):
-        if self._hydrodata is None:
-            self._hydrodata = self._define_storms()
-        return self._hydrodata
+    def data(self):
+        if self._data is None:
+            self._data = self._define_storms()
+        return self._data
 
     @property
     def all_storms(self):
         if self._all_storms is None:
             self._all_storms = {}
-            for storm_number in self.hydrodata[self.stormcol].unique():
+            for storm_number in self.data[self.stormcol].unique():
                 if storm_number > 0:
                     s = Storm(
-                            self.hydrodata, storm_number, precipcol=self.precipcol,
+                            self.data, storm_number, precipcol=self.precipcol,
                             inflowcol=self.inflowcol, outflowcol=self.outflowcol,
                             tempcol=self.tempcol, stormcol=self.stormcol,
                             freqMinutes=self.outputfreq.n, volume_conversion=1
@@ -895,71 +895,71 @@ class HydroRecord(object):
 
         '''
 
-        hydrodata = self._raw_hydrodata.copy()
+        data = self._raw_data.copy()
 
         # pull out the rain and flow data
         if self.precipcol is None:
             precipcol = 'precip'
-            hydrodata.loc[:, precipcol] = np.nan
+            data.loc[:, precipcol] = np.nan
         else:
             precipcol = self.precipcol
 
         if self.inflowcol is None:
             inflowcol = 'inflow'
-            hydrodata.loc[:, inflowcol] = np.nan
+            data.loc[:, inflowcol] = np.nan
         else:
             inflowcol = self.inflowcol
 
         if self.outflowcol is None:
             outflowcol = 'outflow'
-            hydrodata.loc[:, outflowcol] = np.nan
+            data.loc[:, outflowcol] = np.nan
         else:
             outflowcol = self.outflowcol
 
         # bool column where True means there's rain or flow of some kind
         water_columns = [precipcol, inflowcol, outflowcol]
-        hydrodata.loc[:, 'wet'] = np.any(hydrodata[water_columns] > 0, axis=1)
+        data.loc[:, 'wet'] = np.any(data[water_columns] > 0, axis=1)
 
         # copy the bool column into its own df and add a bunch
         # shifted columns so each row looks backwards and forwards
-        hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
-            hydrodata['wet'],
+        data.loc[:, 'windiff'] = pandas.rolling_apply(
+            data['wet'],
             self.intereventPeriods,
             lambda x: x.any(),
             min_periods=1
         ).diff()
 
-        firstrow = hydrodata.iloc[0]
+        firstrow = data.iloc[0]
         if firstrow['wet']:
-            hydrodata.loc[firstrow.name, 'windiff'] = 1
+            data.loc[firstrow.name, 'windiff'] = 1
 
-        hydrodata.loc[:, 'event_start'] = False
-        hydrodata.loc[:, 'event_end'] = False
+        data.loc[:, 'event_start'] = False
+        data.loc[:, 'event_end'] = False
 
-        starts = hydrodata['windiff'] == 1
-        hydrodata.loc[starts, 'event_start'] = True
+        starts = data['windiff'] == 1
+        data.loc[starts, 'event_start'] = True
 
-        stops = hydrodata['windiff'].shift(-1 * self.intereventPeriods) == -1
-        hydrodata.loc[stops, 'event_end'] = True
+        stops = data['windiff'].shift(-1 * self.intereventPeriods) == -1
+        data.loc[stops, 'event_end'] = True
 
         # initialize the new column as zeros
-        hydrodata.loc[:, self.stormcol] = 0
+        data.loc[:, self.stormcol] = 0
 
         # each time a storm starts, incriment the storm number + 1
-        hydrodata.loc[:, self.stormcol] = hydrodata['event_start'].cumsum()
+        data.loc[:, self.stormcol] = data['event_start'].cumsum()
 
         # periods between storms are where the cumulative number
         # of storms that have ended are equal to the cumulative
         # number of storms that have started.
         # Stack Overflow: http://tinyurl.com/lsjkr9x
-        nostorm = hydrodata[self.stormcol] == hydrodata['event_end'].shift(2).cumsum()
-        hydrodata.loc[nostorm, self.stormcol] = 0
+        nostorm = data[self.stormcol] == data['event_end'].shift(2).cumsum()
+        data.loc[nostorm, self.stormcol] = 0
 
         if not debug:
             cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
-            hydrodata = hydrodata.drop(cols_to_drop, axis=1)
+            data = data.drop(cols_to_drop, axis=1)
 
-        return hydrodata
+        return data
 
     def getStormFromTimestamp(self, timestamp, lookback_hours=0):
         '''Get the storm associdated with a give (sample) date
@@ -989,11 +989,11 @@ class HydroRecord(object):
         if lookback_hours < 0:
             raise ValueError('`lookback_hours` must be greater than 0')
 
-        storm_number = int(self.hydrodata.loc[:timestamp, self.stormcol].iloc[-1])
+        storm_number = int(self.data.loc[:timestamp, self.stormcol].iloc[-1])
 
         if (storm_number == 0 or pandas.isnull(storm_number)) and lookback_hours != 0:
             lookback_time = timestamp - pandas.offsets.Hour(lookback_hours)
-            storms = self.hydrodata.loc[lookback_time:timestamp, [self.stormcol]]
+            storms = self.data.loc[lookback_time:timestamp, [self.stormcol]]
             storms = storms[storms > 0].dropna()
             if storms.shape[0] == 0:
                 storm_number = None
