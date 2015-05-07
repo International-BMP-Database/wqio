@@ -208,6 +208,11 @@ class Storm(object):
         antecedent_timedelta = self.storm_start - previous_storm_end
         self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
 
+        # quantities
+        self._precip = None
+        self._inflow = None
+        self._outflow = None
+
         # starts and stop
         self._precip_start = None
         self._precip_end = None
@@ -237,14 +242,6 @@ class Storm(object):
         self._total_precip_depth = None
         self._total_inflow_volume = None
         self._total_outflow_volume = None
-
-        self.precip =  self.data[self.data[precipcol] > 0]
-        self.inflow =  self.data[self.data[inflowcol] > 0]
-        self.outflow =  self.data[self.data[outflowcol] > 0]
-
-        self.has_precip = self.precip.shape[0] > 0
-        self.has_inflow = self.inflow.shape[0] > 0
-        self.has_outflow = self.outflow.shape[0] > 0
 
         self.meta = {
             self.outflowcol: {
@@ -289,14 +286,48 @@ class Storm(object):
             }
         }
 
-        # peaks
-        self.peak_precip_intensity = self.data[precipcol].max()
-        self.peak_inflow = self.data[inflowcol].max()
-        self.peak_outflow = self.data[outflowcol].max()
-
         # summaries
         self._summary_dict = None
 
+    # quantities
+    @property
+    def precip(self):
+        if self._precip is None:
+            if self.precipcol is not None:
+                self._precip = self.data[self.data[self.precipcol] > 0][self.precipcol]
+            else:
+                self._precip = np.array([])
+        return self._precip
+
+    @property
+    def inflow(self):
+        if self._inflow is None:
+            if self.inflowcol is not None:
+                self._inflow = self.data[self.data[self.inflowcol] > 0][self.inflowcol]
+            else:
+                self._inflow = np.array([])
+        return self._inflow
+
+    @property
+    def outflow(self):
+        if self._outflow is None:
+            if self.outflowcol is not None:
+                self._outflow = self.data[self.data[self.outflowcol] > 0][self.outflowcol]
+            else:
+                self._outflow = np.array([])
+        return self._outflow
+
+    @property
+    def has_precip(self):
+        return self.precip.shape[0] > 0
+
+    @property
+    def has_inflow(self):
+        return self.inflow.shape[0] > 0
+
+    @property
+    def has_outflow(self):
+        return self.outflow.shape[0] > 0
 
     @property
     def season(self):
@@ -308,81 +339,102 @@ class Storm(object):
     # starts and stops
     @property
     def precip_start(self):
-        if self._precip_start is None:
+        if self._precip_start is None and self.has_precip:
             self._precip_start = self._get_event_time(self.precipcol, 'start')
         return self._precip_start
 
     @property
     def precip_end(self):
-        if self._precip_end is None:
+        if self._precip_end is None and self.has_precip:
             self._precip_end = self._get_event_time(self.precipcol, 'end')
         return self._precip_end
 
     @property
     def inflow_start(self):
-        if self._inflow_start is None:
+        if self._inflow_start is None and self.has_inflow:
             self._inflow_start = self._get_event_time(self.inflowcol, 'start')
         return self._inflow_start
 
     @property
     def inflow_end(self):
-        if self._inflow_end is None:
+        if self._inflow_end is None and self.has_inflow:
             self._inflow_end = self._get_event_time(self.inflowcol, 'end')
         return self._inflow_end
 
     @property
     def outflow_start(self):
-        if self._outflow_start is None:
+        if self._outflow_start is None and self.has_outflow:
             self._outflow_start = self._get_event_time(self.outflowcol, 'start')
         return self._outflow_start
 
     @property
     def outflow_end(self):
-        if self._outflow_end is None:
+        if self._outflow_end is None and self.has_outflow:
             self._outflow_end = self._get_event_time(self.outflowcol, 'end')
         return self._outflow_end
+
+    # peaks
+    @property
+    def peak_precip_intensity(self):
+        if self._peak_precip_intensity is None and self.has_precip:
+            self._peak_precip_intensity = self.precip.max()
+        return self._peak_precip_intensity
+
+    @property
+    def peak_inflow(self):
+        if self._peak_inflow is None and self.has_inflow:
+            self._peak_inflow = self.inflow.max()
+        return self._peak_inflow
+
+    @property
+    def peak_outflow(self):
+        if self._peak_outflow is None and self.has_outflow:
+            self._peak_outflow = self.outflow.max()
+        return self._peak_outflow
 
     # totals
     @property
     def total_precip_depth(self):
-        if self._total_precip_depth is None:
+        if self._total_precip_depth is None and self.has_precip:
             self._total_precip_depth = self.data[self.precipcol].sum()
         return self._total_precip_depth
 
     @property
     def total_inflow_volume(self):
-        if self._total_inflow_volume is None:
+        if self._total_inflow_volume is None and self.has_inflow:
             self._total_inflow_volume = self.data[self.inflowcol].sum() * self.volume_conversion
         return self._total_inflow_volume
 
     @property
     def total_outflow_volume(self):
-        if self._total_outflow_volume is None:
+        if self._total_outflow_volume is None and self.has_outflow:
             self._total_outflow_volume = self.data[self.outflowcol].sum() * self.volume_conversion
         return self._total_outflow_volume
 
     # centroids
     @property
     def centroid_precip_time(self):
-        if self._centroid_precip_time is None:
+        if self._centroid_precip_time is None and self.has_precip:
             self._centroid_precip_time = self._compute_centroid(self.precipcol)
         return self._centroid_precip_time
 
     @property
     def centroid_inflow_time(self):
-        if self._centroid_inflow_time is None:
+        if self._centroid_inflow_time is None and self.has_inflow:
             self._centroid_inflow_time = self._compute_centroid(self.inflowcol)
         return self._centroid_inflow_time
 
     @property
     def centroid_outflow_time(self):
-        if self._centroid_outflow_time is None:
+        if self._centroid_outflow_time is None and self.has_outflow:
             self._centroid_outflow_time = self._compute_centroid(self.outflowcol)
         return self._centroid_outflow_time
 
     @property
     def centroid_lag_hours(self):
-        if self._centroid_lag_hours is None:
+        if (self._centroid_lag_hours is None and
+                self.centroid_outflow_time is not None and
+                self.centroid_inflow_time is not None):
             self._centroid_lag_hours = (
                 self.centroid_outflow_time - self.centroid_inflow_time
             ).total_seconds() / SEC_PER_HOUR
@@ -391,21 +443,21 @@ class Storm(object):
     #times
     @property
     def peak_precip_intensity_time(self):
-        if self._peak_precip_intensity_time is None:
+        if self._peak_precip_intensity_time is None and self.has_precip:
             PI_selector = self.data[self.precipcol] == self.peak_precip_intensity
             self._peak_precip_intensity_time = self.data[PI_selector].index[0]
         return self._peak_precip_intensity_time
 
     @property
     def peak_inflow_time(self):
-        if self._peak_inflow_time is None:
+        if self._peak_inflow_time is None and self.has_inflow:
             PInf_selector = self.data[self.inflowcol] == self.peak_inflow
             self._peak_inflow_time = self.data[PInf_selector].index[0]
         return self._peak_inflow_time
 
     @property
     def peak_outflow_time(self):
-        if self._peak_outflow_time is None:
+        if self._peak_outflow_time is None and self.has_outflow:
             PEff_selector = self.data[self.outflowcol] == self.peak_outflow
             if PEff_selector.sum() > 0:
                 self._peak_outflow_time = self.data[PEff_selector].index[0]
@@ -420,6 +472,35 @@ class Storm(object):
             time_delta = self.peak_outflow_time - self.peak_inflow_time
             self._peak_lag_hours = time_delta.total_seconds() / SEC_PER_HOUR
         return self._peak_lag_hours
+
+    @property
+    def summary_dict(self):
+        if self._summary_dict is None:
+            self._summary_dict = {
+                'Storm Number': self.stormnumber,
+                'Antecedent Days': self.antecedent_period_days,
+                'Start Date': self.storm_start,
+                'End Date': self.storm_end,
+                'Duration Hours': self.duration_hours,
+                'Peak Precip Intensity': self.peak_precip_intensity,
+                'Total Precip Depth': self.total_precip_depth,
+                'Total Inflow Volume': self.total_inflow_volume,
+                'Peak Inflow': self.peak_inflow,
+                'Total Outflow Volume': self.total_outflow_volume,
+                'Peak Outflow': self.peak_outflow,
+                'Peak Lag Hours': self.peak_lag_hours,
+                'Season': self.season
+            }
+
+        return self._summary_dict
+
+    def is_small(self, minprecip=0.0, mininflow=0.0, minoutflow=0.0):
+        storm_is_small = (
+            (self.total_precip_depth is not None and self.total_precip_depth < minprecip) or
+            (self.total_inflow_volume is not None and self.total_inflow_volume < mininflow) or
+            (self.total_outflow_volume is not None and self.total_outflow_volume < minoutflow)
+        )
+        return storm_is_small
 
     def _get_event_time(self, column, bound):
         index_map = {'start': 0, 'end': -1}
@@ -657,84 +738,154 @@ class Storm(object):
 
         return fig, artists, labels
 
-    @property
-    def summary_dict(self):
-        if self._summary_dict is None:
-            self._summary_dict = {
-                'Storm Number': self.stormnumber,
-                'Antecedent Days': self.antecedent_period_days,
-                'Start Date': self.storm_start,
-                'End Date': self.storm_end,
-                'Duration Hours': self.duration_hours,
-                'Peak Precip Intensity': self.peak_precip_intensity,
-                'Total Precip Depth': self.total_precip_depth,
-                'Total Inflow Volume': self.total_inflow_volume,
-                'Peak Inflow': self.peak_inflow,
-                'Total Outflow Volume': self.total_outflow_volume,
-                'Peak Outflow': self.peak_outflow,
-                'Peak Lag Hours': self.peak_lag_hours,
-                'Season': self.season
-            }
 
-        return self._summary_dict
-
-
-def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
-                 minprecip=0.01, minflow=0.01, intereventperiods=36,
-                 standardizeColNames=True, outputfreqMinutes=10,
-                 debug=False, stormcol='storm', inplace=True):
+class HydroRecord(object):
     '''
-    Loops through the hydrologic records and parses the data into storms.
-        In this context, a storm is defined as starting whenever the
-        hydrologic records shows non-zero precipitation or [in|out]flow
-        from the BMP after a minimum inter-event dry period duration
-        specified in the the function call. A new column (`storm`) is
-        added to the DataFrame, of copy of which is returned.
+    Parameters
+    ----------
+    hydrodata : pandas.DataFrame
+        DataFrame of hydrologic data of the storm. Should contain
+        a unique index of type pandas.DatetimeIndex.
 
-    Input:
-        hydrodata : pandas.DataFrame
-            DataFrame of hydrologic data of the storm. Should contain
-            a unique index of type pandas.DatetimeIndex.
+    precipcol : optional string (default = None)
+        Name of column in `hydrodata` containing precipiation data.
 
-        precipcol : optional string (default = None)
-            Name of column in `hydrodata` containing precipiation data.
+    inflowcol : optional string (default = None)
+        Name of column in `hydrodata` containing influent flow data.
 
-        inflowcol : optional string (default = None)
-            Name of column in `hydrodata` containing influent flow data.
+    outflowcol : optional string (default = None)
+        Name of column in `hydrodata` containing effluent flow data.
 
-        outflowcol : optional string (default = None)
-            Name of column in `hydrodata` containing effluent flow data.
+    intereventPeriods : optional int (default = 36)
+        The number of dry records (no flow or rain) required to end
+        a storm.
 
-        minprecip : optional float (default = 0.01)
-            The minimum incremental precipiation depth required to be
-            considered part of a storm.
+    standardizeColNames : optional bool (default = True)
+        Toggles renaming columns to standard names in the returned
+        DataFrame.
 
-        minflow : optional float (default = 0.01)
-            The minimum incremental volumetric flowrate required to be
-            considered part of a storm.
+    outputfreqMinutes : optional int (default = 10)
+        The default frequency (minutes) to which all data will be
+        resampled. Precipitation data will be summed up across '
+        multiple timesteps during resampling, while flow will be
+        averaged.
 
-        intereventperiods : optional int (default = 36)
-            The number of dry records (no flow or rain) required to end
-            a storm.
+    debug : bool (default = False)
+        If True, diagnostic columns will not be dropped prior to
+        returning the dataframe of parsed_storms.
+    '''
 
-        standardizeColNames : optional bool (default = True)
-            Toggles renaming columns to standard names in the returned
-            DataFrame.
+    def __init__(self, hydrodata, precipcol=None, inflowcol=None,
+                 outflowcol=None, tempcol=None, stormcol='storm',
+                 minprecip=0.0, mininflow=0.0, minoutflow=0.0,
+                 outputfreqMinutes=10, intereventPeriods=36,
+                 volume_conversion=1):
 
-        outputfreqMinutes : optional int (default = 10)
-            The default frequency (minutes) to which all data will be
-            resampled. Precipitation data will be summed up across '
-            multiple timesteps during resampling, while flow will be
-            averaged.
+            # validate input
+        if precipcol is None and inflowcol is None and outflowcol is None:
+            msg = '`hydrodata` must have at least a precip or in/outflow column'
+            raise ValueError(msg)
 
+        # static input
+        self._raw_hydrodata = hydrodata
+        self.precipcol = precipcol
+        self.inflowcol = inflowcol
+        self.outflowcol = outflowcol
+        self.stormcol = stormcol
+        self.tempcol = tempcol
+        self.outputfreq = pandas.offsets.Minute(outputfreqMinutes)
+        self.intereventPeriods = intereventPeriods
+        self.minprecip = minprecip
+        self.mininflow = mininflow
+        self.minoutflow = minoutflow
+        self.volume_conversion = volume_conversion
+
+        # properties
+        self._hydrodata = None
+        self._all_storms = None
+        self._storms = None
+        self._storm_stats = None
+
+    @property
+    def hydrodata(self):
+        if self._hydrodata is None:
+            self._hydrodata = self._define_storms()
+        return self._hydrodata
+
+    @property
+    def all_storms(self):
+        if self._all_storms is None:
+            self._all_storms = {}
+            for storm_number in self.hydrodata[self.stormcol].unique():
+                if storm_number > 0:
+                    s = Storm(
+                            self.hydrodata, storm_number, precipcol=self.precipcol,
+                            inflowcol=self.inflowcol, outflowcol=self.outflowcol,
+                            tempcol=self.tempcol, stormcol=self.stormcol,
+                            freqMinutes=self.outputfreq.n, volume_conversion=1
+                    )
+                    self._all_storms[storm_number] = s
+
+        return self._all_storms
+
+    @property
+    def storms(self):
+        if self._storms is None:
+            self._storms = {
+                snum: storm for snum, storm in self.all_storms.items()
+                    if not storm.is_small(
+                        minprecip=self.minprecip,
+                        mininflow=self.mininflow,
+                        minoutflow=self.minoutflow
+                    )
+            }
+        return self._storms
+
+    @property
+    def storm_stats(self):
+        if self._storm_stats is None:
+            storm_stats = pandas.DataFrame([
+                self.storms[sn].summary_dict for sn in self.storms
+            ])
+
+            col_order = [
+                'Storm Number',
+                'Antecedent Days',
+                'Start Date',
+                'End Date',
+                'Duration Hours',
+                'Peak Precip Intensity',
+                'Total Precip Depth',
+                'Total Inflow Volume',
+                'Peak Inflow',
+                'Total Outflow Volume',
+                'Peak Outflow',
+                'Peak Lag Hours'
+            ]
+            self._storm_stats = storm_stats[col_order]
+
+        return self._storm_stats
+
+    def _define_storms(self, debug=False):
+        '''
+        Loops through the hydrologic records and parses the data into
+        storms. In this context, a storm is defined as starting whenever
+        the hydrologic records shows non-zero precipitation or
+        [in|out]flow from the BMP after a minimum inter-event dry period
+        duration specified in the the function call.
+
+        Parameters
+        ----------
         debug : bool (default = False)
             If True, diagnostic columns will not be dropped prior to
             returning the dataframe of parsed_storms.
 
-    Writes:
+        Writes
+        ------
         None
 
-    Returns:
+        Returns
+        -------
         parsed_storms : pandas.DataFrame
             Copy of the origin `hydrodata` DataFrame, but resmapled to
             a fixed frequency, columns possibly renamed, and a `storm`
@@ -742,172 +893,114 @@ def defineStorms(hydrodata, precipcol=None, inflowcol=None, outflowcol=None,
             belongs. Records where `storm` == 0 are not a part of any
             storm.
 
-    '''
+        '''
 
-    if not inplace:
-        hydrodata = hydrodata.copy()
-    # validate input
-    if precipcol is None and inflowcol is None and outflowcol is None:
-        msg = '`hydrodata` must have at least a precip or in/outflow column'
-        raise ValueError(msg)
+        hydrodata = self._raw_hydrodata.copy()
 
-    # pull out the rain and flow data
-    if precipcol is None:
-        precipcol = 'precip'
-        hydrodata.loc[:, precipcol] = np.nan
-
-    if inflowcol is None:
-        inflowcol = 'inflow'
-        hydrodata.loc[:, inflowcol] = np.nan
-
-    if outflowcol is None:
-        outflowcol = 'outflow'
-        hydrodata.loc[:, outflowcol] = np.nan
-
-    # bool column where True means there's rain or flow of some kind
-    hydrodata.loc[:, 'wet'] = hydrodata.apply(
-        lambda r: (r[precipcol] >= minprecip or
-                   r[inflowcol] >= minflow or
-                   r[outflowcol] >= minflow),
-        axis=1
-    )
-
-    # copy the bool column into its own df and add a bunch
-    # shifted columns so each row looks backwards and forwards
-    hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
-        hydrodata['wet'],
-        intereventperiods,
-        lambda x: x.any(),
-        min_periods=1
-    ).diff()
-
-    firstrow = hydrodata.iloc[0]
-    if firstrow['wet']:
-        hydrodata.loc[firstrow.name, 'windiff'] = 1
-
-    hydrodata.loc[:, 'event_start'] = False
-    hydrodata.loc[:, 'event_end'] = False
-
-    starts = hydrodata['windiff'] == 1
-    hydrodata.loc[starts, 'event_start'] = True
-
-    stops = hydrodata['windiff'].shift(-1 * intereventperiods) == -1
-    hydrodata.loc[stops, 'event_end'] = True
-
-    # initialize the new column as zeros
-    hydrodata.loc[:, stormcol] = 0
-
-    # each time a storm starts, incriment the storm number + 1
-    hydrodata.loc[:, stormcol] = hydrodata['event_start'].cumsum()
-
-    # periods between storms are where the cumulative number
-    # of storms that have ended are equal to the cumulative
-    # number of storms that have started.
-    # Stack Overflow: http://tinyurl.com/lsjkr9x
-    nostorm = hydrodata[stormcol] == hydrodata['event_end'].shift(2).cumsum()
-    hydrodata.loc[nostorm, stormcol] = 0
-
-    if standardizeColNames:
-        coldict = {
-            precipcol: 'precip',
-            inflowcol: 'inflow',
-            outflowcol: 'outflow'
-        }
-        hydrodata.rename(columns=coldict, inplace=True)
-
-    #hydrodata[stormcol] = iswet[stormcol]
-    if not debug:
-        cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
-        hydrodata = hydrodata.drop(cols_to_drop, axis=1)
-
-    return hydrodata
-
-
-def summarizeStorms(dataframe, **storm_kws):
-    stormcol = storm_kws.pop('stormcol', None)
-    if stormcol is None:
-        raise ValueError("`dataframe` must have storms defined.")
-
-    storms = [
-        Storm(dataframe, sn, **storm_kws)
-        for sn in dataframe[stormcol].unique() if sn > 0
-    ]
-
-    stats = pandas.DataFrame([s.summary_dict for s in storms])
-
-    col_order = [
-        'Storm Number',
-        'Antecedent Days',
-        'Start Date',
-        'End Date',
-        'Duration Hours',
-        'Peak Precip Intensity',
-        'Total Precip Depth',
-        'Total Inflow Volume',
-        'Peak Inflow',
-        'Total Outflow Volume',
-        'Peak Outflow',
-        'Peak Lag Hours'
-    ]
-
-    return storms, stats[col_order]
-
-
-def getStormFromTimestamp(timestamp, stormdata, stormcol='storm', lookback_hours=0):
-    '''Get the storm associdated with a give (sample) date
-
-    Parameters
-    ----------
-    timestamp : pandas.Timestamp
-        The date/time for which to search within the hydrologic record.
-    stormdata : pandas.DataFrame
-        DataFrame of the hydrologic data with storm numbers defined
-        (such as by `wqio.defineStorms`).
-    stormcol : string, optional (default = 'storm')
-        The column of `stormdata` in which the storm numbers are found.
-    lookback_hours : positive int or float, optional (default = 0)
-        If no storm is actively occuring at the provided timestamp, we
-        can optionally look backwards in the hydrologic record a fixed
-        amount of time (specified in hours). Negative values are
-        ignored.
-
-    Returns
-    -------
-    storm_number : int
-
-    See Also
-    --------
-    wqio.events.defineStorms
-
-    '''
-
-    if not isinstance(timestamp, pandas.Timestamp):
-        try:
-            timestamp = pandas.Timestamp(timestamp)
-        except:
-            raise ValueError('{} could not be coerced into a pandas.Timestamp')
-
-    if lookback_hours < 0:
-        raise ValueError('`lookback_hours` must be greater than 0')
-
-    storm_number = int(stormdata.loc[:timestamp, stormcol].iloc[-1])
-
-    if (storm_number == 0 or pandas.isnull(storm_number)) and lookback_hours != 0:
-        offset = timestamp - pandas.offsets.Hour(lookback_hours)
-        storms = stormdata.loc[offset:timestamp, [stormcol]]
-        storms = storms[storms > 0].dropna()
-        if storms.shape[0] == 0:
-            storm_number = None
+        # pull out the rain and flow data
+        if self.precipcol is None:
+            precipcol = 'precip'
+            hydrodata.loc[:, precipcol] = np.nan
         else:
-            storm_number = int(storms.iloc[-1])
+            precipcol = self.precipcol
 
-    return storm_number
+        if self.inflowcol is None:
+            inflowcol = 'inflow'
+            hydrodata.loc[:, inflowcol] = np.nan
+        else:
+            inflowcol = self.inflowcol
 
+        if self.outflowcol is None:
+            outflowcol = 'outflow'
+            hydrodata.loc[:, outflowcol] = np.nan
+        else:
+            outflowcol = self.outflowcol
 
+        # bool column where True means there's rain or flow of some kind
+        water_columns = [precipcol, inflowcol, outflowcol]
+        hydrodata.loc[:, 'wet'] = np.any(hydrodata[water_columns] > 0, axis=1)
 
+        # copy the bool column into its own df and add a bunch
+        # shifted columns so each row looks backwards and forwards
+        hydrodata.loc[:, 'windiff'] = pandas.rolling_apply(
+            hydrodata['wet'],
+            self.intereventPeriods,
+            lambda x: x.any(),
+            min_periods=1
+        ).diff()
 
+        firstrow = hydrodata.iloc[0]
+        if firstrow['wet']:
+            hydrodata.loc[firstrow.name, 'windiff'] = 1
 
+        hydrodata.loc[:, 'event_start'] = False
+        hydrodata.loc[:, 'event_end'] = False
 
+        starts = hydrodata['windiff'] == 1
+        hydrodata.loc[starts, 'event_start'] = True
+
+        stops = hydrodata['windiff'].shift(-1 * self.intereventPeriods) == -1
+        hydrodata.loc[stops, 'event_end'] = True
+
+        # initialize the new column as zeros
+        hydrodata.loc[:, self.stormcol] = 0
+
+        # each time a storm starts, incriment the storm number + 1
+        hydrodata.loc[:, self.stormcol] = hydrodata['event_start'].cumsum()
+
+        # periods between storms are where the cumulative number
+        # of storms that have ended are equal to the cumulative
+        # number of storms that have started.
+        # Stack Overflow: http://tinyurl.com/lsjkr9x
+        nostorm = hydrodata[self.stormcol] == hydrodata['event_end'].shift(2).cumsum()
+        hydrodata.loc[nostorm, self.stormcol] = 0
+
+        if not debug:
+            cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
+            hydrodata = hydrodata.drop(cols_to_drop, axis=1)
+
+        return hydrodata
+
+    def getStormFromTimestamp(self, timestamp, lookback_hours=0):
+        '''Get the storm associdated with a give (sample) date
+
+        Parameters
+        ----------
+        timestamp : pandas.Timestamp
+            The date/time for which to search within the hydrologic record.
+        lookback_hours : positive int or float, optional (default = 0)
+            If no storm is actively occuring at the provided timestamp, we
+            can optionally look backwards in the hydrologic record a fixed
+            amount of time (specified in hours). Negative values are
+            ignored.
+
+        Returns
+        -------
+        storm_number : int
+
+        '''
+
+        if not isinstance(timestamp, pandas.Timestamp):
+            try:
+                timestamp = pandas.Timestamp(timestamp)
+            except:
+                raise ValueError('{} could not be coerced into a pandas.Timestamp')
+
+        if lookback_hours < 0:
+            raise ValueError('`lookback_hours` must be greater than 0')
+
+        storm_number = int(self.hydrodata.loc[:timestamp, self.stormcol].iloc[-1])
+
+        if (storm_number == 0 or pandas.isnull(storm_number)) and lookback_hours != 0:
+            lookback_time = timestamp - pandas.offsets.Hour(lookback_hours)
+            storms = self.hydrodata.loc[lookback_time:timestamp, [self.stormcol]]
+            storms = storms[storms > 0].dropna()
+            if storms.shape[0] == 0:
+                storm_number = None
+            else:
+                storm_number = int(storms.iloc[-1])
+
+        return storm_number
 
 
 def getSeason(date):
@@ -949,3 +1042,6 @@ def getSeason(date):
         return 'autumn'
     else: # pragma: no cover
         raise ValueError('could not assign season to  {}'.format(date))
+
+
+

@@ -189,47 +189,58 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
         pass
 
 
-class base_defineStormsMixin(object):
+class base_HydroRecordMixin(object):
     def teardown(self):
         plt.close('all')
 
-    def test_check_type_and_columns(self):
-        nt.assert_true(isinstance(self.parsed_record, pandas.DataFrame))
-        for col in self.known_std_columns:
-            nt.assert_true(col in self.parsed_record.columns.tolist())
+    def test_attributes(self):
+        nt.assert_true(hasattr(self.hr, '_raw_hydrodata'))
+        nt.assert_true(isinstance(self.hr._raw_hydrodata, pandas.DataFrame))
 
-    @nt.raises(ValueError)
-    def test_defineStorm_no_columns(self):
-        data = events.defineStorms(self.orig_record)
+
+        nt.assert_true(hasattr(self.hr, 'hydrodata'))
+        nt.assert_true(isinstance(self.hr.hydrodata, pandas.DataFrame))
+        nt.assert_true(isinstance(self.hr.hydrodata.index, pandas.DatetimeIndex))
+        for col in self.known_std_columns:
+            nt.assert_true(col in self.hr.hydrodata.columns.tolist())
+
+        nt.assert_true(hasattr(self.hr, 'all_storms'))
+        nt.assert_true(isinstance(self.hr.all_storms, dict))
+
+        nt.assert_true(hasattr(self.hr, 'storms'))
+        nt.assert_true(isinstance(self.hr.storms, dict))
+
+        #nt.assert_true(hasattr(self.hr, 'storm_stats'))
+        nt.assert_true(isinstance(self.hr.storm_stats, pandas.DataFrame))
+
+    def test_check_type_and_columns(self):
+        nt.assert_true(isinstance(self.hr.hydrodata, pandas.DataFrame))
 
     def test_check_nan_col(self):
-        nt.assert_true(np.all(np.isnan(self.parsed_record['outflow'])))
+        nt.assert_true(np.all(np.isnan(self.hr.hydrodata['outflow'])))
 
     def test_number_storms(self):
-        last_storm = self.parsed_record['storm'].max()
+        last_storm = self.hr.hydrodata['storm'].max()
         nt.assert_equal(last_storm, self.known_number_of_storms)
 
     def test_first_storm_start(self):
-        storm1 = self.parsed_record[self.parsed_record['storm'] == 1]
+        storm1 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 1]
         assert_timestamp_equal(storm1.index[0], self.known_storm1_start)
 
     def test_first_storm_end(self):
-        storm1 = self.parsed_record[self.parsed_record['storm'] == 1]
+        storm1 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 1]
         assert_timestamp_equal(storm1.index[-1], self.known_storm1_end)
 
     def test_second_storm_start(self):
-        storm2 = self.parsed_record[self.parsed_record['storm'] == 2]
+        storm2 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 2]
         assert_timestamp_equal(storm2.index[0], self.known_storm2_start)
 
     def test_second_storm_end(self):
-        storm2 = self.parsed_record[self.parsed_record['storm'] == 2]
+        storm2 = self.hr.hydrodata[self.hr.hydrodata['storm'] == 2]
         assert_timestamp_equal(storm2.index[-1], self.known_storm2_end)
 
-    def test_index_type(self):
-        nt.assert_true(isinstance(self.parsed_record.index, pandas.DatetimeIndex))
 
-
-class test_defineStorms_Simple(base_defineStormsMixin):
+class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 13:40:00')
@@ -240,17 +251,68 @@ class test_defineStorms_Simple(base_defineStormsMixin):
             sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
         )
 
-        self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)
-        self.parsed_record = events.defineStorms(
+        self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5
+            outflowcol=None, outputfreqMinutes=5, minprecip=1.5
         )
 
+        self.storm_date = pandas.Timestamp('2013-05-19 11:11')
+        self.gap_date = pandas.Timestamp('2013-05-19 14:42')
+        self.known_storm = 2
+        self.known_stats_subset = pandas.DataFrame({
+            'Storm Number': [1, 5],
+            'Antecedent Days': [-2.409722, 0.708333],
+            'Peak Precip Intensity': [0.100, 0.100],
+            'Total Precip Depth': [2.76, 4.14]
+        })
 
-class test_defineStorms_Singular(base_defineStormsMixin):
+    def test_storm_stats(self):
+
+        cols = [
+            'Storm Number',
+            'Antecedent Days',
+            'Peak Precip Intensity',
+            'Total Precip Depth'
+        ]
+
+        pdtest.assert_frame_equal(self.hr.storm_stats[cols], self.known_stats_subset[cols])
+
+    def test_getStormFromTimestamp_basic(self):
+        sn = self.hr.getStormFromTimestamp(self.storm_date)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_getStormFromTimestamp_string(self):
+        datestring = '{}'.format(self.storm_date)
+        sn = self.hr.getStormFromTimestamp(datestring)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_getStormFromTimestamp_datetime(self):
+        pydt = self.storm_date.to_pydatetime()
+        sn = self.hr.getStormFromTimestamp(pydt)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_getStormFromTimestamp_lookback_6(self):
+        sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=6)
+        nt.assert_equal(sn, self.known_storm)
+
+    def test_getStormFromTimestamp_lookback_2(self):
+        sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=2)
+        nt.assert_equal(sn, None)
+
+    @nt.raises(ValueError)
+    def test_getStormFromTimestamp_bad_date(self):
+        self.hr.getStormFromTimestamp('junk')
+
+    @nt.raises(ValueError)
+    def test_getStormFromTimestamp_bad_lookback(self):
+        sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=-3)
+
+
+class test_HydroRecord_Singular(base_HydroRecordMixin):
     def setup(self):
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 13:40:00')
@@ -260,17 +322,17 @@ class test_defineStorms_Singular(base_defineStormsMixin):
         self.storm_file = os.path.join(
             sys.prefix, 'wqio_data', 'testing', 'teststorm_singular.csv'
         )
-        self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)
-        self.parsed_record = events.defineStorms(
+        self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5
         )
 
 
-class test_defineStorms_FirstObservation(base_defineStormsMixin):
+class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
     def setup(self):
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 12:05')
@@ -280,17 +342,17 @@ class test_defineStorms_FirstObservation(base_defineStormsMixin):
         self.storm_file = os.path.join(
             sys.prefix, 'wqio_data', 'testing', 'teststorm_firstobs.csv'
         )
-        self.known_std_columns = ['precip', 'inflow', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)
-        self.parsed_record = events.defineStorms(
+        self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5
         )
 
 
-class test_storm(object):
+class test_Storm(object):
     def setup(self):
         # path stuff
         self.prefix = setup_prefix('core.events')
@@ -300,15 +362,19 @@ class test_storm(object):
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)
-        self.parsed_record = events.defineStorms(self.orig_record,
-                                                precipcol='rain',
-                                                inflowcol='influent',
-                                                outflowcol='effluent',
-                                                outputfreqMinutes=5,
-                                                intereventperiods=24)
-        self.storm = events.Storm(self.parsed_record, 2)
+        self.hr = events.HydroRecord(self.orig_record,
+                                     precipcol='rain',
+                                     inflowcol='influent',
+                                     outflowcol='effluent',
+                                     outputfreqMinutes=5,
+                                     intereventPeriods=24)
+        self.storm = events.Storm(self.hr.hydrodata, 2,
+                                  precipcol=self.hr.precipcol,
+                                  inflowcol=self.hr.inflowcol,
+                                  outflowcol=self.hr.outflowcol,
+                                  freqMinutes=self.hr.outputfreq.n)
 
-        self.known_columns = ['precip', 'inflow', 'outflow', 'storm']
+        self.known_columns = ['rain', 'influent', 'effluent', 'storm']
         self.known_index_type = pandas.DatetimeIndex
         self.known_storm_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm_end = pandas.Timestamp('2013-05-19 11:55')
@@ -482,40 +548,9 @@ class test_storm(object):
         output = self.makePath('test_basicstorm.png')
         self.storm.summaryPlot(filename=output)
 
-
-def test_summarizeStorms():
-    storm_file = os.path.join(
-        sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
-    )
-
-    orig_record = pandas.read_csv(
-        storm_file, index_col='date', parse_dates=True
-    ).resample('5T').fillna(0)
-
-    parsed_record = events.defineStorms(
-        orig_record, precipcol='rain', inflowcol='influent',
-        outflowcol=None, outputfreqMinutes=5
-    )
-
-    storms, summary = events.summarizeStorms(
-        parsed_record, precipcol='precip',
-        inflowcol='inflow', stormcol='storm',
-        outflowcol='outflow', freqMinutes=5
-    )
-
-    for s in storms:
-        nt.assert_true(isinstance(s, events.Storm))
-
-    nt.assert_true(isinstance(summary, pandas.DataFrame))
-
-    known_subset = pandas.DataFrame({
-        'Storm Number': np.arange(1, 6, dtype=np.int64),
-        'Antecedent Days': [-2.409722, 0.184028, 0.145833, 0.194444, 0.708333],
-        'Peak Precip Intensity': [0.100, 0.110, 0.100, 0.100, 0.100],
-        'Total Precip Depth': [2.76, 1.39, 1.38, 1.38, 4.14]
-    })
-    cols = ['Storm Number', 'Antecedent Days', 'Peak Precip Intensity', 'Total Precip Depth']
-    pdtest.assert_frame_equal(summary[cols], known_subset[cols])
+    def test_is_small(self):
+        nt.assert_true(self.storm.is_small(minprecip=5.0))
+        nt.assert_false(self.storm.is_small(minprecip=1.0))
 
 
 class _base_getSeason(object):
@@ -544,58 +579,7 @@ class test_getSeason_Datetime(_base_getSeason):
         return datetime.datetime.strptime(date_string, '%Y-%m-%d')
 
 
-class test_getSeason_Timestampe(_base_getSeason):
+class test_getSeason_Timestamp(_base_getSeason):
     @nt.nottest
     def makeDate(self, date_string):
         return pandas.Timestamp(date_string)
-
-
-class test_getStormFromTimestamp(object):
-    def setup(self):
-        self.storm_date = pandas.Timestamp('2013-05-19 11:11')
-        self.gap_date = pandas.Timestamp('2013-05-19 14:42')
-        self.known_storm = 2
-        self.storm_file = os.path.join(
-            sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
-        )
-
-        self.orig_record = pandas.read_csv(
-            self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
-        self.parsed_record = events.defineStorms(
-            self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5
-        )
-
-    def test_basic(self):
-        sn = events.getStormFromTimestamp(self.storm_date, self.parsed_record)
-        nt.assert_equal(sn, self.known_storm)
-
-    def test_string(self):
-        datestring = '{}'.format(self.storm_date)
-        sn = events.getStormFromTimestamp(datestring, self.parsed_record)
-        nt.assert_equal(sn, self.known_storm)
-
-    def test_datetime(self):
-        pydt = self.storm_date.to_pydatetime()
-        sn = events.getStormFromTimestamp(pydt, self.parsed_record)
-        nt.assert_equal(sn, self.known_storm)
-
-    def test_lookback_6(self):
-        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
-                                          lookback_hours=6)
-        nt.assert_equal(sn, self.known_storm)
-
-    def test_lookback_2(self):
-        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
-                                          lookback_hours=2)
-        nt.assert_equal(sn, None)
-
-    @nt.raises(ValueError)
-    def test_bad_date(self):
-        events.getStormFromTimestamp('junk', self.parsed_record)
-
-    @nt.raises(ValueError)
-    def test_bad_lookback(self):
-        sn = events.getStormFromTimestamp(self.gap_date, self.parsed_record,
-                                          lookback_hours=-3)
