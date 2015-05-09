@@ -212,7 +212,7 @@ class base_HydroRecordMixin(object):
         nt.assert_true(hasattr(self.hr, 'storms'))
         nt.assert_true(isinstance(self.hr.storms, dict))
 
-        #nt.assert_true(hasattr(self.hr, 'storm_stats'))
+        nt.assert_true(hasattr(self.hr, 'storm_stats'))
         nt.assert_true(isinstance(self.hr.storm_stats, pandas.DataFrame))
 
     def test_check_type_and_columns(self):
@@ -241,10 +241,20 @@ class base_HydroRecordMixin(object):
         storm2 = self.hr.data[self.hr.data['storm'] == 2]
         assert_timestamp_equal(storm2.index[-1], self.known_storm2_end)
 
+    def test_interevent_stuff(self):
+        nt.assert_true(hasattr(self.hr, 'intereventPeriods'))
+        nt.assert_true(hasattr(self.hr, 'intereventHours'))
+
+        nt.assert_equal(self.hr.intereventPeriods, self.known_ie_periods)
+        nt.assert_equal(self.hr.intereventHours, self.known_ie_hours)
+
 
 class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
+        self.known_ie_hours = 3
+        self.known_ie_periods = 36
         self.known_number_of_storms = 5
+        self.known_number_of_bigstorms = 2
         self.known_storm1_start = pandas.Timestamp('2013-05-18 13:40:00')
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
@@ -254,17 +264,6 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         )
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
-        self.orig_record = pandas.read_csv(
-            self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
-        self.hr = events.HydroRecord(
-            self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5, minprecip=1.5
-        )
-
-        self.storm_date = pandas.Timestamp('2013-05-19 11:11')
-        self.gap_date = pandas.Timestamp('2013-05-19 14:42')
-        self.known_storm = 2
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
             'Antecedent Days': [-2.409722, 0.708333],
@@ -272,9 +271,22 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
             'Total Precip Depth': [2.76, 4.14]
         })
 
+        self.orig_record = pandas.read_csv(
+            self.storm_file, index_col='date', parse_dates=True
+        ).resample('5T').fillna(0)
+        self.hr = events.HydroRecord(
+            self.orig_record, precipcol='rain', inflowcol='influent',
+            outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
+            intereventHours=self.known_ie_hours
+        )
+
+        self.storm_date = pandas.Timestamp('2013-05-19 11:11')
+        self.gap_date = pandas.Timestamp('2013-05-19 14:42')
+        self.known_storm = 2
+
     def test_storm_attr_lengths(self):
-        nt.assert_equal(len(self.hr.storms), 2)
-        nt.assert_equal(len(self.hr.all_storms), 5)
+        nt.assert_equal(len(self.hr.storms), self.known_number_of_bigstorms)
+        nt.assert_equal(len(self.hr.all_storms), self.known_number_of_storms)
 
     def test_storm_stats(self):
 
@@ -334,6 +346,8 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
 
 class test_HydroRecord_Singular(base_HydroRecordMixin):
     def setup(self):
+        self.known_ie_hours = 3
+        self.known_ie_periods = 36
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 13:40:00')
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
@@ -348,12 +362,15 @@ class test_HydroRecord_Singular(base_HydroRecordMixin):
         ).resample('5T').fillna(0)
         self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5
+            outflowcol=None, outputfreqMinutes=5,
+            intereventHours=self.known_ie_hours
         )
 
 
 class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
     def setup(self):
+        self.known_ie_hours = 3
+        self.known_ie_periods = 36
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 12:05')
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
@@ -368,12 +385,15 @@ class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         ).resample('5T').fillna(0)
         self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
-            outflowcol=None, outputfreqMinutes=5
+            outflowcol=None, outputfreqMinutes=5,
+            intereventHours=self.known_ie_hours
         )
 
 
 class testHydroRecord_diffStormClass(base_HydroRecordMixin):
     def setup(self):
+        self.known_ie_hours = 3
+        self.known_ie_periods = 36
         self.known_number_of_storms = 5
         self.known_storm1_start = pandas.Timestamp('2013-05-18 13:40:00')
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
@@ -390,7 +410,8 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.hr = events.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
-            stormclass=fakeStormSublcass
+            stormclass=fakeStormSublcass,
+            intereventHours=self.known_ie_hours
         )
 
         self.storm_date = pandas.Timestamp('2013-05-19 11:11')
@@ -423,7 +444,7 @@ class test_Storm(object):
                                      inflowcol='influent',
                                      outflowcol='effluent',
                                      outputfreqMinutes=5,
-                                     intereventPeriods=24)
+                                     intereventHours=2)
         self.storm = events.Storm(self.hr.data, 2,
                                   precipcol=self.hr.precipcol,
                                   inflowcol=self.hr.inflowcol,

@@ -778,7 +778,7 @@ class HydroRecord(object):
     def __init__(self, hydrodata, precipcol=None, inflowcol=None,
                  outflowcol=None, tempcol=None, stormcol='storm',
                  minprecip=0.0, mininflow=0.0, minoutflow=0.0,
-                 outputfreqMinutes=10, intereventPeriods=36,
+                 outputfreqMinutes=10, intereventHours=6,
                  volume_conversion=1, stormclass=None):
 
         # validate input
@@ -799,7 +799,8 @@ class HydroRecord(object):
         self.stormcol = stormcol
         self.tempcol = tempcol
         self.outputfreq = pandas.offsets.Minute(outputfreqMinutes)
-        self.intereventPeriods = intereventPeriods
+        self.intereventHours = intereventHours
+        self.intereventPeriods = MIN_PER_HOUR / self.outputfreq.n * self.intereventHours
         self.minprecip = minprecip
         self.mininflow = mininflow
         self.minoutflow = minoutflow
