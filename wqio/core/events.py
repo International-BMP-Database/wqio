@@ -194,18 +194,18 @@ class Storm(object):
         self.hydrofreq_label = '{0} min'.format(self.freqMinutes)
 
         # tease out start/stop info
-        self.storm_start = self.data.index[0]
-        self.storm_end = self.data.index[-1]
-        self._season = getSeason(self.storm_start)
+        self.start = self.data.index[0]
+        self.end = self.data.index[-1]
+        self._season = getSeason(self.start)
 
         # storm duration (hours)
-        duration = self.storm_end - self.storm_start
+        duration = self.end - self.start
         self.duration_hours = duration.total_seconds() / SEC_PER_HOUR
 
         # antecedent dry period (hours)
         prev_storm_mask = self.full_record[stormcol] == self.stormnumber - 1
-        previous_storm_end = self.full_record[prev_storm_mask].index[-1]
-        antecedent_timedelta = self.storm_start - previous_storm_end
+        previous_end = self.full_record[prev_storm_mask].index[-1]
+        antecedent_timedelta = self.start - previous_end
         self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
 
         # quantities
@@ -479,8 +479,8 @@ class Storm(object):
             self._summary_dict = {
                 'Storm Number': self.stormnumber,
                 'Antecedent Days': self.antecedent_period_days,
-                'Start Date': self.storm_start,
-                'End Date': self.storm_end,
+                'Start Date': self.start,
+                'End Date': self.end,
                 'Duration Hours': self.duration_hours,
                 'Peak Precip Intensity': self.peak_precip_intensity,
                 'Total Precip Depth': self.total_precip_depth,
