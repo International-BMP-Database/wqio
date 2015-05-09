@@ -779,12 +779,17 @@ class HydroRecord(object):
                  outflowcol=None, tempcol=None, stormcol='storm',
                  minprecip=0.0, mininflow=0.0, minoutflow=0.0,
                  outputfreqMinutes=10, intereventPeriods=36,
-                 volume_conversion=1):
+                 volume_conversion=1, stormclass=None):
 
-            # validate input
+        # validate input
         if precipcol is None and inflowcol is None and outflowcol is None:
             msg = '`hydrodata` must have at least a precip or in/outflow column'
             raise ValueError(msg)
+
+        if stormclass is None:
+            self.stormclass = Storm
+        else:
+            self.stormclass = stormclass
 
         # static input
         self._raw_data = hydrodata
@@ -818,13 +823,14 @@ class HydroRecord(object):
             self._all_storms = {}
             for storm_number in self.data[self.stormcol].unique():
                 if storm_number > 0:
-                    s = Storm(
-                            self.data, storm_number, precipcol=self.precipcol,
-                            inflowcol=self.inflowcol, outflowcol=self.outflowcol,
-                            tempcol=self.tempcol, stormcol=self.stormcol,
-                            freqMinutes=self.outputfreq.n, volume_conversion=1
+                    this_storm = self.stormclass(
+                        self.data, storm_number, precipcol=self.precipcol,
+                        inflowcol=self.inflowcol, outflowcol=self.outflowcol,
+                        tempcol=self.tempcol, stormcol=self.stormcol,
+                        volume_conversion=self.volume_conversion,
+                        freqMinutes=self.outputfreq.n,
                     )
-                    self._all_storms[storm_number] = s
+                    self._all_storms[storm_number] = this_storm
 
         return self._all_storms
 
@@ -961,46 +967,61 @@ class HydroRecord(object):
 
         return data
 
-    def getStormFromTimestamp(self, timestamp, lookback_hours=0):
+    def getStormFromTimestamp(self, timestamp, lookback_hours=0, smallstorms=False):
         '''Get the storm associdated with a give (sample) date
 
         Parameters
         ----------
         timestamp : pandas.Timestamp
-            The date/time for which to search within the hydrologic record.
+            The date/time for which to search within the hydrologic
+            record.
         lookback_hours : positive int or float, optional (default = 0)
-            If no storm is actively occuring at the provided timestamp, we
-            can optionally look backwards in the hydrologic record a fixed
-            amount of time (specified in hours). Negative values are
-            ignored.
+            If no storm is actively occuring at the provided timestamp,
+            we can optionally look backwards in the hydrologic record a
+            fixed amount of time (specified in hours). Negative values
+            are ignored.
+        smallstorms : bool, optional (default = False)
+            If True, small storms will be included in the search.
 
         Returns
         -------
         storm_number : int
+        storm : wqio.Storm
 
         '''
 
+        # santize date input
         if not isinstance(timestamp, pandas.Timestamp):
             try:
                 timestamp = pandas.Timestamp(timestamp)
             except:
                 raise ValueError('{} could not be coerced into a pandas.Timestamp')
 
+        # check lookback hours
         if lookback_hours < 0:
             raise ValueError('`lookback_hours` must be greater than 0')
 
+        # initial search for the storm
         storm_number = int(self.data.loc[:timestamp, self.stormcol].iloc[-1])
 
+        # look backwards if we have too
         if (storm_number == 0 or pandas.isnull(storm_number)) and lookback_hours != 0:
             lookback_time = timestamp - pandas.offsets.Hour(lookback_hours)
             storms = self.data.loc[lookback_time:timestamp, [self.stormcol]]
             storms = storms[storms > 0].dropna()
+
             if storms.shape[0] == 0:
+                # no storm
                 storm_number = None
             else:
+                # storm w/i the lookback period
                 storm_number = int(storms.iloc[-1])
 
-        return storm_number
+        # return storm_number and storms
+        if smallstorms:
+            return storm_number, self.all_storms.get(storm_number, None)
+        else:
+            return storm_number, self.storms.get(storm_number, None)
 
 
 def getSeason(date):
