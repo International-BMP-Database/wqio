@@ -432,8 +432,8 @@ class test_Storm(object):
 
         self.known_columns = ['rain', 'influent', 'effluent', 'storm']
         self.known_index_type = pandas.DatetimeIndex
-        self.known_storm_start = pandas.Timestamp('2013-05-19 06:10')
-        self.known_storm_end = pandas.Timestamp('2013-05-19 11:55')
+        self.known_start = pandas.Timestamp('2013-05-19 06:10')
+        self.known_end = pandas.Timestamp('2013-05-19 11:55')
         self.known_season = 'spring'
         self.known_precip_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_precip_end = pandas.Timestamp('2013-05-19 09:10')
@@ -474,13 +474,13 @@ class test_Storm(object):
     def test_index_type(self):
         nt.assert_true(isinstance(self.storm.data.index, pandas.DatetimeIndex))
 
-    def test_storm_start(self):
-        nt.assert_true(hasattr(self.storm, 'storm_start'))
-        assert_timestamp_equal(self.storm.storm_start, self.known_storm_start)
+    def test_start(self):
+        nt.assert_true(hasattr(self.storm, 'start'))
+        assert_timestamp_equal(self.storm.start, self.known_start)
 
-    def test_storm_end(self):
-        nt.assert_true(hasattr(self.storm, 'storm_end'))
-        assert_timestamp_equal(self.storm.storm_end, self.known_storm_end)
+    def test_end(self):
+        nt.assert_true(hasattr(self.storm, 'end'))
+        assert_timestamp_equal(self.storm.end, self.known_end)
 
     def test_season(self):
         nt.assert_true(hasattr(self.storm, 'season'))
