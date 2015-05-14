@@ -14,6 +14,7 @@ from scipy import stats
 
 from .misc import sigFigs
 
+
 def _get_probs(nobs):
     '''Returns the x-axis labels for a probability plot based
     on the number of observations (`nobs`)
