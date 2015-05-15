@@ -267,7 +267,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
             'Antecedent Days': [-2.409722, 0.708333],
-            'Peak Precip Intensity': [0.100, 0.100],
+            'Peak Precip Intensity': [1.200, 1.200],
             'Total Precip Depth': [2.76, 4.14]
         })
 
@@ -325,7 +325,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
     def test_getStormFromTimestame_big(self):
         sn, storm = self.hr.getStormFromTimestamp(self.known_storm1_start)
         nt.assert_equal(sn, 1)
-        nt.assert_true(isinstance(storm, events.Storm))        
+        nt.assert_true(isinstance(storm, events.Storm))
 
     def test_getStormFromTimestamp_lookback_6(self):
         sn, storm = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=6)
@@ -420,7 +420,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
             'Antecedent Days': [-2.409722, 0.708333],
-            'Peak Precip Intensity': [0.100, 0.100],
+            'Peak Precip Intensity': [1.200, 1.200],
             'Total Precip Depth': [2.76, 4.14]
         })
 
@@ -464,7 +464,7 @@ class test_Storm(object):
         self.known_outflow_end = pandas.Timestamp('2013-05-19 11:50')
         self.known_duration_hours = 5.75
         self.known_antecedent_period_days = 0.17708333
-        self.known_peak_precip_intensity = 0.11
+        self.known_peak_precip_intensity = 1.32
         self.known_peak_inflow = 123.0
         self.known_peak_outflow = 41.0
         self.known_peak_precip_intensity_time = pandas.Timestamp('2013-05-19 08:00')

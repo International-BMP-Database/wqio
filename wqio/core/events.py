@@ -375,9 +375,14 @@ class Storm(object):
 
     # peaks
     @property
+    def _peak_depth(self):
+        if self.has_precip:
+            return self.precip.max()
+
+    @property
     def peak_precip_intensity(self):
         if self._peak_precip_intensity is None and self.has_precip:
-            self._peak_precip_intensity = self.precip.max()
+            self._peak_precip_intensity = self._peak_depth * MIN_PER_HOUR / self.freqMinutes
         return self._peak_precip_intensity
 
     @property
@@ -444,7 +449,7 @@ class Storm(object):
     @property
     def peak_precip_intensity_time(self):
         if self._peak_precip_intensity_time is None and self.has_precip:
-            PI_selector = self.data[self.precipcol] == self.peak_precip_intensity
+            PI_selector = self.data[self.precipcol] == self._peak_depth
             self._peak_precip_intensity_time = self.data[PI_selector].index[0]
         return self._peak_precip_intensity_time
 
@@ -850,28 +855,20 @@ class HydroRecord(object):
 
     @property
     def storm_stats(self):
+        col_order = [
+            'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
+            'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
+            'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
+            'Peak Outflow', 'Peak Lag Hours'
+        ]
         if self._storm_stats is None:
             storm_stats = pandas.DataFrame([
                 self.storms[sn].summary_dict for sn in self.storms
             ])
 
-            col_order = [
-                'Storm Number',
-                'Antecedent Days',
-                'Start Date',
-                'End Date',
-                'Duration Hours',
-                'Peak Precip Intensity',
-                'Total Precip Depth',
-                'Total Inflow Volume',
-                'Peak Inflow',
-                'Total Outflow Volume',
-                'Peak Outflow',
-                'Peak Lag Hours'
-            ]
             self._storm_stats = storm_stats[col_order]
 
-        return self._storm_stats
+        return self._storm_stats.sort(columns=['Storm Number']).reset_index(drop=True)
 
     def _define_storms(self, debug=False):
         '''
@@ -992,11 +989,7 @@ class HydroRecord(object):
         '''
 
         # santize date input
-        if not isinstance(timestamp, pandas.Timestamp):
-            try:
-                timestamp = pandas.Timestamp(timestamp)
-            except:
-                raise ValueError('{} could not be coerced into a pandas.Timestamp')
+        timestamp = santizeTimestamp(timestamp)
 
         # check lookback hours
         if lookback_hours < 0:
@@ -1025,6 +1018,16 @@ class HydroRecord(object):
             return storm_number, self.storms.get(storm_number, None)
 
 
+def santizeTimestamp(timestamp):
+    if not isinstance(timestamp, pandas.Timestamp):
+        try:
+            timestamp = pandas.Timestamp(timestamp)
+        except:
+            raise ValueError('{} could not be coerced into a pandas.Timestamp')
+
+    return timestamp
+
+
 def getSeason(date):
     '''Defines the season from a given date.
 
@@ -1045,7 +1048,7 @@ def getSeason(date):
     enough for now.
 
     '''
-
+    date = santizeTimestamp(date)
     if (date.month == 12 and date.day >= 22) or \
             (date.month in [1, 2]) or \
             (date.month == 3 and date.day < 22):

@@ -293,7 +293,7 @@ class Location(object):
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
-        self.plot_marker = markers[self.station_name][0]
+        self._plot_marker = markers[self.station_name][0]
         self.scatter_marker = markers[self.station_name][1]
         self._color = colors[self.station_name]
 
@@ -322,6 +322,13 @@ class Location(object):
     @color.setter
     def color(self, value):
         self._color = value
+
+    @property
+    def plot_marker(self):
+        return self._plot_marker
+    @plot_marker.setter
+    def plot_marker(self, value):
+        self._plot_marker = value
 
     @property
     def bsIter(self):
@@ -1832,6 +1839,7 @@ class DataCollection(object):
         return self._generic_stat(lambda x: np.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
                                   bootstrap=False)
+
     @cache_readonly
     def logmean(self):
         return self._generic_stat(lambda x, axis=0: np.mean(np.log(x), axis=axis), statname='Log-mean')
@@ -1891,8 +1899,11 @@ class DataCollection(object):
         for key, value in kwargs.items():
             items = [r for r in filter(lambda x: x.definition[key] == value, items)]
 
-        if squeeze and len(items) == 1:
-            items = items[0]
+        if squeeze:
+            if len(items) == 1:
+                items = items[0]
+            elif len(items) == 0:
+                items = None
 
         return items
 
