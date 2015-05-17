@@ -624,10 +624,10 @@ class Location(object):
         if self.all_positive and self.hasData:
             return utils.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
 
-    def boxplot_stats(self, log=True, bacteria=False):
+    def boxplot_stats(self, log=True, usegeomean=False):
         bxpstats = {
             'label': self.name,
-            'mean': self.geomean if bacteria else self.mean,
+            'mean': self.geomean if usegeomean else self.mean,
             'med': self.median,
             'q1': self.pctl25,
             'q3': self.pctl75,
@@ -651,7 +651,7 @@ class Location(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, minpoints=5,
+                width=0.8, usegeomean=False, ylabel=None, minpoints=5,
                 patch_artist=False):
         ''' Adds a boxplot to a matplotlib figure
 
@@ -669,10 +669,10 @@ class Location(object):
             the median.
         showmean : bool, optional (default=True)
             Toggles plotting the mean value on the boxplot as a point.
-            See also the `bacteria` kwarg
+            See also the `usegeomean` kwarg
         width : float, optional (default=0.8)
             Width of boxplot on the axes (data units)
-        bacteria : bool, optional (default False)
+        usegeomean : bool, optional (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
         ylabel : string or None (default):
@@ -699,7 +699,7 @@ class Location(object):
         )
 
         if self.N >= minpoints:
-            bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
+            bxpstats = self.boxplot_stats(log=yscale=='log', usegeomean=usegeomean)
             bp = ax.bxp(bxpstats, positions=[pos], widths=width,
                         showmeans=showmean, shownotches=notch, showcaps=False,
                         manage_xticks=False, patch_artist=patch_artist,
@@ -794,7 +794,7 @@ class Location(object):
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, axtype='prob',
+                 width=0.8, usegeomean=False, ylabel=None, axtype='prob',
                  patch_artist=False):
         '''
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
@@ -814,12 +814,12 @@ class Location(object):
 
         showmean : optional bool (default=True)
             Toggles plotting the mean value on the boxplot as a point.
-            See also the `bacteria` kwarg
+            See also the `usegeomean` kwarg
 
         width : optional float (default=0.8)
             Width of boxplot on the axes (data units)
 
-        bacteria : optional bool (default False)
+        usegeomean : optional bool (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
 
@@ -846,7 +846,7 @@ class Location(object):
         ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
-                     showmean=showmean, width=width, bacteria=bacteria,
+                     showmean=showmean, width=width, usegeomean=usegeomean,
                      ylabel=ylabel, patch_artist=patch_artist)
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
@@ -1359,7 +1359,7 @@ class Dataset(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, xlims=None, bothTicks=True,
+                width=0.8, usegeomean=False, ylabel=None, xlims=None, bothTicks=True,
                 offset=0.5, patch_artist=False):
         '''
         Adds a boxplot to a matplotlib figure
@@ -1381,12 +1381,12 @@ class Dataset(object):
 
             showmean : optional bool (default=True)
                 Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
+                See also the `usegeomean` kwarg
 
             width : optional float (default=0.8)
                 Width of boxplot on the axes (data units)
 
-            bacteria : optional bool (default False)
+            usegeomean : optional bool (default False)
                 If True, uses the geometric mean when `showmean` is True.
                 Otherwise, the arithmetic mean is used.
 
@@ -1410,7 +1410,7 @@ class Dataset(object):
         for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
             if loc.include:
                 loc.boxplot(ax=ax, pos=pos+offset, notch=notch, showmean=showmean,
-                            width=width/2, bacteria=bacteria, ylabel=None,
+                            width=width/2, usegeomean=usegeomean, ylabel=None,
                             patch_artist=patch_artist)
 
         ax.set_yscale(yscale)
@@ -1485,7 +1485,7 @@ class Dataset(object):
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, axtype='qq',
+                 width=0.8, usegeomean=False, ylabel=None, axtype='qq',
                  patch_artist=False):
         '''
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
@@ -1508,12 +1508,12 @@ class Dataset(object):
 
             showmean : optional bool (default=True)
                 Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
+                See also the `usegeomean` kwarg
 
             width : optional float (default=0.8)
                 Width of boxplot on the axes (data units)
 
-            bacteria : optional bool (default False)
+            usegeomean : optional bool (default False)
                 If True, uses the geometric mean when `showmean` is True.
                 Otherwise, the arithmetic mean is used.
 
@@ -1541,7 +1541,7 @@ class Dataset(object):
         ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
-                     showmean=showmean, width=width, bacteria=bacteria,
+                     showmean=showmean, width=width, usegeomean=usegeomean,
                      ylabel=ylabel, patch_artist=patch_artist)
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
