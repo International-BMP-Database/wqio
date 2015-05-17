@@ -945,10 +945,17 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
     return tstamp
 
 
-def whiskers_and_fliers(x, q1, q3, transformout=None):
+def whiskers_and_fliers(x, q1, q3, transformin=None, transformout=None):
     wnf = {}
+    if transformin is None:
+        transformin = lambda x: x
+
     if transformout is None:
         transformout = lambda x: x
+
+    x = transformin(x)
+    q1 = transformin(q1)
+    q3 = transformin(q3)
 
     iqr = q3 - q1
     # get low extreme
