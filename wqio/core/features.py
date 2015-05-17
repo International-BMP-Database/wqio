@@ -65,8 +65,8 @@ class Parameter(object):
         units of measure for the parameter
     '''
     def __init__(self, name=None, units=None, usingTex=False):
-        self._name = name
-        self._units = units
+        self.name = name
+        self.units = units
         self._usingTex = usingTex
 
     @property
