@@ -54,44 +54,20 @@ def _process_p_vals(pval):
 
 
 class Parameter(object):
+    '''
+    Class representing a single parameter
+
+    Parameters
+    ----------
+    name : string
+        name of the parameter
+    units : string
+        units of measure for the parameter
+    '''
     def __init__(self, name=None, units=None, usingTex=False):
-        '''
-        Class representing a single parameter
-
-        Input:
-            name : string
-                name of the parameter
-
-            units : string
-                units of measure for the parameter
-
-        Attributes:
-            name : string
-                standard name of the parameter found in the DB
-
-            unit : string
-                decently formatted combo of `name` and `units`
-
-        Methods:
-            None
-        '''
         self._name = name
         self._units = units
         self._usingTex = usingTex
-
-    @property
-    def name(self):
-        return self._name
-    @name.setter
-    def name(self, value):
-        self._name = value
-
-    @property
-    def units(self):
-        return self._units
-    @units.setter
-    def units(self, value):
-        self._units = value
 
     @property
     def usingTex(self):
@@ -120,10 +96,6 @@ class Parameter(object):
         else:
             paramunit = '{0} ({1})'
 
-        #if self.usingTex:
-        #    n = sanitizeTexParam(self.name)
-        #    u = sanitizeTexUnit(self.units)
-        #else:
         n = self.name
         u = self.units
 
@@ -135,55 +107,58 @@ class Parameter(object):
         )
 
     def __str__(self):
-        return "<openpybmp Parameter object> ({})".format(
-            self.paramunit(usecomma=False)
-        )
+        return self.__repr__()
 
 
 class DrainageArea(object):
+    ''' A simple object representing the drainage area of a BMP.
+
+    The calculations available assume that the are of the BMP and the
+    "total" area are mutually exclusive. In other words, the watershed
+    outlet is at the BMP inlet.
+
+    Parameters
+    ----------
+    total_area : float, optional (default=1.0)
+        The total geometric area of the BMP's catchment
+    imp_area : float, optional (default=1.0)
+        The impervious area of the BMP's catchment
+    bmp_area : float, optional (default=0.0)
+            The geometric area of the BMP itself.
+
+    Notes
+    -----
+    Units are not enforced, so keep them consistent yourself.
+
+    '''
     def __init__(self, total_area=1.0, imp_area=1.0, bmp_area=0.0):
-        '''
-        A simple object representing the drainage area of a BMP. Units are not
-        enforced, so keep them consistent yourself. The calculations available
-        assume that the are of the BMP and the "total" area are mutually
-        exclusive. In other words, the watershed outlet is at the BMP inlet.
-
-        Input:
-            total_area : optional float (default=1.0)
-                The total geometric area of the BMP's catchment
-
-            imp_area : optional float (default=1.0)
-                The impervious area of the BMP's catchment
-
-            bmp_area : optional float (default=0.0)
-                The geometric area of the BMP itself.
-
-        Attributes:
-            See Input section.
-
-        Methods:
-            simple_method - estimates the influent volume to the BMP based on
-                storm depth.
-        '''
         self.total_area = float(total_area)
         self.imp_area = float(imp_area)
         self.bmp_area = float(bmp_area)
 
     def simple_method(self, storm_depth, volume_conversion=1, annualFactor=1):
         '''
-        Estimate runoff volume via Bob Pitt's Simple Method.
+        Estimate runoff volume to BMP via Bob Pitt's Simple Method.
 
-        Input:
-            storm_depth : float
-                Depth of the storm.
+        Parameters
+        ----------
+        storm_depth : float
+            Depth of the storm.
+        volume_conversion : float, optional (default = 1)
+            Conversion factor to go from [area units] * [depth units] to
+            the desired [volume units]. If [area] = m^2, [depth] = mm,
+            and [volume] = L, then `volume_conversion` = 1.
+        annualFactor : float, optional (default = 1)
+            Factor accounting for the percentage of annual storms that
+            actually produce runoff.
 
-            volume_conversion : float (default = 1)
-                Conversion factor to go from [area units] * [depth units] to
-                the desired [volume units]. If [area] = m^2, [depth] = mm, and
-                [volume] = L, then `volume_conversion` = 1.
+        Returns
+        -------
+        runoff volume : float
 
         '''
-        # volumetric run off coneffiecient
+
+        # volumetric run off coeffiecient
         Rv = 0.05 + (0.9 * (self.imp_area/self.total_area))
 
         # run per unit storm depth
@@ -202,94 +177,42 @@ class Location(object):
         '''
         Object providing convenient access to statics for data
 
-        Input:
-            dataframe : pandas.DataFrame instance
-                A dataframe that contains at least two columns: one for the
-                analytical values and another for the data qualfiers. Can
-                contain any type of row index, but the column index must be
-                simple (i.e., not a pandas.MultiIndex).
+        Parameters
+        ----------
+        dataframe : pandas.DataFrame instance
+            A dataframe that contains at least two columns: one for the
+            analytical values and another for the data qualfiers. Can
+            contain any type of row index, but the column index must be
+            simple (i.e., not a pandas.MultiIndex).
+        rescol : str, optional (default = 'res')
+            Name of the column in `dataframe` that contains the
+            analytical results.
+        qualcol : str, optional (default = 'qual')
+            Name of the column in `dataframe` containing qualifiers.
+        ndval : str, optional (default = 'ND').
+            The *only* value in the `qualcol` of `dataframe` that
+            indicates that the corresponding value in `rescol` in
+            non-detect (i.e., right-censored).
+        bsIter : int, optional (default = 1e4)
+            Number of interations to use when using a bootstrap
+            algorithm to refine a statistic.
+        station_type : str, optional ['inflow' (default) or 'outflow']
+            Type of location being analyzed.
+        useROS : bool, optional (default = True)
+            Toggles the use of Regression On Order Statistics to
+            estimate non-detect values.
+        include : bool, optional (default = True)
+            Toggles the inclusion of the location in figures generated
+            from `Datasets` comprised of this location.
 
-            rescol : optional string (default = 'res')
-                Name of the column in `dataframe` that contains the analytical
-                values
+        Plotting Methods
+        ----------------
+        boxplot
+        probplot
+        statplot
 
-            qualcol : optional string (default = 'qual')
-                Name of the column in `dataframe` containing qualifiers.
-
-            ndval : optional string (default = 'ND')
-                The *only* value in the `qualcol` of `dataframe` that indicates
-                that the corresponding value in `rescol` in non-detect
-
-            bsIter : optional int (default = 1e4)
-                Number of interations to use when using a bootstrap algorithm
-                to refine a statistic.
-
-            station_type : optional string ['inflow' (default) or 'outflow']
-                Type of location being analyzed
-
-            useROS : optional bool (default = True)
-                Toggles the use of Regression On Order Statistics to estimate
-                non-detect values
-
-            include : optional bool (default = True)
-                Toggles the inclusion of the location in figures generated
-                from `Datasets` compruised of this location
-
-        General Attributes:
-            .station_type (string) : Same as input
-            .station_name (string) : 'Influent' or 'Effluent' depending on
-                `station_type`
-            .plot_marker (string) : matplotlib string of the marker used in
-                plotting methods
-            .scatter_marker (string) : matplotlib string of the marker used
-                in comparitive scatter plot methods
-            .color (string) : matplotlib color for plotting
-            .filtered_data (pandas.DataFrame) : full dataset with qualifiers
-            .ros (utils.ros.MR) : MR object of the ROS'd values
-            .data (pandas.Series) : Final data for use in stats and plotting
-                based on `useROS` (no qualiers)
-            .full_data (pandas.DataFrame) : Representation of `self.data`
-                that maintains the qualifiers associated with each result.
-            .bsIter (int) : Same as input
-            .useROS (bool) : Same as input
-            .include (bool) : Same as input
-            .exclude (bool) : Opposite of `.include`
-
-        Statistical Attributes:
-            .N (int) : total number of results
-            .ND (int) : number of non-detect results
-            .NUnique (int) : number of unique result values in the data
-            .fractionND (float) : fraction of data that is non-detect
-            .min (float) : minimum value of the data
-            .max (float) : maximum value of the data
-            .min_detect (float) : minimum detected value of the data
-            .min_DL (float) : minimum detection limit reported for the data
-            .mean*+ (float) : bootstrapped arithmetic mean of the data
-            .std*+ (float) bootstrapped standard deviation of the data
-            .geomean* (float) : geometric mean
-            .geostd (float) : geometric standard deviation
-            .cov (float) : covariance (absolute value of std/mean)
-            .skew (float) : skewness coefficient
-            .median* : median of the dataset
-            .pctl[10/25/75/90] (float) : percentiles of the dataset
-            .pnorm (float) : results of the Shapiro-Wilks test for normality
-            .plognorm (float) : results of the Shapiro-Wilks test for normality
-                on log-transormed data (so test for lognormalily).
-            .analysis_space (string) : Based on the results of self.pnorm and
-                self.plognorm, this is either "normal" or "lognormal".
-
-        Statistial Notes:
-            * indicates that there's an accompyaning tuple of confidence
-              interval. For example, self.mean and self.mean_conf_interval
-            + indicatates that there's a equivalent stat for log-transormed
-              data. For example, self.mean and self.log_mean (subject
-              to the absense of negitive results).
-
-        Methods (see docstrings for more info):
-            .boxplot
-            .probplot
-            .statplot
         '''
+
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -318,6 +241,8 @@ class Location(object):
 
     @property
     def color(self):
+        ''' Used in plotting
+        '''
         return self._color
     @color.setter
     def color(self, value):
@@ -325,6 +250,8 @@ class Location(object):
 
     @property
     def plot_marker(self):
+        ''' Used in plotting
+        '''
         return self._plot_marker
     @plot_marker.setter
     def plot_marker(self, value):
@@ -332,14 +259,22 @@ class Location(object):
 
     @property
     def bsIter(self):
+        ''' Number fof time the bootstrapper will iterates.
+
+        Setter clears the isntances property cache
+        '''
         return self._bsIter
     @bsIter.setter
     def bsIter(self, value):
-        self._bsIter = value
         self._cache.clear()
+        self._bsIter = value
 
     @property
     def useROS(self):
+        ''' Toggles using ROS'd values for stats
+
+        Setter clears the isntances property cache
+        '''
         return self._useROS
     @useROS.setter
     def useROS(self, value):
@@ -348,6 +283,10 @@ class Location(object):
 
     @property
     def filtered_data(self):
+        ''' Place-holder for when filter functions are implemented.
+
+        Setter clears the isntances property cache
+        '''
         if self._filtered_data is None:
             return self._raw_data
         else:
@@ -359,6 +298,8 @@ class Location(object):
 
     @property
     def data(self):
+        ''' Just a plain numpy array of the "final" data for analysis.
+        '''
         if self.hasData:
             if self.useROS:
                output = self.ros.data['final_data']
@@ -368,6 +309,8 @@ class Location(object):
 
     @property
     def full_data(self):
+        ''' Same as ``self.data`` but with no entires filtered out.
+        '''
         if self.hasData:
             if self.useROS:
                 output = self.ros.data[['final_data', 'qual']]
@@ -380,6 +323,8 @@ class Location(object):
 
     @property
     def name(self):
+        ''' Just a name for the dataset.
+        '''
         return self._name
     @name.setter
     def name(self, value):
@@ -387,6 +332,8 @@ class Location(object):
 
     @property
     def definition(self):
+        ''' Ideally, this is a dictionary with metadata.
+        '''
         return self._definition
     @definition.setter
     def definition(self, value):
@@ -394,6 +341,13 @@ class Location(object):
 
     @property
     def include(self):
+        ''' Boolean for indicating if a Location should be used.
+
+        Intended for situations that involve creating many Locations,
+        inspecting them for certain caharacterics, setting this
+        property, and then looping through them, using this is for logic
+        determining which analysese should be performed.
+        '''
         return self._include
     @include.setter
     def include(self, value):
@@ -401,14 +355,21 @@ class Location(object):
 
     @property
     def exclude(self):
+        ''' Opposite of ``self.include``
+        '''
         return not self.include
 
     @cache_readonly
     def N(self):
+        ''' Number of data points
+        '''
         return self.filtered_data.shape[0]
 
     @cache_readonly
     def hasData(self):
+        ''' Boolean that's true if the number of datapoints is greater
+        than zero.
+        '''
         if self.N == 0:
             return False
         else:
@@ -416,43 +377,66 @@ class Location(object):
 
     @cache_readonly
     def all_positive(self):
+        ''' Confirms that only positive results were passed.
+        '''
         if self.hasData:
             return self.min > 0
 
     @cache_readonly
     def ND(self):
+        '''Number of non-detect (right-censored values).
+        '''
         return (self.filtered_data[self._qualcol] == self._ndval).sum()
 
     @cache_readonly
     def NUnique(self):
+        ''' Number of unique results. A low value (relative to
+        ``self.N``) may indicate that there are a large number of
+        non-detets, even if the raw data didn't specify them as such.
+        '''
         return pandas.unique(self.data).shape[0]
 
     @cache_readonly
     def fractionND(self):
+        ''' Relative porportion of results that are reported non-detect.
+        '''
         return self.ND/self.N
 
     @cache_readonly
     def ros(self):
+        ''' A dataframe of the ROS'd data.
+        '''
         if self.hasData:
             return utils.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
 
     @cache_readonly
     def pnorm(self):
+        ''' P-value of the results of the Shapiro-Wilkes test for
+        normality.
+        '''
         if self.hasData:
             return stats.shapiro(self.data)[1]
 
     @cache_readonly
     def plognorm(self):
+        ''' P-value of the results of the Shapiro-Wilkes test for
+        normality applied to log-transformed data.
+        '''
         if self.hasData:
             return stats.shapiro(np.log(self.data))[1]
 
     @cache_readonly
     def lilliefors_p(self):
+        ''' P-value of the Lillifors test for normality.
+        '''
         if self.hasData:
             return sm.stats.lillifors(self.data)[1]
 
     @cache_readonly
     def analysis_space(self):
+        ''' Returns the best approximated distribution based on the
+        Shapiro-Wilkes p-values.
+        '''
         if self.plognorm >= self.pnorm and self.plognorm > 0.1:
             return 'lognormal'
         else:
@@ -460,107 +444,155 @@ class Location(object):
 
     @cache_readonly
     def cov(self):
+        ''' Coeffiecient of variation.
+        '''
         if self.hasData:
            return self.data.std()/self.data.mean()
 
     @cache_readonly
     def min(self):
+        ''' Minimum result.
+        '''
         if self.hasData:
             return self.data.min()
 
     @cache_readonly
     def min_detect(self):
+        ''' Minimum detected (uncensored) results.
+        '''
         if self.hasData:
-            return self._filtered_data[self._rescol][self._filtered_data[self._qualcol] != self._ndval].min()
+            mask = self._filtered_data[self._qualcol] != self._ndval
+            return self._filtered_data[mask][self._rescol].min()
 
     @cache_readonly
     def min_DL(self):
+        ''' The lowest detection limit.
+        '''
         if self.hasData:
-            return self._filtered_data[self._rescol][self._filtered_data[self._qualcol] == self._ndval].min()
+            mask = self._filtered_data[self._qualcol] == self._ndval
+            return self._filtered_data[mask][self._rescol].min()
 
     @cache_readonly
     def max(self):
+        ''' The maximum reported value.
+        '''
         if self.hasData:
             return self.data.max()
 
     @cache_readonly
     def skew(self):
+        ''' The skewness of the data.
+        '''
         if self.hasData:
             return stats.skew(self.data)
 
     @cache_readonly
     def pctl10(self):
+        ''' The 10th percentile.
+        '''
         if self.hasData:
             return stats.scoreatpercentile(self.data, 10)
 
     @cache_readonly
     def pctl25(self):
+        ''' The 25th percentile.
+        '''
         if self.hasData:
             return stats.scoreatpercentile(self.data, 25)
 
     @cache_readonly
     def pctl75(self):
+        ''' The 75th percentile.
+        '''
         if self.hasData:
             return stats.scoreatpercentile(self.data, 75)
 
     @cache_readonly
     def pctl90(self):
+        ''' The 90th percentile.
+        '''
         if self.hasData:
             return stats.scoreatpercentile(self.data, 90)
 
     # stats that we need
     @cache_readonly
     def median(self):
+        ''' The median result (50th percentile).
+        '''
         if self.hasData:
             return self._median_boostrap[0]
 
     @cache_readonly
     def median_conf_interval(self):
+        ''' The 95% confidence interval about the median based on the
+        BCa bootstrapping algorithm.
+        '''
         if self.hasData:
             return self._median_boostrap[1]
 
     @cache_readonly
     def mean(self):
+        ''' The arithmetic mean of the data.
+        '''
         if self.hasData:
             return self._mean_boostrap[0]
 
     @cache_readonly
     def mean_conf_interval(self):
+        ''' The 95% confidence interval about the arithmetic mean based
+        on the BCa bootstrapping algorithm.
+        '''
         if self.hasData:
             return self._mean_boostrap[1]
 
     @cache_readonly
     def std(self):
+        ''' Standard deviation from the mean.
+        '''
         if self.hasData:
             return np.std(self.data)
 
     @cache_readonly
     def logmean(self):
+        ''' The arithmetic mean of the log-transformed data.
+        '''
         if self.all_positive and self.hasData:
             return np.mean(np.log(self.data))
 
     @cache_readonly
     def logmean_conf_interval(self):
+        ''' The 95% confidence interval about the arithmetic mean of the
+        log-transformed data.
+        '''
         if self.all_positive and self.hasData:
             return self._logmean_boostrap[1]
 
     @cache_readonly
     def logstd(self):
+        ''' The standard deviation of the log-transformed data.
+        '''
         if self.all_positive and self.hasData:
             return np.std(np.log(self.data))
 
     @cache_readonly
     def geomean(self):
+        '''The geometric mean of the data.
+        '''
         if self.all_positive and self.hasData:
             return np.exp(self.logmean)
 
     @cache_readonly
     def geomean_conf_interval(self):
+        ''' The 95% confidence interval about the geometric mean of the
+        data.
+        '''
         if self.all_positive and self.hasData:
             return np.exp(self.logmean_conf_interval)
 
     @cache_readonly
     def geostd(self):
+        ''' The geometric standard deviation
+        '''
         if self.all_positive and self.hasData:
             return np.exp(self.logstd)
         else:
@@ -605,17 +637,13 @@ class Location(object):
 
         if log:
             wnf = utils.whiskers_and_fliers(
-                np.log(self.data),
-                np.log(self.pctl25),
-                np.log(self.pctl75),
-                transformout=np.exp
+                self.data, self.pctl25, self.pctl75,
+                transformin=np.log, transformout=np.exp
             )
         else:
             wnf = utils.whiskers_and_fliers(
-                self.data,
-                self.pctl25,
-                self.pctl75,
-                transformout=None
+                self.data, self.pctl25, self.pctl75,
+                transformin=None, transformout=None
             )
 
         bxpstats.update(wnf)
@@ -623,41 +651,37 @@ class Location(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, minPoints=5,
+                width=0.8, bacteria=False, ylabel=None, minpoints=5,
                 patch_artist=False):
-        '''Adds a boxplot to a matplotlib figure
+        ''' Adds a boxplot to a matplotlib figure
 
         Parameters
         ----------
-        ax : optional matplotlib axes object or None (default)
+        ax : matplotlib axes object or None (default), optional
             Axes on which the boxplot with be drawn. If None, one will
             be created.
-
-        pos : optional int (default=1)
+        pos : int, optional (default=1)
             Location along x-axis where boxplot will be placed.
-
-        yscale : optional string ['linear' or 'log' (default)]
+        yscale : string, optional ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-
-        notch : optional bool (default=True)
+        notch : bool, optional (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
-
-        showmean : optional bool (default=True)
+        showmean : bool, optional (default=True)
             Toggles plotting the mean value on the boxplot as a point.
             See also the `bacteria` kwarg
-
-        width : optional float (default=0.8)
+        width : float, optional (default=0.8)
             Width of boxplot on the axes (data units)
-
-        bacteria : optional bool (default False)
+        bacteria : bool, optional (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
-
         ylabel : string or None (default):
             Label for y-axis
-
-        patch_artist : optional bool (default = False)
+        minpoints : int, (default, optional = 5)
+            Minimum number of observations required to draw the boxplot.
+            If this condition is not met, falls back to
+            ``verticalScatter``.
+        patch_artist : bool, optional (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
 
@@ -674,7 +698,7 @@ class Location(object):
             markerfacecolor=self.color, markeredgecolor='Black'
         )
 
-        if self.N >= minPoints:
+        if self.N >= minpoints:
             bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
             bp = ax.bxp(bxpstats, positions=[pos], widths=width,
                         showmeans=showmean, shownotches=notch, showcaps=False,
@@ -705,38 +729,40 @@ class Location(object):
     def probplot(self, ax=None, yscale='log', axtype='prob',
                  ylabel=None, clearYLabels=False, managegrid=True,
                  rotateticklabels=True, setxlimits=True, **plotopts):
-        '''Adds a probability plot to a matplotlib figure
+        ''' Adds a probability plot to a matplotlib figure
 
         Parameters
         ----------
-        ax : optional matplotlib axes object or None (default).
+        ax : matplotlib axes object or None (default), optional.
             The Axes on which to plot. If None is provided, one will be
             created.
-        axtype : string (default = 'pp')
+        yscale : string (default = 'log'), optional
+            Scale for the y-axis. Use 'log' for logarithmic or 'linear'.
+        axtype : string, optional (default = 'pp')
             Type of plot to be created. Options are:
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        color : color string or three tuple (default = 'b')
-            Just needs to be any valid matplotlib color representation.
-        marker : string (default = 'o')
-            String representing a matplotlib marker style.
-        linestyle : string (default = 'none')
-            String representing a matplotlib line style. No line is shown by
-            default.
-        [x|y]label : string or None (default)
-            Axis label for the plot.
-        yscale : string (default = 'log')
-            Scale for the y-axis. Use 'log' for logarithmic (default) or
-            'linear'.
-        clearYLabels : bool (default = False)
+        ylabel : string or None (default), optional
+            Y-axis label for the plot.
+        clearYLabels : bool (default = False), optional
             If True, removed y-*tick* labels from `ax`
+        managegrid : bool, optional (default = True)
+            If true, gridlines are drawn.
+        rotateticklabels : bool, optional (default = True)
+            If true, the x-axis tick labels will be rotated 45 degrees.
+        setxlimits : bool, optional (default = True)
+            If true, the limits of the x-axis are automatically set
+            based on the number of data points plotted.
+        **plotopts : optional keywork arguments passed to
+        ``utils.figutils.probplot``.
 
         Returns
         -------
-        fig : matplotlib.Figure instance
+        fig : matplotlib.Figure
 
         '''
+
         fig, ax = utils.figutils._check_ax(ax)
 
         color = plotopts.pop('color', self.color)
@@ -774,45 +800,43 @@ class Location(object):
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
         contains a probability ot quantile plot.
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        pos : optional int (default=1)
+            Location along x-axis where boxplot will be placed.
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
+        yscale : optional string ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        notch : optional bool (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
 
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
+        showmean : optional bool (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
 
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
+        width : optional float (default=0.8)
+            Width of boxplot on the axes (data units)
 
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
+        bacteria : optional bool (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
 
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
+        ylabel : string or None (default):
+            Label for y-axis
 
-            ylabel : string or None (default):
-                Label for y-axis
+        probAxis : bool (default = True)
+            Toggles the display of probabilities (True) or Z-scores (i.e.,
+            theoretical quantiles) on the x-axis
 
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
+        patch_artist : optional bool (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
 
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-        Returns:
-            fig : matplotlib Figure instance
+        Returns
+        -------
+        fig : matplotlib Figure
 
         '''
         # setup the figure and axes
@@ -838,38 +862,35 @@ class Location(object):
                         ylabel=None, yscale='log', ignoreROS=True,
                         markersize=4):
         '''
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the points with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the points with be drawn. If None, one will
+            be created.
+        pos : int (default=1), optional
+            Location along x-axis where data will be centered.
+        width : float (default=0.80), optional
+            Width of the random x-values uniform distributed around `pos`
+        alpha : float (default=0.75), optional
+            Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
+        yscale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the y-axis
+        ylabel : string or None (default):, optional
+            Label for y-axis
+        ignoreROS : bool (default = True), optional
+            By default, this function will plot the original, non-ROS'd
+            data with a different symbol for non-detects. If `True`, the
+            and `self.useROS` is `True`, this function will plot the ROS'd
+            data with a single marker.
+        markersize : option int (default = 6)
+            Size of data markers on the figure in points.
 
-            pos : optional int (default=1)
-                Location along x-axis where data will be centered.
+        Returns
+        -------
+        fig : matplotlib Figure instance
 
-            width : optional float (default=0.80)
-                Width of the random x-values uniform distributed around `pos`
-
-            alpha : optional float (default=0.75)
-                Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            ylabel : optional string or None (default):
-                Label for y-axis
-
-            ignoreROS : optional bool (default = True)
-                By default, this function will plot the original, non-ROS'd
-                data with a different symbol for non-detects. If `True`, the
-                and `self.useROS` is `True`, this function will plot the ROS'd
-                data with a single marker.
-
-            markersize : option int (default = 6)
-                Size of data markers on the figure in points.
-
-        Returns:
-            fig : matplotlib Figure instance
         '''
+
         fig, ax = utils.figutils._check_ax(ax)
 
         low = pos - width*0.5
@@ -932,20 +953,29 @@ class Location(object):
 
     # other methods
     def applyFilter(self, filterfxn, **fxnkwargs):
-        '''
-        Filter the dataset and set the `include`/`exclude` attributes based on
-        a user-defined function. Warning: this is very advanced functionality.
-        Proceed with caution and ask for help.
+        '''Filter the dataset and set the `include`/`exclude` attributes
+        based on a user-defined function.
 
-        Input:
-            filterfxn : function
-                A user defined function that filters the data and determines
-                if the `include` attribute should be True or False. It *must*
-                return a pandas.DataFrame and a bool (in that order), or an
-                error will be raised. The `filterfxn` must accept the
-                `Location.data` attribute as its first argument.
 
-            **fxnkwargs : optional named arguments pass to `filterfxn`
+        Parameters
+        ----------
+        filterfxn : callable
+            A function that filters the data and determines if the
+            `include` attribute should be True or False. It *must*
+            return a pandas.DataFrame and a bool (in that order), or an
+            error will be raised. The `filterfxn` must accept the
+            `Location.data` attribute as its first argument.
+
+        **fxnkwargs : optional  keyword arguments
+            Passed to directly to the provided `filterfxn`
+
+        Note
+        ----
+         - This is very advanced functionality. Proceed with caution and
+        ask for help.
+        - Using this method will overwrite the ``filtered_data``
+        attribute. This is broad implicationes and will change many of
+        the cached properties of the instance.
 
         '''
         newdata, include = filterfxn(self.full_data, **fxnkwargs)
@@ -1082,7 +1112,7 @@ class Dataset(object):
 
         Notes
         -----
-        Operates on natural log-transormed paired data only.
+        Operates on natural log-transformed paired data only.
 
         See also
         --------
@@ -1502,6 +1532,7 @@ class Dataset(object):
 
         Returns:
             fig : matplotlib Figure instance
+
         '''
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
