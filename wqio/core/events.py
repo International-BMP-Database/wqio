@@ -786,7 +786,7 @@ class HydroRecord(object):
                  outflowcol=None, tempcol=None, stormcol='storm',
                  minprecip=0.0, mininflow=0.0, minoutflow=0.0,
                  outputfreqMinutes=10, intereventHours=6,
-                 volume_conversion=1, stormclass=None, lowmem=True):
+                 volume_conversion=1, stormclass=None, lowmem=False):
 
         # validate input
         if precipcol is None and inflowcol is None and outflowcol is None:
