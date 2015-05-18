@@ -189,7 +189,6 @@ class Storm(object):
         self.volume_conversion = volume_conversion * SEC_PER_MINUTE * self.freqMinutes
 
         # basic data
-        self.full_record = dataframe.copy()
         self.data = dataframe[dataframe[stormcol] == self.stormnumber].copy()
         self.hydrofreq_label = '{0} min'.format(self.freqMinutes)
 
@@ -203,10 +202,13 @@ class Storm(object):
         self.duration_hours = duration.total_seconds() / SEC_PER_HOUR
 
         # antecedent dry period (hours)
-        prev_storm_mask = self.full_record[stormcol] == self.stormnumber - 1
-        previous_end = self.full_record[prev_storm_mask].index[-1]
-        antecedent_timedelta = self.start - previous_end
-        self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
+        if self.stormnumber > 1:
+            prev_storm_mask = dataframe[stormcol] == self.stormnumber - 1
+            previous_end = dataframe[prev_storm_mask].index[-1]
+            antecedent_timedelta = self.start - previous_end
+            self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
+        else:
+            self.antecedent_period_days = np.nan
 
         # quantities
         self._precip = None
@@ -784,7 +786,7 @@ class HydroRecord(object):
                  outflowcol=None, tempcol=None, stormcol='storm',
                  minprecip=0.0, mininflow=0.0, minoutflow=0.0,
                  outputfreqMinutes=10, intereventHours=6,
-                 volume_conversion=1, stormclass=None):
+                 volume_conversion=1, stormclass=None, lowmem=True):
 
         # validate input
         if precipcol is None and inflowcol is None and outflowcol is None:
@@ -810,6 +812,7 @@ class HydroRecord(object):
         self.mininflow = mininflow
         self.minoutflow = minoutflow
         self.volume_conversion = volume_conversion
+        self.lowmem = lowmem
 
         # properties
         self._data = None
@@ -821,6 +824,9 @@ class HydroRecord(object):
     def data(self):
         if self._data is None:
             self._data = self._define_storms()
+            if self.lowmem:
+                self._data = self._data[self._data[self.stormcol] != 0]
+
         return self._data
 
     @property
