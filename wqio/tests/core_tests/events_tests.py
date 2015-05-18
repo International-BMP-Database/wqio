@@ -266,7 +266,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
-            'Antecedent Days': [-2.409722, 0.708333],
+            'Antecedent Days': [np.nan, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
             'Total Precip Depth': [2.76, 4.14]
         })
