@@ -19,6 +19,7 @@ from wqio.core.features import (
     Parameter,
     DrainageArea,
     Location,
+    LocationCollection,
     Dataset,
     DataCollection
 )
@@ -406,26 +407,30 @@ class _base_LocationMixin(object):
 
     def test_statplot_PP(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', ylabel='Test Label', axtype='pp')
+        boxopts = dict(ylabel='Test Label')
+        probopts = dict(axtype='pp')
+        fig = self.loc.statplot(yscale='log', boxplot_options=boxopts, probplot_options=probopts)
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_Stat-PP_useROS_{0}.png'.format(self.loc.useROS)))
 
     def test_statplot_baseline_QQ(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', axtype='qq', ylabel='Test Label')
+        boxopts = dict(ylabel='Test Label')
+        probopts = dict(axtype='qq')
+        fig = self.loc.statplot(yscale='log', boxplot_options=boxopts, probplot_options=probopts)
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_Stat-QQ_useROS_{0}.png'.format(self.loc.useROS)))
 
     def test_statplot_baseline_prob(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', axtype='prob', ylabel='Test Label')
+        boxopts = dict(ylabel='Test Label')
+        probopts = dict(axtype='prob')
+        fig = self.loc.statplot(yscale='log', boxplot_options=boxopts, probplot_options=probopts)
         assert_true(isinstance(fig, plt.Figure))
         fig.savefig(self.makePath('test_Loc_Stat-Prob_useROS_{0}.png'.format(self.loc.useROS)))
 
     @raises(ValueError)
     def test_statplot_badYScale(self):
         assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='JUNK', axtype='qq', ylabel='Test Label')
+        fig = self.loc.statplot(yscale='JUNK')
 
     def test_verticalScatter_baseline(self):
         assert_true(hasattr(self.loc, 'verticalScatter'))
@@ -952,6 +957,19 @@ class test_Dataset(object):
 
         assert_true(infl_ros_mean != infl_raw_mean)
         assert_true(effl_ros_mean != effl_raw_mean)
+
+
+class base_LocationCollection_Mixin(object):
+    def test_locations(self):
+        nt.assert_true(hasattr(self.lc, 'locations'))
+        nt.assert_true(isinstance(self.lc.locations, list))
+        for loc in self.lc.locations:
+            nt.assert_true(loc, Location)
+
+    def test_mannwhitney(self):
+        nt.assert_true(hasattr(self.lc, 'mannwhitney'))
+        nt.assert_true(isinstance(self.lc.mannwhitney, pandas.DataFrame))
+        nt.assert_equal(self.lc.mannwhitney, self.known_mannwhitney)
 
 
 class _base_DataCollecionMixin(object):

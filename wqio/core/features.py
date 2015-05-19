@@ -754,7 +754,7 @@ class Location(object):
         setxlimits : bool, optional (default = True)
             If true, the limits of the x-axis are automatically set
             based on the number of data points plotted.
-        **plotopts : optional keywork arguments passed to
+        **plotopts : optional keyword arguments passed to
         ``utils.figutils.probplot``.
 
         Returns
@@ -793,64 +793,49 @@ class Location(object):
 
         return fig
 
-    def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, usegeomean=False, ylabel=None, axtype='prob',
-                 patch_artist=False):
+    def statplot(self, yscale='log', boxplot_options=None, probplot_options=None):
         '''
         Creates a two-axis figure. Left axis has a bopxplot. Right axis
         contains a probability ot quantile plot.
 
         Parameters
         ----------
-        pos : optional int (default=1)
-            Location along x-axis where boxplot will be placed.
-
-        yscale : optional string ['linear' or 'log' (default)]
-            Scale formatting of the y-axis
-
-        notch : optional bool (default=True)
-            Toggles drawing of bootstrapped confidence interval around
-            the median.
-
-        showmean : optional bool (default=True)
-            Toggles plotting the mean value on the boxplot as a point.
-            See also the `usegeomean` kwarg
-
-        width : optional float (default=0.8)
-            Width of boxplot on the axes (data units)
-
-        usegeomean : optional bool (default False)
-            If True, uses the geometric mean when `showmean` is True.
-            Otherwise, the arithmetic mean is used.
-
-        ylabel : string or None (default):
-            Label for y-axis
-
-        probAxis : bool (default = True)
-            Toggles the display of probabilities (True) or Z-scores (i.e.,
-            theoretical quantiles) on the x-axis
-
-        patch_artist : optional bool (default = False)
-            Toggles the use of patch artist instead of a line artists
-            for the boxes
+        yscale : string (default = 'log'), optional
+            Scale for the y-axis. Use 'log' for logarithmic or 'linear'.
+        boxplot_options : dict
+            Dictionary of keyword arguments passed direction to
+            ``self.boxplot``.
+        probplot_options : dict
+            Dictionary of keyword arguments passed direction to
+            ``self.probplot``.
 
         Returns
         -------
         fig : matplotlib Figure
 
+        See also
+        --------
+        Location.boxplot, Location.probplot
+
         '''
+        if boxplot_options is None:
+            boxplot_options = {}
+
+        if probplot_options is None:
+            probplot_options = {}
+
+        boxplot_options['yscale'] = yscale
+        probplot_options['yscale'] = yscale
+
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
                          edgecolor='none')
         ax1 = plt.subplot2grid((1, 4), (0, 0))
         ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
 
-        self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
-                     showmean=showmean, width=width, usegeomean=usegeomean,
-                     ylabel=ylabel, patch_artist=patch_artist)
+        self.boxplot(ax=ax1, **boxplot_options)
 
-        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
-                      ylabel=None, clearYLabels=True)
+        self.probplot(ax=ax2, **probplot_options)
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
@@ -989,23 +974,451 @@ class Location(object):
         self.include = include
 
 
+class LocationCollection(object):
+    def __init__(self, data, **kwargs):
+        self.data = data.reset_index(drop=True)
+        self.stations = data.colums.get_level_values[0].unique()
+        palette = seaborn.color_palette(kwargs.pop('palette', 'deep'))
+        self.locations = []
+        for n, sta in enumerate(self.stations):
+            loc = Location(data[sta], station_type=sta, **kwargs)
+            loc.color = palette[n]
+            loc.name = sta
+
+
+    # plotting methods
+    def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
+                width=0.8, usegeomean=False, ylabel=None, xlims=None, bothTicks=True,
+                offset=0.5, patch_artist=False, xtick_kwds={}):
+        '''
+        Adds a boxplot to a matplotlib figure
+
+        Parameters
+        ----------
+        ax : matplotlib, axes object or None (default), optional
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+
+        pos : int, (default=1), optional
+            Location along x-axis where boxplot will be placed.
+
+        yscale : string, ['linear' or 'log' (default)], optional
+            Scale formatting of the y-axis
+
+        notch : bool, (default=True), optional
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+
+        showmean : bool, (default=True), optional
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `usegeomean` kwarg
+
+        width : float, (default=0.8), optional
+            Width of boxplot on the axes (data units)
+
+        usegeomean : bool, (default False), optional
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+
+        ylabel : string or None (default):
+            Label for y-axis
+
+        xlims : sequence, (length=2) or None (default), optional
+            Custom limits of the x-axis. If None, defaults to
+            [pos-1, pos+1].
+
+        patch_artist : bool, (default = False), optional
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
+
+        Returns
+        -------
+        fig : matplotlib Figure
+
+        '''
+
+        fig, ax = utils.figutils._check_ax(ax)
+        xlabels = []
+
+        for loc, pos in enumerate(self.locations, 1):
+            if loc.include:
+                loc.boxplot(ax=ax, pos=pos, notch=notch, showmean=showmean,
+                            width=width, usegeomean=usegeomean,
+                            patch_artist=patch_artist)
+                xlabels.append(loc.name)
+
+        ax.set_yscale(yscale)
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if yscale == 'log':
+            ax.yaxis.set_major_formatter(label_format)
+
+        utils.figutils.gridlines(ax, yminor=True)
+        ax.xaxis.grid(False, which='major')
+
+        if ylabel:
+            ax.set_ylabel(ylabel)
+
+        if xlims is None:
+            ax.set_xlim([0, pos+1])
+        else:
+            ax.set_xlim(xlims)
+
+        if bothTicks:
+            ax.set_xticks(np.arange(1, pos+1))
+            ax.set_xticklabels(xlabels, **xtick_kwds)
+        else:
+            ax.set_xticks([len(self.locations)/2])
+
+        return fig
+
+    def probplot(self, ax=None, yscale='log', axtype='qq', ylabel=None,
+                 clearYLabels=False, rotateticklabels=True, setxlimits=True):
+        '''
+        Adds probability plots to a matplotlib figure
+
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+
+        yscale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the y-axis
+
+        ylabel : string or None (default):
+            Label for y-axis
+
+        clearYLabels : bool (default = False)
+            If True, removed y-*tick* label from `ax`
+
+        Returns
+        -------
+        fig : matplotlib Figure
+
+        '''
+
+        fig, ax = utils.figutils._check_ax(ax)
+
+        for loc in self.locations:
+            if loc.include:
+                loc.probplot(ax=ax, clearYLabels=False, axtype=axtype,
+                             yscale=yscale)
+
+        xlabels = {
+            'pp': 'Theoretical percentiles',
+            'qq': 'Theoretical quantiles',
+            'prob': 'Non-exceedance probability (\%)'
+        }
+
+        ax.set_xlabel(xlabels[axtype])
+        ax.legend(loc='upper left', frameon=True)
+
+        if rotateticklabels:
+            utils.figutils.rotateTickLabels(ax, 45, 'x')
+
+        if setxlimits:
+            N = np.max([loc.N for loc in self.locations])
+            utils.figutils.setProbLimits(ax, N, 'x')
+
+        return fig
+
+    def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
+                 width=0.8, usegeomean=False, ylabel=None, axtype='qq',
+                 patch_artist=False):
+        '''
+        Creates a two-axis figure. Left axis has a bopxplot. Right axis
+        contains a probability ot quantile plot.
+
+        Parameters
+    ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+
+        pos : int (default=1), optional
+            Location along x-axis where boxplot will be placed.
+
+        yscale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the y-axis
+
+        notch : bool (default=True), optional
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+
+        showmean : bool (default=True), optional
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `usegeomean` kwarg
+
+        width : float (default=0.8), optional
+            Width of boxplot on the axes (data units)
+
+        usegeomean : bool (default False), optional
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+
+        ylabel : string or None (default):
+            Label for y-axis
+
+        patch_artist : bool (default = False), optional
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
+
+        probAxis : bool (default = True)
+            Toggles the display of probabilities (True) or Z-scores (i.e.,
+            theoretical quantiles) on the x-axis
+
+        Returns
+        -------
+        fig : matplotlib Figure
+
+        '''
+
+        # setup the figure and axes
+        fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
+                         edgecolor='none')
+        ax1 = plt.subplot2grid((1, 4), (0, 0))
+        ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
+
+        self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
+                     showmean=showmean, width=width, usegeomean=usegeomean,
+                     ylabel=ylabel, patch_artist=patch_artist)
+
+        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
+                      ylabel=None, clearYLabels=True,
+                      rotateticklabels=True, setxlimits=True)
+
+        ax1.yaxis.tick_left()
+        ax2.yaxis.tick_right()
+        fig.tight_layout()
+        fig.subplots_adjust(wspace=0.05)
+        return fig
+
+    def jointplot(self, hist=False, kde=True, rug=True, **scatter):
+        showlegend = scatter.pop('showlegend', True)
+        _ = scatter.pop('ax', None)
+
+        if self.paired_data is not None:
+            data = self.paired_data.xs('res', level='quantity', axis=1)
+            jg = seaborn.JointGrid(x='inflow', y='outflow', data=data)
+            self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter)
+            jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
+
+            jg.ax_marg_x.set_xscale(scatter.pop('xscale', 'log'))
+            jg.ax_marg_y.set_yscale(scatter.pop('yscale', 'log'))
+
+            if showlegend:
+                jg.ax_joint.legend(loc='upper left')
+
+        return jg
+
+    def scatterplot(self, ax=None, xscale='log', yscale='log', one2one=False,
+                    useROS=False, xlabel=None, ylabel=None, showlegend=True):
+        '''
+        Adds an influent/effluent scatter plot to a matplotlibe figure
+
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the scatterplot with be drawn. If None, one will
+            be created.
+
+        [x|y]scale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the [x|y]-axis
+
+        one2one : bool (default = False), optional
+            Toggles the inclusion of the 1:1 line (aka line of equality)
+
+        useROS : bool (default = True)
+            Toggles the use of the ROS'd results. If False, raw results
+            (i.e., detection limit for NDs) are used with varying
+            symbology
+
+        [x|y]label : string or None (default):
+            Label for [x|y]-axis. If None, will be 'Influent'. If the dataset
+            definition is available and incldues a Parameter, that will
+            be included as will. For no label, use `[x|y]label = ""`
+
+        showlegend : bool (default = True)
+            Toggles the display of the legend
+
+        Returns
+        -------
+        fig : matplotlib Figure
+
+        '''
+
+        # set up the figure/axes
+        fig, ax = utils.figutils._check_ax(ax)
+
+        # set the scales
+        ax.set_xscale(xscale)
+        ax.set_yscale(yscale)
+
+        # common symbology
+        markerkwargs = dict(
+            linestyle='none',
+            markerfacecolor='black',
+            markeredgecolor='white',
+            markeredgewidth=0.5,
+            markersize=6,
+            zorder=10,
+        )
+
+        # plot the ROSd'd result, if requested
+        if useROS:
+            x = self.paired_data.inflow.res
+            y = self.paired_data.outflow.res
+            ax.plot(x, y, marker='o', label="Paired, ROS'd data",  alpha=0.3, **markerkwargs)
+
+        # plot the raw results, if requested
+        else:
+            self._plot_nds(ax, which='neither', marker='o', alpha=0.8,
+                           label='Detected data pairs', **markerkwargs)
+            self._plot_nds(ax, which='influent', marker='v', alpha=0.6,
+                           label='Influent not detected', **markerkwargs)
+            self._plot_nds(ax, which='effluent', marker='<', alpha=0.6,
+                           label='Effluent not detected', **markerkwargs)
+            self._plot_nds(ax, which='both', marker='d', alpha=0.45,
+                           label='Both not detected', **markerkwargs)
+
+        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
+        if xscale == 'log':
+            ax.xaxis.set_major_formatter(label_format)
+        else:
+            ax.set_xlim(left=0)
+
+        if yscale == 'log':
+            ax.yaxis.set_major_formatter(label_format)
+        else:
+            ax.set_ylim(bottom=0)
+
+        # unify the axes limits
+        if xscale == yscale:
+            ax.set_aspect('equal')
+            axis_limits = [
+                np.min([ax.get_xlim(), ax.get_ylim()]),
+                np.max([ax.get_xlim(), ax.get_ylim()])
+            ]
+            ax.set_ylim(axis_limits)
+            ax.set_xlim(axis_limits)
+
+        elif yscale == 'linear':
+            axis_limits = [
+                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
+                np.max([ax.get_xlim(), ax.get_ylim()])
+            ]
+
+        elif xscale == 'linear':
+            axis_limits = [
+                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
+                np.max([ax.get_xlim(), ax.get_ylim()])
+            ]
+
+        # generate plotting values for 1:1 line
+        if xscale == yscale == 'linear':
+            xx = np.linspace(*axis_limits)
+        else:
+            xx = np.logspace(*np.log10(axis_limits))
+
+        # include the line of equality, if requested
+        if one2one:
+            ax.plot(xx, xx, linestyle='-', linewidth=1.25, alpha=0.50,
+                    color='black', zorder=5, label='1:1 line')
+
+        # setup the axes labels
+        if xlabel is None:
+            xlabel = 'Influent'
+
+        if ylabel is None:
+            ylabel = 'Effluent'
+
+        # create major/minor gridlines and apply the axes labels
+        utils.figutils.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
+
+        # show legend, if requested
+        if showlegend:
+            leg = ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.00)
+            leg.get_frame().set_alpha(0.00)
+            leg.get_frame().set_edgecolor('none')
+
+        fig.tight_layout()
+        return fig
+
+    def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
+        '''
+        Helper function for scatter plots -- plots various combinations
+        of non-detect paired data
+        '''
+        # store the original useROS value
+        use_ros_cache = self.useROS
+
+
+        if which == 'both':
+            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
+
+        elif which == 'influent':
+            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+
+        elif which == 'effluent':
+            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
+
+        elif which == 'neither':
+            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
+                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+
+        else:
+            msg = '`which` must be "both", "influent", ' \
+                  '"effluent", or "neighter"'
+            raise ValueError(msg)
+
+        x = self.paired_data.loc[index][('inflow', 'res')]
+        y = self.paired_data.loc[index][('outflow', 'res')]
+        ax.plot(x, y, label=label, **markerkwargs)
+
+
+
 class Dataset(object):
     # TODO: constructor should take dataframe, and build Location object,
     # not the other way around. This will allow Dataset.influent = None
     # by passing in a dataframe where df.shape[0] == 0
-    def __init__(self, influent, effluent, useROS=True, name=None, xlsDataDumpFile=None):
+    ''' A Dataset is an object that stores and compares two Location
+    objects (typically, the influent and effluent locations).
+
+    Parameters
+    ----------
+    influent, effluent : wqio.Location
+        Location objects representing the influent and effluent
+        monitoring locations.
+    useROS : bool, optional (default = True)
+        Toggles the use of ROS'd data when computing statistics.
+    name : string or None, optional
+        An optional name for the Dataset. Can be convenient when
+        summarizing lots of datasets and writing out to files.
+    defkwargs : optional keyword arguments
+        Optional keywords that can be used to set the definition of the
+        Dataset. Useful when you have a collection of many Datasets and
+        would like to filter for common elememts.
+
+    '''
+    def __init__(self, influent, effluent, useROS=True, name=None, **defkwargs):
 
         ## TODO 2013-11-12: need to use useROS to set useROS attr of the locations,
         ## then use [Location].data for the stats #duh
 
         # basic attributes
-        self.dumpFile = xlsDataDumpFile
         self.influent = influent
+        self.influent.useROS = useROS
+
         self.effluent = effluent
+        self.effluent.useROS = useROS
+
         self._name = name
         self._include = None
         self._useROS = useROS
-        self._definition = {}
+        self._definition = defkwargs
         self._cache = resettable_cache()
 
     @property
