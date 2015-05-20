@@ -47,7 +47,7 @@ def assert_timestamp_equal(x, y):
 
 
 def setup_prefix(folder):
-    for imgdir in ['baseline_images', 'results_images']:
+    for imgdir in ['baseline_images', 'result_images']:
         subdir = os.path.join('.', imgdir)
         subsubdir = os.path.join(subdir, folder)
 
