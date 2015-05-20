@@ -711,29 +711,53 @@ def setup_sample(sampletype, with_storm=False):
     return wqs
 
 
-@image_comparison(baseline_images=['test_Grab_without_storm'], extensions=['png'])
+@image_comparison(
+    baseline_images=['test_Grab_without_storm', 'test_Grab_without_storm_rug'],
+    extensions=['png']
+)
 def test_plot_grabsample_no_storm_not_focus():
     wqs = setup_sample('grab', with_storm=False)
     fig, ax = plt.subplots()
     wqs.plot_ts(ax, isFocus=False)
 
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=False, asrug=True)
 
-@image_comparison(baseline_images=['test_Grab_without_storm_focus'], extensions=['png'])
+
+@image_comparison(
+    baseline_images=['test_Grab_without_storm_focus', 'test_Grab_without_storm_focus_rug'],
+    extensions=['png']
+)
 def test_plot_grabsample_no_storm_focus():
     wqs = setup_sample('grab', with_storm=False)
     fig, ax = plt.subplots()
     wqs.plot_ts(ax, isFocus=True)
 
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=True, asrug=True)
 
-@image_comparison(baseline_images=['test_Comp_without_storm'], extensions=['png'])
+
+@image_comparison(
+    baseline_images=['test_Comp_without_storm', 'test_Comp_without_storm_rug'],
+    extensions=['png']
+)
 def test_plot_compsample_no_storm_not_focus():
     wqs = setup_sample('composite', with_storm=False)
     fig, ax = plt.subplots()
     wqs.plot_ts(ax, isFocus=False)
 
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=False, asrug=True)
 
-@image_comparison(baseline_images=['test_Comp_without_storm_focus'], extensions=['png'])
+
+@image_comparison(
+    baseline_images=['test_Comp_without_storm_focus', 'test_Comp_without_storm_focus_rug'],
+    extensions=['png']
+)
 def test_plot_compsample_no_storm_focus():
     wqs = setup_sample('composite', with_storm=False)
     fig, ax = plt.subplots()
     wqs.plot_ts(ax, isFocus=True)
+
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=True, asrug=True)

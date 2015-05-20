@@ -112,14 +112,15 @@ class _basic_wq_sample(object):
 
         if asrug:
             seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha)
+            line = plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
+                              color='black', alpha=alpha, linestyle='none')
 
         else:
-            ax.plot(self.sample_ts, yposition, marker=self.marker,
-                    markersize=4, linestyle=self.linestyle, color='Black',
-                    zorder=10, label='_nolegend', alpha=alpha)
+            line, = ax.plot(self.sample_ts, yposition, marker=self.marker,
+                            markersize=4, linestyle=self.linestyle, color='Black',
+                            zorder=10, label='_nolegend', alpha=alpha)
 
-        return plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
-                          color='black', alpha=alpha, linestyle='none')
+        return line
 
 
 class CompositeSample(_basic_wq_sample):
