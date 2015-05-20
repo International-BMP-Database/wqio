@@ -74,7 +74,7 @@ class InvertedProbTransform(Transform):
     is_separable = True
     has_inverse = True
 
-    def __init__(self):
+    def __init__(self, dist):
         self.dist = dist
         Transform.__init__(self)
 
