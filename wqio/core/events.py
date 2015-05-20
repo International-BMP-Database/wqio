@@ -560,76 +560,60 @@ class Storm(object):
 
         return artists, labels
 
-    def _plot_hydroquantity(self, quantity, ax=None, inverty=False,
-                            rotation=90, cumulative=False):
+    def plot_hydroquantity(self, quantity, ax=None, label=None, otherlabels=None, artists=None):
+        '''Plots a hydrologic quantity to a matplotlib axes.
+
+        Parameters
+        ----------
+        quantity : string
+            Column name of the quantity you want to plot.
+        ax : matplotlib axes object or None, optional
+            The axes on which the data will be plotted. If None, a new
+            one will be created.
+
+        Returns
+        -------
+        proxy : matplotlib artist
+            A proxy artist for the plotted quantity
+
         '''
-        Adds an area of a quantity in the hydrologic data to an matplotlib
-            axes.
 
-        Input:
-            quantity (string) : column name of the quantity you want to plot
-            ax (matplotlib axes object, default None) : the axes on which the
-                data will be plotted. If None, a new one will be created.
-            interty (bool, default False) : whether or not to invert the y-axis
-
-        Writes:
-            None
-
-        Returns:
-            fig (matplotlib figure object) : the figure on which `ax` lives
-        '''
         # setup the figure
         if ax is None:
             fig, ax = plt.subplots()
-        #else:
-        #    fig = ax.figure
+        else:
+            fig = ax.figure
 
-        # plot properties based on the column
-        col = quantity.lower()
+        if label is None:
+            label = quantity
 
 
         # select the plot props based on the column
         try:
-            meta = self.meta[col]
+            meta = self.meta[quantity]
         except KeyError:
-            raise KeyError('%s not available. Try: %s' % (quantity, colmap.keys()))
+            raise KeyError('%s not available'.format(quantity))
 
-        # selct data and fill in missing records with 0
-        data = self.data[col].copy()
-        data.fillna(value=0, inplace=True)
 
         # plot the data
-        ax.fill_between(data.index, data, color=meta['color'],
-                        alpha=meta['alpha'], zorder=5,
-                        linewidth=0, )
+        self.data[quantity].fillna(0).plot(ax=ax, kind='area', color=meta['color'],
+                                           alpha=meta['alpha'], zorder=5)
 
-        # y-label
-        if quantity.lower() in ['outflow', 'inflow']:
-            ax.set_ylabel('Flow (L/s)', color='Black')
-        else:
-            ax.set_ylabel(meta['ylabel'], color=meta['color'])
+        if artists is not None:
+            proxy = mpatches.Rectangle(
+                (0, 0), 1, 1, facecolor=meta['color'], linewidth=0, alpha=meta['alpha']
+            )
+            artists.append(proxy)
+        if otherlabels is not None:
+            otherlabels.append(label)
 
-        # y-axis minuimum
-        if meta['ymin'] is not None:
-            ax.set_ylim(ymin=meta['ymin'])
+        print(ax.get_ylim())
 
-        # y-axis maximum (the `if` handles no-data situations)
-        ymax = ax.get_ylim()[1]
-        if ymax < 0.25:
-            ax.set_ylim(ymax=0.5)
-
-        # y-axis inversion (precip only, typically)
-        if inverty:
-            ax.invert_yaxis()
-
-        proxy = mpatches.Rectangle(
-            (0, 0), 1, 1, facecolor=meta['color'], linewidth=0, alpha=meta['alpha']
-        )
-
-        return proxy
+        return fig, otherlabels, artists
 
     def summaryPlot(self, axratio=2, filename=None, showLegend=True,
-                    precip=True, inflow=True, outflow=True, **figkwargs):
+                    precip=True, inflow=True, outflow=True, figopts={},
+                    serieslabels={}):
         '''
         Creates a figure showing the hydrlogic record (flow and
             precipitation) of the storm
@@ -650,98 +634,69 @@ class Storm(object):
         Returns:
             None
         '''
-        fig = plt.figure(**figkwargs)
+        fig = plt.figure(**figopts)
         gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio],
                                hspace=0.08)
         rainax = fig.add_subplot(gs[0])
-        flowax = fig.add_subplot(gs[1], sharex=rainax)
+        flowax = fig.add_subplot(gs[1])
 
         # create the legend proxy artists
         artists = []
         labels = []
 
         legcols = 0
+        # in the label assignment: `serieslabels.pop(item, item)` might
+        # seem odd. What it does is looks for a label (value) in the
+        # dictionary with the key equal to `item`. If there is no valur
+        # for that key in the dictionary the `item` itself is returned.
+        # so if there's nothing called "test" in mydict,
+        # `mydict.pop("test", "test")` returns `"test"`.
         if inflow:
-            inflow_proxy = self._plot_hydroquantity(
-                self.inflowcol, ax=flowax, inverty=False
+            fig, labels, artists = self.plot_hydroquantity(
+                self.inflowcol,
+                ax=flowax,
+                label=serieslabels.pop(self.inflowcol, self.inflowcol),
+                otherlabels=labels,
+                artists=artists,
             )
-            artists.append(inflow_proxy)
-            labels.append('Influent flow')
-            legcols += 1
 
         if outflow:
-            outflow_proxy = self._plot_hydroquantity(
-                self.outflowcol, ax=flowax, inverty=False
+            fig, labels, arti = self.plot_hydroquantity(
+                self.outflowcol,
+                ax=flowax,
+                label=serieslabels.pop(self.outflowcol, self.outflowcol),
+                otherlabels=labels,
+                artists=artists
             )
-            artists.append(outflow_proxy)
-            labels.append('Measured effluent')
-            legcols += 1
 
         if precip:
-            precip_proxy = self._plot_hydroquantity(
-                self.precipcol, ax=rainax, inverty=True
+            fig, labels, arti = self.plot_hydroquantity(
+                self.precipcol,
+                ax=rainax,
+                label=serieslabels.pop(self.precipcol, self.precipcol),
+                otherlabels=labels,
+                artists=artists
             )
-            artists.append(precip_proxy)
-            labels.append('Precipitation')
-            legcols += 1
+            rainax.invert_yaxis()
 
         if showLegend:
-            leg = rainax.legend(artists, labels, loc='upper left', fontsize=7,
-                                markerscale=0.75, ncol=legcols, frameon=False,
-                                bbox_to_anchor=(0.00, 1.35))
+            leg = rainax.legend(artists, labels, fontsize=7, ncol=1,
+                                markerscale=0.75, frameon=False,
+                                loc='lower right')
             leg.get_frame().set_zorder(25)
-
-        storm_length = 0.2 + flowax.get_xlim()[1] - flowax.get_xlim()[0]
-        if storm_length <= 0.75:
-            hourinterval = 1
-            day_array = np.arange(0, HOUR_PER_DAY, 4)
-        elif 0.75 < storm_length <= 1.5:
-            hourinterval = 2
-            day_array = np.arange(0, HOUR_PER_DAY, 6)
-        elif 1.5 < storm_length <= 3:
-            hourinterval = 4
-            day_array = np.arange(0, HOUR_PER_DAY, 12)
-        elif 4 < storm_length <= 6:
-            hourinterval = 8
-            day_array = np.array([0])
+            _leg = [leg]
         else:
-            hourinterval = 12
-            day_array = np.array([0])
+            _leg = None
 
-        # hour tick marks and label format
-        hour_array = np.arange(hourinterval, HOUR_PER_DAY, hourinterval)
 
-        for dhour in day_array[1:]:
-            index = np.nonzero(hour_array == dhour)[0][0]
-            hour_array = np.delete(hour_array, index)
-
-        hours = mdates.HourLocator(byhour=hour_array)
-        hourfmt = mdates.DateFormatter('%H:%M')
-
-        # day tick marks and label formats
-        days = mdates.HourLocator(byhour=day_array)
-        dayfmt = mdates.DateFormatter('%H:%M\n%d-%b\n%Y')
-
-        # x major ticks
-        flowax.xaxis.set_major_locator(days)
-        flowax.xaxis.set_major_formatter(dayfmt)
-
-        # x minor ticks
-        flowax.xaxis.set_minor_locator(hours)
-        flowax.xaxis.set_minor_formatter(hourfmt)
-
-        # tick tick formats
-        flowax.tick_params(axis='both', which='which',
-                           labelsize=7, length=4, pad=4)
-
-        rainax.set_ylabel('Precipitation\n(mm)')
-        rainax.set_xticklabels([])
-
+        seaborn.despine(ax=rainax, bottom=True, top=False)
+        seaborn.despine(ax=flowax)
         # grid lines and axis background color and layout
         #fig.tight_layout()
 
         if filename is not None:
-            fig.savefig(filename, dpi=300, transparent=True, bbox_inches='tight')
+            fig.savefig(filename, dpi=300, transparent=True,
+                        bbox_inches='tight', bbox_extra_artists=_leg)
 
         return fig, artists, labels
 

@@ -14,9 +14,10 @@ from wqio.testing.testutils import assert_timestamp_equal, setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
-matplotlib.rcParams['text.usetex'] = usetex
+matplotlib.rcParams['text.usetex'] = False
+from matplotlib.testing.decorators import image_comparison, cleanup
 import matplotlib.pyplot as plt
-
+import seaborn
 
 from wqio.core import events
 from wqio import utils
@@ -660,3 +661,31 @@ class test_getSeason_Timestamp(_base_getSeason):
     @nt.nottest
     def makeDate(self, date_string):
         return pandas.Timestamp(date_string)
+
+
+
+@image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
+def test_storm_summary_plot():
+    storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
+    orig_record = (
+        pandas.read_csv(storm_file, index_col='date', parse_dates=True )
+            .resample('5T')
+            .fillna(0)
+    )
+
+    storm = events.HydroRecord(
+        orig_record, precipcol='rain', inflowcol='influent',
+        outflowcol=None, outputfreqMinutes=5, minprecip=0,
+        intereventHours=3
+    ).storms[2]
+
+    def doplot(storm):
+        labels = {
+            storm.inflowcol: 'Effluent (l/s)',
+            storm.precipcol: 'Precip Depth (mm)'
+
+        }
+        fig, artists, labels = storm.summaryPlot(outflow=False, serieslabels=labels)
+        return fig
+
+    fig = doplot(storm)
