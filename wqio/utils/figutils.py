@@ -290,64 +290,6 @@ def alt_logLabelFormatter(tick, pos=None):
     return tick
 
 
-def formatGSAxes(ax, axtype, col, xticks, ylabel, sublabel=None, labelsize=8):
-    # common stuff
-    ax.xaxis.tick_bottom()  # this effectively removes ticks from the top
-
-    if sublabel is None:
-        sublabel = ''
-
-    # outer axes
-    if axtype == 'outer':
-        ax.set_ylabel(ylabel, size=labelsize, verticalalignment='bottom')
-
-        # left side of the figure
-        if col == 0:
-            #ax.spines['right'].set_color('none')
-            # remove ticks from the right
-            ax.yaxis.tick_left()
-            ax.tick_params(axis='y', right='off', which='both')
-            ax.annotate(sublabel, (0.0, 1.0), xytext=(5, -10),
-                        xycoords='axes fraction', textcoords='offset points',
-                        fontsize=8, zorder=20)
-
-        # right side of the figure
-        if col == 1:
-            #ax.spines['left'].set_color('none')
-            ax.tick_params(axis='y', left='off', which='both')
-
-            # remove ticks from the left
-            ax.yaxis.tick_right()
-            ax.yaxis.set_label_position("right")
-            label = ax.yaxis.get_label()
-            label.set_rotation(270)
-            ax.annotate(sublabel, (1.0, 1.0), xytext=(-20, -10),
-                        xycoords='axes fraction', textcoords='offset points',
-                        fontsize=8, zorder=20)
-
-    # inner axes
-    elif axtype == 'inner':
-        ax.set_yticklabels([])
-        ax.tick_params(axis='y', right='off', left='off', which='both')
-
-        # left size
-        if col == 0:
-            ax.spines['left'].set_color('none')
-
-        # right side
-        if col == 1:
-            ax.spines['right'].set_color('none')
-
-    # middle? coming soon?
-    else:
-        raise ValueError('axtype can only be "inner" or "outer"')
-
-    # clear tick labels if xticks is False or Nones
-    if not xticks:
-        ax.set_xticklabels([])
-        ax.set_xlabel('')
-
-
 def scatterHistogram(X, Y, xlabel=None, ylabel=None, figname=None, axes=None,
                      symbolkwds=None, barkwds=None, xlim=None, ylim=None,
                      color='CornflowerBlue'):
