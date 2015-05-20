@@ -105,14 +105,6 @@ class base_wqsampleMixin(object):
         nt.assert_true(hasattr(self.wqs, 'yfactor'))
         nt.assert_equal(self.wqs.yfactor, self.known_yfactor)
 
-    def test_plot_ts_isFocus(self):
-        self.wqs.plot_ts(self.ax, isFocus=True)
-        self.fig.savefig(self.makePath('{0}_{1}_wqsample_isFocus.png'.format(self.wqs.label, self.test_name)))
-
-    def test_plot_ts_isNotFocus(self):
-        self.wqs.plot_ts(self.ax, isFocus=False)
-        self.fig.savefig(self.makePath('{0}_{1}_wqsample_isNotFocus.png'.format(self.wqs.label, self.test_name)))
-
 
 class base_wqsample_NoStorm(base_wqsampleMixin):
     def test_storm(self):
@@ -659,8 +651,8 @@ class test_getSeason_Timestamp(_base_getSeason):
 
 
 
-@image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
-def test_storm_summary_plot():
+@nt.nottest
+def setup_storm():
     storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )
@@ -668,12 +660,18 @@ def test_storm_summary_plot():
             .fillna(0)
     )
 
-    storm = events.HydroRecord(
+    hr = events.HydroRecord(
         orig_record, precipcol='rain', inflowcol='influent',
         outflowcol=None, outputfreqMinutes=5, minprecip=0,
         intereventHours=3
-    ).storms[2]
+    )
 
+    return hr.storms[2]
+
+@cleanup
+@image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
+def test_plot_storm_summary():
+    storm = setup_storm()
     def doplot(storm):
         labels = {
             storm.inflowcol: 'Effluent (l/s)',
@@ -684,3 +682,58 @@ def test_storm_summary_plot():
         return fig
 
     fig = doplot(storm)
+
+
+@nt.nottest
+def setup_sample(sampletype, with_storm=False):
+    datafile = os.path.join(sys.prefix, 'wqio_data', 'testing', 'test_wqsample_data.csv')
+    rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
+    if sampletype.lower() =='grab':
+        st = events.GrabSample
+        starttime = '2013-02-24 16:54'
+        endtime = '2013-02-24 16:59'
+        freq = None
+    elif sampletype.lower() =='composite':
+        st = events.CompositeSample
+        starttime = '2013-02-24 16:59'
+        endtime = '2013-02-25 02:59'
+        freq = pandas.offsets.Minute(20)
+
+    if with_storm:
+        storm = setup_storm()
+    else:
+        storm = None
+
+    wqs = st(rawdata, starttime, endtime=endtime, samplefreq=freq, storm=storm)
+    wqs.marker = 'D'
+    wqs.markersize = 8
+
+    return wqs
+
+
+@image_comparison(baseline_images=['test_Grab_without_storm'], extensions=['png'])
+def test_plot_grabsample_no_storm_not_focus():
+    wqs = setup_sample('grab', with_storm=False)
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=False)
+
+
+@image_comparison(baseline_images=['test_Grab_without_storm_focus'], extensions=['png'])
+def test_plot_grabsample_no_storm_focus():
+    wqs = setup_sample('grab', with_storm=False)
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=True)
+
+
+@image_comparison(baseline_images=['test_Comp_without_storm'], extensions=['png'])
+def test_plot_compsample_no_storm_not_focus():
+    wqs = setup_sample('composite', with_storm=False)
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=False)
+
+
+@image_comparison(baseline_images=['test_Comp_without_storm_focus'], extensions=['png'])
+def test_plot_compsample_no_storm_focus():
+    wqs = setup_sample('composite', with_storm=False)
+    fig, ax = plt.subplots()
+    wqs.plot_ts(ax, isFocus=True)

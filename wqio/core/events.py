@@ -30,6 +30,7 @@ class _basic_wq_sample(object):
         self._sample_ts = None
         self._label = None
         self._marker = None
+        self._markersize = None
         self._linestyle = None
         self._yfactor = None
         self._season = getSeason(self.starttime)
@@ -80,6 +81,15 @@ class _basic_wq_sample(object):
     @linestyle.setter
     def linestyle(self, value):
         self._linestyle = value
+
+    @property
+    def markersize(self):
+        if self._markersize is None:
+            self._markersize = 4
+        return self._markersize
+    @markersize.setter
+    def markersize(self, value):
+        self._markersize = value
 
     @property
     def yfactor(self):
