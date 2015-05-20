@@ -34,7 +34,7 @@ class base_wqsampleMixin(object):
 
     @nt.nottest
     def basic_setup(self):
-        self.prefix = setup_prefix('core.events')
+        self.prefix = setup_prefix('core_tests')
         self.fig, self.ax = plt.subplots()
         self.known_wqdata_type = pandas.DataFrame
         self.known_starttime_type = pandas.Timestamp
@@ -433,7 +433,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
 class test_Storm(object):
     def setup(self):
         # path stuff
-        self.prefix = setup_prefix('core.events')
+        self.prefix = setup_prefix('core_tests')
 
 
         self.storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
@@ -620,11 +620,6 @@ class test_Storm(object):
         ]
         keys = list(self.storm.summary_dict.keys())
         nt.assert_list_equal(sorted(keys), sorted(known_keys))
-
-    def test_summaryPlot(self):
-        nt.assert_true(hasattr(self.storm, 'summaryPlot'))
-        output = self.makePath('test_basicstorm.png')
-        self.storm.summaryPlot(filename=output)
 
     def test_is_small(self):
         nt.assert_true(self.storm.is_small(minprecip=5.0))
