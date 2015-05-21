@@ -110,15 +110,19 @@ class _basic_wq_sample(object):
         ymax = ax.get_ylim()[-1]
         yposition = [self.yfactor * ymax] * len(self.sample_ts)
 
+        timeseries = pandas.Series(yposition, index=self.sample_ts)
+
         if asrug:
-            seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha)
+            seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha, mew=0.75)
             line = plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
                               color='black', alpha=alpha, linestyle='none')
 
         else:
-            line, = ax.plot(self.sample_ts, yposition, marker=self.marker,
-                            markersize=4, linestyle=self.linestyle, color='Black',
+            timeseries.plot(ax=ax, marker=self.marker, markersize=4,
+                            linestyle=self.linestyle, color='Black',
                             zorder=10, label='_nolegend', alpha=alpha)
+            line = plt.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
+                              color='black', alpha=alpha, linestyle='none')
 
         return line
 
@@ -618,8 +622,6 @@ class Storm(object):
         if otherlabels is not None:
             otherlabels.append(label)
 
-        print(ax.get_ylim())
-
         return fig, otherlabels, artists
 
     def summaryPlot(self, axratio=2, filename=None, showLegend=True,
@@ -647,9 +649,10 @@ class Storm(object):
         '''
         fig = plt.figure(**figopts)
         gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio],
-                               hspace=0.08)
+                               hspace=0.12)
         rainax = fig.add_subplot(gs[0])
-        flowax = fig.add_subplot(gs[1])
+        rainax.yaxis.set_major_locator(plt.MaxNLocator(5))
+        flowax = fig.add_subplot(gs[1], sharex=rainax)
 
         # create the legend proxy artists
         artists = []
@@ -702,6 +705,7 @@ class Storm(object):
 
         seaborn.despine(ax=rainax, bottom=True, top=False)
         seaborn.despine(ax=flowax)
+        flowax.set_xlabel('')
         # grid lines and axis background color and layout
         #fig.tight_layout()
 
