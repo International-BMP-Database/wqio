@@ -649,8 +649,6 @@ class test_getSeason_Timestamp(_base_getSeason):
     def makeDate(self, date_string):
         return pandas.Timestamp(date_string)
 
-
-
 @nt.nottest
 def setup_storm():
     storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
@@ -668,7 +666,6 @@ def setup_storm():
 
     return hr.storms[2]
 
-@cleanup
 @image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
 def test_plot_storm_summary():
     storm = setup_storm()
