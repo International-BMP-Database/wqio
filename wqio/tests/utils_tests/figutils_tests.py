@@ -3,20 +3,20 @@ import os
 import subprocess
 from six import StringIO
 
-import nose.tools as nt
 import numpy as np
-import numpy.testing as nptest
-
-from wqio import testing
-usetex = testing.compare_versions(utility='latex')
+import pandas
 
 import matplotlib
-matplotlib.rcParams['text.usetex'] = usetex
+matplotlib.rcParams['text.usetex'] = False
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 from matplotlib.testing.decorators import image_comparison
 import scipy.stats as stats
+
+import nose.tools as nt
+import numpy.testing as nptest
+from wqio import testing
 
 from wqio.utils import figutils, ros
 
@@ -106,7 +106,7 @@ class test_axes_methods:
         fig = figutils.probplot(self.ros.data.final_data, ax=self.ax)
         self.savefig('probplot.png')
 
-    @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
+    @nptest.dec.skipif(sys.platform != 'win32')
     def test_logLabelFormatter(self):
         self.ax.plot([1, 5], [0.0005, 5e6])
         self.ax.set_yscale('log')
@@ -122,7 +122,7 @@ class test_axes_methods:
         ]
         nt.assert_list_equal(rendered_labels, expected_labels)
 
-    @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
+    @nptest.dec.skipif(sys.platform != 'win32')
     def test_alt_logLabelFormatter(self):
         self.ax.plot([1, 5], [0.0005, 5e6])
         self.ax.set_yscale('log')
@@ -136,6 +136,56 @@ class test_axes_methods:
             r'$10 ^ {5}$', r'$10 ^ {6}$', r'$10 ^ {7}$', ''
         ]
         nt.assert_list_equal(rendered_labels, expected_labels)
+
+
+@nt.nottest
+def setup_jointplot():
+    plt.rcdefaults()
+    np.random.seed(0)
+    N = 37
+    df = pandas.DataFrame({
+        'A': np.random.normal(size=N),
+        'B': np.random.lognormal(mean=0.25, sigma=1.25, size=N),
+        'C': np.random.lognormal(mean=1.25, sigma=0.75, size=N)
+    })
+
+    return df
+
+@image_comparison(
+    baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
+                     'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
+    extensions=['png']
+)
+def test_jointplot_basic():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='b')
+    fig1 = jg1.fig
+
+    jg2 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='g',
+                             xlabel='Quantity B')
+    fig2 = jg2.fig
+
+    jg3 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='r',
+                             ylabel='Quantity C')
+    fig3 = jg3.fig
+
+    jg4 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='k',
+                             xlabel='Quantity B', ylabel='Quantity C')
+    fig4 = jg4.fig
+
+
+@image_comparison(baseline_images=['test_jointplot_zerominFalse'], extensions=['png'])
+def test_jointplot_zerominFalse():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='A', y='C', data=df, zeromin=False, one2one=False)
+    fig1 = jg1.fig
+
+
+@image_comparison(baseline_images=['test_jointplot_one2one'], extensions=['png'])
+def test_jointplot_one2one():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=True)
+    fig1 = jg1.fig
 
 
 @nt.raises(NotImplementedError)
