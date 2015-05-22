@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.gridspec as gridspec
 import scipy.stats as stats
+import seaborn.apionly as seaborn
 
 from . import misc
 
@@ -93,8 +94,8 @@ def gridlines(axes, xlabel=None, ylabel=None, xscale=None, yscale=None,
         axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
-def jointplot(x=None, y=None, data=None, color=None,
-              xlabel=None, ylabel=None, one2one=True):
+def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
+              color=None, zeromin=True, one2one=True):
     """ Plots the joint distribution of two variables via seaborn
 
     Parameters
@@ -103,10 +104,12 @@ def jointplot(x=None, y=None, data=None, color=None,
         Sequences of values or column names found within ``data``.
     data : pandas DataFrame or None, optional
         An optional DataFrame containing the data.
-    color : matplotlib color, optional
-        Color used for the plot elements.
     xlabel, ylabel : string, optional
         Overrides the default x- and y-axis labels.
+    color : matplotlib color, optional
+        Color used for the plot elements.
+    zeromin : bool, optional
+        When True (default), force lower axes limits to 0.
     one2one : bool, optional
         When True (default), plots the 1:1 line on the axis and sets
         the x- and y-axis limits to be equal.
@@ -119,11 +122,17 @@ def jointplot(x=None, y=None, data=None, color=None,
     jg = seaborn.jointplot(x=x, y=y, color=color, data=data,
                            marginal_kws=dict(rug=True, kde=True))
 
-    if xlabel is not None:
-        jg.set_axis_labels(xlabel=xlabel)
+    if xlabel is None:
+        xlabel = jg.ax_joint.get_xlabel()
 
-    if ylabel is not None:
-        jg.set_axis_labels(ylabel=xlabel)
+    if ylabel is None:
+        ylabel = jg.ax_joint.get_ylabel()
+
+    jg.set_axis_labels(xlabel=xlabel, ylabel=ylabel)
+
+    if zeromin:
+        jg.ax_joint.set_xlim(left=0)
+        jg.ax_joint.set_ylim(bottom=0)
 
     if one2one:
         ax_limit_max = np.max([jg.ax_joint.get_xlim(), jg.ax_joint.get_ylim()])
@@ -136,7 +145,6 @@ def jointplot(x=None, y=None, data=None, color=None,
         jg.ax_joint.legend(frameon=False, loc='upper left')
 
     return jg
-
 
 
 def boxplot(axes, data, position, median=None, CIs=None,
