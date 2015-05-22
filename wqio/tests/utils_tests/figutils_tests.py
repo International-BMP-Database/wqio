@@ -3,7 +3,7 @@ import os
 import subprocess
 from six import StringIO
 
-from nose.tools import *
+import nose.tools as nt
 import numpy as np
 import numpy.testing as nptest
 
@@ -34,11 +34,11 @@ class test_axes_methods:
     def teardown(self):
         plt.close('all')
 
-    @nottest
+    @nt.nottest
     def makePath(self, filename):
         return os.path.join(self.prefix, filename)
 
-    @nottest
+    @nt.nottest
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
 
@@ -120,7 +120,7 @@ class test_axes_methods:
             r'$1 \times 10 ^ {5}$', r'$1 \times 10 ^ {6}$',
             r'$1 \times 10 ^ {7}$', ''
         ]
-        assert_list_equal(rendered_labels, expected_labels)
+        nt.assert_list_equal(rendered_labels, expected_labels)
 
     @nptest.dec.skipif(sys.platform != 'win32' or not usetex)
     def test_alt_logLabelFormatter(self):
@@ -135,7 +135,7 @@ class test_axes_methods:
             r'1.0', r'10', r'100', r'1000', r'$10 ^ {4}$',
             r'$10 ^ {5}$', r'$10 ^ {6}$', r'$10 ^ {7}$', ''
         ]
-        assert_list_equal(rendered_labels, expected_labels)
+        nt.assert_list_equal(rendered_labels, expected_labels)
 
 
 @nt.raises(NotImplementedError)
@@ -160,7 +160,7 @@ class test_shiftedColorMap:
     def teardown(self):
         plt.close('all')
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_start_low(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -169,7 +169,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_start_high(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -178,7 +178,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_midpoint_low(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -187,7 +187,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_midpoint_high(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -196,7 +196,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_stop_low(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -205,7 +205,7 @@ class test_shiftedColorMap:
             stop=self.midpoint-0.01
         )
 
-    @raises(ValueError)
+    @nt.raises(ValueError)
     def test_bad_stop_high(self):
         figutils.shiftedColorMap(
             self.orig_cmap,
@@ -215,7 +215,7 @@ class test_shiftedColorMap:
         )
 
     def test_start(self):
-        assert_tuple_equal(self.orig_cmap(self.start), self.shifted_cmap(0.0))
+        nt.assert_tuple_equal(self.orig_cmap(self.start), self.shifted_cmap(0.0))
 
     def test_midpoint(self):
         nptest.assert_array_almost_equal(
@@ -225,4 +225,4 @@ class test_shiftedColorMap:
         )
 
     def test_stop(self):
-        assert_tuple_equal(self.orig_cmap(self.stop), self.shifted_cmap(1.0))
+        nt.assert_tuple_equal(self.orig_cmap(self.stop), self.shifted_cmap(1.0))
