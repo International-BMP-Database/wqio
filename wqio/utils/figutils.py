@@ -93,6 +93,52 @@ def gridlines(axes, xlabel=None, ylabel=None, xscale=None, yscale=None,
         axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
+def jointplot(x=None, y=None, data=None, color=None,
+              xlabel=None, ylabel=None, one2one=True):
+    """ Plots the joint distribution of two variables via seaborn
+
+    Parameters
+    ----------
+    x, y : array-like or string
+        Sequences of values or column names found within ``data``.
+    data : pandas DataFrame or None, optional
+        An optional DataFrame containing the data.
+    color : matplotlib color, optional
+        Color used for the plot elements.
+    xlabel, ylabel : string, optional
+        Overrides the default x- and y-axis labels.
+    one2one : bool, optional
+        When True (default), plots the 1:1 line on the axis and sets
+        the x- and y-axis limits to be equal.
+
+    Returns
+    -------
+    jg : seaborn.JointGrid
+
+    """
+    jg = seaborn.jointplot(x=x, y=y, color=color, data=data,
+                           marginal_kws=dict(rug=True, kde=True))
+
+    if xlabel is not None:
+        jg.set_axis_labels(xlabel=xlabel)
+
+    if ylabel is not None:
+        jg.set_axis_labels(ylabel=xlabel)
+
+    if one2one:
+        ax_limit_max = np.max([jg.ax_joint.get_xlim(), jg.ax_joint.get_ylim()])
+        jg.ax_joint.set_xlim(left=0, right=ax_limit_max)
+        jg.ax_joint.set_ylim(bottom=0, top=ax_limit_max)
+        jg.ax_joint.plot([0, ax_limit_max], [0, ax_limit_max], marker='None',
+                     linestyle='-', linewidth=1.75, color=color or 'k',
+                     alpha=0.45, label='1:1 line')
+
+        jg.ax_joint.legend(frameon=False, loc='upper left')
+
+    return jg
+
+
+
 def boxplot(axes, data, position, median=None, CIs=None,
             mean=None, meanmarker='o', meancolor='b'):
     '''
@@ -290,160 +336,10 @@ def alt_logLabelFormatter(tick, pos=None):
     return tick
 
 
-def scatterHistogram(X, Y, xlabel=None, ylabel=None, figname=None, axes=None,
-                     symbolkwds=None, barkwds=None, xlim=None, ylim=None,
-                     color='CornflowerBlue'):
+def scatterHistogram(*args, **kwargs):
+    ''' No longer implemented
     '''
-    Makes a figure with a scatter plot of two variables and a histogram for each
-    variable.
-
-    Input:
-        X : array-like
-            Data to be plotted along the x-axis
-
-        Y : array-like
-            Data to be plotted along the y-axis
-
-        xlabel : optional string (default=None)
-            Optional label for the x-axis of the scatter plot. Note that the
-            default value means that x-axis of histogram will not be labeled.
-
-        ylabel : optional string (default=None)
-            Optional label for the y-axis of the scatter plot. Note that the
-            default value means that y-axis of histogram will not be labeled.
-
-        figname : optional string (default=None)
-            Filename to which the figure will be saved (if provided).
-
-        axes : optional iterable of matplotlib `Axes` objects (default=None)
-            If provided, this must be a list of matplotlib axes in the
-            following order:
-                1) top axes for the x-data histogram
-                2) main axes for the scatter plot
-                3) right axes for the y-data histogram.
-            Otherwise, axes will be create during this routine.
-
-        symbolkwds : optional dictionary (default={})
-            Kwargs to be passed on to the `axes.plot` command for the scatter
-            plot. If not specified, `linestyle` will be set to "none" (the
-            string, not the `None` object)
-
-        barkwds : optional dictionary (default={})
-            Kwargs to be passed on to the `axes.bar` command for the histogram plot.
-
-    Returns:
-        fig : matplotlib Figure instance.
-
-    '''
-
-    scatter_symbol = {
-        'marker': 'o',
-        'markeredgecolor': 'white',
-        'markerfacecolor': color,
-        'markersize': 4,
-        'linestyle': 'none',
-        'alpha': 0.75
-    }
-
-    bar_symbol = {
-        'facecolor': color,
-        'edgecolor': 'white',
-        'alpha': 0.75
-    }
-
-    if axes is None:
-        # set up the figure
-        fig = plt.figure(figsize=(6, 6))
-        fig_gs = gridspec.GridSpec(2, 2, height_ratios=[4, 10],
-                                   width_ratios=[10, 4])
-
-        # create histogram axes for x-data (upper left)
-        hist_x = fig.add_subplot(fig_gs[0, 0])
-
-        # create the main scatter plot axes (lower left)
-        mainax = fig.add_subplot(fig_gs[1, 0])
-
-        # histogram axes for y-data (lower right)
-        hist_y = fig.add_subplot(fig_gs[1, 1])
-
-    else:
-        if len(axes) != 3:
-            raise ValueError("`axes` must be an iterable with N = 3")
-
-        for n, ax in enumerate(axes):
-            if not isinstance(ax, plt.Axes):
-                msg = "element at index {0} is not an `Axes` object".format(n)
-                raise ValueError(msg)
-
-        hist_x, mainax, hist_y = axes
-        fig = hist_x.get_figure()
-
-    # force count axes to format as ints
-    hist_y.xaxis.set_major_locator(mticker.MaxNLocator(4, integer=True))
-    hist_y.xaxis.set_major_formatter(mticker.FormatStrFormatter('%d'))
-
-    hist_x.yaxis.set_major_locator(mticker.MaxNLocator(4, integer=True))
-    hist_x.yaxis.set_major_formatter(mticker.FormatStrFormatter('%d'))
-
-    # be sure that the scatter plots dots, not lines
-    if symbolkwds is not None:
-        scatter_symbol.update(symbolkwds)
-
-    if barkwds is not None:
-        bar_symbol.update(barkwds)
-
-    # plot stuff on main axis
-    mainax.plot(X, Y, **scatter_symbol)
-    if xlim is not None:
-        mainax.set_xlim(**xlim)
-    if ylim is not None:
-        mainax.set_ylim(**ylim)
-
-    # format stuff
-    mainax.xaxis.tick_bottom()
-    mainax.yaxis.tick_left()
-
-    if xlabel is not None:
-        mainax.set_xlabel(xlabel)
-
-    if ylabel is not None:
-        mainax.set_ylabel(ylabel)
-
-    # make the x-data bar plot
-    hist_x.hist(X, orientation='vertical', align='mid', **bar_symbol)
-
-    # format x-histogram
-    hist_x.set_xticklabels([])
-    hist_x.tick_params(axis='x', length=0)
-    hist_x.xaxis.tick_bottom()
-    hist_x.yaxis.tick_left()
-    hist_x.set_xticks(mainax.get_xticks())
-    hist_x.set_xlim(mainax.get_xlim())
-    if ylabel is not None:
-        hist_x.set_ylabel('Count')
-
-    # make the y-data bar plot
-    hist_y.hist(Y, orientation='horizontal', align='mid', **bar_symbol)
-
-    # format the y-data histogram
-    hist_y.set_yticklabels([])
-    hist_y.tick_params(axis='y', length=0)
-    hist_y.yaxis.tick_left()
-    hist_y.xaxis.tick_bottom()
-    hist_y.set_yticks(mainax.get_xticks())
-    hist_y.set_ylim(mainax.get_xlim())
-    if xlabel is not None:
-        hist_y.set_xlabel('Count')
-
-    # tighten things up
-    fig.subplots_adjust(wspace=0.08, hspace=0.08, left=0.15,
-                        right=0.98, bottom=0.08, top=0.98)
-
-    # save if necessary
-    if figname is not None:
-        fig.savefig(figname, dpi=300, bbox_inches='tight')
-
-    return fig
+    raise NotImplementedError('This gone. Use jointplot instead.')
 
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
