@@ -138,92 +138,9 @@ class test_axes_methods:
         assert_list_equal(rendered_labels, expected_labels)
 
 
-class test_scatterHistogram:
-    def setup(self):
-        self.fig, self.axes = plt.subplots(nrows=2, ncols=2)
-
-        self.x = np.array([
-            7.48015314, 4.6222714 , 9.01095731, 7.98639611,
-            6.56520105, 8.28668008, 8.88881000, 9.23505688,
-            5.52075174, 7.1344543 , 5.36104144, 6.31328249,
-            6.53392651, 8.96088653, 4.78989627, 3.27250932,
-            8.41477798, 7.54291787, 7.36982318, 5.74657018,
-            8.12647486, 4.6129123 , 6.02550153, 6.84299899,
-            5.63095163, 8.20904575, 7.68361688, 10.90631482,
-            7.20938852, 4.71375399, 8.11806228, 5.90488422,
-            4.12479778, 8.15594211, 11.16551958, 7.45410655,
-            8.96646264
-        ])
-
-        self.y = np.array([
-            5.30995729, 4.90652812, 4.64388533, 4.58074539,
-            3.97922263, 5.96186786, 5.11284324, 1.99402179,
-            5.24351585, -0.45201096, 3.45148458, 6.72188106,
-            3.59817747, 6.84682235, 5.17153649, 7.81965041,
-            1.40317254, 4.39889747, -0.76829593, 1.4526049 ,
-            3.36884806, 3.58727632, 3.25783271, 2.38286936,
-            8.53593809, 4.00885338, 6.42957833, 5.91891113,
-            3.14951288, -1.64253263, 1.52852978, 1.60945809,
-            5.0613945 , 4.63739907, 1.58679716,  1.91932307,
-            3.32511911
-        ])
-        self.prefix = testing.testutils.setup_prefix('utils.figutils')
-
-    @nottest
-    def makePath(self, filename):
-        return os.path.join(self.prefix, filename)
-
-    def teardown(self):
-        plt.close('all')
-
-    def test_baseline(self):
-        figname = self.makePath('scatter_hist_basecase.png')
-        fig = figutils.scatterHistogram(self.x, self.y, figname=figname)
-        assert_true(isinstance(fig, plt.Figure))
-
-    def test_manualaxes(self):
-        figname = self.makePath('scatter_manualaxes.png')
-        fig = figutils.scatterHistogram(self.x, self.y, figname=figname,
-                                        axes=self.axes.flatten()[:3])
-        assert_true(isinstance(fig, plt.Figure))
-
-    def test_manuallimits(self):
-        figname = self.makePath('scatter_manuallimits.png')
-        fig = figutils.scatterHistogram(self.x, self.y, figname=figname,
-                                        xlim={'left': -3, 'right': 12},
-                                        ylim={'bottom': -3, 'top': 12})
-        assert_true(isinstance(fig, plt.Figure))
-
-    def test_customsymbology(self):
-        scatter_symbols = dict(
-            linestyle='none',
-            marker='o',
-            markerfacecolor='CornflowerBlue',
-            markeredgecolor='white',
-            alpha=0.75,
-            markeredgewidth=0.5
-        )
-
-        bar_symbols = dict(
-            alpha=0.75,
-            facecolor='DarkGreen',
-            edgecolor='none',
-            bins=10,
-            rwidth=0.8
-        )
-        figname = self.makePath('scatter_custom.png')
-        fig = figutils.scatterHistogram(self.x, self.y, figname=figname,
-                                        symbolkwds=scatter_symbols,
-                                        barkwds=bar_symbols)
-        assert_true(isinstance(fig, plt.Figure))
-
-    @raises(ValueError)
-    def test_badaxeslength(self):
-        fig = figutils.scatterHistogram(self.x, self.y, axes=self.axes)
-
-    @raises(ValueError)
-    def test_badaxestype(self):
-        fig = figutils.scatterHistogram(self.x, self.y, axes=[1, 2, 3])
+@nt.raises(NotImplementedError)
+def test_scatterHistogram():
+    figutils.scatterHistogram()
 
 
 class test_shiftedColorMap:
