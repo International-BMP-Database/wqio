@@ -4,7 +4,7 @@ import numpy as np
 import scipy.optimize as opt
 
 from wqio import testing
-from wqio.utils import bootstrap
+from wqio.algo import bootstrap
 
 
 def test__boot_strap():

@@ -3,6 +3,7 @@ import scipy.stats as stats
 import scipy.stats.distributions as dist
 import scipy.optimize as opt
 
+
 __all__ = ['Stat', 'Fit']
 
 

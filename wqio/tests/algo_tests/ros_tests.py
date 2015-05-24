@@ -12,7 +12,7 @@ matplotlib.rcParams['text.usetex'] = usetex
 
 import pandas as pd
 
-from wqio.utils import ros
+from wqio.algo import ros
 
 
 def test_rosSort():
