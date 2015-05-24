@@ -27,7 +27,8 @@ __all__ = ['sigFigs', 'makeBoxplotLegend', 'processFilename', 'constructPath',
            '_boxplot_legend', 'makeLongLandscapeTexTable',
            'estimateFromLineParams', 'redefineIndexLevel', 'sanitizeTex',
            'checkIntervalOverlap', 'ProgressBar', 'makeTimestamp',
-           'whiskers_and_fliers']
+           'whiskers_and_fliers', 'santizeTimestamp', 'getSeason']
+
 
 leg_data = np.array([[
     1.71176747025, 2.54701331804, 3.28171165797, 2.33036103386, 2.70661099194, 4.20248978178,
@@ -40,6 +41,60 @@ leg_data = np.array([[
     3.40782171773, 2.00510325243, 0.882125342791, 2.0383262187, 3.32916579582, 2.35264374769,
     1.4030069675, 2.71479418592
 ]])
+
+
+def santizeTimestamp(timestamp):
+    if not isinstance(timestamp, pandas.Timestamp):
+        try:
+            timestamp = pandas.Timestamp(timestamp)
+        except:
+            raise ValueError('{} could not be coerced into a pandas.Timestamp')
+
+    return timestamp
+
+
+def getSeason(date):
+    '''Defines the season from a given date.
+
+    Parameters
+    ----------
+    date : datetime.datetime object or similar
+        Any object that represents a date and has `.month` and `.day`
+        attributes
+
+    Returns
+    -------
+    season : str
+
+    Notes
+    -----
+    Assumes that all seasons changed on the 22nd (e.g., all winters
+    start on Decemeber 22). This isn't strictly true, but it's good
+    enough for now.
+
+    '''
+    date = santizeTimestamp(date)
+    if (date.month == 12 and date.day >= 22) or \
+            (date.month in [1, 2]) or \
+            (date.month == 3 and date.day < 22):
+        return 'winter'
+    elif (date.month == 3 and date.day >= 22) or \
+            (date.month in [4, 5]) or \
+            (date.month == 6 and date.day < 22):
+        return 'spring'
+    elif (date.month == 6 and date.day >= 22) or \
+            (date.month in [7, 8]) or \
+            (date.month == 9 and date.day < 22):
+        return 'summer'
+    elif (date.month == 9 and date.day >= 22) or \
+            (date.month in [10, 11]) or \
+            (date.month == 12 and date.day < 22):
+        return 'autumn'
+    else: # pragma: no cover
+        raise ValueError('could not assign season to  {}'.format(date))
+
+
+
 
 def addSecondColumnLevel(levelval, levelname, olddf):
     '''
