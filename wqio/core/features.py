@@ -10,7 +10,8 @@ from statsmodels.tools.decorators import (resettable_cache,
                                           cache_writable)
 
 import seaborn.apionly as seaborn
-from .. import utils
+from wqio import utils
+from wqio import algo
 
 # meta data mappings based on station
 station_names = {
@@ -245,7 +246,7 @@ class Location(object):
                 in comparitive scatter plot methods
             .color (string) : matplotlib color for plotting
             .filtered_data (pandas.DataFrame) : full dataset with qualifiers
-            .ros (utils.ros.MR) : MR object of the ROS'd values
+            .ros (algo.ros.MR) : MR object of the ROS'd values
             .data (pandas.Series) : Final data for use in stats and plotting
                 based on `useROS` (no qualiers)
             .full_data (pandas.DataFrame) : Representation of `self.data`
@@ -434,7 +435,7 @@ class Location(object):
     @cache_readonly
     def ros(self):
         if self.hasData:
-            return utils.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
+            return algo.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
 
     @cache_readonly
     def pnorm(self):
@@ -570,27 +571,27 @@ class Location(object):
     @cache_readonly
     def _median_boostrap(self):
         if self.hasData:
-            return utils.bootstrap.Stat(self.data, np.median, NIter=self.bsIter).BCA()
+            return algo.bootstrap.Stat(self.data, np.median, NIter=self.bsIter).BCA()
 
     @cache_readonly
     def _mean_boostrap(self):
         if self.hasData:
-            return utils.bootstrap.Stat(self.data, np.mean, NIter=self.bsIter).BCA()
+            return algo.bootstrap.Stat(self.data, np.mean, NIter=self.bsIter).BCA()
 
     @cache_readonly
     def _std_boostrap(self):
         if self.hasData:
-            return utils.bootstrap.Stat(self.data, np.std, NIter=self.bsIter).BCA()
+            return algo.bootstrap.Stat(self.data, np.std, NIter=self.bsIter).BCA()
 
     @cache_readonly
     def _logmean_boostrap(self):
         if self.all_positive and self.hasData:
-            return utils.bootstrap.Stat(np.log(self.data), np.mean, NIter=self.bsIter).BCA()
+            return algo.bootstrap.Stat(np.log(self.data), np.mean, NIter=self.bsIter).BCA()
 
     @cache_readonly
     def _logstd_boostrap(self):
         if self.all_positive and self.hasData:
-            return utils.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
+            return algo.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
@@ -1752,7 +1753,7 @@ class DataCollection(object):
 
         if self.useROS:
             def fxn(g):
-                return utils.ros.MR(g).data
+                return algo.ros.MR(g).data
         else:
             def fxn(g):
                 g[self.roscol] = np.nan
@@ -1866,7 +1867,7 @@ class DataCollection(object):
 
     def _generic_stat(self, statfxn, bootstrap=True, statname=None):
         def CIs(x):
-            bs = utils.bootstrap.Stat(x[self.rescol].values, statfxn=statfxn)
+            bs = algo.bootstrap.Stat(x[self.rescol].values, statfxn=statfxn)
             stat, (lci, uci) = bs.BCA()
             statnames = ['lower', 'stat', 'upper']
             return pandas.Series([lci, stat, uci], index=statnames)

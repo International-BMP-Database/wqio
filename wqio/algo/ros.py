@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 import pandas
 
-from .exceptions import DataError
-
 
 __all__ = ['rosSort', 'MR']
 

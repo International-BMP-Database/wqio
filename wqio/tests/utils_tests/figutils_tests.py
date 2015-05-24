@@ -18,7 +18,8 @@ import nose.tools as nt
 import numpy.testing as nptest
 from wqio import testing
 
-from wqio.utils import figutils, ros
+from wqio.utils import figutils
+from wqio.algo import ros
 
 
 class test_axes_methods:
