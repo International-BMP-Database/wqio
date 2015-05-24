@@ -478,8 +478,7 @@ def setup_storm():
 
     return hr.storms[2]
 
-@image_comparison(baseline_images=['test_stormplot'],
-                  extensions=['png'], tol=1e-2)
+@image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
 def test_plot_storm_summary():
     storm = setup_storm()
     def doplot(storm):
