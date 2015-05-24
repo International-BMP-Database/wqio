@@ -9,184 +9,13 @@ import matplotlib.lines as mlines
 import seaborn.apionly as seaborn
 import pandas
 
-from ..utils import figutils
+from wqio import utils
 
 SEC_PER_MINUTE = 60.
 MIN_PER_HOUR = 60.
 HOUR_PER_DAY = 24.
 SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
 SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
-
-
-class _basic_wq_sample(object):
-    def __init__(self, dataframe, starttime, samplefreq=None,
-                 endtime=None, storm=None, rescol='res',
-                 qualcol='qual', dlcol='DL', unitscol='units'):
-
-        self._wqdata = dataframe
-        self._startime = pandas.Timestamp(starttime)
-        self._endtime = pandas.Timestamp(endtime)
-        self._samplefreq = samplefreq
-        self._sample_ts = None
-        self._label = None
-        self._marker = None
-        self._markersize = None
-        self._linestyle = None
-        self._yfactor = None
-        self._season = getSeason(self.starttime)
-        self.storm = storm
-
-    @property
-    def season(self):
-        return self._season
-    @season.setter
-    def season(self, value):
-        self._season = value
-
-    @property
-    def wqdata(self):
-        return self._wqdata
-    @wqdata.setter
-    def wqdata(self, value):
-        self._wqdata = value
-
-    @property
-    def starttime(self):
-        return self._startime
-    @starttime.setter
-    def starttime(self, value):
-        self._startime = value
-
-    @property
-    def endtime(self):
-        if self._endtime is None:
-            self._endtime = self._startime
-        return self._endtime
-    @endtime.setter
-    def endtime(self, value):
-        self._endtime = value
-
-    @property
-    def samplefreq(self):
-        return self._samplefreq
-    @samplefreq.setter
-    def samplefreq(self, value):
-        self._samplefreq = value
-
-    @property
-    def linestyle(self):
-        if self._linestyle is None:
-            self._linestyle = 'none'
-        return self._linestyle
-    @linestyle.setter
-    def linestyle(self, value):
-        self._linestyle = value
-
-    @property
-    def markersize(self):
-        if self._markersize is None:
-            self._markersize = 4
-        return self._markersize
-    @markersize.setter
-    def markersize(self, value):
-        self._markersize = value
-
-    @property
-    def yfactor(self):
-        if self._yfactor is None:
-            self._yfactor = 0.25
-        return self._yfactor
-    @yfactor.setter
-    def yfactor(self, value):
-        self._yfactor = value
-
-    def plot_ts(self, ax, isFocus=True, asrug=False):
-        if self.sample_ts is not None:
-            if isFocus:
-                alpha = 0.75
-            else:
-                alpha = 0.35
-
-        ymax = ax.get_ylim()[-1]
-        yposition = [self.yfactor * ymax] * len(self.sample_ts)
-
-        timeseries = pandas.Series(yposition, index=self.sample_ts)
-
-        if asrug:
-            seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha, mew=0.75)
-            line = plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
-                              color='black', alpha=alpha, linestyle='none')
-
-        else:
-            timeseries.plot(ax=ax, marker=self.marker, markersize=4,
-                            linestyle=self.linestyle, color='Black',
-                            zorder=10, label='_nolegend', alpha=alpha)
-            line = plt.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
-                              color='black', alpha=alpha, linestyle='none')
-
-        return line
-
-
-class CompositeSample(_basic_wq_sample):
-    @property
-    def label(self):
-        if self._label is None:
-            self._label = 'Composite Sample'
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-
-    @property
-    def marker(self):
-        if self._marker is None:
-            self._marker = 'x'
-        return self._marker
-    @marker.setter
-    def marker(self, value):
-        self._marker = value
-
-    @property
-    def sample_ts(self):
-        if self.starttime is not None and self.endtime is not None:
-            if self.samplefreq is not None:
-                self._sample_ts = pandas.DatetimeIndex(
-                    start=self.starttime,
-                    end=self.endtime,
-                    freq=self.samplefreq
-                )
-            else:
-                self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
-        return self._sample_ts
-
-
-class GrabSample(_basic_wq_sample):
-    @property
-    def label(self):
-        if self._label is None:
-            self._label = 'Grab Sample'
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-
-    @property
-    def marker(self):
-        if self._marker is None:
-            self._marker = '+'
-        return self._marker
-    @marker.setter
-    def marker(self, value):
-        self._marker = value
-
-    @property
-    def sample_ts(self):
-        if self._sample_ts is None and self.starttime is not None:
-            if self.endtime is None:
-                self._sample_ts = pandas.DatetimeIndex(data=[self.starttime])
-            else:
-                self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
-        return self._sample_ts
 
 
 class Storm(object):
@@ -210,7 +39,7 @@ class Storm(object):
         # tease out start/stop info
         self.start = self.data.index[0]
         self.end = self.data.index[-1]
-        self._season = getSeason(self.start)
+        self._season = utils.getSeason(self.start)
 
         # storm duration (hours)
         duration = self.end - self.start
@@ -706,6 +535,7 @@ class Storm(object):
         seaborn.despine(ax=rainax, bottom=True, top=False)
         seaborn.despine(ax=flowax)
         flowax.set_xlabel('')
+        rainax.set_xlabel('')
         # grid lines and axis background color and layout
         #fig.tight_layout()
 
@@ -965,7 +795,7 @@ class HydroRecord(object):
         '''
 
         # santize date input
-        timestamp = santizeTimestamp(timestamp)
+        timestamp = utils.santizeTimestamp(timestamp)
 
         # check lookback hours
         if lookback_hours < 0:
@@ -992,57 +822,3 @@ class HydroRecord(object):
             return storm_number, self.all_storms.get(storm_number, None)
         else:
             return storm_number, self.storms.get(storm_number, None)
-
-
-def santizeTimestamp(timestamp):
-    if not isinstance(timestamp, pandas.Timestamp):
-        try:
-            timestamp = pandas.Timestamp(timestamp)
-        except:
-            raise ValueError('{} could not be coerced into a pandas.Timestamp')
-
-    return timestamp
-
-
-def getSeason(date):
-    '''Defines the season from a given date.
-
-    Parameters
-    ----------
-    date : datetime.datetime object or similar
-        Any object that represents a date and has `.month` and `.day`
-        attributes
-
-    Returns
-    -------
-    season : str
-
-    Notes
-    -----
-    Assumes that all seasons changed on the 22nd (e.g., all winters
-    start on Decemeber 22). This isn't strictly true, but it's good
-    enough for now.
-
-    '''
-    date = santizeTimestamp(date)
-    if (date.month == 12 and date.day >= 22) or \
-            (date.month in [1, 2]) or \
-            (date.month == 3 and date.day < 22):
-        return 'winter'
-    elif (date.month == 3 and date.day >= 22) or \
-            (date.month in [4, 5]) or \
-            (date.month == 6 and date.day < 22):
-        return 'spring'
-    elif (date.month == 6 and date.day >= 22) or \
-            (date.month in [7, 8]) or \
-            (date.month == 9 and date.day < 22):
-        return 'summer'
-    elif (date.month == 9 and date.day >= 22) or \
-            (date.month in [10, 11]) or \
-            (date.month == 12 and date.day < 22):
-        return 'autumn'
-    else: # pragma: no cover
-        raise ValueError('could not assign season to  {}'.format(date))
-
-
-

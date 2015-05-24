@@ -3,6 +3,7 @@ import random
 import sys
 import os
 from six import StringIO
+import datetime
 
 import nose.tools as nt
 import numpy as np
@@ -574,6 +575,38 @@ def test_sanitizeTex():
     """
 
     nt.assert_equal(misc.sanitizeTex(inputstring), desiredstring)
+
+
+class _base_getSeason(object):
+    def setup(self):
+        self.winter = self.makeDate('1998-12-25')
+        self.spring = self.makeDate('2015-03-22')
+        self.summer = self.makeDate('1965-07-04')
+        self.autumn = self.makeDate('1982-11-24')
+
+    def test_winter(self):
+        nt.assert_equal(misc.getSeason(self.winter), 'winter')
+
+    def test_spring(self):
+        nt.assert_equal(misc.getSeason(self.spring), 'spring')
+
+    def test_summer(self):
+        nt.assert_equal(misc.getSeason(self.summer), 'summer')
+
+    def test_autumn(self):
+        nt.assert_equal(misc.getSeason(self.autumn), 'autumn')
+
+
+class test_getSeason_Datetime(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return datetime.datetime.strptime(date_string, '%Y-%m-%d')
+
+
+class test_getSeason_Timestamp(_base_getSeason):
+    @nt.nottest
+    def makeDate(self, date_string):
+        return pandas.Timestamp(date_string)
 
 
 class test_makeTimestamp(object):
