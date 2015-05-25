@@ -202,6 +202,16 @@ def test_boxplot_with_mean():
                      mean=7.25, meanmarker='^', meancolor='red')
 
 
+@image_comparison(baseline_images=['test_boxplot_formatted'], extensions=['png'])
+def test_boxplot_formatted():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    bp = figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25],
+                          mean=7.25, meanmarker='^', meancolor='red')
+    figutils.formatBoxplot(bp)
+
+
+
 class test_axes_methods:
     def setup(self):
         self.fig, self.ax = plt.subplots()
@@ -223,18 +233,6 @@ class test_axes_methods:
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
 
-
-
-    def test_boxplot(self):
-        figutils.boxplot(self.ax, self.ros.data.final_data, 1)
-        self.savefig('boxplot.png')
-
-
-
-    def test_formatBoxplot(self):
-        bp = self.ax.boxplot(self.ros.data.final_data, notch=1)
-        figutils.formatBoxplot(bp)
-        self.savefig('formatted_boxplot.png')
 
     def test_probplot(self):
         fig = figutils.probplot(self.ros.data.final_data, ax=self.ax)
