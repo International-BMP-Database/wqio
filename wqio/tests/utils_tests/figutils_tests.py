@@ -211,6 +211,30 @@ def test_boxplot_formatted():
     figutils.formatBoxplot(bp)
 
 
+@image_comparison(baseline_images=['test_probplot_prob'], extensions=['png'])
+def test_probplot_prob():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, xlabel='Test xlabel')
+    nt.assert_true(isinstance(fig, plt.Figure))
+
+
+@image_comparison(baseline_images=['test_probplot_qq'], extensions=['png'])
+def test_probplot_qq():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq', color='r', ylabel='Test label')
+
+
+@image_comparison(baseline_images=['test_probplot_pp'], extensions=['png'])
+def test_probplot_pp():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', color='g',
+                            linestyle='--', yscale='linear', xlabel='test x',
+                            ylabel='test y')
+
+
 
 class test_axes_methods:
     def setup(self):
@@ -233,10 +257,6 @@ class test_axes_methods:
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
 
-
-    def test_probplot(self):
-        fig = figutils.probplot(self.ros.data.final_data, ax=self.ax)
-        self.savefig('probplot.png')
 
     @nptest.dec.skipif(sys.platform != 'win32')
     def test_logLabelFormatter(self):
