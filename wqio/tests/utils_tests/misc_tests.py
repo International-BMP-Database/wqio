@@ -387,7 +387,7 @@ class test_uniqueIndex(object):
             known = '0'
             nt.assert_equal(test, known)
 
-        @nptest.raises(misc.DataError)
+        @nptest.raises(ValueError)
         def test_getUniqueDataframeIndexVal_error():
             misc.getUniqueDataframeIndexVal(self.data, 'date')
 

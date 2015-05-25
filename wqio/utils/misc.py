@@ -15,8 +15,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas
 
-from .exceptions import DataError
-
 
 __all__ = ['sigFigs', 'makeBoxplotLegend', 'processFilename', 'constructPath',
            'addStatsToOutputSummary', '_sig_figs', 'makeTablesFromCSVStrings',
@@ -122,7 +120,7 @@ def getUniqueDataframeIndexVal(df, indexlevel):
     '''
     index = np.unique(df.index.get_level_values(indexlevel).tolist())
     if index.shape != (1,):
-        raise DataError('index level "%s" is not unique!' % indexlevel)
+        raise ValueError('index level "%s" is not unique!' % indexlevel)
 
     return index[0]
 
