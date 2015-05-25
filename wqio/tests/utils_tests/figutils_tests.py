@@ -180,6 +180,27 @@ def test_scatterHistogram():
     figutils.scatterHistogram()
 
 
+@image_comparison(baseline_images=['test_boxplot_basic'], extensions=['png'])
+def test_boxplot_basic():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    figutils.boxplot(ax, mr.data.final_data, 1)
+
+
+@image_comparison(baseline_images=['test_boxplot_manual_median'], extensions=['png'])
+def test_boxplot_manual_median():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25])
+
+
+@image_comparison(baseline_images=['test_boxplot_with_mean'], extensions=['png'])
+def test_boxplot_with_mean():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25],
+                     mean=7.25, meanmarker='^', meancolor='red')
+
 
 class test_axes_methods:
     def setup(self):
@@ -208,19 +229,7 @@ class test_axes_methods:
         figutils.boxplot(self.ax, self.ros.data.final_data, 1)
         self.savefig('boxplot.png')
 
-    def test_boxplot_manual_median(self):
-        figutils.boxplot(self.ax, self.ros.data.final_data,
-                         1, median=self.median,
-                         CIs=self.median_ci)
-        self.savefig('boxplot_manualmed.png')
 
-    def test_boxplot_with_mean(self):
-        figutils.boxplot(self.ax, self.ros.data.final_data, 1,
-                         median=self.median,
-                         CIs=self.median_ci,
-                         mean=self.mean,
-                         meanmarker='^', meancolor='red')
-        self.savefig('boxplot_with_mean.png')
 
     def test_formatBoxplot(self):
         bp = self.ax.boxplot(self.ros.data.final_data, notch=1)
