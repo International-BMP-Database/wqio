@@ -22,14 +22,16 @@ def _check_ax(ax):
 
 
 def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
-    axes = []
-    if which in ['x', 'both']:
-        axes.append(ax.xaxis)
+    if which =='both':
+        rotateTickLabels(ax, rotation, 'x', rotation_mode=rotation_mode, ha=ha)
+        rotateTickLabels(ax, rotation, 'y', rotation_mode=rotation_mode, ha=ha)
+    else:
+        if which == 'x':
+            axis = ax.xaxis
 
-    elif which in ['y', 'both']:
-        axes.append(ax.yaxis)
+        elif which == 'y':
+            axis = ax.yaxis
 
-    for axis in axes:
         for t in axis.get_ticklabels():
             t.set_horizontalalignment(ha)
             t.set_rotation(rotation)

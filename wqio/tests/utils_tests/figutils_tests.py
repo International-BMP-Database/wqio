@@ -22,6 +22,52 @@ from wqio.utils import figutils
 from wqio.algo import ros
 
 
+class test__check_ax(object):
+    @nt.raises(ValueError)
+    def test_bad_value(self):
+        figutils._check_ax('junk')
+
+    def test_with_ax(self):
+        fig, ax = plt.subplots()
+        fig1, ax1 = figutils._check_ax(ax)
+        nt.assert_true(isinstance(ax1, plt.Axes))
+        nt.assert_true(isinstance(fig1, plt.Figure))
+        nt.assert_true(ax1 is ax)
+        nt.assert_true(fig1 is fig)
+
+    def test_with_None(self):
+        fig1, ax1 = figutils._check_ax(None)
+        nt.assert_true(isinstance(ax1, plt.Axes))
+        nt.assert_true(isinstance(fig1, plt.Figure))
+
+
+@image_comparison(baseline_images=['test_rotateTickLabels_xaxis'], extensions=['png'])
+def test_rotateTickLabels_xaxis():
+    fig, ax = plt.subplots()
+    ax.set_xticks([1, 2, 3])
+    ax.set_xticklabels(['AAA', 'BBB', 'CCC'])
+    figutils.rotateTickLabels(ax, 60, 'x')
+
+
+@image_comparison(baseline_images=['test_rotateTickLabels_yaxis'], extensions=['png'])
+def test_rotateTickLabels_yaxis():
+    fig, ax = plt.subplots()
+    ax.set_yticks([1, 2, 3])
+    ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
+    figutils.rotateTickLabels(ax, -30, 'y')
+
+
+@image_comparison(baseline_images=['test_rotateTickLabels_both'], extensions=['png'])
+def test_rotateTickLabels_both():
+    fig, ax = plt.subplots()
+    ax.set_xticks([1, 2, 3])
+    ax.set_xticklabels(['XXX', 'YYY', 'ZZZ'])
+
+    ax.set_yticks([1, 2, 3])
+    ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
+    figutils.rotateTickLabels(ax, 45, 'both')
+
+
 class test_axes_methods:
     def setup(self):
         self.fig, self.ax = plt.subplots()
@@ -42,18 +88,6 @@ class test_axes_methods:
     @nt.nottest
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
-
-    def test_rotateTickLabels_xaxis(self):
-        self.ax.set_xticks([1, 2, 3])
-        self.ax.set_xticklabels(['AAA', 'BBB', 'CCC'])
-        figutils.rotateTickLabels(self.ax, 60, 'x')
-        self.savefig('rotate_xticks.png')
-
-    def test_rotateTickLabels_yaxis(self):
-        self.ax.set_yticks([1, 2, 3])
-        self.ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
-        figutils.rotateTickLabels(self.ax, -30, 'y')
-        self.savefig('rotate_yticks.png')
 
     def test_setProblimits_x_ax_LT50(self):
         self.ax.set_xscale('prob')
