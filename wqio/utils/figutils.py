@@ -149,6 +149,12 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
     return jg
 
 
+def scatterHistogram(*args, **kwargs):
+    ''' No longer implemented
+    '''
+    raise NotImplementedError('This gone. Use jointplot instead.')
+
+
 def boxplot(axes, data, position, median=None, CIs=None,
             mean=None, meanmarker='o', meancolor='b'):
     '''
@@ -344,12 +350,6 @@ def alt_logLabelFormatter(tick, pos=None):
         tick = r'$10 ^ {%d}$' % int(np.log10(tick))
 
     return tick
-
-
-def scatterHistogram(*args, **kwargs):
-    ''' No longer implemented
-    '''
-    raise NotImplementedError('This gone. Use jointplot instead.')
 
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):

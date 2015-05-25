@@ -127,6 +127,59 @@ def test_gridlines_ylog_noyminor():
     figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log', yminor=False)
 
 
+@nt.nottest
+def setup_jointplot():
+    plt.rcdefaults()
+    np.random.seed(0)
+    N = 37
+    df = pandas.DataFrame({
+        'A': np.random.normal(size=N),
+        'B': np.random.lognormal(mean=0.25, sigma=1.25, size=N),
+        'C': np.random.lognormal(mean=1.25, sigma=0.75, size=N)
+    })
+
+    return df
+
+@image_comparison(
+    baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
+                     'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
+    extensions=['png']
+)
+def test_jointplot_basic():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='b')
+    fig1 = jg1.fig
+
+    jg2 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='g', xlabel='Quantity B')
+    fig2 = jg2.fig
+
+    jg3 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='r', ylabel='Quantity C')
+    fig3 = jg3.fig
+
+    jg4 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='k',
+                             xlabel='Quantity B', ylabel='Quantity C')
+    fig4 = jg4.fig
+
+
+@image_comparison(baseline_images=['test_jointplot_zerominFalse'], extensions=['png'])
+def test_jointplot_zerominFalse():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='A', y='C', data=df, zeromin=False, one2one=False)
+    fig1 = jg1.fig
+
+
+@image_comparison(baseline_images=['test_jointplot_one2one'], extensions=['png'])
+def test_jointplot_one2one():
+    df = setup_jointplot()
+    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=True)
+    fig1 = jg1.fig
+
+
+@nt.raises(NotImplementedError)
+def test_scatterHistogram():
+    figutils.scatterHistogram()
+
+
 
 class test_axes_methods:
     def setup(self):
@@ -210,59 +263,6 @@ class test_axes_methods:
         nt.assert_list_equal(rendered_labels, expected_labels)
 
 
-@nt.nottest
-def setup_jointplot():
-    plt.rcdefaults()
-    np.random.seed(0)
-    N = 37
-    df = pandas.DataFrame({
-        'A': np.random.normal(size=N),
-        'B': np.random.lognormal(mean=0.25, sigma=1.25, size=N),
-        'C': np.random.lognormal(mean=1.25, sigma=0.75, size=N)
-    })
-
-    return df
-
-@image_comparison(
-    baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
-                     'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
-    extensions=['png']
-)
-def test_jointplot_basic():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='b')
-    fig1 = jg1.fig
-
-    jg2 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='g',
-                             xlabel='Quantity B')
-    fig2 = jg2.fig
-
-    jg3 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='r',
-                             ylabel='Quantity C')
-    fig3 = jg3.fig
-
-    jg4 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='k',
-                             xlabel='Quantity B', ylabel='Quantity C')
-    fig4 = jg4.fig
-
-
-@image_comparison(baseline_images=['test_jointplot_zerominFalse'], extensions=['png'])
-def test_jointplot_zerominFalse():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='A', y='C', data=df, zeromin=False, one2one=False)
-    fig1 = jg1.fig
-
-
-@image_comparison(baseline_images=['test_jointplot_one2one'], extensions=['png'])
-def test_jointplot_one2one():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=True)
-    fig1 = jg1.fig
-
-
-@nt.raises(NotImplementedError)
-def test_scatterHistogram():
-    figutils.scatterHistogram()
 
 
 class test_shiftedColorMap:
