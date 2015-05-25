@@ -11,7 +11,7 @@ matplotlib.rcParams['text.usetex'] = False
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-from matplotlib.testing.decorators import image_comparison
+from matplotlib.testing.decorators import image_comparison, cleanup
 import scipy.stats as stats
 
 import nose.tools as nt
@@ -24,11 +24,12 @@ from wqio.algo import ros
 
 @nt.nottest
 def setup_plot_data():
+    plt.rcdefaults()
     data = testing.getTestROSData()
     mr = ros.MR(data)
     return mr
 
-
+@cleanup
 class test__check_ax(object):
     @nt.raises(ValueError)
     def test_bad_value(self):
