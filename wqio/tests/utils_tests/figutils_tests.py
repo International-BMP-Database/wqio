@@ -68,6 +68,34 @@ def test_rotateTickLabels_both():
     figutils.rotateTickLabels(ax, 45, 'both')
 
 
+@image_comparison(baseline_images=['test_setProblimits_x_ax_LT50'], extensions=['png'])
+def test_setProblimits_x_ax_LT50():
+    fig, ax = plt.subplots()
+    ax.set_xscale('prob')
+    figutils.setProbLimits(ax, 37, which='x')
+
+
+@image_comparison(baseline_images=['test_setProblimits_y_ax_LT50'], extensions=['png'])
+def test_setProblimits_y_ax_LT50():
+    fig, ax = plt.subplots()
+    ax.set_yscale('prob')
+    figutils.setProbLimits(ax, 37, which='y')
+
+
+@image_comparison(baseline_images=['test_setProblimits_y_ax_GT50'], extensions=['png'])
+def test_setProblimits_y_ax_GT50():
+    fig, ax = plt.subplots()
+    ax.set_yscale('prob')
+    figutils.setProbLimits(ax, 98, which='y')
+
+
+@image_comparison(baseline_images=['test_setProblimits_y_ax_GT100'], extensions=['png'])
+def test_setProblimits_y_ax_GT100():
+    fig, ax = plt.subplots()
+    ax.set_yscale('prob')
+    figutils.setProbLimits(ax, 457, which='y')
+
+
 class test_axes_methods:
     def setup(self):
         self.fig, self.ax = plt.subplots()
@@ -89,25 +117,6 @@ class test_axes_methods:
     def savefig(self, filename):
         self.fig.savefig(self.makePath(filename))
 
-    def test_setProblimits_x_ax_LT50(self):
-        self.ax.set_xscale('prob')
-        figutils.setProbLimits(self.ax, 37, which='x')
-        self.savefig('problimts_xaxLT50.png')
-
-    def test_setProblimits_y_ax_LT50(self):
-        self.ax.set_yscale('prob')
-        figutils.setProbLimits(self.ax, 37, which='y')
-        self.savefig('problimts_yaxLT50.png')
-
-    def test_setProblimits_y_ax_GT50(self):
-        self.ax.set_yscale('prob')
-        figutils.setProbLimits(self.ax, 98, which='y')
-        self.savefig('problimts_yaxGT50.png')
-
-    def test_setProblimits_y_ax_GT100(self):
-        self.ax.set_yscale('prob')
-        figutils.setProbLimits(self.ax, 457, which='y')
-        self.savefig('problimts_yaxGT100.png')
 
     def test_gridlines(self):
         self.ax.plot(self.ros.data.final_data)
