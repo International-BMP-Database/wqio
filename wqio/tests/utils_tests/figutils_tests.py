@@ -235,61 +235,22 @@ def test_probplot_pp():
                             ylabel='test y')
 
 
-
-class test_axes_methods:
-    def setup(self):
-        self.fig, self.ax = plt.subplots()
-        self.data = testing.getTestROSData()
-        self.ros = ros.MR(self.data)
-        self.mean = self.ros.data.final_data.mean()
-        self.median = self.ros.data.final_data.median()
-        self.median_ci = [(self.median * 0.75, self.median * 1.25)]
-        self.prefix = testing.testutils.setup_prefix('utils.figutils')
-
-    def teardown(self):
-        plt.close('all')
-
-    @nt.nottest
-    def makePath(self, filename):
-        return os.path.join(self.prefix, filename)
-
-    @nt.nottest
-    def savefig(self, filename):
-        self.fig.savefig(self.makePath(filename))
+@image_comparison(baseline_images=['test_logLabelFormatter'], extensions=['png'])
+def test_logLabelFormatter():
+    fig, ax = plt.subplots()
+    ax.plot([1, 5], [0.0005, 5e6])
+    ax.set_yscale('log')
+    ax.set_ylim([0.0001, 1e7])
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.logLabelFormatter))
 
 
-    @nptest.dec.skipif(sys.platform != 'win32')
-    def test_logLabelFormatter(self):
-        self.ax.plot([1, 5], [0.0005, 5e6])
-        self.ax.set_yscale('log')
-        self.ax.set_ylim([0.0001, 1e7])
-        self.ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.logLabelFormatter))
-        plt.draw()
-        rendered_labels = [tick.get_text() for tick in self.ax.get_yticklabels()]
-        expected_labels = [
-            r'', r'$1 \times 10 ^ {-4}$', r'0.001', r'0.01', r'0.1',
-            r'1.0', r'10', r'100', r'1000', r'$1 \times 10 ^ {4}$',
-            r'$1 \times 10 ^ {5}$', r'$1 \times 10 ^ {6}$',
-            r'$1 \times 10 ^ {7}$', ''
-        ]
-        nt.assert_list_equal(rendered_labels, expected_labels)
-
-    @nptest.dec.skipif(sys.platform != 'win32')
-    def test_alt_logLabelFormatter(self):
-        self.ax.plot([1, 5], [0.0005, 5e6])
-        self.ax.set_yscale('log')
-        self.ax.set_ylim([0.0001, 1e7])
-        self.ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
-        plt.draw()
-        rendered_labels = [tick.get_text() for tick in self.ax.get_yticklabels()]
-        expected_labels = [
-            r'', r'$10 ^ {-4}$', r'0.001', r'0.01', r'0.1',
-            r'1.0', r'10', r'100', r'1000', r'$10 ^ {4}$',
-            r'$10 ^ {5}$', r'$10 ^ {6}$', r'$10 ^ {7}$', ''
-        ]
-        nt.assert_list_equal(rendered_labels, expected_labels)
-
-
+@image_comparison(baseline_images=['test_logLabelFormatter_alt'], extensions=['png'])
+def test_logLabelFormatter_alt():
+    fig, ax = plt.subplots()
+    ax.plot([1, 5], [0.0005, 5e6])
+    ax.set_yscale('log')
+    ax.set_ylim([0.0001, 1e7])
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
 
 
 class test_shiftedColorMap:
