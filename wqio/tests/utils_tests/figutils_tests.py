@@ -22,6 +22,13 @@ from wqio.utils import figutils
 from wqio.algo import ros
 
 
+@nt.nottest
+def setup_plot_data():
+    data = testing.getTestROSData()
+    mr = ros.MR(data)
+    return mr
+
+
 class test__check_ax(object):
     @nt.raises(ValueError)
     def test_bad_value(self):
@@ -96,6 +103,31 @@ def test_setProblimits_y_ax_GT100():
     figutils.setProbLimits(ax, 457, which='y')
 
 
+@image_comparison(baseline_images=['test_gridlines_basic'], extensions=['png'])
+def test_gridlines_basic():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    ax.plot(mr.data.final_data)
+    figutils.gridlines(ax, 'xlabel', 'ylabel')
+
+
+@image_comparison(baseline_images=['test_gridlines_ylog'], extensions=['png'])
+def test_gridlines_ylog():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    ax.plot(mr.data.final_data)
+    figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log')
+
+
+@image_comparison(baseline_images=['test_gridlines_ylog_noyminor'], extensions=['png'])
+def test_gridlines_ylog_noyminor():
+    mr = setup_plot_data()
+    fig, ax = plt.subplots()
+    ax.plot(mr.data.final_data)
+    figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log', yminor=False)
+
+
+
 class test_axes_methods:
     def setup(self):
         self.fig, self.ax = plt.subplots()
@@ -118,10 +150,6 @@ class test_axes_methods:
         self.fig.savefig(self.makePath(filename))
 
 
-    def test_gridlines(self):
-        self.ax.plot(self.ros.data.final_data)
-        figutils.gridlines(self.ax, 'xlabel', 'ylabel')
-        self.savefig('gridlines.png')
 
     def test_boxplot(self):
         figutils.boxplot(self.ax, self.ros.data.final_data, 1)
