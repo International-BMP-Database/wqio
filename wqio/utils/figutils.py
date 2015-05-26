@@ -10,6 +10,15 @@ from . import misc
 
 
 def _check_ax(ax):
+    """ Checks if a value if an Axes. If None, a new one is created.
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    ax : matplotlib Axes
+
+    """
+
     if ax is None:
         fig, ax = plt.subplots()
     elif isinstance(ax, plt.Axes):
@@ -22,6 +31,30 @@ def _check_ax(ax):
 
 
 def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
+    """ Rotates the ticklabels of a matplotlib Axes
+
+    Parameters
+    ----------
+    ax : matplotlib Axes
+        The Axes object that will be modified.
+    rotation : float
+        The amount of rotation, in degrees, to be applied to the labels.
+    which : string
+        The axis whose ticklabels will be rotated. Valid values are 'x',
+        'y', or 'both'.
+    rotation_mode : string, optional
+        The rotation point for the ticklabels. Highly recommended to use
+        the default value ('anchor').
+    ha : string
+        The horizontal alignment of the ticks. Again, recommended to use
+        the default ('right').
+
+    Returns
+    -------
+    None
+
+    """
+
     if which =='both':
         rotateTickLabels(ax, rotation, 'x', rotation_mode=rotation_mode, ha=ha)
         rotateTickLabels(ax, rotation, 'y', rotation_mode=rotation_mode, ha=ha)
@@ -39,6 +72,23 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
 
 
 def setProbLimits(ax, N, which):
+    """ Sets the limits of a probabilty axis based the number of point.
+
+    Parameters
+    ----------
+    ax : matplotlib Axes
+        The Axes object that will be modified.
+    N : int
+        Maximum number of points for the series plotted on the Axes.
+    which : string
+        The axis whose ticklabels will be rotated. Valid values are 'x',
+        'y', or 'both'.
+
+    Returns
+    -------
+    None
+    """
+
     minval = 10 ** (-1 *np.ceil(np.log10(N) - 2))
     if which in ['x', 'both']:
         ax.set_xlim(left=minval, right=100-minval)
@@ -46,54 +96,58 @@ def setProbLimits(ax, N, which):
         ax.set_ylim(bottom=minval, top=100-minval)
 
 
-def gridlines(axes, xlabel=None, ylabel=None, xscale=None, yscale=None,
+def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
               xminor=True, yminor=True):
-    '''
-    Deal with normal gridlines and other formats on an axes
+    """ Standard formatting for gridlines on a matplotlib Axes
 
-    Input:
-        axes (matplotlib axes object) : the axes to format
-        xlabel (string) : the label of the x-axis
-        ylabel (string) : the label of the y-axis
-        xscale (string, default 'log') : scale of the x-axis (linear or log)
-        yscale (string, default 'log') : scale of the y-axis (linear or log)
-        xminor (bool, default True) : toggles inclusion of the x minor grid
-        yminor (bool, default True) : toggles inclusion of the y minor grid
+    Parameters
+    ----------
+    ax : matplotlib Axes
+        The Axes object that will be modified.
+    xlabel, ylabel : string, optional
+        The labels of the x- and y-axis.
+    xscale, yscale : string, optional
+        The scale of each axis. Can be 'linear', 'log', or 'prob'.
+    xminor, yminor bool, optional
+        Toggles the grid on minor ticks. Has no effect in minor ticks
+        are not present.
 
-    Writes:
-        None
+    Returns
+    -------
+    None
 
-    Returns:
-        None
-    '''
+    """
+
+    formatter = mticker.FuncFormatter(logLabelFormatter)
+
     # set the scales
     if xscale is not None:
-        axes.set_xscale(xscale)
+        ax.set_xscale(xscale)
         if xscale == 'log':
-            axes.xaxis.set_major_formatter(mticker.FuncFormatter(logLabelFormatter))
+            ax.xaxis.set_major_formatter(formatter)
 
     if yscale is not None:
-        axes.set_yscale(yscale)
+        ax.set_yscale(yscale)
         if yscale == 'log':
-            axes.yaxis.set_major_formatter(mticker.FuncFormatter(logLabelFormatter))
+            ax.yaxis.set_major_formatter(formatter)
 
     # set the labels
     if xlabel is not None:
-        axes.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel)
 
     if ylabel is not None:
-        axes.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel)
 
     # major grids
-    axes.yaxis.grid(True, which='major', ls='-', alpha=0.35)
-    axes.xaxis.grid(True, which='major', ls='-', alpha=0.35)
+    ax.yaxis.grid(True, which='major', ls='-', alpha=0.35)
+    ax.xaxis.grid(True, which='major', ls='-', alpha=0.35)
 
     # minor grids
     if xminor:
-        axes.xaxis.grid(True, which='minor', ls='-', alpha=0.17)
+        ax.xaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
     if yminor:
-        axes.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
+        ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
 def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
@@ -150,29 +204,41 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
 
 
 def scatterHistogram(*args, **kwargs):
-    ''' No longer implemented
-    '''
+    """ No longer implemented
+    """
     raise NotImplementedError('This gone. Use jointplot instead.')
 
 
-def boxplot(axes, data, position, median=None, CIs=None,
+def boxplot(ax, data, position, median=None, CIs=None,
             mean=None, meanmarker='o', meancolor='b'):
-    '''
-    Adds a boxplot to an axes from the ROS'd data in a
-        `bmp.dataAccess.Location` object
+    """ Adds a boxplot to an axes
 
-    Input:
-        axes (matplotlib axes object) : the axes to format
-        rosdata (utils.ros object) : dataset to plot
-        position (int) : position along the x-axis where the boxplot should go
+    Parameters
+    ----------
+    ax : matplotlib Axes
+        The axis on which the boxplot will be drawn.
+    data : array-like
+        The data to be summarized.
+    position : int
+        Location on the x-axis where the boxplot will be drawn.
+    median : float, optional
+        Custom value for the median.
+    CIs : array-like, length = 2
+        Custom confidence intervals around the median for notched plots.
+    mean : float, optional
+        Custom value for the mean of the data (e.g., geomeans for
+        bacteria data).
+    meanmarker : string, optional (default = 'o')
+        matplotlib symbol used to plot the mean.
+    meancolor : string, optional (default = 'b')
+        matplotlib color used to plot the mean.
 
-    Writes:
-        None
+    Returns
+    -------
+    bp : dictionary of matplotlib artists
+        The graphical elements of the boxplot.
 
-    Returns:
-        bp (dictionary of matplotlib artists) : graphical elements of the
-            boxplot
-    '''
+    """
 
     if median is not None and np.isscalar(median):
         median = [median]
@@ -187,13 +253,13 @@ def boxplot(axes, data, position, median=None, CIs=None,
         CIs = CIs.tolist()
 
     # plot the data
-    bp = axes.boxplot(data, notch=1, positions=[position],
+    bp = ax.boxplot(data, notch=1, positions=[position],
                       widths=0.6, usermedians=median, conf_intervals=CIs)
 
     # plot the mean value as a big marker
     if mean is not None:
         # (geomean for bacteria data)
-        axes.plot(position, mean, marker=meanmarker, markersize=4,
+        ax.plot(position, mean, marker=meanmarker, markersize=4,
                   markerfacecolor=meancolor, markeredgecolor='k')
 
     return bp
@@ -201,29 +267,32 @@ def boxplot(axes, data, position, median=None, CIs=None,
 
 def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
                   showcaps=False, patch_artist=False):
-    '''
-    Easily format a boxplots for stylistic consistency
+    """ Easily format a boxplots for stylistic consistency
 
-    Input:
-        bp (dictionary of matplotlib artists) : graphical elements of the
-            boxplot
-        color (string) : any valid matplotlib color string
-            for the median lines and outlier markers
-        marker (string) : any valid matplotlib marker string
-            for the outliers
-        markersize (int) : size in points of the outlier marker
-        linestyle (string) : any valid matplotlib linestyle string
-            for the medians
-        patch_artist : optional bool (default = False)
-            Toggles the use of patch artist instead of a line artists
-            for the boxes.
+    Parameters
+    -----------
+    bp : dictionary of matplotlib artists
+        Graphical elements of the boxplot as returned by `plt.boxplot`
+        or `figutils.boxplot`.
+    color : string or RGB tuple
+        Any valid matplotlib color string or RGB-spec for the median
+        lines and outlier markers.
+    marker : string
+        Any valid matplotlib marker string for the outliers.
+    markersize : int
+        Size (in points) of the outlier marker.
+    linestyle : string
+        Any valid matplotlib linestyle string for the medians
+    patch_artist : optional bool (default = False)
+        Toggles the use of patch artist instead of a line artists for
+        the boxes.
 
-    Writes:
-        None
+    Returns
+    -------
+    None
 
-    Returns:
-        None
-    '''
+    """
+
     if patch_artist:
         # format the box itself
         for box in bp['boxes']:
@@ -259,7 +328,7 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
 def probplot(data, ax=None, axtype='prob', color='b', marker='o',
              linestyle='none', xlabel=None, ylabel=None, yscale='log',
              **plotkwds):
-    '''Probability, percentile, and quantile plots.
+    """ Probability, percentile, and quantile plots.
 
     Parameters
     ----------
@@ -291,7 +360,7 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     -------
     fig : matplotlib.Figure instance
 
-    '''
+    """
 
     fig, ax = _check_ax(ax)
     if axtype not in ['pp', 'qq', 'prob']:
@@ -327,10 +396,8 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
 
 def logLabelFormatter(tick, pos=None):
-    '''
-    Y-tick label formatter to deal with scientific notation
-    the way I like
-    '''
+    """ Formats log axes as `1 x 10^N` when N > 4 or N < -4. """
+
     if 10**3 >= tick > 1:
         tick = int(tick)
     elif tick > 10**3 or tick < 10**-3:
@@ -340,10 +407,8 @@ def logLabelFormatter(tick, pos=None):
 
 
 def alt_logLabelFormatter(tick, pos=None):
-    '''
-    X-tick label formatter to deal with scientific notation
-    the way I like
-    '''
+    """ Formats log axes as `10^N` when N > 4 or N < -4. """
+
     if 10**3 >= tick > 1:
         tick = int(tick)
     elif tick > 10**3 or tick < 10**-3:
@@ -353,27 +418,32 @@ def alt_logLabelFormatter(tick, pos=None):
 
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
-    '''
-    Function to offset the "center" of a colormap. Useful for
-    data with a negative min and positive max and you want the
-    middle of the colormap's dynamic range to be at zero
+    """ Offset the "center" of a colormap.
 
-    Input
-    -----
-      cmap : The matplotlib colormap to be altered
-      start : Offset from lowest point in the colormap's range.
-          Defaults to 0.0 (no lower ofset). Should be between
-          0.0 and `midpoint`.
-      midpoint : The new center of the colormap. Defaults to
-          0.5 (no shift). Should be between `start` and `stop`.
-          In general, this should be  1 - vmax/(vmax + abs(vmin))
-          For example if your data range from -15.0 to +5.0 and
-          you want the center of the colormap at 0.0, `midpoint`
-          should be set to  1 - 5/(5 + 15)) or 0.75
-      stop : Offset from highets point in the colormap's range.
-          Defaults to 1.0 (no upper ofset). Should be between
-          `midpoint` and 1.0.
-    '''
+    Useful for data with a negative min and positive max and you want
+    the middle of the colormap's dynamic range to be at zero.
+
+    Parameters
+    ----------
+    cmap : The matplotlib colormap
+        The colormap be altered
+    start : float, optional
+        Offset from lowest point in the colormap's range. Defaults to
+        0.0 (no lower ofset). Should be between 0.0 and `midpoint`.
+    midpoint : float, optional
+        The new center of the colormap. Defaults to 0.5 (no shift).
+        Should be between `start` and `stop`. In general, this should be
+        1 - vmax/(vmax + abs(vmin)) For example if your data range from
+        -15.0 to +5.0 and you want the center of the colormap at 0.0,
+        `midpoint` should be set to  1 - 5/(5 + 15)) or 0.75.
+    stop : float, optional
+        Offset from highets point in the colormap's range. Defaults to
+        1.0 (no upper ofset). Should be between `midpoint` and 1.0.
+    name : string, optional
+        Just a name for the colormap. Not particularly important.
+
+    """
+
     if midpoint <= start or midpoint >= stop:
         raise ValueError("`midpoint` must be between `start` and `stop`")
 
