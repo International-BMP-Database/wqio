@@ -315,8 +315,6 @@ class test_Storm(object):
         self.known_peak_lag_time = 0.1666666667
         self.known_centroid_lag_time = 0.255672966
 
-        self.fig, self.ax = plt.subplots()
-
     def teardown(self):
         plt.close('all')
         pass
@@ -463,6 +461,7 @@ class test_Storm(object):
 
 @nt.nottest
 def setup_storm():
+    plt.rcdefaults()
     storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )

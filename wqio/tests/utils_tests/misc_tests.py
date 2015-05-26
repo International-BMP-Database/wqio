@@ -10,7 +10,7 @@ import numpy as np
 import numpy.testing as nptest
 
 from wqio import testing
-usetex = testing.compare_versions(utility='latex')
+usetex = False #testing.compare_versions(utility='latex')
 
 import matplotlib
 matplotlib.rcParams['text.usetex'] = usetex
@@ -217,7 +217,7 @@ def test_makeTexFigure():
     nt.assert_equal(known, test)
 
 
-class testss_with_paths(object):
+class tests_with_paths(object):
     @nt.nottest
     def makePath(self, filename):
         return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
