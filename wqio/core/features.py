@@ -654,7 +654,7 @@ class Location(object):
             Toggles the use of patch artist instead of a line artists
             for the boxes
         xlims : dict, optional
-            Diction of limits for the x-axis. Keys must be either
+            Dictionary of limits for the x-axis. Keys must be either
             "left", "right", or both
 
         Returns
@@ -708,28 +708,28 @@ class Location(object):
 
         Parameters
         ----------
-        ax : optional matplotlib axes object or None (default).
+        ax : matplotlib axes object, optional or None (default).
             The Axes on which to plot. If None is provided, one will be
             created.
-        axtype : string (default = 'pp')
+        axtype : string, optional (default = 'pp')
             Type of plot to be created. Options are:
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        color : color string or three tuple (default = 'b')
-            Just needs to be any valid matplotlib color representation.
-        marker : string (default = 'o')
+        color : string or three tuple (default = 'b'), optional
+            Any valid matplotlib color specification.
+        marker : string, optional (default = 'o')
             String representing a matplotlib marker style.
-        linestyle : string (default = 'none')
-            String representing a matplotlib line style. No line is shown by
-            default.
-        [x|y]label : string or None (default)
+        linestyle : string, optional (default = 'none')
+            String representing a matplotlib line style. No line is shown
+            by default.
+        [x|y]label : string, optional or None (default)
             Axis label for the plot.
-        yscale : string (default = 'log')
+        yscale : string , optional(default = 'log')
             Scale for the y-axis. Use 'log' for logarithmic (default) or
             'linear'.
-        clearYLabels : bool (default = False)
-            If True, removed y-*tick* labels from `ax`
+        clearYLabels : bool, optional (default = False)
+            If True, removed y-*tick* labels from `ax`.
 
         Returns
         -------
@@ -773,27 +773,27 @@ class Location(object):
 
         Parameters
         ----------
-        pos : optional int (default=1)
+        pos : int, optional (default=1)
             Location along x-axis where boxplot will be placed.
-        yscale : optional string ['linear' or 'log' (default)]
+        yscale : string, optional ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-        notch : optional bool (default=True)
+        notch : bool, optional (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
-        showmean : optional bool (default=True)
+        showmean : bool, optional (default=True)
             Toggles plotting the mean value on the boxplot as a point.
             See also the `bacteria` kwarg
-        width : optional float (default=0.8)
+        width : float, optional (default=0.8)
             Width of boxplot on the axes (data units)
-        bacteria : optional bool (default False)
+        bacteria : bool, optional (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
-        ylabel : string or None (default):
+        ylabel : string, optional or None (default):
             Label for y-axis
-        probAxis : bool (default = True)
+        probAxis : bool, optional (default = True)
             Toggles the display of probabilities (True) or Z-scores
             (i.e., theoretical quantiles) on the x-axis
-        patch_artist : optional bool (default = False)
+        patch_artist : bool, optional (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
 
@@ -826,43 +826,40 @@ class Location(object):
     def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
                         ylabel=None, yscale='log', ignoreROS=True,
                         markersize=4, xlims=None):
-        '''
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the points with be drawn. If None, one will
-                be created.
-
-            pos : optional int (default=1)
-                Location along x-axis where data will be centered.
-
-            jitter : optional float (default=0.80)
-                Width of the random x-values uniform distributed around `pos`
-
-            alpha : optional float (default=0.75)
-                Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            ylabel : optional string or None (default):
-                Label for y-axis
-
-            ignoreROS : optional bool (default = True)
-                By default, this function will plot the original, non-ROS'd
-                data with a different symbol for non-detects. If `True`, the
-                and `self.useROS` is `True`, this function will plot the ROS'd
-                data with a single marker.
-
-            markersize : option int (default = 6)
-                Size of data markers on the figure in points.
-
+        """
+        Parameters
+        ----------
+        ax : matplotlib axes object, optional or None (default)
+            Axes on which the points with be drawn. If None, one will
+            be created.
+        pos : int, optional (default=1)
+            Location along x-axis where data will be centered.
+        jitter : float, optional (default=0.80)
+            Width of the random x-values uniform distributed around
+            `pos`
+        alpha : float, optional (default=0.75)
+            Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
+        yscale : string, optional ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        ylabel : string, optional or None (default):
+            Label for y-axis
+        ignoreROS : bool, optional (default = True)
+            By default, this function will plot the original, non-ROS'd
+            data with a different symbol for non-detects. If `True`, the
+            and `self.useROS` is `True`, this function will plot the
+            ROS'd data with a single marker.
+        markersize : int, optional (default = 6)
+            Size of data markers on the figure in points.
         xlims : dict, optional
-            Diction of limits for the x-axis. Keys must be either
+            Dictionary of limits for the x-axis. Keys must be either
             "left", "right", or both
 
-        Returns:
-            fig : matplotlib Figure instance
-        '''
+        Returns
+        -------
+        fig : matplotlib Figure instance
+
+        """
+
         fig, ax = utils.figutils._check_ax(ax)
 
 
@@ -897,36 +894,6 @@ class Location(object):
             ax.set_xlim(**xlims)
 
         return fig
-
-    def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
-        '''
-        Helper function for scatter plots -- plots various combinations
-        of non-detect paired data
-        '''
-        if which == 'both':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
-
-        elif which == 'influent':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
-
-        elif which == 'effluent':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
-
-        elif which == 'neither':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
-
-        else:
-            msg = '`which` must be "both", "influent", ' \
-                  '"effluent", or "neighter"'
-            raise ValueError(msg)
-
-        x = self.paired_data.loc[index][('inflow', 'res')]
-        y = self.paired_data.loc[index][('outflow', 'res')]
-        ax.plot(x, y, label=label, **markerkwargs)
 
     # other methods
     def applyFilter(self, filterfxn, **fxnkwargs):
