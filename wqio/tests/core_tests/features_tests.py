@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 import pandas
 import pandas.util.testing as pdtest
+from matplotlib.testing.decorators import image_comparison, cleanup
 
 from wqio.core.features import (
     Parameter,
@@ -131,9 +132,6 @@ class _base_LocationMixin(object):
 
     @nottest
     def main_setup(self):
-        # path stuff
-        self.prefix = setup_prefix('core.features')
-
 
         # basic test data
         self.tolerance = 0.05
@@ -154,13 +152,9 @@ class _base_LocationMixin(object):
         self.known_hasData = True
         self.known_min_detect = 2.00
         self.known_min_DL = 5.00
-        self.fig, self.ax = plt.subplots()
-
         self.known_filtered_include = False
 
     def teardown(self):
-        self.ax.cla()
-        self.fig.clf()
         plt.close('all')
 
     def test_bsIter(self):
@@ -356,102 +350,6 @@ class _base_LocationMixin(object):
         assert_equal(self.loc.include, not self.known_include)
         assert_equal(self.loc.exclude, not self.known_exclude)
 
-    def test_boxplot_baseline(self):
-        assert_true(hasattr(self.loc, 'boxplot'))
-        fig = self.loc.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                               showmean=True, width=0.8, ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath(
-            'test_Loc_Box_useROS_{0}.png'.format(self.loc.useROS)
-        ))
-
-    @raises(ValueError)
-    def test_boxplot_badAxes(self):
-        fig = self.loc.boxplot(ax=5, pos=1, yscale='log', notch=True,
-                               showmean=True, width=0.8)
-
-    @raises(ValueError)
-    def test_boxplot_badYscale(self):
-        fig = self.loc.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
-                               showmean=True, width=0.8)
-
-    def test_probplot_QQ(self):
-        assert_true(hasattr(self.loc, 'probplot'))
-        self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', ylabel='Test Label', axtype='qq')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Prob-QQ_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_probplot_baseline_PP(self):
-        assert_true(hasattr(self.loc, 'probplot'))
-        self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Prob-PP_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_probplot_baseline_Prob(self):
-        assert_true(hasattr(self.loc, 'probplot'))
-        self.loc.probplot(yscale='log')
-        fig = self.loc.probplot(ax=self.ax, yscale='log', axtype='prob')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Prob-prob_useROS_{0}.png'.format(self.loc.useROS)))
-
-    @raises(ValueError)
-    def test_probplot_badAxes(self):
-        fig = self.loc.probplot(ax=3, yscale='log')
-
-    @raises(ValueError)
-    def test_probplot_badYscale(self):
-        self.loc.probplot(yscale='JUNK')
-
-    def test_statplot_PP(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', ylabel='Test Label', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Stat-PP_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_statplot_baseline_QQ(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', axtype='qq', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Stat-QQ_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_statplot_baseline_prob(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='log', axtype='prob', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_Stat-Prob_useROS_{0}.png'.format(self.loc.useROS)))
-
-    @raises(ValueError)
-    def test_statplot_badYScale(self):
-        assert_true(hasattr(self.loc, 'statplot'))
-        fig = self.loc.statplot(yscale='JUNK', axtype='qq', ylabel='Test Label')
-
-    def test_verticalScatter_baseline(self):
-        assert_true(hasattr(self.loc, 'verticalScatter'))
-        fig = self.loc.verticalScatter(ax=self.ax, pos=2, width=1, alpha=0.5)
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_Loc_verticalScatter_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_verticalScatter_ylabel_yscale(self):
-        fig = self.loc.verticalScatter(ax=self.ax, pos=2, width=1, alpha=0.5,
-                                        ylabel='testlabel', yscale='linear')
-        fig.savefig(self.makePath('test_Loc_verticalScatter_YScaleYLabel_useROS_{0}.png'.format(self.loc.useROS)))
-
-    def test_verticalScatter_DontIgnoreROS(self):
-        fig = self.loc.verticalScatter(ax=self.ax, pos=2, width=1, alpha=0.5,
-                                        ylabel='testlabel', yscale='linear',
-                                        ignoreROS=False)
-        fig.savefig(self.makePath('test_Loc_verticalScatter_DontIgnoreROS_useROS_{0}.png'.format(self.loc.useROS)))
-
-    @raises(ValueError)
-    def test_verticalScatter_badAxes(self):
-        fig = self.loc.verticalScatter(ax='JUNK', pos=2, width=1, alpha=0.5)
-
-    @raises(ValueError)
-    def test_verticalScatter_badYScale(self):
-        fig = self.loc.verticalScatter(ax=self.ax, pos=2, width=1, alpha=0.5, yscale='JUNK')
-
     def test_applyFilter_exists(self):
         assert_true(hasattr(self.loc, 'applyFilter'))
 
@@ -573,6 +471,173 @@ class test_Location_noROS(_base_LocationMixin):
             nptest.assert_allclose(self.loc.median_conf_interval,
                                    self.known_median_conf_interval2,
                                    rtol=self.tolerance)
+
+
+@nottest
+def setup_location(station_type):
+    data = testing.getTestROSData()
+    np.random.seed(0)
+    loc = Location(data, station_type=station_type, bsIter=10000,
+                   rescol='res', qualcol='qual', useROS=True)
+    plt.rcdefaults()
+    return loc
+
+
+@image_comparison(baseline_images=[
+    'test_loc_boxplot_default',
+    'test_loc_boxplot_patch_artists',
+    'test_loc_boxplot_linscale',
+    'test_loc_boxplot_no_mean',
+    'test_loc_boxplot_width',
+    'test_loc_boxplot_no_notch',
+    'test_loc_boxplot_bacteria_geomean',
+    'test_loc_boxplot_with_ylabel',
+    'test_loc_boxplot_fallback_to_vert_scatter',
+    'test_loc_boxplot_provided_ax',
+    'test_loc_boxplot_custom_position'
+], extensions=['png'])
+def test_location_boxplot():
+    xlims = {'left': 0, 'right': 2}
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+    fig1 = loc.boxplot()
+    fig2 = loc.boxplot(patch_artist=True, xlims=xlims)
+    fig3 = loc.boxplot(yscale='linear', xlims=xlims)
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 'd'
+    fig4 = loc.boxplot(showmean=False, xlims=xlims)
+    fig5 = loc.boxplot(width=1.25, xlims=xlims)
+    fig6 = loc.boxplot(notch=False, xlims=xlims)
+
+    loc.color = 'forestgreen'
+    loc.plot_marker = 's'
+    fig7 = loc.boxplot(bacteria=True, xlims=xlims)
+    fig8 = loc.boxplot(ylabel='Test Ylabel', xlims=xlims)
+    fig9 = loc.boxplot(minpoints=np.inf, xlims=xlims)
+
+    fig10, ax10 = plt.subplots()
+    fig10 = loc.boxplot(ax=ax10, xlims=xlims)
+    assert_true(isinstance(fig10, plt.Figure))
+    assert_raises(ValueError, loc.boxplot, ax='junk')
+
+    fig11 = loc.boxplot(pos=1.5, xlims=xlims)
+
+
+@image_comparison(baseline_images=[
+    'test_loc_probplot_default',
+    'test_loc_probplot_provided_ax',
+    'test_loc_probplot_yscale_linear',
+    'test_loc_probplot_ppax',
+    'test_loc_probplot_qqax',
+    'test_loc_probplot_ylabel',
+    'test_loc_probplot_clear_yticks',
+    'test_loc_probplot_no_managegrid',
+    'test_loc_probplot_no_rotate_xticklabels',
+    'test_loc_probplot_no_set_xlims',
+    'test_loc_probplot_plotopts1',
+    'test_loc_probplot_plotopts2',
+], extensions=['png'])
+def test_location_probplot():
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+
+    fig1 = loc.probplot()
+    fig2, ax2 = plt.subplots()
+    fig2 = loc.probplot(ax=ax2)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, loc.probplot, ax='junk')
+
+    fig3 = loc.probplot(yscale='linear')
+    fig4 = loc.probplot(axtype='pp')
+    fig5 = loc.probplot(axtype='qq')
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 'd'
+    fig6 = loc.probplot(ylabel='test ylabel')
+    fig7 = loc.probplot(clearYLabels=True)
+    fig8 = loc.probplot(managegrid=False)
+
+    loc.color = 'forestgreen'
+    loc.plot_marker = 'd'
+    fig10 = loc.probplot(rotateticklabels=False)
+    fig11 = loc.probplot(setxlimits=False)
+    fig12 = loc.probplot(markersize=10, linestyle='--')
+    fig13 = loc.probplot(markeredgewidth=2)
+
+
+@image_comparison(baseline_images=[
+    'test_loc_statplot_custom_position',
+    'test_loc_statplot_yscale_linear',
+    'test_loc_statplot_no_notch',
+    'test_loc_statplot_no_mean',
+    'test_loc_statplot_custom_width',
+    'test_loc_statplot_bacteria_true',
+    'test_loc_statplot_ylabeled',
+    'test_loc_statplot_qq',
+    'test_loc_statplot_pp',
+    'test_loc_statplot_patch_artist',
+], extensions=['png'])
+def test_location_statplot():
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+
+    fig1 = loc.statplot(pos=1.25)
+    fig2 = loc.statplot(yscale='linear')
+    fig3 = loc.statplot(notch=False)
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 'd'
+    fig4 = loc.statplot(showmean=False)
+    fig5 = loc.statplot(width=1.5)
+    fig6 = loc.statplot(bacteria=True)
+    fig7 = loc.statplot(ylabel='Test Y-Label')
+
+    loc.color = 'forestgreen'
+    loc.plot_marker = 's'
+    fig8 = loc.statplot(axtype='qq')
+    fig9 = loc.statplot(axtype='pp')
+    fig10 = loc.statplot(patch_artist=True)
+    assert_true(fig10, plt.Figure)
+
+
+@image_comparison(baseline_images=[
+    'test_loc_vertical_scatter_default',
+    'test_loc_vertical_scatter_provided_ax',
+    'test_loc_vertical_scatter_pos',
+    'test_loc_vertical_scatter_nojitter',
+    'test_loc_vertical_scatter_alpha',
+    'test_loc_vertical_scatter_ylabel',
+    'test_loc_vertical_scatter_yscale_linear',
+    'test_loc_vertical_scatter_not_ignoreROS',
+    'test_loc_vertical_scatter_markersize',
+], extensions=['png'])
+def test_location_verticalScatter():
+    xlims = {'left': 0, 'right': 2}
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+
+    fig1 = loc.verticalScatter()
+    fig2, ax2 = plt.subplots()
+    fig2 = loc.verticalScatter(ax=ax2, xlims=xlims)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, loc.verticalScatter, ax='junk', xlims=xlims)
+
+    fig3 = loc.verticalScatter(pos=1.25, xlims=xlims)
+    fig4 = loc.verticalScatter(jitter=0.0, xlims=xlims)
+    fig5 = loc.verticalScatter(alpha=0.25, xlims=xlims)
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 's'
+    loc.verticalScatter(ylabel='Test Y-Label', xlims=xlims)
+    loc.verticalScatter(yscale='linear', xlims=xlims)
+    loc.verticalScatter(ignoreROS=False, xlims=xlims)
+    loc.verticalScatter(markersize=8, xlims=xlims)
+
 
 
 class test_Dataset(object):

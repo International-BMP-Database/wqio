@@ -624,8 +624,8 @@ class Location(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, minPoints=5,
-                patch_artist=False):
+                width=0.8, bacteria=False, ylabel=None, minpoints=5,
+                patch_artist=False, xlims=None):
         '''Adds a boxplot to a matplotlib figure
 
         Parameters
@@ -633,34 +633,29 @@ class Location(object):
         ax : optional matplotlib axes object or None (default)
             Axes on which the boxplot with be drawn. If None, one will
             be created.
-
         pos : optional int (default=1)
             Location along x-axis where boxplot will be placed.
-
         yscale : optional string ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-
         notch : optional bool (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
-
         showmean : optional bool (default=True)
             Toggles plotting the mean value on the boxplot as a point.
             See also the `bacteria` kwarg
-
         width : optional float (default=0.8)
             Width of boxplot on the axes (data units)
-
         bacteria : optional bool (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
-
         ylabel : string or None (default):
             Label for y-axis
-
         patch_artist : optional bool (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
+        xlims : dict, optional
+            Dictionary of limits for the x-axis. Keys must be either
+            "left", "right", or both
 
         Returns
         -------
@@ -675,7 +670,7 @@ class Location(object):
             markerfacecolor=self.color, markeredgecolor='Black'
         )
 
-        if self.N >= minPoints:
+        if self.N >= minpoints:
             bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
             bp = ax.bxp(bxpstats, positions=[pos], widths=width,
                         showmeans=showmean, shownotches=notch, showcaps=False,
@@ -685,7 +680,7 @@ class Location(object):
             utils.figutils.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
                                          patch_artist=patch_artist)
         else:
-            self.verticalScatter(ax=ax, pos=pos, width=width*0.5, alpha=0.75,
+            self.verticalScatter(ax=ax, pos=pos, jitter=width*0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
 
         ax.set_yscale(yscale)
@@ -701,6 +696,9 @@ class Location(object):
         if self.name is not None:
             ax.set_xticklabels([self.name])
 
+        if xlims is not None:
+            ax.set_xlim(**xlims)
+
         return fig
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
@@ -710,28 +708,28 @@ class Location(object):
 
         Parameters
         ----------
-        ax : optional matplotlib axes object or None (default).
+        ax : matplotlib axes object, optional or None (default).
             The Axes on which to plot. If None is provided, one will be
             created.
-        axtype : string (default = 'pp')
+        axtype : string, optional (default = 'pp')
             Type of plot to be created. Options are:
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        color : color string or three tuple (default = 'b')
-            Just needs to be any valid matplotlib color representation.
-        marker : string (default = 'o')
+        color : string or three tuple (default = 'b'), optional
+            Any valid matplotlib color specification.
+        marker : string, optional (default = 'o')
             String representing a matplotlib marker style.
-        linestyle : string (default = 'none')
-            String representing a matplotlib line style. No line is shown by
-            default.
-        [x|y]label : string or None (default)
+        linestyle : string, optional (default = 'none')
+            String representing a matplotlib line style. No line is shown
+            by default.
+        [x|y]label : string, optional or None (default)
             Axis label for the plot.
-        yscale : string (default = 'log')
+        yscale : string , optional(default = 'log')
             Scale for the y-axis. Use 'log' for logarithmic (default) or
             'linear'.
-        clearYLabels : bool (default = False)
-            If True, removed y-*tick* labels from `ax`
+        clearYLabels : bool, optional (default = False)
+            If True, removed y-*tick* labels from `ax`.
 
         Returns
         -------
@@ -743,10 +741,10 @@ class Location(object):
         color = plotopts.pop('color', self.color)
         label = plotopts.pop('label', self.name)
         marker = plotopts.pop('marker', self.plot_marker)
-        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype,
-                                      yscale=yscale, ylabel=ylabel,
-                                      color=color, label=label,
-                                      marker=marker, **plotopts)
+        linestyle = plotopts.pop('linestyle', 'none')
+        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
+                                      ylabel=ylabel, color=color, label=label,
+                                      marker=marker, linestyle=linestyle, **plotopts)
 
         if yscale == 'log':
             label_format = mticker.FuncFormatter(
@@ -763,7 +761,7 @@ class Location(object):
         if rotateticklabels:
             utils.figutils.rotateTickLabels(ax, 45, 'x', ha='right')
 
-        if setxlimits:
+        if setxlimits and axtype == 'prob':
             utils.figutils.setProbLimits(ax, self.N, 'x')
 
         return fig
@@ -771,51 +769,40 @@ class Location(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
-        '''
-        Creates a two-axis figure. Left axis has a bopxplot. Right axis
-        contains a probability ot quantile plot.
+        '''Creates a two-axis figure with a boxplot & probability plot.
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        pos : int, optional (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : string, optional ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : bool, optional (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : bool, optional (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : float, optional (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : bool, optional (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string, optional or None (default):
+            Label for y-axis
+        probAxis : bool, optional (default = True)
+            Toggles the display of probabilities (True) or Z-scores
+            (i.e., theoretical quantiles) on the x-axis
+        patch_artist : bool, optional (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-        Returns:
-            fig : matplotlib Figure instance
+        Returns
+        -------
+        fig : matplotlib Figure instance
 
         '''
+
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
                          edgecolor='none')
@@ -824,7 +811,8 @@ class Location(object):
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
-                     ylabel=ylabel, patch_artist=patch_artist)
+                     ylabel=ylabel, patch_artist=patch_artist,
+                     xlims={'left': pos - (0.6*width), 'right': pos + (0.6*width)})
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True)
@@ -835,101 +823,77 @@ class Location(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def verticalScatter(self, ax=None, pos=1, width=0.8, alpha=0.75,
+    def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
                         ylabel=None, yscale='log', ignoreROS=True,
-                        markersize=4):
-        '''
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the points with be drawn. If None, one will
-                be created.
+                        markersize=4, xlims=None):
+        """
+        Parameters
+        ----------
+        ax : matplotlib axes object, optional or None (default)
+            Axes on which the points with be drawn. If None, one will
+            be created.
+        pos : int, optional (default=1)
+            Location along x-axis where data will be centered.
+        jitter : float, optional (default=0.80)
+            Width of the random x-values uniform distributed around
+            `pos`
+        alpha : float, optional (default=0.75)
+            Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
+        yscale : string, optional ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        ylabel : string, optional or None (default):
+            Label for y-axis
+        ignoreROS : bool, optional (default = True)
+            By default, this function will plot the original, non-ROS'd
+            data with a different symbol for non-detects. If `True`, the
+            and `self.useROS` is `True`, this function will plot the
+            ROS'd data with a single marker.
+        markersize : int, optional (default = 6)
+            Size of data markers on the figure in points.
+        xlims : dict, optional
+            Dictionary of limits for the x-axis. Keys must be either
+            "left", "right", or both
 
-            pos : optional int (default=1)
-                Location along x-axis where data will be centered.
+        Returns
+        -------
+        fig : matplotlib Figure instance
 
-            width : optional float (default=0.80)
-                Width of the random x-values uniform distributed around `pos`
+        """
 
-            alpha : optional float (default=0.75)
-                Opacity of the marker (1.0 -> opaque; 0.0 -> transparent)
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            ylabel : optional string or None (default):
-                Label for y-axis
-
-            ignoreROS : optional bool (default = True)
-                By default, this function will plot the original, non-ROS'd
-                data with a different symbol for non-detects. If `True`, the
-                and `self.useROS` is `True`, this function will plot the ROS'd
-                data with a single marker.
-
-            markersize : option int (default = 6)
-                Size of data markers on the figure in points.
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         fig, ax = utils.figutils._check_ax(ax)
 
-        low = pos - width*0.5
-        high = pos + width*0.5
+
+        if jitter == 0:
+            xvals = [pos] * self.N
+        else:
+            low = pos - jitter * 0.5
+            high = pos + jitter * 0.5
+            xvals = np.random.uniform(low=low, high=high, size=self.N)
 
         if not ignoreROS and self.useROS:
-            xvals = self.N * [pos]
             ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
                     markerfacecolor=self.color, markeredgecolor='white',
                     linestyle='none', alpha=alpha)
         else:
-            x_nondet = xvals = self.ND * [pos]
             y_nondet = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]==self._ndval]
-            x_detect = xvals = (self.N - self.ND) * [pos]
             y_detect = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]!=self._ndval]
 
-            ax.plot(x_detect, y_detect, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha, label='Detects')
-
-            ax.plot(x_nondet, y_nondet, marker='v', markersize=markersize,
+            ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
                     markerfacecolor='none', markeredgecolor=self.color,
                     linestyle='none', alpha=alpha, label='Non-detects')
+
+            ax.plot(xvals[self.ND:], y_detect, marker=self.plot_marker, markersize=markersize,
+                    markerfacecolor=self.color, markeredgecolor='white',
+                    linestyle='none', alpha=alpha, label='Detects')
 
         ax.set_yscale(yscale)
         if ylabel is not None:
             ax.set_ylabel(ylabel)
 
+        if xlims is not None:
+            ax.set_xlim(**xlims)
+
         return fig
-
-    def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
-        '''
-        Helper function for scatter plots -- plots various combinations
-        of non-detect paired data
-        '''
-        if which == 'both':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
-
-        elif which == 'influent':
-            index = (self.paired_data[('inflow', 'qual')] == 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
-
-        elif which == 'effluent':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] == 'ND')
-
-        elif which == 'neither':
-            index = (self.paired_data[('inflow', 'qual')] != 'ND') & \
-                    (self.paired_data[('outflow', 'qual')] != 'ND')
-
-        else:
-            msg = '`which` must be "both", "influent", ' \
-                  '"effluent", or "neighter"'
-            raise ValueError(msg)
-
-        x = self.paired_data.loc[index][('inflow', 'res')]
-        y = self.paired_data.loc[index][('outflow', 'res')]
-        ax.plot(x, y, label=label, **markerkwargs)
 
     # other methods
     def applyFilter(self, filterfxn, **fxnkwargs):
