@@ -497,31 +497,32 @@ def setup_location(station_type):
     'test_loc_boxplot_custom_position'
 ], extensions=['png'])
 def test_location_boxplot():
+    xlims = {'left': 0, 'right': 2}
     loc = setup_location('inflow')
     loc.color = 'cornflowerblue'
     loc.plot_marker = 'o'
     fig1 = loc.boxplot()
-    fig2 = loc.boxplot(patch_artist=True, xlims={'left': 0, 'right': 2})
-    fig3 = loc.boxplot(yscale='linear', xlims={'left': 0, 'right': 2})
+    fig2 = loc.boxplot(patch_artist=True, xlims=xlims)
+    fig3 = loc.boxplot(yscale='linear', xlims=xlims)
 
     loc.color = 'firebrick'
     loc.plot_marker = 'd'
-    fig4 = loc.boxplot(showmean=False, xlims={'left': 0, 'right': 2})
-    fig5 = loc.boxplot(width=1.25, xlims={'left': 0, 'right': 2})
-    fig6 = loc.boxplot(notch=False, xlims={'left': 0, 'right': 2})
+    fig4 = loc.boxplot(showmean=False, xlims=xlims)
+    fig5 = loc.boxplot(width=1.25, xlims=xlims)
+    fig6 = loc.boxplot(notch=False, xlims=xlims)
 
     loc.color = 'forestgreen'
     loc.plot_marker = 's'
-    fig7 = loc.boxplot(bacteria=True, xlims={'left': 0, 'right': 2})
-    fig8 = loc.boxplot(ylabel='Test Ylabel', xlims={'left': 0, 'right': 2})
-    fig9 = loc.boxplot(minpoints=np.inf, xlims={'left': 0, 'right': 2})
+    fig7 = loc.boxplot(bacteria=True, xlims=xlims)
+    fig8 = loc.boxplot(ylabel='Test Ylabel', xlims=xlims)
+    fig9 = loc.boxplot(minpoints=np.inf, xlims=xlims)
 
     fig10, ax10 = plt.subplots()
-    fig10 = loc.boxplot(ax=ax10, xlims={'left': 0, 'right': 2})
+    fig10 = loc.boxplot(ax=ax10, xlims=xlims)
     assert_true(isinstance(fig10, plt.Figure))
     assert_raises(ValueError, loc.boxplot, ax='junk')
 
-    fig11 = loc.boxplot(pos=1.5, xlims={'left': 0, 'right': 2})
+    fig11 = loc.boxplot(pos=1.5, xlims=xlims)
 
 
 @image_comparison(baseline_images=[
@@ -601,6 +602,42 @@ def test_location_statplot():
     fig9 = loc.statplot(axtype='pp')
     fig10 = loc.statplot(patch_artist=True)
     assert_true(fig10, plt.Figure)
+
+
+@image_comparison(baseline_images=[
+    'test_loc_vertical_scatter_default',
+    'test_loc_vertical_scatter_provided_ax',
+    'test_loc_vertical_scatter_pos',
+    'test_loc_vertical_scatter_nojitter',
+    'test_loc_vertical_scatter_alpha',
+    'test_loc_vertical_scatter_ylabel',
+    'test_loc_vertical_scatter_yscale_linear',
+    'test_loc_vertical_scatter_not_ignoreROS',
+    'test_loc_vertical_scatter_markersize',
+], extensions=['png'])
+def test_location_verticalScatter():
+    xlims = {'left': 0, 'right': 2}
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+
+    fig1 = loc.verticalScatter()
+    fig2, ax2 = plt.subplots()
+    fig2 = loc.verticalScatter(ax=ax2, xlims=xlims)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, loc.verticalScatter, ax='junk', xlims=xlims)
+
+    fig3 = loc.verticalScatter(pos=1.25, xlims=xlims)
+    fig4 = loc.verticalScatter(jitter=0.0, xlims=xlims)
+    fig5 = loc.verticalScatter(alpha=0.25, xlims=xlims)
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 's'
+    loc.verticalScatter(ylabel='Test Y-Label', xlims=xlims)
+    loc.verticalScatter(yscale='linear', xlims=xlims)
+    loc.verticalScatter(ignoreROS=False, xlims=xlims)
+    loc.verticalScatter(markersize=8, xlims=xlims)
+
 
 
 class test_Dataset(object):

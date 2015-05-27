@@ -680,7 +680,7 @@ class Location(object):
             utils.figutils.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
                                          patch_artist=patch_artist)
         else:
-            self.verticalScatter(ax=ax, pos=pos, width=width*0.5, alpha=0.75,
+            self.verticalScatter(ax=ax, pos=pos, jitter=width*0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
 
         ax.set_yscale(yscale)
@@ -823,9 +823,9 @@ class Location(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def verticalScatter(self, ax=None, pos=1, width=0.8, alpha=0.75,
+    def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
                         ylabel=None, yscale='log', ignoreROS=True,
-                        markersize=4):
+                        markersize=4, xlims=None):
         '''
         Input:
             ax : optional matplotlib axes object or None (default)
@@ -835,7 +835,7 @@ class Location(object):
             pos : optional int (default=1)
                 Location along x-axis where data will be centered.
 
-            width : optional float (default=0.80)
+            jitter : optional float (default=0.80)
                 Width of the random x-values uniform distributed around `pos`
 
             alpha : optional float (default=0.75)
@@ -856,36 +856,45 @@ class Location(object):
             markersize : option int (default = 6)
                 Size of data markers on the figure in points.
 
+        xlims : dict, optional
+            Diction of limits for the x-axis. Keys must be either
+            "left", "right", or both
+
         Returns:
             fig : matplotlib Figure instance
         '''
         fig, ax = utils.figutils._check_ax(ax)
 
-        low = pos - width*0.5
-        high = pos + width*0.5
+
+        if jitter == 0:
+            xvals = [pos] * self.N
+        else:
+            low = pos - jitter * 0.5
+            high = pos + jitter * 0.5
+            xvals = np.random.uniform(low=low, high=high, size=self.N)
 
         if not ignoreROS and self.useROS:
-            xvals = self.N * [pos]
             ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
                     markerfacecolor=self.color, markeredgecolor='white',
                     linestyle='none', alpha=alpha)
         else:
-            x_nondet = xvals = self.ND * [pos]
             y_nondet = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]==self._ndval]
-            x_detect = xvals = (self.N - self.ND) * [pos]
             y_detect = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]!=self._ndval]
 
-            ax.plot(x_detect, y_detect, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha, label='Detects')
-
-            ax.plot(x_nondet, y_nondet, marker='v', markersize=markersize,
+            ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
                     markerfacecolor='none', markeredgecolor=self.color,
                     linestyle='none', alpha=alpha, label='Non-detects')
+
+            ax.plot(xvals[self.ND:], y_detect, marker=self.plot_marker, markersize=markersize,
+                    markerfacecolor=self.color, markeredgecolor='white',
+                    linestyle='none', alpha=alpha, label='Detects')
 
         ax.set_yscale(yscale)
         if ylabel is not None:
             ax.set_ylabel(ylabel)
+
+        if xlims is not None:
+            ax.set_xlim(**xlims)
 
         return fig
 
