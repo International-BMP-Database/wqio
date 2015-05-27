@@ -624,8 +624,8 @@ class Location(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, minPoints=5,
-                patch_artist=False):
+                width=0.8, bacteria=False, ylabel=None, minpoints=5,
+                patch_artist=False, xlims=None):
         '''Adds a boxplot to a matplotlib figure
 
         Parameters
@@ -633,34 +633,29 @@ class Location(object):
         ax : optional matplotlib axes object or None (default)
             Axes on which the boxplot with be drawn. If None, one will
             be created.
-
         pos : optional int (default=1)
             Location along x-axis where boxplot will be placed.
-
         yscale : optional string ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-
         notch : optional bool (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
-
         showmean : optional bool (default=True)
             Toggles plotting the mean value on the boxplot as a point.
             See also the `bacteria` kwarg
-
         width : optional float (default=0.8)
             Width of boxplot on the axes (data units)
-
         bacteria : optional bool (default False)
             If True, uses the geometric mean when `showmean` is True.
             Otherwise, the arithmetic mean is used.
-
         ylabel : string or None (default):
             Label for y-axis
-
         patch_artist : optional bool (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
+        xlims : dict, optional
+            Diction of limits for the x-axis. Keys must be either
+            "left", "right", or both
 
         Returns
         -------
@@ -675,7 +670,7 @@ class Location(object):
             markerfacecolor=self.color, markeredgecolor='Black'
         )
 
-        if self.N >= minPoints:
+        if self.N >= minpoints:
             bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
             bp = ax.bxp(bxpstats, positions=[pos], widths=width,
                         showmeans=showmean, shownotches=notch, showcaps=False,
@@ -700,6 +695,9 @@ class Location(object):
         ax.set_xticks([pos])
         if self.name is not None:
             ax.set_xticklabels([self.name])
+
+        if xlims is not None:
+            ax.set_xlim(**xlims)
 
         return fig
 
@@ -743,10 +741,10 @@ class Location(object):
         color = plotopts.pop('color', self.color)
         label = plotopts.pop('label', self.name)
         marker = plotopts.pop('marker', self.plot_marker)
-        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype,
-                                      yscale=yscale, ylabel=ylabel,
-                                      color=color, label=label,
-                                      marker=marker, **plotopts)
+        linestyle = plotopts.pop('linestyle', 'none')
+        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
+                                      ylabel=ylabel, color=color, label=label,
+                                      marker=marker, linestyle=linestyle, **plotopts)
 
         if yscale == 'log':
             label_format = mticker.FuncFormatter(
@@ -763,7 +761,7 @@ class Location(object):
         if rotateticklabels:
             utils.figutils.rotateTickLabels(ax, 45, 'x', ha='right')
 
-        if setxlimits:
+        if setxlimits and axtype == 'prob':
             utils.figutils.setProbLimits(ax, self.N, 'x')
 
         return fig
@@ -771,9 +769,7 @@ class Location(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
-        '''
-        Creates a two-axis figure. Left axis has a bopxplot. Right axis
-        contains a probability ot quantile plot.
+        '''Creates a two-axis figure with a boxplot as probability plot.
 
         Input:
             ax : optional matplotlib axes object or None (default)
