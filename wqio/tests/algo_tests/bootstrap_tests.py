@@ -21,7 +21,7 @@ class test_Stat:
         self.data = testing.getTestROSData()
         self.statfxn = np.mean
         self.alpha = 0.10
-        self.NIter = 10000
+        self.NIter = 2500
         self.bsStat = bootstrap.Stat(np.array(self.data.res), statfxn=self.statfxn,
                                      alpha=self.alpha, NIter=self.NIter)
 
@@ -79,7 +79,7 @@ class test_Fit:
     def setup(self):
         self.data = testing.getTestROSData()
         self.alpha = 0.10
-        self.NIter = 10000
+        self.NIter = 2500
 
         def cf_line(x, m, b):
             return m*x + b
