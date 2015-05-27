@@ -1019,6 +1019,224 @@ class test_Dataset(object):
         assert_true(effl_ros_mean != effl_raw_mean)
 
 
+@nottest
+def setup_dataset(station_type):
+    np.random.seed(0)
+    in_data = testing.getTestROSData()
+    in_data['res'] += 3
+
+    out_data = testing.getTestROSData()
+    out_data['res'] -= 1.5
+
+    influent = Location(in_data, station_type='inflow', bsIter=10000,
+                        rescol='res', qualcol='qual', useROS=False)
+
+    effluent = Location(out_data, station_type='outflow', bsIter=10000,
+                        rescol='res', qualcol='qual', useROS=False)
+
+    ds = Dataset(influent, effluent, name='Test Dataset')
+    plt.rcdefaults()
+    return ds
+
+@image_comparison(baseline_images=[
+    'test_ds_boxplot_default',
+    'test_ds_boxplot_patch_artists',
+    'test_ds_boxplot_linscale',
+    'test_ds_boxplot_no_mean',
+    'test_ds_boxplot_width',
+    'test_ds_boxplot_no_notch',
+    'test_ds_boxplot_bacteria_geomean',
+    'test_ds_boxplot_with_ylabel',
+    'test_ds_boxplot_fallback_to_vert_scatter',
+    'test_ds_boxplot_provided_ax',
+    'test_ds_boxplot_custom_position',
+    'test_ds_boxplot_custom_offset',
+    'test_ds_boxplot_single_tick',
+    'test_ds_boxplot_single_tick_no_name',
+], extensions=['png'])
+def test_dataset_boxplot():
+    xlims = {'left': 0, 'right': 2}
+    ds = setup_dataset('inflow')
+    ds.color = 'cornflowerblue'
+    ds.plot_marker = 'o'
+    fig1 = ds.boxplot()
+    fig2 = ds.boxplot(patch_artist=True, xlims=xlims)
+    fig3 = ds.boxplot(yscale='linear', xlims=xlims)
+
+    ds.color = 'firebrick'
+    ds.plot_marker = 'd'
+    fig4 = ds.boxplot(showmean=False, xlims=xlims)
+    fig5 = ds.boxplot(width=1.25, xlims=xlims)
+    fig6 = ds.boxplot(notch=False, xlims=xlims)
+
+    ds.color = 'forestgreen'
+    ds.plot_marker = 's'
+    fig7 = ds.boxplot(bacteria=True, xlims=xlims)
+    fig8 = ds.boxplot(ylabel='Test Ylabel', xlims=xlims)
+    fig9 = ds.boxplot(minpoints=np.inf, xlims=xlims)
+
+    fig10, ax10 = plt.subplots()
+    fig10 = ds.boxplot(ax=ax10, xlims=xlims)
+    assert_true(isinstance(fig10, plt.Figure))
+    assert_raises(ValueError, ds.boxplot, ax='junk')
+
+    fig11 = ds.boxplot(pos=1.5, xlims=xlims)
+    fig12 = ds.boxplot(offset=0.75, xlims=xlims)
+    fig13 = ds.boxplot(bothTicks=False, xlims=xlims)
+    ds.name = None
+    fig14 = ds.boxplot(bothTicks=False, xlims=xlims)
+
+
+# @image_comparison(baseline_images=[
+#     'test_ds_probplot_default',
+#     'test_ds_probplot_provided_ax',
+#     'test_ds_probplot_yscale_linear',
+#     'test_ds_probplot_ppax',
+#     'test_ds_probplot_qqax',
+#     'test_ds_probplot_ylabel',
+#     'test_ds_probplot_clear_yticks',
+#     'test_ds_probplot_no_managegrid',
+#     'test_ds_probplot_no_rotate_xticklabels',
+#     'test_ds_probplot_no_set_xlims',
+#     'test_ds_probplot_plotopts1',
+#     'test_ds_probplot_plotopts2',
+# ], extensions=['png'])
+# def test_dataset_probplot():
+#     ds = setup_dataset('inflow')
+#     ds.color = 'cornflowerblue'
+#     ds.plot_marker = 'o'
+
+#     fig1 = ds.probplot()
+#     fig2, ax2 = plt.subplots()
+#     fig2 = ds.probplot(ax=ax2)
+#     assert_true(isinstance(fig2, plt.Figure))
+#     assert_raises(ValueError, ds.probplot, ax='junk')
+
+#     fig3 = ds.probplot(yscale='linear')
+#     fig4 = ds.probplot(axtype='pp')
+#     fig5 = ds.probplot(axtype='qq')
+
+#     ds.color = 'firebrick'
+#     ds.plot_marker = 'd'
+#     fig6 = ds.probplot(ylabel='test ylabel')
+#     fig7 = ds.probplot(clearYLabels=True)
+#     fig8 = ds.probplot(managegrid=False)
+
+#     ds.color = 'forestgreen'
+#     ds.plot_marker = 'd'
+#     fig10 = ds.probplot(rotateticklabels=False)
+#     fig11 = ds.probplot(setxlimits=False)
+#     fig12 = ds.probplot(markersize=10, linestyle='--')
+#     fig13 = ds.probplot(markeredgewidth=2)
+
+
+# @image_comparison(baseline_images=[
+#     'test_ds_statplot_custom_position',
+#     'test_ds_statplot_yscale_linear',
+#     'test_ds_statplot_no_notch',
+#     'test_ds_statplot_no_mean',
+#     'test_ds_statplot_custom_width',
+#     'test_ds_statplot_bacteria_true',
+#     'test_ds_statplot_ylabeled',
+#     'test_ds_statplot_qq',
+#     'test_ds_statplot_pp',
+#     'test_ds_statplot_patch_artist',
+# ], extensions=['png'])
+# def test_dataset_statplot():
+#     ds = setup_dataset('inflow')
+#     ds.color = 'cornflowerblue'
+#     ds.plot_marker = 'o'
+
+#     fig1 = ds.statplot(pos=1.25)
+#     fig2 = ds.statplot(yscale='linear')
+#     fig3 = ds.statplot(notch=False)
+
+#     ds.color = 'firebrick'
+#     ds.plot_marker = 'd'
+#     fig4 = ds.statplot(showmean=False)
+#     fig5 = ds.statplot(width=1.5)
+#     fig6 = ds.statplot(bacteria=True)
+#     fig7 = ds.statplot(ylabel='Test Y-Label')
+
+#     ds.color = 'forestgreen'
+#     ds.plot_marker = 's'
+#     fig8 = ds.statplot(axtype='qq')
+#     fig9 = ds.statplot(axtype='pp')
+#     fig10 = ds.statplot(patch_artist=True)
+#     assert_true(fig10, plt.Figure)
+
+
+# @image_comparison(baseline_images=[
+#     'test_ds_vertical_scatter_default',
+#     'test_ds_vertical_scatter_provided_ax',
+#     'test_ds_vertical_scatter_pos',
+#     'test_ds_vertical_scatter_nojitter',
+#     'test_ds_vertical_scatter_alpha',
+#     'test_ds_vertical_scatter_ylabel',
+#     'test_ds_vertical_scatter_yscale_linear',
+#     'test_ds_vertical_scatter_not_ignoreROS',
+#     'test_ds_vertical_scatter_markersize',
+# ], extensions=['png'])
+# def test_dataset_verticalScatter():
+#     xlims = {'left': 0, 'right': 2}
+#     ds = setup_dataset('inflow')
+#     ds.color = 'cornflowerblue'
+#     ds.plot_marker = 'o'
+
+#     fig1 = ds.verticalScatter()
+#     fig2, ax2 = plt.subplots()
+#     fig2 = ds.verticalScatter(ax=ax2, xlims=xlims)
+#     assert_true(isinstance(fig2, plt.Figure))
+#     assert_raises(ValueError, ds.verticalScatter, ax='junk', xlims=xlims)
+
+#     fig3 = ds.verticalScatter(pos=1.25, xlims=xlims)
+#     fig4 = ds.verticalScatter(jitter=0.0, xlims=xlims)
+#     fig5 = ds.verticalScatter(alpha=0.25, xlims=xlims)
+
+#     ds.color = 'firebrick'
+#     ds.plot_marker = 's'
+#     ds.verticalScatter(ylabel='Test Y-Label', xlims=xlims)
+#     ds.verticalScatter(yscale='linear', xlims=xlims)
+#     ds.verticalScatter(ignoreROS=False, xlims=xlims)
+#     ds.verticalScatter(markersize=8, xlims=xlims)
+
+
+@nottest
+def make_dc_data():
+    np.random.seed(0)
+
+    dl_map = {
+        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
+        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
+    }
+
+    index = pandas.MultiIndex.from_product([
+        list('ABCDEFGH'),
+        list('1234567'),
+        ['GA', 'AL', 'OR', 'CA'],
+        ['Inflow', 'Outflow', 'Reference']
+    ], names=['param', 'bmp', 'state', 'loc'])
+
+    array = np.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
+    data = pandas.DataFrame(data=array, index=index, columns=['res'])
+    data['DL'] = data.apply(
+        lambda r: dl_map.get(r.name[0]),
+        axis=1
+    )
+
+    data['res'] = data.apply(
+        lambda r: dl_map.get(r.name[0]) if r['res'] < r['DL'] else r['res'],
+        axis=1
+    )
+
+    data['qual'] = data.apply(
+        lambda r: 'ND' if r['res'] <= r['DL'] else '=',
+        axis=1
+    )
+
+    return data
+
+
 class _base_DataCollecionMixin(object):
     @nottest
     def _base_setup(self):
@@ -1230,39 +1448,3 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
                 'D': 0.4790, 'E': 0.7710, 'F': 0.6370, 'G': 0.3070
             }
         })
-
-
-@nottest
-def make_dc_data():
-    np.random.seed(0)
-
-    dl_map = {
-        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
-        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
-    }
-
-    index = pandas.MultiIndex.from_product([
-        list('ABCDEFGH'),
-        list('1234567'),
-        ['GA', 'AL', 'OR', 'CA'],
-        ['Inflow', 'Outflow', 'Reference']
-    ], names=['param', 'bmp', 'state', 'loc'])
-
-    array = np.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
-    data = pandas.DataFrame(data=array, index=index, columns=['res'])
-    data['DL'] = data.apply(
-        lambda r: dl_map.get(r.name[0]),
-        axis=1
-    )
-
-    data['res'] = data.apply(
-        lambda r: dl_map.get(r.name[0]) if r['res'] < r['DL'] else r['res'],
-        axis=1
-    )
-
-    data['qual'] = data.apply(
-        lambda r: 'ND' if r['res'] <= r['DL'] else '=',
-        axis=1
-    )
-
-    return data

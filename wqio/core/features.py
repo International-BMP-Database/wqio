@@ -650,6 +650,10 @@ class Location(object):
             Otherwise, the arithmetic mean is used.
         ylabel : string or None (default):
             Label for y-axis
+        minpoints : int, optional (default = 5)
+            The minimum number of data points required to draw a
+            boxplot. If too few points are present, the drawing will
+            fallback to a verticalScatter plot.
         patch_artist : optional bool (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
@@ -1293,60 +1297,63 @@ class Dataset(object):
         return output
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, xlims=None, bothTicks=True,
-                offset=0.5, patch_artist=False):
-        '''
-        Adds a boxplot to a matplotlib figure
+    def boxplot(self, ax=None, pos=1, yscale='log', notch=True,
+                showmean=True, width=0.8, bacteria=False, ylabel=None,
+                xlims=None, bothTicks=True, offset=0.5,
+                patch_artist=False, minpoints=5):
+        """ Adds a boxplot to a matplotlib figure
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+        pos : int, optional (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : optional string ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : bool, optional (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : bool, optional (default is True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : float, optional (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : bool, optional (default is False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string or None (default):
+            Label for y-axis
+        xlims : sequence (length=2), dict, or None (default), optional
+            Custom limits of the x-axis. If None, defaults to
+            [pos-1, pos+1].
+        bothTicks : bool, optional (default is True)
+            If True, each box gets a tick label. Otherwise, both get a
+            single tick.
+        offset : float, optional (default = 0.5)
+            Spacing, in x-axis data coordinates, of the boxplots.
+        patch_artist : bool, optional (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
+        minpoints : int, optional (default = 5)
+            The minimum number of data points required to draw a
+            boxplot. If too few points are present, the drawing will
+            fallback to a verticalScatter plot.
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
+        Returns
+        -------
+        fig : matplotlib Figure instance
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        """
 
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            xlims : optional sequence (length=2) or None (default)
-                Custom limits of the x-axis. If None, defaults to
-                [pos-1, pos+1].
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         fig, ax = utils.figutils._check_ax(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
             if loc.include:
                 loc.boxplot(ax=ax, pos=pos+offset, notch=notch, showmean=showmean,
                             width=width/2, bacteria=bacteria, ylabel=None,
-                            patch_artist=patch_artist)
+                            patch_artist=patch_artist, minpoints=minpoints)
 
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
@@ -1360,13 +1367,20 @@ class Dataset(object):
         if xlims is None:
             ax.set_xlim([pos-1, pos+1])
         else:
-            ax.set_xlim(xlims)
+            if isinstance(xlims, dict):
+                ax.set_xlim(**xlims)
+            else:
+                ax.set_xlim(xlims)
 
         if bothTicks:
             ax.set_xticks([pos-offset, pos+offset])
             ax.set_xticklabels([self.influent.name, self.effluent.name])
         else:
             ax.set_xticks([pos])
+            if self.name is not None:
+                ax.set_xticklabels([self.name])
+            else:
+                ax.set_xticklabels([''])
 
         ax.xaxis.grid(False, which='major')
 
