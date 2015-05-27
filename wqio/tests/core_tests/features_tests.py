@@ -11,6 +11,7 @@ usetex = testing.compare_versions(utility='latex')
 import matplotlib
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
+import seaborn.apionly as seaborn
 
 import pandas
 import pandas.util.testing as pdtest
@@ -842,14 +843,6 @@ class test_Dataset(object):
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
-    def test_joinplot(self):
-        assert_true(hasattr(self.ds, 'jointplot'))
-        self.ds.jointplot()
-
-    @raises(ValueError)
-    def test__plot_nds_error(self):
-        self.ds._plot_nds(self.ax, which='JUNK')
-
     def test__repr__normal(self):
         self.ds.__repr__
 
@@ -1058,6 +1051,26 @@ def test_dataset__plot_NDs():
 
     fig4, ax4 = plt.subplots()
     ds._plot_nds(ax4, which='neither', marker='o', **markerkwargs)
+
+
+@image_comparison(baseline_images=[
+    'test_ds_joint_hist',
+    'test_ds_joint_kde',
+    'test_ds_joint_rug',
+    'test_ds_joint_kde_rug_hist',
+], extensions=['png'])
+def test_dataset_jointplot():
+    ds = setup_dataset(extra_NDs=True)
+
+    def do_jointplots(ds, hist=False, kde=False, rug=False):
+        jg = ds.jointplot(hist=hist, kde=kde, rug=rug)
+        assert_true(isinstance(jg, seaborn.JointGrid))
+        return jg.fig
+
+    fig1 = do_jointplots(ds, hist=True)
+    fig2 = do_jointplots(ds, kde=True)
+    fig3 = do_jointplots(ds, rug=True)
+    fig4 = do_jointplots(ds, hist=True, kde=True, rug=True)
 
 
 @nottest

@@ -1515,18 +1515,44 @@ class Dataset(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def jointplot(self, hist=False, kde=True, rug=True, **scatter):
-        showlegend = scatter.pop('showlegend', True)
-        _ = scatter.pop('ax', None)
+    def jointplot(self, hist=False, kde=True, rug=True, **scatter_kws):
+        """ Create a joint distribution plot for the dataset
+
+        Parameters
+        ----------
+        hist : bool, optional (default is False)
+            Toggles showing histograms on the distribution plots
+        kde : bool, optional (default is True)
+            Toggles showing KDE plots on the distribution plots
+        run : bool, optional (default is True)
+            Toggles showing rug plots on the distribution plots
+        **scatter_kws : keyword arguments
+            Optionals passed directly to Dataset.scatterplot
+
+        Returns
+        -------
+        jg : seaborn.JointGrid
+
+        See also
+        --------
+        seaborn.JointGrid
+        seaborn.jointplot
+        seaborn.distplot
+        Dataset.scatterplot
+
+        """
+
+        showlegend = scatter_kws.pop('showlegend', True)
+        _ = scatter_kws.pop('ax', None)
 
         if self.paired_data is not None:
             data = self.paired_data.xs('res', level='quantity', axis=1)
             jg = seaborn.JointGrid(x='inflow', y='outflow', data=data)
-            self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter)
+            self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter_kws)
             jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
 
-            jg.ax_marg_x.set_xscale(scatter.pop('xscale', 'log'))
-            jg.ax_marg_y.set_yscale(scatter.pop('yscale', 'log'))
+            jg.ax_marg_x.set_xscale(scatter_kws.pop('xscale', 'log'))
+            jg.ax_marg_y.set_yscale(scatter_kws.pop('yscale', 'log'))
 
             if showlegend:
                 jg.ax_joint.legend(loc='upper left')
