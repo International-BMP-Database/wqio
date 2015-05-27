@@ -720,20 +720,23 @@ class Location(object):
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        color : string or three tuple (default = 'b'), optional
-            Any valid matplotlib color specification.
-        marker : string, optional (default = 'o')
-            String representing a matplotlib marker style.
-        linestyle : string, optional (default = 'none')
-            String representing a matplotlib line style. No line is shown
-            by default.
         [x|y]label : string, optional or None (default)
             Axis label for the plot.
         yscale : string , optional(default = 'log')
             Scale for the y-axis. Use 'log' for logarithmic (default) or
             'linear'.
-        clearYLabels : bool, optional (default = False)
-            If True, removed y-*tick* labels from `ax`.
+        clearYLabels : bool, optional (default is False)
+            If True, removed y-*tick* labels from teh Axes.
+        managegrid : bool, optional (default is True)
+            If True, typical gridlines will be added to the Axes.
+        rotateticklabels : bool, optional (default is True)
+            If True, the tick labels of the probability axes will be
+            rotated.
+        setxlimits : bool, optional (default is True)
+            If True and `axtype` == 'prob', tehe axis limits will be
+            automatically set based on the number of points in the plot.
+        plotopts : keyword arguments
+            Additional options passed directly to `plt.plot`
 
         Returns
         -------
@@ -803,7 +806,7 @@ class Location(object):
 
         Returns
         -------
-        fig : matplotlib Figure instance
+        fig : matplotlib Figure
 
         '''
 
@@ -860,7 +863,7 @@ class Location(object):
 
         Returns
         -------
-        fig : matplotlib Figure instance
+        fig : matplotlib Figure
 
         """
 
@@ -1343,7 +1346,7 @@ class Dataset(object):
 
         Returns
         -------
-        fig : matplotlib Figure instance
+        fig : matplotlib Figure
 
         """
 
@@ -1386,34 +1389,50 @@ class Dataset(object):
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', axtype='qq', ylabel=None,
-                 clearYLabels=False, rotateticklabels=True, setxlimits=True):
-        '''
-        Adds probability plots to a matplotlib figure
+    def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
+                 clearYLabels=False, rotateticklabels=True,
+                 setxlimits=True, managegrid=True):
+        """ Adds probability plots to a matplotlib figure
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object, optional or None (default).
+            The Axes on which to plot. If None is provided, one will be
+            created.
+        yscale : string , optional(default = 'log')
+            Scale for the y-axis. Use 'log' for logarithmic (default) or
+            'linear'.
+        axtype : string, optional (default = 'pp')
+            Type of plot to be created. Options are:
+                - 'prob': probabilty plot
+                - 'pp': percentile plot
+                - 'qq': quantile plot
+        ylabel : string, optional or None (default)
+            Axis label for the plot.
+        clearYLabels : bool, optional (default is False)
+            If True, removed y-*tick* labels from teh Axes.
+        rotateticklabels : bool, optional (default is True)
+            If True, the tick labels of the probability axes will be
+            rotated.
+        setxlimits : bool, optional (default is True)
+            If True and `axtype` == 'prob', tehe axis limits will be
+            automatically set based on the number of points in the plot.
+        managegrid : bool, optional (default is True)
+            If True, typical gridlines will be added to the Axes.
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        Returns
+        -------
+        fig : matplotlib Figure
 
-            ylabel : string or None (default):
-                Label for y-axis
+        """
 
-            clearYLabels : bool (default = False)
-                If True, removed y-*tick* label from `ax`
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         fig, ax = utils.figutils._check_ax(ax)
 
         for loc in [self.influent, self.effluent]:
             if loc.include:
-                loc.probplot(ax=ax, clearYLabels=False, axtype=axtype,
-                             yscale=yscale)
+                loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
+                             yscale=yscale, managegrid=managegrid,
+                             rotateticklabels=rotateticklabels)
 
         xlabels = {
             'pp': 'Theoretical percentiles',
@@ -1424,12 +1443,18 @@ class Dataset(object):
         ax.set_xlabel(xlabels[axtype])
         ax.legend(loc='upper left', frameon=True)
 
+        if ylabel is not None:
+            ax.set_ylabel(ylabel)
+
         if rotateticklabels:
             utils.figutils.rotateTickLabels(ax, 45, 'x')
 
-        if setxlimits:
+        if setxlimits and axtype == 'prob':
             N = np.max([self.influent.N, self.effluent.N])
             utils.figutils.setProbLimits(ax, N, 'x')
+
+        if managegrid:
+            utils.figutils.gridlines(ax, yminor=True)
 
         return fig
 
@@ -1480,7 +1505,7 @@ class Dataset(object):
 
 
         Returns:
-            fig : matplotlib Figure instance
+            fig : matplotlib Figure
         '''
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
@@ -1550,7 +1575,7 @@ class Dataset(object):
                 Toggles the display of the legend
 
         Returns:
-            fig : matplotlib Figure instance
+            fig : matplotlib Figure
         '''
         # set up the figure/axes
         fig, ax = utils.figutils._check_ax(ax)

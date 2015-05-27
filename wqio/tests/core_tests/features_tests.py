@@ -1020,7 +1020,7 @@ class test_Dataset(object):
 
 
 @nottest
-def setup_dataset(station_type):
+def setup_dataset():
     np.random.seed(0)
     in_data = testing.getTestROSData()
     in_data['res'] += 3
@@ -1056,21 +1056,14 @@ def setup_dataset(station_type):
 ], extensions=['png'])
 def test_dataset_boxplot():
     xlims = {'left': 0, 'right': 2}
-    ds = setup_dataset('inflow')
-    ds.color = 'cornflowerblue'
-    ds.plot_marker = 'o'
+    ds = setup_dataset()
+
     fig1 = ds.boxplot()
     fig2 = ds.boxplot(patch_artist=True, xlims=xlims)
     fig3 = ds.boxplot(yscale='linear', xlims=xlims)
-
-    ds.color = 'firebrick'
-    ds.plot_marker = 'd'
     fig4 = ds.boxplot(showmean=False, xlims=xlims)
     fig5 = ds.boxplot(width=1.25, xlims=xlims)
     fig6 = ds.boxplot(notch=False, xlims=xlims)
-
-    ds.color = 'forestgreen'
-    ds.plot_marker = 's'
     fig7 = ds.boxplot(bacteria=True, xlims=xlims)
     fig8 = ds.boxplot(ylabel='Test Ylabel', xlims=xlims)
     fig9 = ds.boxplot(minpoints=np.inf, xlims=xlims)
@@ -1087,47 +1080,35 @@ def test_dataset_boxplot():
     fig14 = ds.boxplot(bothTicks=False, xlims=xlims)
 
 
-# @image_comparison(baseline_images=[
-#     'test_ds_probplot_default',
-#     'test_ds_probplot_provided_ax',
-#     'test_ds_probplot_yscale_linear',
-#     'test_ds_probplot_ppax',
-#     'test_ds_probplot_qqax',
-#     'test_ds_probplot_ylabel',
-#     'test_ds_probplot_clear_yticks',
-#     'test_ds_probplot_no_managegrid',
-#     'test_ds_probplot_no_rotate_xticklabels',
-#     'test_ds_probplot_no_set_xlims',
-#     'test_ds_probplot_plotopts1',
-#     'test_ds_probplot_plotopts2',
-# ], extensions=['png'])
-# def test_dataset_probplot():
-#     ds = setup_dataset('inflow')
-#     ds.color = 'cornflowerblue'
-#     ds.plot_marker = 'o'
+@image_comparison(baseline_images=[
+    'test_ds_probplot_default',
+    'test_ds_probplot_provided_ax',
+    'test_ds_probplot_yscale_linear',
+    'test_ds_probplot_ppax',
+    'test_ds_probplot_qqax',
+    'test_ds_probplot_ylabel',
+    'test_ds_probplot_clear_yticks',
+    'test_ds_probplot_no_managegrid',
+    'test_ds_probplot_no_rotate_xticklabels',
+    'test_ds_probplot_no_set_xlims',
+], extensions=['png'])
+def test_dataset_probplot():
+    ds = setup_dataset()
 
-#     fig1 = ds.probplot()
-#     fig2, ax2 = plt.subplots()
-#     fig2 = ds.probplot(ax=ax2)
-#     assert_true(isinstance(fig2, plt.Figure))
-#     assert_raises(ValueError, ds.probplot, ax='junk')
+    fig1 = ds.probplot()
+    fig2, ax2 = plt.subplots()
+    fig2 = ds.probplot(ax=ax2)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, ds.probplot, ax='junk')
 
-#     fig3 = ds.probplot(yscale='linear')
-#     fig4 = ds.probplot(axtype='pp')
-#     fig5 = ds.probplot(axtype='qq')
-
-#     ds.color = 'firebrick'
-#     ds.plot_marker = 'd'
-#     fig6 = ds.probplot(ylabel='test ylabel')
-#     fig7 = ds.probplot(clearYLabels=True)
-#     fig8 = ds.probplot(managegrid=False)
-
-#     ds.color = 'forestgreen'
-#     ds.plot_marker = 'd'
-#     fig10 = ds.probplot(rotateticklabels=False)
-#     fig11 = ds.probplot(setxlimits=False)
-#     fig12 = ds.probplot(markersize=10, linestyle='--')
-#     fig13 = ds.probplot(markeredgewidth=2)
+    fig3 = ds.probplot(yscale='linear')
+    fig4 = ds.probplot(axtype='pp')
+    fig5 = ds.probplot(axtype='qq')
+    fig6 = ds.probplot(ylabel='test ylabel')
+    fig7 = ds.probplot(clearYLabels=True)
+    fig8 = ds.probplot(managegrid=False)
+    fig10 = ds.probplot(rotateticklabels=False)
+    fig11 = ds.probplot(setxlimits=False)
 
 
 # @image_comparison(baseline_images=[
