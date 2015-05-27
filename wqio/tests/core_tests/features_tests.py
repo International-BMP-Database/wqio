@@ -845,61 +845,6 @@ class test_Dataset(object):
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
-    def test_boxplot_baseline(self):
-        assert_true(hasattr(self.ds, 'boxplot'))
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8, ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Box_BothLocs_NoName.png'))
-
-    def test_boxplot_baseline_withName(self):
-        self.ds.name = 'Test Dataset'
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8, ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Box_BothLocs_Name.png'))
-
-    @raises(ValueError)
-    def test_boxplot_badAxes(self):
-        fig = self.ds.boxplot(ax=5, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8)
-
-    @raises(ValueError)
-    def test_boxplot_badYscale(self):
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
-                              showmean=True, width=0.8)
-
-    def test_probplot_QQ(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        fig = self.ds.probplot(ax=self.ax, yscale='log', ylabel='Test Label', axtype='qq')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-QQ.png'))
-
-    def test_probplot_baseline_PP(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-PP.png'))
-
-    def test_probplot_baseline_Prob(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='prob')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-prob.png'))
-
-    @raises(ValueError)
-    def test_probplot_badAxes(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        fig = self.ds.probplot(ax=3, yscale='log')
-        assert_true(isinstance(fig, plt.Figure))
-
-    @raises(ValueError)
-    def test_probplot_badYscale(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='JUNK')
-
     def test_statplot_PP(self):
         assert_true(hasattr(self.ds, 'statplot'))
         fig = self.ds.statplot(yscale='log', ylabel='Test Label', axtype='pp')
@@ -926,7 +871,6 @@ class test_Dataset(object):
     def test_joinplot(self):
         assert_true(hasattr(self.ds, 'jointplot'))
         self.ds.jointplot()
-
 
     def test_scatterplot_baseline(self):
         assert_true(hasattr(self.ds, 'scatterplot'))
