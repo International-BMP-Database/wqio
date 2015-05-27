@@ -642,8 +642,6 @@ def test_location_verticalScatter():
 class test_Dataset(object):
     def setup(self):
         self.maxDiff = None
-        # path stuff
-        self.prefix = setup_prefix('core.features')
 
         # basic test data
         self.tolerance = 0.05

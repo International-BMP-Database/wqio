@@ -268,8 +268,6 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
 class test_Storm(object):
     def setup(self):
         # path stuff
-        self.prefix = setup_prefix('core_tests')
-
 
         self.storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
