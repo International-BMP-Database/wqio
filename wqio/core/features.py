@@ -776,7 +776,7 @@ class Location(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
-        '''Creates a two-axis figure with a boxplot & probability plot.
+        """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
         ----------
@@ -808,7 +808,7 @@ class Location(object):
         -------
         fig : matplotlib Figure
 
-        '''
+        """
 
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
@@ -1441,7 +1441,7 @@ class Dataset(object):
         }
 
         ax.set_xlabel(xlabels[axtype])
-        ax.legend(loc='upper left', frameon=True)
+        ax.legend(loc='lower right', frameon=True)
 
         if ylabel is not None:
             ax.set_ylabel(ylabel)
@@ -1461,52 +1461,40 @@ class Dataset(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='qq',
                  patch_artist=False):
-        '''
-        Creates a two-axis figure. Left axis has a bopxplot. Right axis
-        contains a probability ot quantile plot.
+        """Creates a two-axis figure with a boxplot & probability plot.
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        pos : int, optional (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : string, optional ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : bool, optional (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : bool, optional (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : float, optional (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : bool, optional (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string, optional or None (default):
+            Label for y-axis
+        probAxis : bool, optional (default = True)
+            Toggles the display of probabilities (True) or Z-scores
+            (i.e., theoretical quantiles) on the x-axis
+        patch_artist : bool, optional (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
+        Returns
+        -------
+        fig : matplotlib Figure
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        """
 
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
-
-
-
-        Returns:
-            fig : matplotlib Figure
-        '''
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
                          edgecolor='none')

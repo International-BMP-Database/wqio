@@ -639,7 +639,6 @@ def test_location_verticalScatter():
     loc.verticalScatter(markersize=8, xlims=xlims)
 
 
-
 class test_Dataset(object):
     def setup(self):
         self.maxDiff = None
@@ -1055,40 +1054,32 @@ def test_dataset_probplot():
     fig11 = ds.probplot(setxlimits=False)
 
 
-# @image_comparison(baseline_images=[
-#     'test_ds_statplot_custom_position',
-#     'test_ds_statplot_yscale_linear',
-#     'test_ds_statplot_no_notch',
-#     'test_ds_statplot_no_mean',
-#     'test_ds_statplot_custom_width',
-#     'test_ds_statplot_bacteria_true',
-#     'test_ds_statplot_ylabeled',
-#     'test_ds_statplot_qq',
-#     'test_ds_statplot_pp',
-#     'test_ds_statplot_patch_artist',
-# ], extensions=['png'])
-# def test_dataset_statplot():
-#     ds = setup_dataset('inflow')
-#     ds.color = 'cornflowerblue'
-#     ds.plot_marker = 'o'
+@image_comparison(baseline_images=[
+    'test_ds_statplot_custom_position',
+    'test_ds_statplot_yscale_linear',
+    'test_ds_statplot_no_notch',
+    'test_ds_statplot_no_mean',
+    'test_ds_statplot_custom_width',
+    'test_ds_statplot_bacteria_true',
+    'test_ds_statplot_ylabeled',
+    'test_ds_statplot_qq',
+    'test_ds_statplot_pp',
+    'test_ds_statplot_patch_artist',
+], extensions=['png'])
+def test_dataset_statplot():
+    ds = setup_dataset()
 
-#     fig1 = ds.statplot(pos=1.25)
-#     fig2 = ds.statplot(yscale='linear')
-#     fig3 = ds.statplot(notch=False)
-
-#     ds.color = 'firebrick'
-#     ds.plot_marker = 'd'
-#     fig4 = ds.statplot(showmean=False)
-#     fig5 = ds.statplot(width=1.5)
-#     fig6 = ds.statplot(bacteria=True)
-#     fig7 = ds.statplot(ylabel='Test Y-Label')
-
-#     ds.color = 'forestgreen'
-#     ds.plot_marker = 's'
-#     fig8 = ds.statplot(axtype='qq')
-#     fig9 = ds.statplot(axtype='pp')
-#     fig10 = ds.statplot(patch_artist=True)
-#     assert_true(fig10, plt.Figure)
+    fig1 = ds.statplot(pos=1.25)
+    fig2 = ds.statplot(yscale='linear')
+    fig3 = ds.statplot(notch=False)
+    fig4 = ds.statplot(showmean=False)
+    fig5 = ds.statplot(width=1.5)
+    fig6 = ds.statplot(bacteria=True)
+    fig7 = ds.statplot(ylabel='Test Y-Label')
+    fig8 = ds.statplot(axtype='qq')
+    fig9 = ds.statplot(axtype='pp')
+    fig10 = ds.statplot(patch_artist=True)
+    assert_true(fig10, plt.Figure)
 
 
 # @image_comparison(baseline_images=[
