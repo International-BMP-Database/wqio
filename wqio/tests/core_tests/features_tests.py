@@ -476,8 +476,10 @@ class test_Location_noROS(_base_LocationMixin):
 @nottest
 def setup_location(station_type):
     data = testing.getTestROSData()
+    np.random.seed(0)
     loc = Location(data, station_type=station_type, bsIter=10000,
                    rescol='res', qualcol='qual', useROS=True)
+    plt.rcdefaults()
     return loc
 
 
@@ -492,9 +494,9 @@ def setup_location(station_type):
     'test_loc_boxplot_with_ylabel',
     'test_loc_boxplot_fallback_to_vert_scatter',
     'test_loc_boxplot_provided_ax',
+    'test_loc_boxplot_custom_position'
 ], extensions=['png'])
 def test_location_boxplot():
-    np.random.seed(0)
     loc = setup_location('inflow')
     loc.color = 'cornflowerblue'
     loc.plot_marker = 'o'
@@ -519,6 +521,8 @@ def test_location_boxplot():
     assert_true(isinstance(fig10, plt.Figure))
     assert_raises(ValueError, loc.boxplot, ax='junk')
 
+    fig11 = loc.boxplot(pos=1.5, xlims={'left': 0, 'right': 2})
+
 
 @image_comparison(baseline_images=[
     'test_loc_probplot_default',
@@ -535,7 +539,6 @@ def test_location_boxplot():
     'test_loc_probplot_plotopts2',
 ], extensions=['png'])
 def test_location_probplot():
-    np.random.seed(0)
     loc = setup_location('inflow')
     loc.color = 'cornflowerblue'
     loc.plot_marker = 'o'
@@ -563,6 +566,41 @@ def test_location_probplot():
     fig12 = loc.probplot(markersize=10, linestyle='--')
     fig13 = loc.probplot(markeredgewidth=2)
 
+
+@image_comparison(baseline_images=[
+    'test_loc_statplot_custom_position',
+    'test_loc_statplot_yscale_linear',
+    'test_loc_statplot_no_notch',
+    'test_loc_statplot_no_mean',
+    'test_loc_statplot_custom_width',
+    'test_loc_statplot_bacteria_true',
+    'test_loc_statplot_ylabeled',
+    'test_loc_statplot_qq',
+    'test_loc_statplot_pp',
+    'test_loc_statplot_patch_artist',
+], extensions=['png'])
+def test_location_statplot():
+    loc = setup_location('inflow')
+    loc.color = 'cornflowerblue'
+    loc.plot_marker = 'o'
+
+    fig1 = loc.statplot(pos=1.25)
+    fig2 = loc.statplot(yscale='linear')
+    fig3 = loc.statplot(notch=False)
+
+    loc.color = 'firebrick'
+    loc.plot_marker = 'd'
+    fig4 = loc.statplot(showmean=False)
+    fig5 = loc.statplot(width=1.5)
+    fig6 = loc.statplot(bacteria=True)
+    fig7 = loc.statplot(ylabel='Test Y-Label')
+
+    loc.color = 'forestgreen'
+    loc.plot_marker = 's'
+    fig8 = loc.statplot(axtype='qq')
+    fig9 = loc.statplot(axtype='pp')
+    fig10 = loc.statplot(patch_artist=True)
+    assert_true(fig10, plt.Figure)
 
 
 class test_Dataset(object):

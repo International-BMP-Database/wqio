@@ -769,49 +769,40 @@ class Location(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
-        '''Creates a two-axis figure with a boxplot as probability plot.
+        '''Creates a two-axis figure with a boxplot & probability plot.
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        pos : optional int (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : optional string ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : optional bool (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : optional bool (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : optional float (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : optional bool (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string or None (default):
+            Label for y-axis
+        probAxis : bool (default = True)
+            Toggles the display of probabilities (True) or Z-scores
+            (i.e., theoretical quantiles) on the x-axis
+        patch_artist : optional bool (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
-
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
-
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-        Returns:
-            fig : matplotlib Figure instance
+        Returns
+        -------
+        fig : matplotlib Figure instance
 
         '''
+
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
                          edgecolor='none')
@@ -820,7 +811,8 @@ class Location(object):
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
-                     ylabel=ylabel, patch_artist=patch_artist)
+                     ylabel=ylabel, patch_artist=patch_artist,
+                     xlims={'left': pos - (0.6*width), 'right': pos + (0.6*width)})
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True)
