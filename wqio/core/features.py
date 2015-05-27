@@ -1533,38 +1533,39 @@ class Dataset(object):
 
         return jg
 
-    def scatterplot(self, ax=None, xscale='log', yscale='log', one2one=False,
-                    useROS=False, xlabel=None, ylabel=None, showlegend=True):
-        '''
-        Adds an influent/effluent scatter plot to a matplotlibe figure
+    def scatterplot(self, ax=None, xscale='log', yscale='log',
+                    xlabel=None, ylabel=None, showlegend=True,
+                    one2one=False, useROS=False):
+        """ Creates an influent/effluent scatter plot
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the scatterplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the scatterplot with be drawn. If None, one
+            will be created.
+        xscale, yscale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the [x|y]-axis
+        xlabel, ylabel : string or None (default), optional:
+            Label for [x|y]-axis. If None, will be 'Influent'. If the
+            dataset definition is available and incldues a Parameter,
+            that will be included as will. For no label, use
+            e.g., `xlabel = ""`.
+        showlegend : bool, optional (default is True)
+            Toggles including a legend on the plot.
+        one2one : bool, optional (default is False), optional
+            Toggles the inclusion of the 1:1 line (i.e. line of
+            equality).
+        useROS : bool, optional (default is False)
+            Toggles the use of the ROS'd results. If False, raw results
+            (i.e., detection limit for NDs) are used with varying
+            symbology.
 
-            [x|y]scale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the [x|y]-axis
+        Returns
+        ------
+        fig : matplotlib Figure
 
-            one2one : optional bool (default = False)
-                Toggles the inclusion of the 1:1 line (aka line of equality)
+        """
 
-            useROS : bool (default = True)
-                Toggles the use of the ROS'd results. If False, raw results
-                (i.e., detection limit for NDs) are used with varying
-                symbology
-
-            [x|y]label : string or None (default):
-                Label for [x|y]-axis. If None, will be 'Influent'. If the dataset
-                definition is available and incldues a Parameter, that will
-                be included as will. For no label, use `[x|y]label = ""`
-
-            showlegend : bool (default = True)
-                Toggles the display of the legend
-
-        Returns:
-            fig : matplotlib Figure
-        '''
         # set up the figure/axes
         fig, ax = utils.figutils._check_ax(ax)
 
@@ -1620,28 +1621,16 @@ class Dataset(object):
             ax.set_ylim(axis_limits)
             ax.set_xlim(axis_limits)
 
-        elif yscale == 'linear':
+        elif yscale == 'linear' or xscale == 'linear':
             axis_limits = [
-                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
+                np.min([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
                 np.max([ax.get_xlim(), ax.get_ylim()])
             ]
-
-        elif xscale == 'linear':
-            axis_limits = [
-                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
-                np.max([ax.get_xlim(), ax.get_ylim()])
-            ]
-
-        # generate plotting values for 1:1 line
-        if xscale == yscale == 'linear':
-            xx = np.linspace(*axis_limits)
-        else:
-            xx = np.logspace(*np.log10(axis_limits))
 
         # include the line of equality, if requested
         if one2one:
-            ax.plot(xx, xx, linestyle='-', linewidth=1.25, alpha=0.50,
-                    color='black', zorder=5, label='1:1 line')
+            ax.plot(axis_limits, axis_limits, linestyle='-', linewidth=1.25,
+                    alpha=0.50, color='black', zorder=5, label='1:1 line')
 
         # setup the axes labels
         if xlabel is None:

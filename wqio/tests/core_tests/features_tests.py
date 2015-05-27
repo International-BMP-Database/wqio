@@ -844,98 +844,9 @@ class test_Dataset(object):
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
-    def test_statplot_PP(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', ylabel='Test Label', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-PP'))
-
-    def test_statplot_baseline_QQ(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', axtype='qq', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-QQ'))
-
-    def test_statplot_baseline_prob(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', axtype='prob', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-Prob'))
-
-    @raises(ValueError)
-    def test_statplot_badYScale(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='JUNK',  ylabel='Test Label')
-
     def test_joinplot(self):
         assert_true(hasattr(self.ds, 'jointplot'))
         self.ds.jointplot()
-
-    def test_scatterplot_baseline(self):
-        assert_true(hasattr(self.ds, 'scatterplot'))
-        fig = self.ds.scatterplot(ax=self.ax)
-        assert_true(isinstance(fig, plt.Figure))
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_Baseline.png'),
-                    bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    def test_scatterplot_noROS(self):
-        assert_true(hasattr(self.ds, 'scatterplot'))
-        fig = self.ds.scatterplot(ax=self.ax, useROS=False)
-        assert_true(isinstance(fig, plt.Figure))
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_NoROS.png'),
-                    bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    def test_scatterplot_xlinear(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='linear', yscale='log', one2one=True)
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_xlinear.png'),
-                    bbox_inches='tight', bbox_extra_artists=(leg,))
-
-    def test_scatterplot_ylinear(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='log', yscale='linear', one2one=True)
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_ylinear.png'),
-                    bbox_inches='tight', bbox_extra_artists=(leg,))
-
-    @raises(ValueError)
-    def test_scatterplot_xlog_bad(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='junk')
-
-    @raises(ValueError)
-    def test_scatterplot_ylog_bad(self):
-        fig = self.ds.scatterplot(ax=self.ax, yscale='junk')
-
-    @raises(ValueError)
-    def test_scatterplot_badAxes(self):
-        fig = self.ds.scatterplot(ax='junk')
-
-    def test_scatterplot_one2one(self):
-        fig = self.ds.scatterplot(ax=self.ax, one2one=True)
-        fig.savefig(self.makePath('test_DS_Scatter_with1-1.png'),
-                    bbox_inches='tight', bbox_extra_artists=(fig.axes[0].get_legend(),))
-
-    def test_scatterplot_one2one_noROS(self):
-        fig = self.ds.scatterplot(ax=self.ax, one2one=True, useROS=False)
-        fig.savefig(self.makePath('test_DS_Scatter_with1-1_noROS.png'),
-                    bbox_inches='tight', bbox_extra_artists=(fig.axes[0].get_legend(),))
-
-    def test_scatterplot_check_axes_limits(self):
-        fig = self.ds.scatterplot(ax=self.ax)
-        assert_tuple_equal(self.ax.get_xlim(), self.ax.get_ylim())
-
-    def test__plot_nds_both(self):
-        self.ds._plot_nds(self.ax, which='both')
-
-    def test__plot_nds_effluent(self):
-        self.ds._plot_nds(self.ax, which='effluent')
-
-    def test__plot_nds_influent(self):
-        self.ds._plot_nds(self.ax, which='influent')
-
-    def test__plot_nds_neither(self):
-        self.ds._plot_nds(self.ax, which='neither')
 
     @raises(ValueError)
     def test__plot_nds_error(self):
@@ -963,13 +874,17 @@ class test_Dataset(object):
 
 
 @nottest
-def setup_dataset():
+def setup_dataset(extra_NDs=False):
     np.random.seed(0)
     in_data = testing.getTestROSData()
     in_data['res'] += 3
 
     out_data = testing.getTestROSData()
     out_data['res'] -= 1.5
+
+    if extra_NDs:
+        in_data.loc[[0, 1, 2], 'qual'] = 'ND'
+        out_data.loc[[14, 15, 16], 'qual'] = 'ND'
 
     influent = Location(in_data, station_type='inflow', bsIter=10000,
                         rescol='res', qualcol='qual', useROS=False)
@@ -1082,39 +997,69 @@ def test_dataset_statplot():
     assert_true(fig10, plt.Figure)
 
 
-# @image_comparison(baseline_images=[
-#     'test_ds_vertical_scatter_default',
-#     'test_ds_vertical_scatter_provided_ax',
-#     'test_ds_vertical_scatter_pos',
-#     'test_ds_vertical_scatter_nojitter',
-#     'test_ds_vertical_scatter_alpha',
-#     'test_ds_vertical_scatter_ylabel',
-#     'test_ds_vertical_scatter_yscale_linear',
-#     'test_ds_vertical_scatter_not_ignoreROS',
-#     'test_ds_vertical_scatter_markersize',
-# ], extensions=['png'])
-# def test_dataset_verticalScatter():
-#     xlims = {'left': 0, 'right': 2}
-#     ds = setup_dataset('inflow')
-#     ds.color = 'cornflowerblue'
-#     ds.plot_marker = 'o'
+@image_comparison(baseline_images=[
+    'test_ds_scatterplot_default',
+    'test_ds_scatterplot_provided_ax',
+    'test_ds_scatterplot_xscale_linear',
+    'test_ds_scatterplot_xyscale_linear',
+    'test_ds_scatterplot_yscale_linear',
+    'test_ds_scatterplot_xlabel',
+    'test_ds_scatterplot_ylabel',
+    'test_ds_scatterplot_no_xlabel',
+    'test_ds_scatterplot_no_ylabel',
+    'test_ds_scatterplot_no_legend',
+    'test_ds_scatterplot_one2one',
+    'test_ds_scatterplot_useROS',
+], extensions=['png'])
+def test_dataset_scatterplot():
+    ds = setup_dataset(extra_NDs=True)
 
-#     fig1 = ds.verticalScatter()
-#     fig2, ax2 = plt.subplots()
-#     fig2 = ds.verticalScatter(ax=ax2, xlims=xlims)
-#     assert_true(isinstance(fig2, plt.Figure))
-#     assert_raises(ValueError, ds.verticalScatter, ax='junk', xlims=xlims)
+    fig1 = ds.scatterplot()
+    fig2, ax2 = plt.subplots()
+    fig2 = ds.scatterplot(ax=ax2)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, ds.scatterplot, ax='junk')
 
-#     fig3 = ds.verticalScatter(pos=1.25, xlims=xlims)
-#     fig4 = ds.verticalScatter(jitter=0.0, xlims=xlims)
-#     fig5 = ds.verticalScatter(alpha=0.25, xlims=xlims)
+    fig3 = ds.scatterplot(xscale='linear')
+    fig5 = ds.scatterplot(xscale='linear', yscale='linear')
+    fig4 = ds.scatterplot(yscale='linear')
+    fig6 = ds.scatterplot(xlabel='X-label')
+    fig7 = ds.scatterplot(ylabel='Y-label')
+    fig8 = ds.scatterplot(xlabel='')
+    fig9 = ds.scatterplot(ylabel='')
+    fig10 = ds.scatterplot(showlegend=False)
+    fig10 = ds.scatterplot(one2one=True)
+    fig11 = ds.scatterplot(useROS=True)
 
-#     ds.color = 'firebrick'
-#     ds.plot_marker = 's'
-#     ds.verticalScatter(ylabel='Test Y-Label', xlims=xlims)
-#     ds.verticalScatter(yscale='linear', xlims=xlims)
-#     ds.verticalScatter(ignoreROS=False, xlims=xlims)
-#     ds.verticalScatter(markersize=8, xlims=xlims)
+
+@image_comparison(baseline_images=[
+    'test_ds__plot_NDs_both',
+    'test_ds__plot_NDs_effluent',
+    'test_ds__plot_NDs_influent',
+    'test_ds__plot_NDs_neither',
+], extensions=['png'])
+def test_dataset__plot_NDs():
+    ds = setup_dataset(extra_NDs=True)
+    markerkwargs = dict(
+        linestyle='none',
+        markerfacecolor='black',
+        markeredgecolor='white',
+        markeredgewidth=0.5,
+        markersize=6,
+        zorder=10,
+    )
+
+    fig1, ax1 = plt.subplots()
+    ds._plot_nds(ax1, which='both', marker='d', **markerkwargs)
+
+    fig2, ax2 = plt.subplots()
+    ds._plot_nds(ax2, which='effluent', marker='<', **markerkwargs)
+
+    fig3, ax3 = plt.subplots()
+    ds._plot_nds(ax3, which='influent', marker='v', **markerkwargs)
+
+    fig4, ax4 = plt.subplots()
+    ds._plot_nds(ax4, which='neither', marker='o', **markerkwargs)
 
 
 @nottest
