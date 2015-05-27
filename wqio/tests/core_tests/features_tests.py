@@ -11,6 +11,7 @@ usetex = testing.compare_versions(utility='latex')
 import matplotlib
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
+import seaborn.apionly as seaborn
 
 import pandas
 import pandas.util.testing as pdtest
@@ -639,12 +640,9 @@ def test_location_verticalScatter():
     loc.verticalScatter(markersize=8, xlims=xlims)
 
 
-
 class test_Dataset(object):
     def setup(self):
         self.maxDiff = None
-        # path stuff
-        self.prefix = setup_prefix('core.features')
 
         # basic test data
         self.tolerance = 0.05
@@ -845,159 +843,6 @@ class test_Dataset(object):
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
-    def test_boxplot_baseline(self):
-        assert_true(hasattr(self.ds, 'boxplot'))
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8, ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Box_BothLocs_NoName.png'))
-
-    def test_boxplot_baseline_withName(self):
-        self.ds.name = 'Test Dataset'
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8, ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Box_BothLocs_Name.png'))
-
-    @raises(ValueError)
-    def test_boxplot_badAxes(self):
-        fig = self.ds.boxplot(ax=5, pos=1, yscale='log', notch=True,
-                              showmean=True, width=0.8)
-
-    @raises(ValueError)
-    def test_boxplot_badYscale(self):
-        fig = self.ds.boxplot(ax=self.ax, pos=1, yscale='JUNK', notch=True,
-                              showmean=True, width=0.8)
-
-    def test_probplot_QQ(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        fig = self.ds.probplot(ax=self.ax, yscale='log', ylabel='Test Label', axtype='qq')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-QQ.png'))
-
-    def test_probplot_baseline_PP(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-PP.png'))
-
-    def test_probplot_baseline_Prob(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='log')
-        fig = self.ds.probplot(ax=self.ax, yscale='log', axtype='prob')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Prob-prob.png'))
-
-    @raises(ValueError)
-    def test_probplot_badAxes(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        fig = self.ds.probplot(ax=3, yscale='log')
-        assert_true(isinstance(fig, plt.Figure))
-
-    @raises(ValueError)
-    def test_probplot_badYscale(self):
-        assert_true(hasattr(self.ds, 'probplot'))
-        self.ds.probplot(yscale='JUNK')
-
-    def test_statplot_PP(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', ylabel='Test Label', axtype='pp')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-PP'))
-
-    def test_statplot_baseline_QQ(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', axtype='qq', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-QQ'))
-
-    def test_statplot_baseline_prob(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='log', axtype='prob', ylabel='Test Label')
-        assert_true(isinstance(fig, plt.Figure))
-        fig.savefig(self.makePath('test_DS_Stat-Prob'))
-
-    @raises(ValueError)
-    def test_statplot_badYScale(self):
-        assert_true(hasattr(self.ds, 'statplot'))
-        fig = self.ds.statplot(yscale='JUNK',  ylabel='Test Label')
-
-    def test_joinplot(self):
-        assert_true(hasattr(self.ds, 'jointplot'))
-        self.ds.jointplot()
-
-
-    def test_scatterplot_baseline(self):
-        assert_true(hasattr(self.ds, 'scatterplot'))
-        fig = self.ds.scatterplot(ax=self.ax)
-        assert_true(isinstance(fig, plt.Figure))
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_Baseline.png'),
-                    bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    def test_scatterplot_noROS(self):
-        assert_true(hasattr(self.ds, 'scatterplot'))
-        fig = self.ds.scatterplot(ax=self.ax, useROS=False)
-        assert_true(isinstance(fig, plt.Figure))
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_NoROS.png'),
-                    bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    def test_scatterplot_xlinear(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='linear', yscale='log', one2one=True)
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_xlinear.png'),
-                    bbox_inches='tight', bbox_extra_artists=(leg,))
-
-    def test_scatterplot_ylinear(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='log', yscale='linear', one2one=True)
-        leg = fig.axes[0].get_legend()
-        fig.savefig(self.makePath('test_DS_Scatter_ylinear.png'),
-                    bbox_inches='tight', bbox_extra_artists=(leg,))
-
-    @raises(ValueError)
-    def test_scatterplot_xlog_bad(self):
-        fig = self.ds.scatterplot(ax=self.ax, xscale='junk')
-
-    @raises(ValueError)
-    def test_scatterplot_ylog_bad(self):
-        fig = self.ds.scatterplot(ax=self.ax, yscale='junk')
-
-    @raises(ValueError)
-    def test_scatterplot_badAxes(self):
-        fig = self.ds.scatterplot(ax='junk')
-
-    def test_scatterplot_one2one(self):
-        fig = self.ds.scatterplot(ax=self.ax, one2one=True)
-        fig.savefig(self.makePath('test_DS_Scatter_with1-1.png'),
-                    bbox_inches='tight', bbox_extra_artists=(fig.axes[0].get_legend(),))
-
-    def test_scatterplot_one2one_noROS(self):
-        fig = self.ds.scatterplot(ax=self.ax, one2one=True, useROS=False)
-        fig.savefig(self.makePath('test_DS_Scatter_with1-1_noROS.png'),
-                    bbox_inches='tight', bbox_extra_artists=(fig.axes[0].get_legend(),))
-
-    def test_scatterplot_check_axes_limits(self):
-        fig = self.ds.scatterplot(ax=self.ax)
-        assert_tuple_equal(self.ax.get_xlim(), self.ax.get_ylim())
-
-    def test__plot_nds_both(self):
-        self.ds._plot_nds(self.ax, which='both')
-
-    def test__plot_nds_effluent(self):
-        self.ds._plot_nds(self.ax, which='effluent')
-
-    def test__plot_nds_influent(self):
-        self.ds._plot_nds(self.ax, which='influent')
-
-    def test__plot_nds_neither(self):
-        self.ds._plot_nds(self.ax, which='neither')
-
-    @raises(ValueError)
-    def test__plot_nds_error(self):
-        self.ds._plot_nds(self.ax, which='JUNK')
-
     def test__repr__normal(self):
         self.ds.__repr__
 
@@ -1017,6 +862,251 @@ class test_Dataset(object):
 
         assert_true(infl_ros_mean != infl_raw_mean)
         assert_true(effl_ros_mean != effl_raw_mean)
+
+
+@nottest
+def setup_dataset(extra_NDs=False):
+    np.random.seed(0)
+    in_data = testing.getTestROSData()
+    in_data['res'] += 3
+
+    out_data = testing.getTestROSData()
+    out_data['res'] -= 1.5
+
+    if extra_NDs:
+        in_data.loc[[0, 1, 2], 'qual'] = 'ND'
+        out_data.loc[[14, 15, 16], 'qual'] = 'ND'
+
+    influent = Location(in_data, station_type='inflow', bsIter=10000,
+                        rescol='res', qualcol='qual', useROS=False)
+
+    effluent = Location(out_data, station_type='outflow', bsIter=10000,
+                        rescol='res', qualcol='qual', useROS=False)
+
+    ds = Dataset(influent, effluent, name='Test Dataset')
+    plt.rcdefaults()
+    return ds
+
+@image_comparison(baseline_images=[
+    'test_ds_boxplot_default',
+    'test_ds_boxplot_patch_artists',
+    'test_ds_boxplot_linscale',
+    'test_ds_boxplot_no_mean',
+    'test_ds_boxplot_width',
+    'test_ds_boxplot_no_notch',
+    'test_ds_boxplot_bacteria_geomean',
+    'test_ds_boxplot_with_ylabel',
+    'test_ds_boxplot_fallback_to_vert_scatter',
+    'test_ds_boxplot_provided_ax',
+    'test_ds_boxplot_custom_position',
+    'test_ds_boxplot_custom_offset',
+    'test_ds_boxplot_single_tick',
+    'test_ds_boxplot_single_tick_no_name',
+], extensions=['png'])
+def test_dataset_boxplot():
+    xlims = {'left': 0, 'right': 2}
+    ds = setup_dataset()
+
+    fig1 = ds.boxplot()
+    fig2 = ds.boxplot(patch_artist=True, xlims=xlims)
+    fig3 = ds.boxplot(yscale='linear', xlims=xlims)
+    fig4 = ds.boxplot(showmean=False, xlims=xlims)
+    fig5 = ds.boxplot(width=1.25, xlims=xlims)
+    fig6 = ds.boxplot(notch=False, xlims=xlims)
+    fig7 = ds.boxplot(bacteria=True, xlims=xlims)
+    fig8 = ds.boxplot(ylabel='Test Ylabel', xlims=xlims)
+    fig9 = ds.boxplot(minpoints=np.inf, xlims=xlims)
+
+    fig10, ax10 = plt.subplots()
+    fig10 = ds.boxplot(ax=ax10, xlims=xlims)
+    assert_true(isinstance(fig10, plt.Figure))
+    assert_raises(ValueError, ds.boxplot, ax='junk')
+
+    fig11 = ds.boxplot(pos=1.5, xlims=xlims)
+    fig12 = ds.boxplot(offset=0.75, xlims=xlims)
+    fig13 = ds.boxplot(bothTicks=False, xlims=xlims)
+    ds.name = None
+    fig14 = ds.boxplot(bothTicks=False, xlims=xlims)
+
+
+@image_comparison(baseline_images=[
+    'test_ds_probplot_default',
+    'test_ds_probplot_provided_ax',
+    'test_ds_probplot_yscale_linear',
+    'test_ds_probplot_ppax',
+    'test_ds_probplot_qqax',
+    'test_ds_probplot_ylabel',
+    'test_ds_probplot_clear_yticks',
+    'test_ds_probplot_no_managegrid',
+    'test_ds_probplot_no_rotate_xticklabels',
+    'test_ds_probplot_no_set_xlims',
+], extensions=['png'])
+def test_dataset_probplot():
+    ds = setup_dataset()
+
+    fig1 = ds.probplot()
+    fig2, ax2 = plt.subplots()
+    fig2 = ds.probplot(ax=ax2)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, ds.probplot, ax='junk')
+
+    fig3 = ds.probplot(yscale='linear')
+    fig4 = ds.probplot(axtype='pp')
+    fig5 = ds.probplot(axtype='qq')
+    fig6 = ds.probplot(ylabel='test ylabel')
+    fig7 = ds.probplot(clearYLabels=True)
+    fig8 = ds.probplot(managegrid=False)
+    fig10 = ds.probplot(rotateticklabels=False)
+    fig11 = ds.probplot(setxlimits=False)
+
+
+@image_comparison(baseline_images=[
+    'test_ds_statplot_custom_position',
+    'test_ds_statplot_yscale_linear',
+    'test_ds_statplot_no_notch',
+    'test_ds_statplot_no_mean',
+    'test_ds_statplot_custom_width',
+    'test_ds_statplot_bacteria_true',
+    'test_ds_statplot_ylabeled',
+    'test_ds_statplot_qq',
+    'test_ds_statplot_pp',
+    'test_ds_statplot_patch_artist',
+], extensions=['png'])
+def test_dataset_statplot():
+    ds = setup_dataset()
+
+    fig1 = ds.statplot(pos=1.25)
+    fig2 = ds.statplot(yscale='linear')
+    fig3 = ds.statplot(notch=False)
+    fig4 = ds.statplot(showmean=False)
+    fig5 = ds.statplot(width=1.5)
+    fig6 = ds.statplot(bacteria=True)
+    fig7 = ds.statplot(ylabel='Test Y-Label')
+    fig8 = ds.statplot(axtype='qq')
+    fig9 = ds.statplot(axtype='pp')
+    fig10 = ds.statplot(patch_artist=True)
+    assert_true(fig10, plt.Figure)
+
+
+@image_comparison(baseline_images=[
+    'test_ds_scatterplot_default',
+    'test_ds_scatterplot_provided_ax',
+    'test_ds_scatterplot_xscale_linear',
+    'test_ds_scatterplot_xyscale_linear',
+    'test_ds_scatterplot_yscale_linear',
+    'test_ds_scatterplot_xlabel',
+    'test_ds_scatterplot_ylabel',
+    'test_ds_scatterplot_no_xlabel',
+    'test_ds_scatterplot_no_ylabel',
+    'test_ds_scatterplot_no_legend',
+    'test_ds_scatterplot_one2one',
+    'test_ds_scatterplot_useROS',
+], extensions=['png'])
+def test_dataset_scatterplot():
+    ds = setup_dataset(extra_NDs=True)
+
+    fig1 = ds.scatterplot()
+    fig2, ax2 = plt.subplots()
+    fig2 = ds.scatterplot(ax=ax2)
+    assert_true(isinstance(fig2, plt.Figure))
+    assert_raises(ValueError, ds.scatterplot, ax='junk')
+
+    fig3 = ds.scatterplot(xscale='linear')
+    fig5 = ds.scatterplot(xscale='linear', yscale='linear')
+    fig4 = ds.scatterplot(yscale='linear')
+    fig6 = ds.scatterplot(xlabel='X-label')
+    fig7 = ds.scatterplot(ylabel='Y-label')
+    fig8 = ds.scatterplot(xlabel='')
+    fig9 = ds.scatterplot(ylabel='')
+    fig10 = ds.scatterplot(showlegend=False)
+    fig10 = ds.scatterplot(one2one=True)
+    fig11 = ds.scatterplot(useROS=True)
+
+
+@image_comparison(baseline_images=[
+    'test_ds__plot_NDs_both',
+    'test_ds__plot_NDs_effluent',
+    'test_ds__plot_NDs_influent',
+    'test_ds__plot_NDs_neither',
+], extensions=['png'])
+def test_dataset__plot_NDs():
+    ds = setup_dataset(extra_NDs=True)
+    markerkwargs = dict(
+        linestyle='none',
+        markerfacecolor='black',
+        markeredgecolor='white',
+        markeredgewidth=0.5,
+        markersize=6,
+        zorder=10,
+    )
+
+    fig1, ax1 = plt.subplots()
+    ds._plot_nds(ax1, which='both', marker='d', **markerkwargs)
+
+    fig2, ax2 = plt.subplots()
+    ds._plot_nds(ax2, which='effluent', marker='<', **markerkwargs)
+
+    fig3, ax3 = plt.subplots()
+    ds._plot_nds(ax3, which='influent', marker='v', **markerkwargs)
+
+    fig4, ax4 = plt.subplots()
+    ds._plot_nds(ax4, which='neither', marker='o', **markerkwargs)
+
+
+@image_comparison(baseline_images=[
+    'test_ds_joint_hist',
+    'test_ds_joint_kde',
+    'test_ds_joint_rug',
+    'test_ds_joint_kde_rug_hist',
+], extensions=['png'])
+def test_dataset_jointplot():
+    ds = setup_dataset(extra_NDs=True)
+
+    def do_jointplots(ds, hist=False, kde=False, rug=False):
+        jg = ds.jointplot(hist=hist, kde=kde, rug=rug)
+        assert_true(isinstance(jg, seaborn.JointGrid))
+        return jg.fig
+
+    fig1 = do_jointplots(ds, hist=True)
+    fig2 = do_jointplots(ds, kde=True)
+    fig3 = do_jointplots(ds, rug=True)
+    fig4 = do_jointplots(ds, hist=True, kde=True, rug=True)
+
+
+@nottest
+def make_dc_data():
+    np.random.seed(0)
+
+    dl_map = {
+        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
+        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
+    }
+
+    index = pandas.MultiIndex.from_product([
+        list('ABCDEFGH'),
+        list('1234567'),
+        ['GA', 'AL', 'OR', 'CA'],
+        ['Inflow', 'Outflow', 'Reference']
+    ], names=['param', 'bmp', 'state', 'loc'])
+
+    array = np.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
+    data = pandas.DataFrame(data=array, index=index, columns=['res'])
+    data['DL'] = data.apply(
+        lambda r: dl_map.get(r.name[0]),
+        axis=1
+    )
+
+    data['res'] = data.apply(
+        lambda r: dl_map.get(r.name[0]) if r['res'] < r['DL'] else r['res'],
+        axis=1
+    )
+
+    data['qual'] = data.apply(
+        lambda r: 'ND' if r['res'] <= r['DL'] else '=',
+        axis=1
+    )
+
+    return data
 
 
 class _base_DataCollecionMixin(object):
@@ -1230,39 +1320,3 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
                 'D': 0.4790, 'E': 0.7710, 'F': 0.6370, 'G': 0.3070
             }
         })
-
-
-@nottest
-def make_dc_data():
-    np.random.seed(0)
-
-    dl_map = {
-        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
-        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
-    }
-
-    index = pandas.MultiIndex.from_product([
-        list('ABCDEFGH'),
-        list('1234567'),
-        ['GA', 'AL', 'OR', 'CA'],
-        ['Inflow', 'Outflow', 'Reference']
-    ], names=['param', 'bmp', 'state', 'loc'])
-
-    array = np.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
-    data = pandas.DataFrame(data=array, index=index, columns=['res'])
-    data['DL'] = data.apply(
-        lambda r: dl_map.get(r.name[0]),
-        axis=1
-    )
-
-    data['res'] = data.apply(
-        lambda r: dl_map.get(r.name[0]) if r['res'] < r['DL'] else r['res'],
-        axis=1
-    )
-
-    data['qual'] = data.apply(
-        lambda r: 'ND' if r['res'] <= r['DL'] else '=',
-        axis=1
-    )
-
-    return data

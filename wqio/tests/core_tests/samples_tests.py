@@ -30,8 +30,6 @@ class base_wqsampleMixin(object):
 
     @nt.nottest
     def basic_setup(self):
-        self.prefix = setup_prefix('core_tests')
-        self.fig, self.ax = plt.subplots()
         self.known_wqdata_type = pandas.DataFrame
         self.known_starttime_type = pandas.Timestamp
         self.known_endtime_type = pandas.Timestamp

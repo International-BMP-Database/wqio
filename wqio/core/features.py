@@ -650,6 +650,10 @@ class Location(object):
             Otherwise, the arithmetic mean is used.
         ylabel : string or None (default):
             Label for y-axis
+        minpoints : int, optional (default = 5)
+            The minimum number of data points required to draw a
+            boxplot. If too few points are present, the drawing will
+            fallback to a verticalScatter plot.
         patch_artist : optional bool (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
@@ -716,20 +720,23 @@ class Location(object):
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        color : string or three tuple (default = 'b'), optional
-            Any valid matplotlib color specification.
-        marker : string, optional (default = 'o')
-            String representing a matplotlib marker style.
-        linestyle : string, optional (default = 'none')
-            String representing a matplotlib line style. No line is shown
-            by default.
         [x|y]label : string, optional or None (default)
             Axis label for the plot.
         yscale : string , optional(default = 'log')
             Scale for the y-axis. Use 'log' for logarithmic (default) or
             'linear'.
-        clearYLabels : bool, optional (default = False)
-            If True, removed y-*tick* labels from `ax`.
+        clearYLabels : bool, optional (default is False)
+            If True, removed y-*tick* labels from teh Axes.
+        managegrid : bool, optional (default is True)
+            If True, typical gridlines will be added to the Axes.
+        rotateticklabels : bool, optional (default is True)
+            If True, the tick labels of the probability axes will be
+            rotated.
+        setxlimits : bool, optional (default is True)
+            If True and `axtype` == 'prob', tehe axis limits will be
+            automatically set based on the number of points in the plot.
+        plotopts : keyword arguments
+            Additional options passed directly to `plt.plot`
 
         Returns
         -------
@@ -769,7 +776,7 @@ class Location(object):
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
                  patch_artist=False):
-        '''Creates a two-axis figure with a boxplot & probability plot.
+        """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
         ----------
@@ -799,9 +806,9 @@ class Location(object):
 
         Returns
         -------
-        fig : matplotlib Figure instance
+        fig : matplotlib Figure
 
-        '''
+        """
 
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
@@ -856,7 +863,7 @@ class Location(object):
 
         Returns
         -------
-        fig : matplotlib Figure instance
+        fig : matplotlib Figure
 
         """
 
@@ -1293,60 +1300,63 @@ class Dataset(object):
         return output
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, xlims=None, bothTicks=True,
-                offset=0.5, patch_artist=False):
-        '''
-        Adds a boxplot to a matplotlib figure
+    def boxplot(self, ax=None, pos=1, yscale='log', notch=True,
+                showmean=True, width=0.8, bacteria=False, ylabel=None,
+                xlims=None, bothTicks=True, offset=0.5,
+                patch_artist=False, minpoints=5):
+        """ Adds a boxplot to a matplotlib figure
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the boxplot with be drawn. If None, one will
+            be created.
+        pos : int, optional (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : optional string ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : bool, optional (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : bool, optional (default is True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : float, optional (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : bool, optional (default is False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string or None (default):
+            Label for y-axis
+        xlims : sequence (length=2), dict, or None (default), optional
+            Custom limits of the x-axis. If None, defaults to
+            [pos-1, pos+1].
+        bothTicks : bool, optional (default is True)
+            If True, each box gets a tick label. Otherwise, both get a
+            single tick.
+        offset : float, optional (default = 0.5)
+            Spacing, in x-axis data coordinates, of the boxplots.
+        patch_artist : bool, optional (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
+        minpoints : int, optional (default = 5)
+            The minimum number of data points required to draw a
+            boxplot. If too few points are present, the drawing will
+            fallback to a verticalScatter plot.
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
+        Returns
+        -------
+        fig : matplotlib Figure
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        """
 
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            xlims : optional sequence (length=2) or None (default)
-                Custom limits of the x-axis. If None, defaults to
-                [pos-1, pos+1].
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         fig, ax = utils.figutils._check_ax(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
             if loc.include:
                 loc.boxplot(ax=ax, pos=pos+offset, notch=notch, showmean=showmean,
                             width=width/2, bacteria=bacteria, ylabel=None,
-                            patch_artist=patch_artist)
+                            patch_artist=patch_artist, minpoints=minpoints)
 
         ax.set_yscale(yscale)
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
@@ -1360,46 +1370,69 @@ class Dataset(object):
         if xlims is None:
             ax.set_xlim([pos-1, pos+1])
         else:
-            ax.set_xlim(xlims)
+            if isinstance(xlims, dict):
+                ax.set_xlim(**xlims)
+            else:
+                ax.set_xlim(xlims)
 
         if bothTicks:
             ax.set_xticks([pos-offset, pos+offset])
             ax.set_xticklabels([self.influent.name, self.effluent.name])
         else:
             ax.set_xticks([pos])
+            if self.name is not None:
+                ax.set_xticklabels([self.name])
+            else:
+                ax.set_xticklabels([''])
 
         ax.xaxis.grid(False, which='major')
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', axtype='qq', ylabel=None,
-                 clearYLabels=False, rotateticklabels=True, setxlimits=True):
-        '''
-        Adds probability plots to a matplotlib figure
+    def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
+                 clearYLabels=False, rotateticklabels=True,
+                 setxlimits=True, managegrid=True):
+        """ Adds probability plots to a matplotlib figure
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object, optional or None (default).
+            The Axes on which to plot. If None is provided, one will be
+            created.
+        yscale : string , optional(default = 'log')
+            Scale for the y-axis. Use 'log' for logarithmic (default) or
+            'linear'.
+        axtype : string, optional (default = 'pp')
+            Type of plot to be created. Options are:
+                - 'prob': probabilty plot
+                - 'pp': percentile plot
+                - 'qq': quantile plot
+        ylabel : string, optional or None (default)
+            Axis label for the plot.
+        clearYLabels : bool, optional (default is False)
+            If True, removed y-*tick* labels from teh Axes.
+        rotateticklabels : bool, optional (default is True)
+            If True, the tick labels of the probability axes will be
+            rotated.
+        setxlimits : bool, optional (default is True)
+            If True and `axtype` == 'prob', tehe axis limits will be
+            automatically set based on the number of points in the plot.
+        managegrid : bool, optional (default is True)
+            If True, typical gridlines will be added to the Axes.
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        Returns
+        -------
+        fig : matplotlib Figure
 
-            ylabel : string or None (default):
-                Label for y-axis
+        """
 
-            clearYLabels : bool (default = False)
-                If True, removed y-*tick* label from `ax`
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         fig, ax = utils.figutils._check_ax(ax)
 
         for loc in [self.influent, self.effluent]:
             if loc.include:
-                loc.probplot(ax=ax, clearYLabels=False, axtype=axtype,
-                             yscale=yscale)
+                loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
+                             yscale=yscale, managegrid=managegrid,
+                             rotateticklabels=rotateticklabels)
 
         xlabels = {
             'pp': 'Theoretical percentiles',
@@ -1408,66 +1441,60 @@ class Dataset(object):
         }
 
         ax.set_xlabel(xlabels[axtype])
-        ax.legend(loc='upper left', frameon=True)
+        ax.legend(loc='lower right', frameon=True)
+
+        if ylabel is not None:
+            ax.set_ylabel(ylabel)
 
         if rotateticklabels:
             utils.figutils.rotateTickLabels(ax, 45, 'x')
 
-        if setxlimits:
+        if setxlimits and axtype == 'prob':
             N = np.max([self.influent.N, self.effluent.N])
             utils.figutils.setProbLimits(ax, N, 'x')
+
+        if managegrid:
+            utils.figutils.gridlines(ax, yminor=True)
 
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='qq',
                  patch_artist=False):
-        '''
-        Creates a two-axis figure. Left axis has a bopxplot. Right axis
-        contains a probability ot quantile plot.
+        """Creates a two-axis figure with a boxplot & probability plot.
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the boxplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        pos : int, optional (default=1)
+            Location along x-axis where boxplot will be placed.
+        yscale : string, optional ['linear' or 'log' (default)]
+            Scale formatting of the y-axis
+        notch : bool, optional (default=True)
+            Toggles drawing of bootstrapped confidence interval around
+            the median.
+        showmean : bool, optional (default=True)
+            Toggles plotting the mean value on the boxplot as a point.
+            See also the `bacteria` kwarg
+        width : float, optional (default=0.8)
+            Width of boxplot on the axes (data units)
+        bacteria : bool, optional (default False)
+            If True, uses the geometric mean when `showmean` is True.
+            Otherwise, the arithmetic mean is used.
+        ylabel : string, optional or None (default):
+            Label for y-axis
+        probAxis : bool, optional (default = True)
+            Toggles the display of probabilities (True) or Z-scores
+            (i.e., theoretical quantiles) on the x-axis
+        patch_artist : bool, optional (default = False)
+            Toggles the use of patch artist instead of a line artists
+            for the boxes
 
-            pos : optional int (default=1)
-                Location along x-axis where boxplot will be placed.
+        Returns
+        -------
+        fig : matplotlib Figure
 
-            yscale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the y-axis
+        """
 
-            notch : optional bool (default=True)
-                Toggles drawing of bootstrapped confidence interval around
-                the median.
-
-            showmean : optional bool (default=True)
-                Toggles plotting the mean value on the boxplot as a point.
-                See also the `bacteria` kwarg
-
-            width : optional float (default=0.8)
-                Width of boxplot on the axes (data units)
-
-            bacteria : optional bool (default False)
-                If True, uses the geometric mean when `showmean` is True.
-                Otherwise, the arithmetic mean is used.
-
-            ylabel : string or None (default):
-                Label for y-axis
-
-            patch_artist : optional bool (default = False)
-                Toggles the use of patch artist instead of a line artists
-                for the boxes
-
-            probAxis : bool (default = True)
-                Toggles the display of probabilities (True) or Z-scores (i.e.,
-                theoretical quantiles) on the x-axis
-
-
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         # setup the figure and axes
         fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
                          edgecolor='none')
@@ -1488,56 +1515,83 @@ class Dataset(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def jointplot(self, hist=False, kde=True, rug=True, **scatter):
-        showlegend = scatter.pop('showlegend', True)
-        _ = scatter.pop('ax', None)
+    def jointplot(self, hist=False, kde=True, rug=True, **scatter_kws):
+        """ Create a joint distribution plot for the dataset
+
+        Parameters
+        ----------
+        hist : bool, optional (default is False)
+            Toggles showing histograms on the distribution plots
+        kde : bool, optional (default is True)
+            Toggles showing KDE plots on the distribution plots
+        run : bool, optional (default is True)
+            Toggles showing rug plots on the distribution plots
+        **scatter_kws : keyword arguments
+            Optionals passed directly to Dataset.scatterplot
+
+        Returns
+        -------
+        jg : seaborn.JointGrid
+
+        See also
+        --------
+        seaborn.JointGrid
+        seaborn.jointplot
+        seaborn.distplot
+        Dataset.scatterplot
+
+        """
+
+        showlegend = scatter_kws.pop('showlegend', True)
+        _ = scatter_kws.pop('ax', None)
 
         if self.paired_data is not None:
             data = self.paired_data.xs('res', level='quantity', axis=1)
             jg = seaborn.JointGrid(x='inflow', y='outflow', data=data)
-            self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter)
+            self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter_kws)
             jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
 
-            jg.ax_marg_x.set_xscale(scatter.pop('xscale', 'log'))
-            jg.ax_marg_y.set_yscale(scatter.pop('yscale', 'log'))
+            jg.ax_marg_x.set_xscale(scatter_kws.pop('xscale', 'log'))
+            jg.ax_marg_y.set_yscale(scatter_kws.pop('yscale', 'log'))
 
             if showlegend:
                 jg.ax_joint.legend(loc='upper left')
 
         return jg
 
-    def scatterplot(self, ax=None, xscale='log', yscale='log', one2one=False,
-                    useROS=False, xlabel=None, ylabel=None, showlegend=True):
-        '''
-        Adds an influent/effluent scatter plot to a matplotlibe figure
+    def scatterplot(self, ax=None, xscale='log', yscale='log',
+                    xlabel=None, ylabel=None, showlegend=True,
+                    one2one=False, useROS=False):
+        """ Creates an influent/effluent scatter plot
 
-        Input:
-            ax : optional matplotlib axes object or None (default)
-                Axes on which the scatterplot with be drawn. If None, one will
-                be created.
+        Parameters
+        ----------
+        ax : matplotlib axes object or None (default), optional
+            Axes on which the scatterplot with be drawn. If None, one
+            will be created.
+        xscale, yscale : string ['linear' or 'log' (default)], optional
+            Scale formatting of the [x|y]-axis
+        xlabel, ylabel : string or None (default), optional:
+            Label for [x|y]-axis. If None, will be 'Influent'. If the
+            dataset definition is available and incldues a Parameter,
+            that will be included as will. For no label, use
+            e.g., `xlabel = ""`.
+        showlegend : bool, optional (default is True)
+            Toggles including a legend on the plot.
+        one2one : bool, optional (default is False), optional
+            Toggles the inclusion of the 1:1 line (i.e. line of
+            equality).
+        useROS : bool, optional (default is False)
+            Toggles the use of the ROS'd results. If False, raw results
+            (i.e., detection limit for NDs) are used with varying
+            symbology.
 
-            [x|y]scale : optional string ['linear' or 'log' (default)]
-                Scale formatting of the [x|y]-axis
+        Returns
+        ------
+        fig : matplotlib Figure
 
-            one2one : optional bool (default = False)
-                Toggles the inclusion of the 1:1 line (aka line of equality)
+        """
 
-            useROS : bool (default = True)
-                Toggles the use of the ROS'd results. If False, raw results
-                (i.e., detection limit for NDs) are used with varying
-                symbology
-
-            [x|y]label : string or None (default):
-                Label for [x|y]-axis. If None, will be 'Influent'. If the dataset
-                definition is available and incldues a Parameter, that will
-                be included as will. For no label, use `[x|y]label = ""`
-
-            showlegend : bool (default = True)
-                Toggles the display of the legend
-
-        Returns:
-            fig : matplotlib Figure instance
-        '''
         # set up the figure/axes
         fig, ax = utils.figutils._check_ax(ax)
 
@@ -1593,28 +1647,16 @@ class Dataset(object):
             ax.set_ylim(axis_limits)
             ax.set_xlim(axis_limits)
 
-        elif yscale == 'linear':
+        elif yscale == 'linear' or xscale == 'linear':
             axis_limits = [
-                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
+                np.min([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
                 np.max([ax.get_xlim(), ax.get_ylim()])
             ]
-
-        elif xscale == 'linear':
-            axis_limits = [
-                np.max([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
-                np.max([ax.get_xlim(), ax.get_ylim()])
-            ]
-
-        # generate plotting values for 1:1 line
-        if xscale == yscale == 'linear':
-            xx = np.linspace(*axis_limits)
-        else:
-            xx = np.logspace(*np.log10(axis_limits))
 
         # include the line of equality, if requested
         if one2one:
-            ax.plot(xx, xx, linestyle='-', linewidth=1.25, alpha=0.50,
-                    color='black', zorder=5, label='1:1 line')
+            ax.plot(axis_limits, axis_limits, linestyle='-', linewidth=1.25,
+                    alpha=0.50, color='black', zorder=5, label='1:1 line')
 
         # setup the axes labels
         if xlabel is None:
