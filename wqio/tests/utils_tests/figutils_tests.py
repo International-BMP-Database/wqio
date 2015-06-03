@@ -8,6 +8,7 @@ import pandas
 
 import matplotlib
 matplotlib.rcParams['text.usetex'] = False
+import seaborn.apionly as seaborn
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -252,6 +253,19 @@ def test_logLabelFormatter_alt():
     ax.set_yscale('log')
     ax.set_ylim([0.0001, 1e7])
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
+
+
+@image_comparison(baseline_images=['test_connect_spines'], extensions=['png'])
+def test__connect_spines():
+    fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2)
+    figutils._connect_spines(ax1, ax2, 0.5, 0.75)
+    figutils._connect_spines(ax3, ax4, 0.9, 0.1, linewidth=2, color='r' , linestyle='dashed')
+
+
+@image_comparison(baseline_images=['test_parallel_coordinates'], extensions=['png'])
+def test_parallel_coordinates():
+    df = seaborn.load_dataset('iris')
+    fig = figutils.parallel_coordinates(df, hue='species')
 
 
 class test_shiftedColorMap:

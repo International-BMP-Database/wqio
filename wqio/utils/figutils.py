@@ -482,3 +482,107 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
 
     return newcmap
 
+
+def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **line_kwds):
+    """ Connects the y-spines between two Axes
+
+    Parameters
+    ----------
+    left_ax, right_ax : matplotlib Axes objects
+        The Axes that need to be connected.
+    left_y, right_y : float
+        Values on the spines that wil be connected.
+    linestyle : string, optional (default = 'solid')
+        The line style to use. Valid values are 'solid', 'dashed',
+        'dashdot', 'dotted'.
+    **line_kwds : keyword arguments
+        Additional options for style the line.
+
+    Returns
+    -------
+    connector : BboxConnector
+        The weird mpl-line-like-thingy that connects the spines.
+
+    """
+
+    import matplotlib.transforms as mtrans
+    import mpl_toolkits.axes_grid1.inset_locator as inset
+
+    left_trans = mtrans.blended_transform_factory(left_ax.transData, left_ax.transAxes)
+    right_trans = mtrans.blended_transform_factory(right_ax.transData, right_ax.transAxes)
+
+    left_data_trans = left_ax.transScale + left_ax.transLimits
+    right_data_trans = right_ax.transScale + right_ax.transLimits
+
+    left_pos = left_data_trans.transform((0, left_y))[1]
+    right_pos = right_data_trans.transform((0, right_y))[1]
+
+    bbox = mtrans.Bbox.from_extents(0, left_pos, 0, right_pos)
+    right_bbox = mtrans.TransformedBbox(bbox, right_trans)
+    left_bbox = mtrans.TransformedBbox(bbox, left_trans)
+
+    # deal with the linestyle
+    connector = inset.BboxConnector(left_bbox, right_bbox, loc1=3, loc2=2,
+                                    linestyle=linestyle, **line_kwds)
+    connector.set_clip_on(False)
+    left_ax.add_line(connector)
+
+    return connector
+
+
+def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws):
+    """ Produce a parallel coordinates plot from a dataframe.
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        The data to be plotted.
+    hue : string
+        The column used to the determine assign the lines' colors.
+    cols : list of strings, optional
+        The non-hue columns to include. If None, all other columns are
+        used.
+    palette : string, optional
+        Name of the seaborn color palette to use.
+    **subplot_kws : keyword arguments
+        Options passed directly to plt.subplots()
+
+    Returns
+    -------
+    fig : matplotlib Figure
+
+    """
+
+    # get the columsn to plot
+    if cols is None:
+        cols = dataframe.select(lambda c: c != hue, axis=1).columns.tolist()
+
+    # subset the data
+    final_cols = cols.copy()
+    final_cols.append(hue)
+    data = dataframe[final_cols]
+
+    # these plots look ridiculous in anything other than 'ticks'
+    with seaborn.axes_style('ticks'):
+        fig, axes = plt.subplots(ncols=len(cols), **subplot_kws)
+        hue_vals = dataframe[hue].unique()
+        colors = seaborn.color_palette(name=palette, n_colors=len(hue_vals))
+        color_dict = dict(zip(hue_vals, colors))
+
+        for col, ax in zip(cols, axes):
+            data_limits =[(0, dataframe[col].min()), (0, dataframe[col].max())]
+            ax.set_xticks([0])
+            ax.update_datalim(data_limits)
+            ax.set_xticklabels([col])
+            ax.autoscale(axis='y')
+            ax.tick_params(axis='y', direction='inout')
+            ax.tick_params(axis='x', direction='in')
+
+        for row in data.values:
+            for n, (ax1, ax2) in enumerate(zip(axes[:-1], axes[1:])):
+                line = _connect_spines(ax1, ax2, row[n], row[n+1], color=color_dict[row[-1]])
+
+
+    fig.subplots_adjust(wspace=0)
+    seaborn.despine(fig=fig, bottom=True, trim=True)
+    return fig
