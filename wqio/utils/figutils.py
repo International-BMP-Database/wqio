@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -558,7 +560,7 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws)
         cols = dataframe.select(lambda c: c != hue, axis=1).columns.tolist()
 
     # subset the data
-    final_cols = cols.copy()
+    final_cols = copy.copy(cols)
     final_cols.append(hue)
     data = dataframe[final_cols]
 
