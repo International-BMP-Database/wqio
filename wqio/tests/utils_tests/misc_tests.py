@@ -392,21 +392,21 @@ class test_uniqueIndex(object):
             misc.getUniqueDataframeIndexVal(self.data, 'date')
 
 
+class test_test_pH2concentration(object):
+    def setup(self):
+        self.pH = 4
+        self.known_conc = 0.10072764682551091
 
-def test_pH2concentration_normal():
-    test_val = misc.pH2concentration(4)
-    known_val = 0.10072764682551091
-    nt.assert_almost_equal(test_val, known_val)
+    def test_pH2concentration_normal(self):
+        nt.assert_almost_equal(misc.pH2concentration(self.pH), self.known_conc)
 
+    @nptest.raises(ValueError)
+    def test_pH2concentration_raises_high(self):
+        misc.pH2concentration(14.1)
 
-@nptest.raises(ValueError)
-def test_pH2concentration_raises_high():
-    misc.pH2concentration(14.1)
-
-
-@nptest.raises(ValueError)
-def test_pH2concentration_raises_low():
-    misc.pH2concentration(-0.1)
+    @nptest.raises(ValueError)
+    def test_pH2concentration_raises_low(self):
+        misc.pH2concentration(-0.1)
 
 
 class test_estimateLineFromParams(object):
@@ -818,3 +818,25 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         }
         self.transformin = lambda x: np.log10(x)
         self.transformout = lambda x: 10**x
+
+
+
+class test_getWaterYear(object):
+    def setup(self):
+        self.earlydate = datetime.datetime(2005, 10, 2)
+        self.latedate = datetime.datetime(2006, 9, 2)
+        self.known_wateryear = '2005/2006'
+
+    def test_early_dt(self):
+        nt.assert_equal(misc.getWaterYear(self.earlydate), self.known_wateryear)
+
+    def test_late_dt(self):
+        nt.assert_equal(misc.getWaterYear(self.latedate), self.known_wateryear)
+
+    def test_early_tstamp(self):
+        date = pandas.Timestamp(self.earlydate)
+        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
+
+    def test_late_tstamp(self):
+        date = pandas.Timestamp(self.latedate)
+        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)

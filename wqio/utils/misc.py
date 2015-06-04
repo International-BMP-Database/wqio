@@ -16,29 +16,6 @@ import matplotlib.pyplot as plt
 import pandas
 
 
-__all__ = ['sigFigs', 'makeBoxplotLegend', 'processFilename', 'constructPath',
-           'addStatsToOutputSummary', '_sig_figs', 'makeTablesFromCSVStrings',
-           'csvToTex', 'csvToXlsx', 'nested_getattr', 'normalize_units',
-           'normalize_units2', 'makeTexTable', 'makeTexFigure',
-           'addExternalValueToOutputSummary', 'getUniqueDataframeIndexVal',
-           'stringify', 'pH2concentration', 'addSecondColumnLevel',
-           '_boxplot_legend', 'makeLongLandscapeTexTable',
-           'estimateFromLineParams', 'redefineIndexLevel', 'sanitizeTex',
-           'checkIntervalOverlap', 'ProgressBar', 'makeTimestamp',
-           'whiskers_and_fliers', 'santizeTimestamp', 'getSeason']
-
-
-leg_data = np.array([[
-    1.7117, 2.5470, 3.2817, 2.3303, 2.7066, 4.2024, 2.7184, 2.9790,
-    2.7782, 1.9440, 3.9939, 4.3938, 6.1780, 3.2937, 3.6596, 2.3589,
-    1.5408, 3.7236, 2.9327, 4.2844, 3.5441, 3.9499, 2.0023, 3.7872,
-    3.4989, 2.2898, 2.7913, 3.2796, 2.3650, 3.5436, 3.3459, 3.8699,
-    3.7448, 2.0149, 2.1290, 4.2193, 4.3932, 1.6687, 5.1053, 2.3849,
-    1.6996, 3.1484, 3.4078, 2.0051, 0.88211, 2.038, 3.3291, 2.3526,
-    1.4030, 2.7147
-]])
-
-
 def santizeTimestamp(timestamp):
     if not isinstance(timestamp, pandas.Timestamp):
         try:
@@ -88,8 +65,6 @@ def getSeason(date):
         return 'autumn'
     else: # pragma: no cover
         raise ValueError('could not assign season to  {}'.format(date))
-
-
 
 
 def addSecondColumnLevel(levelval, levelname, olddf):
@@ -224,7 +199,15 @@ def _boxplot_legend(ax, notch=False, shrink=2.5, fontsize=10, showmean=False):
             which they point.
     '''
     # load static, randomly generated data
-    x = leg_data
+    x = np.array([[
+        1.7117, 2.5470, 3.2817, 2.3303, 2.7066, 4.2024, 2.7184, 2.9790,
+        2.7782, 1.9440, 3.9939, 4.3938, 6.1780, 3.2937, 3.6596, 2.3589,
+        1.5408, 3.7236, 2.9327, 4.2844, 3.5441, 3.9499, 2.0023, 3.7872,
+        3.4989, 2.2898, 2.7913, 3.2796, 2.3650, 3.5436, 3.3459, 3.8699,
+        3.7448, 2.0149, 2.1290, 4.2193, 4.3932, 1.6687, 5.1053, 2.3849,
+        1.6996, 3.1484, 3.4078, 2.0051, 0.88211, 2.038, 3.3291, 2.3526,
+        1.4030, 2.7147
+    ]])
 
     # plot the boxplot
     bpLeg = ax.boxplot(x, notch=notch, positions=[1], widths=0.5, bootstrap=10000)
@@ -1027,6 +1010,36 @@ def whiskers_and_fliers(x, q1, q3, transformout=None):
 
     return wnf
 
+
+def getWaterYear(date):
+    """ Returns the water year of a given date
+
+    Parameters
+    ----------
+    date : datetime-like
+        A datetime or Timestamp object
+
+    Returns
+    -------
+    wateryear : string
+        The water year of `date`
+
+    Example
+    -------
+    >>> import datetime
+    >>> import wqio
+    >>> x = datetime.datetime(2005, 11, 2)
+    >>> print(wqio.utils.getWaterYear(x))
+        '2005/2006'
+
+    """
+
+    year = date.year
+    yearstring = '{}/{}'
+    if date.month >= 10:
+        return yearstring.format(year, year + 1)
+    else:
+        return yearstring.format(year - 1, year)
 
 class ProgressBar:
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
