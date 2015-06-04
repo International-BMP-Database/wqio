@@ -818,3 +818,25 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         }
         self.transformin = lambda x: np.log10(x)
         self.transformout = lambda x: 10**x
+
+
+
+class test_getWaterYear(object):
+    def setup(self):
+        self.earlydate = datetime.datetime(2005, 10, 2)
+        self.latedate = datetime.datetime(2006, 9, 2)
+        self.known_wateryear = '2005/2006'
+
+    def test_early_dt(self):
+        nt.assert_equal(misc.getWaterYear(self.earlydate), self.known_wateryear)
+
+    def test_late_dt(self):
+        nt.assert_equal(misc.getWaterYear(self.latedate), self.known_wateryear)
+
+    def test_early_tstamp(self):
+        date = pandas.Timestamp(self.earlydate)
+        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
+
+    def test_late_tstamp(self):
+        date = pandas.Timestamp(self.latedate)
+        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
