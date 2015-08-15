@@ -850,7 +850,6 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         self.transformout = lambda x: 10**x
 
 
-
 class test_getWaterYear(object):
     def setup(self):
         self.earlydate = datetime.datetime(2005, 10, 2)
