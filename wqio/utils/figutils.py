@@ -386,7 +386,7 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     if yscale == 'log':
         fitlogs = 'y'
     else:
-        fitprobs = None
+        fitlogs = None
 
     if axtype == 'prob':
         fitprobs = 'x'
@@ -406,7 +406,7 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
         xhat, yhat, modelres = misc.fit_line(xvalues, ranked, fitprobs=fitprobs,
                                              fitlogs=fitlogs)
 
-        ax.plot(xhat, yhat, )
+        ax.plot(xhat, yhat, **plotkwds)
 
     return fig
 
