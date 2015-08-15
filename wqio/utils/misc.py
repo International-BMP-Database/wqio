@@ -6,14 +6,13 @@ import time
 import sys
 import os
 import warnings
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
 
+from six import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas
+from scipy import stats
+import statsmodels.api as sm
 
 
 def santizeTimestamp(timestamp):
