@@ -201,8 +201,9 @@ def setup_sample(sampletype, with_storm=False):
     wqs = st(rawdata, starttime, endtime=endtime, samplefreq=freq, storm=storm)
     wqs.marker = 'D'
     wqs.markersize = 8
+    xlims = (pandas.Timestamp('2013-02-24 16:45'), pandas.Timestamp('2013-02-25 03:30'))
 
-    return wqs
+    return wqs, xlims
 
 
 @image_comparison(
@@ -210,11 +211,13 @@ def setup_sample(sampletype, with_storm=False):
     extensions=['png']
 )
 def test_plot_grabsample_no_storm_not_focus():
-    wqs = setup_sample('grab', with_storm=False)
+    wqs, xlims = setup_sample('grab', with_storm=False)
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False)
 
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False, asrug=True)
 
 
@@ -223,11 +226,13 @@ def test_plot_grabsample_no_storm_not_focus():
     extensions=['png']
 )
 def test_plot_grabsample_no_storm_focus():
-    wqs = setup_sample('grab', with_storm=False)
+    wqs, xlims = setup_sample('grab', with_storm=False)
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True)
 
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True, asrug=True)
 
 
@@ -236,11 +241,13 @@ def test_plot_grabsample_no_storm_focus():
     extensions=['png']
 )
 def test_plot_compsample_no_storm_not_focus():
-    wqs = setup_sample('composite', with_storm=False)
+    wqs, xlims = setup_sample('composite', with_storm=False)
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False)
 
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False, asrug=True)
 
 
@@ -249,9 +256,11 @@ def test_plot_compsample_no_storm_not_focus():
     extensions=['png']
 )
 def test_plot_compsample_no_storm_focus():
-    wqs = setup_sample('composite', with_storm=False)
+    wqs, xlims = setup_sample('composite', with_storm=False)
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True)
 
     fig, ax = plt.subplots()
+    ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True, asrug=True)
