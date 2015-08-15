@@ -839,26 +839,30 @@ def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
     '''
     Estimate the dependent of a linear fit given x-data and linear parameters
 
-    Input:
-        xdata : numpy array or pandas Series/DataFrame
-            The input independent variable of the fit
+    Parameters
+    ----------
+    xdata : numpy array or pandas Series/DataFrame
+        The input independent variable of the fit
 
-        slope : float
-            Slope of the best-fit line
+    slope : float
+        Slope of the best-fit line
 
-        intercept : float
-            y-intercept of the best-fit line
+    intercept : float
+        y-intercept of the best-fit line
 
-        xlog : bool (default = False)
-            Toggles whether or not the x-data are lognormally distributed
+    xlog : bool (default = False)
+        Toggles whether or not the x-data are lognormally distributed
 
-        ylog : bool (default = False)
-            Toggles whether or not the y-data are lognormally distributed
+    ylog : bool (default = False)
+        Toggles whether or not the y-data are lognormally distributed
 
     Returns
-        yhat : same type as xdata
-            Estimate of the dependent variable.
+    -------
+    yhat : same type as xdata
+        Estimate of the dependent variable.
+
     '''
+
     if ylog:
         if xlog:
             yhat = np.exp(intercept) * xdata  ** slope
