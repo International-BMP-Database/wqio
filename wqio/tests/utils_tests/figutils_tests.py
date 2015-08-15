@@ -237,6 +237,32 @@ def test_probplot_pp():
                             ylabel='test y')
 
 
+@image_comparison(baseline_images=['test_probplot_prob_bestfit'], extensions=['png'])
+def test_probplot_prob_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, xlabel='Test xlabel',
+                            bestfit=True)
+    nt.assert_true(isinstance(fig, plt.Figure))
+
+
+@image_comparison(baseline_images=['test_probplot_qq_bestfit'], extensions=['png'])
+def test_probplot_qq_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq', color='r',
+                            bestfit=True, ylabel='Test label')
+
+
+@image_comparison(baseline_images=['test_probplot_pp_bestfit'], extensions=['png'])
+def test_probplot_pp_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', color='g',
+                            linestyle='--', yscale='linear', xlabel='test x',
+                            bestfit=True, ylabel='test y')
+
+
 @image_comparison(baseline_images=['test_logLabelFormatter'], extensions=['png'])
 def test_logLabelFormatter():
     fig, ax = plt.subplots()

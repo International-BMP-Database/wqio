@@ -370,15 +370,15 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
     qntls, ranked = stats.probplot(data, fit=False)
     if axtype == 'qq':
-        xdata = qntls
+        xvalues = qntls
     else:
-        xdata = stats.norm.cdf(qntls) * 100
+        xvalues = stats.norm.cdf(qntls) * 100
 
     markerfacecolor = plotkwds.pop('markerfacecolor', 'none')
     markersize = plotkwds.pop('markersize', 4)
 
     # plot the final ROS data versus the Z-scores
-    ax.plot(xdata, ranked, linestyle=linestyle, marker=marker,
+    ax.plot(xvalues, ranked, linestyle=linestyle, marker=marker,
             markeredgecolor=color, markerfacecolor=markerfacecolor,
             markersize=markersize, **plotkwds)
 
@@ -403,7 +403,7 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
         ax.set_ylabel(ylabel)
 
     if bestfit:
-        xhat, yhat, modelres = misc.fit_line(xdata, ranked, fitprobs=fitprobs,
+        xhat, yhat, modelres = misc.fit_line(xvalues, ranked, fitprobs=fitprobs,
                                              fitlogs=fitlogs)
 
         ax.plot(xhat, yhat, )
