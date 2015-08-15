@@ -151,6 +151,36 @@ class test_sigfig_lt1(base_sigfigsMixin):
         nt.assert_equal(misc.sigFigs(p, 3, tex=True, pval=True), '$<0.001$')
 
 
+class test__format_result(object):
+    def setup(self):
+        self.big_num = 12498.124
+        self.med_num = 12.540
+        self.small_num = 0.00257
+
+    def test_big_3(self):
+        nt.assert_equal(
+            misc.formatResult(self.big_num, '<', 3),
+            '<12,500'
+        )
+
+    def test_med_6(self):
+        nt.assert_equal(
+            misc.formatResult(self.med_num, '>', 6),
+            '>12.5400'
+        )
+
+    def test_small_2(self):
+        nt.assert_equal(
+            misc.formatResult(self.small_num, '=', 2),
+            '=0.0026'
+        )
+
+    def test_med_no_qual_3(self):
+        nt.assert_equal(
+            misc.formatResult(self.med_num, '', 3),
+            '12.5'
+        )
+
 def test__boxplot_legend():
     fig, ax = plt.subplots()
     misc._boxplot_legend(ax, notch=True)

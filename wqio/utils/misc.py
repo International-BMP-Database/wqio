@@ -185,6 +185,33 @@ def _sig_figs(x):
     return sigFigs(x, n=3, tex=True)
 
 
+def formatResult(result, qualifier, sigfigs=3):
+    """ Formats a results with its qualifier
+
+    Parameters
+    ----------
+    results : float
+        The concentration or particulate strength
+    qualifier : string
+        The result's qualifier
+    sigfigs : int
+        The number of significant digits to which `result` should be
+        formatted
+
+    Returns
+    -------
+    formatted : string
+
+    Example
+    -------
+    >>> wqio.formatResult(1.23, '<', sigfigs=4)
+    "<1.230"
+
+    """
+
+    return '{}{}'.format(qualifier, sigFigs(result, sigfigs))
+
+
 def _boxplot_legend(ax, notch=False, shrink=2.5, fontsize=10, showmean=False):
     '''
     Help function to draw a boxplot legend.
