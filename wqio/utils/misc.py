@@ -1071,6 +1071,29 @@ def getWaterYear(date):
     else:
         return yearstring.format(year - 1, year)
 
+
+def processAndersonDarlingResults(ad_results):
+    """ Return a nice string of Anderson-Darling test results
+
+    Parameters
+    ----------
+    ad_result : tuple or namedtuple
+        The packed output from scipt.stats.anderson
+
+    Returns
+    -------
+    result : str
+        A string representation of the confidence in the result.
+    """
+    a2, crit, sig = ad_results
+    try:
+        ci = 100 - sig[a2 < crit][-1]
+        return '%0.1f%%' % (ci,)
+    except IndexError:
+        ci = 100 - sig[0]
+        return '<%0.1f%%' % (ci,)
+
+
 class ProgressBar:
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
         '''Progress bar for notebookes:
