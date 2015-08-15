@@ -197,8 +197,8 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
         jg.ax_joint.set_xlim(left=0, right=ax_limit_max)
         jg.ax_joint.set_ylim(bottom=0, top=ax_limit_max)
         jg.ax_joint.plot([0, ax_limit_max], [0, ax_limit_max], marker='None',
-                     linestyle='-', linewidth=1.75, color=color or 'k',
-                     alpha=0.45, label='1:1 line')
+                         linestyle='-', linewidth=1.75, color=color or 'k',
+                         alpha=0.45, label='1:1 line')
 
         jg.ax_joint.legend(frameon=False, loc='upper left')
 
@@ -329,7 +329,7 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
 
 def probplot(data, ax=None, axtype='prob', color='b', marker='o',
              linestyle='none', xlabel=None, ylabel=None, yscale='log',
-             **plotkwds):
+             bestfit=False, **plotkwds):
     """ Probability, percentile, and quantile plots.
 
     Parameters
@@ -383,8 +383,16 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
             markersize=markersize, **plotkwds)
 
     ax.set_yscale(yscale)
+    if yscale == 'log':
+        fitlogs = 'y'
+    else:
+        fitprobs = None
+
     if axtype == 'prob':
+        fitprobs = 'x'
         ax.set_xscale('prob')
+    else:
+        fitprobs = None
         #left, right = ax.get_xlim()
         #ax.set_xlim(left=left*0.96, right=right*1.04)
 
@@ -393,6 +401,12 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
     if ylabel is not None:
         ax.set_ylabel(ylabel)
+
+    if bestfit:
+        xhat, yhat, modelres = misc.fit_line(xdata, ranked, fitprobs=fitprobs,
+                                             fitlogs=fitlogs)
+
+        ax.plot(xhat, yhat, )
 
     return fig
 
@@ -568,7 +582,7 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws)
     with seaborn.axes_style('ticks'):
         fig, axes = plt.subplots(ncols=len(cols), **subplot_kws)
         hue_vals = dataframe[hue].unique()
-        colors = seaborn.color_palette(name=palette, n_colors=len(hue_vals))
+        colors = seaborn.color_palette(palette=palette, n_colors=len(hue_vals))
         color_dict = dict(zip(hue_vals, colors))
 
         for col, ax in zip(cols, axes):
