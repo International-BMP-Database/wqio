@@ -1041,6 +1041,58 @@ def whiskers_and_fliers(x, q1, q3, transformout=None):
     return wnf
 
 
+def getWaterYear(date):
+    """ Returns the water year of a given date
+
+    Parameters
+    ----------
+    date : datetime-like
+        A datetime or Timestamp object
+
+    Returns
+    -------
+    wateryear : string
+        The water year of `date`
+
+    Example
+    -------
+    >>> import datetime
+    >>> import wqio
+    >>> x = datetime.datetime(2005, 11, 2)
+    >>> print(wqio.utils.getWaterYear(x))
+        '2005/2006'
+
+    """
+
+    year = date.year
+    yearstring = '{}/{}'
+    if date.month >= 10:
+        return yearstring.format(year, year + 1)
+    else:
+        return yearstring.format(year - 1, year)
+
+def processAndersonDarlingResults(ad_results):
+    """ Return a nice string of Anderson-Darling test results
+
+    Parameters
+    ----------
+    ad_result : tuple or namedtuple
+        The packed output from scipt.stats.anderson
+
+    Returns
+    -------
+    result : str
+        A string representation of the confidence in the result.
+    """
+    a2, crit, sig = ad_results
+    try:
+        ci = 100 - sig[a2 < crit][-1]
+        return '%0.1f%%' % (ci,)
+    except IndexError:
+        ci = 100 - sig[0]
+        return '<%0.1f%%' % (ci,)
+
+
 class ProgressBar:
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
         '''Progress bar for notebookes:

@@ -869,3 +869,31 @@ class test_getWaterYear(object):
     def test_late_tstamp(self):
         date = pandas.Timestamp(self.latedate)
         nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
+
+
+class test_processAndersonDarlingResults(object):
+    def setup(self):
+        fieldnames = ['statistic', 'critical_values', 'significance_level']
+        AndersonResult = namedtuple('AndersonResult', fieldnames)
+        self.good = AndersonResult(
+            statistic=0.30194681312357829,
+            critical_values=np.array([0.529, 0.602, 0.722, 0.842, 1.002]),
+            significance_level=np.array([15., 10., 5., 2.5, 1.])
+        )
+
+        self.bad = AndersonResult(
+            statistic=np.inf,
+            critical_values=np.array([ 0.907,  1.061,  1.32 ,  1.58 ,  1.926]),
+            significance_level=np.array([ 15. ,  10. ,   5. ,   2.5,   1. ])
+        )
+
+        self.known_good = '99.0%'
+        self.known_bad = '<85.0%'
+
+    def test_good(self):
+        res = misc.processAndersonDarlingResults(self.good)
+        nt.assert_equal(res, self.known_good)
+
+    def test_bad(self):
+        res = misc.processAndersonDarlingResults(self.bad)
+        nt.assert_equal(res, self.known_bad)
