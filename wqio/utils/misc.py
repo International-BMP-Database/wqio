@@ -6,10 +6,6 @@ import time
 import sys
 import os
 import warnings
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
 from six import StringIO
 
 import numpy as np
@@ -68,8 +64,6 @@ def getSeason(date):
         return 'autumn'
     else: # pragma: no cover
         raise ValueError('could not assign season to  {}'.format(date))
-
-
 
 
 def addSecondColumnLevel(levelval, levelname, olddf):
