@@ -999,6 +999,7 @@ class test_fit_line(object):
         x_, y_, res = misc.fit_line(x, y, xhat=self.custom_xhat)
         nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
 
+
 class test_processAndersonDarlingResults(object):
     def setup(self):
         fieldnames = ['statistic', 'critical_values', 'significance_level']
