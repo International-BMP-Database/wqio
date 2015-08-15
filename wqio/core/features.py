@@ -26,7 +26,7 @@ markers = {
     'Reference Flow': ['D', 'd']
 }
 
-palette = seaborn.color_palette(name='deep', n_colors=3, desat=0.88)
+palette = seaborn.color_palette(palette='deep', n_colors=3, desat=0.88)
 colors = {
     'Influent': palette[0],
     'Effluent': palette[1],
