@@ -327,9 +327,9 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
                  markerfacecolor='none', markeredgecolor=color, alpha=1)
 
 
-def probplot(data, ax=None, axtype='prob', color='b', marker='o',
-             linestyle='none', xlabel=None, ylabel=None, yscale='log',
-             bestfit=False, **plotkwds):
+def probplot(data, ax=None, axtype='prob', yscale='log',
+             xlabel=None, ylabel=None, bestfit=False,
+             scatter_kws=None, line_kws=None, return_results=False):
     """ Probability, percentile, and quantile plots.
 
     Parameters
@@ -364,6 +364,9 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
     """
 
+    scatter_kws = {} if scatter_kws is None else scatter_kws
+    line_kws = {} if line_kws is None else line_kws
+
     fig, ax = _check_ax(ax)
     if axtype not in ['pp', 'qq', 'prob']:
         raise ValueError("invalid axtype: {}".format(axtype))
@@ -374,13 +377,10 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     else:
         xvalues = stats.norm.cdf(qntls) * 100
 
-    markerfacecolor = plotkwds.pop('markerfacecolor', 'none')
-    markersize = plotkwds.pop('markersize', 4)
-
     # plot the final ROS data versus the Z-scores
-    ax.plot(xvalues, ranked, linestyle=linestyle, marker=marker,
-            markeredgecolor=color, markerfacecolor=markerfacecolor,
-            markersize=markersize, **plotkwds)
+    linestyle = scatter_kws.pop('linestyle', 'none')
+    marker = scatter_kws.pop('marker', 'o')
+    ax.plot(xvalues, ranked, linestyle=linestyle, marker=marker, **scatter_kws)
 
     ax.set_yscale(yscale)
     if yscale == 'log':
@@ -405,10 +405,14 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     if bestfit:
         xhat, yhat, modelres = misc.fit_line(xvalues, ranked, fitprobs=fitprobs,
                                              fitlogs=fitlogs)
+        ax.plot(xhat, yhat, **line_kws)
+    else:
+        xhat, yhat, modelres = (None, None, None)
 
-        ax.plot(xhat, yhat, **plotkwds)
-
-    return fig
+    if return_results:
+        return fig, dict(q=qntls, x=xvalues, y=ranked, xhat=xhat, yhat=yhat, res=modelres)
+    else:
+        return fig
 
 
 def logLabelFormatter(tick, pos=None):

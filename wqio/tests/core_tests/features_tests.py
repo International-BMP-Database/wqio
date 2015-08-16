@@ -565,8 +565,8 @@ def test_location_probplot():
     loc.plot_marker = 'd'
     fig10 = loc.probplot(rotateticklabels=False)
     fig11 = loc.probplot(setxlimits=False)
-    fig12 = loc.probplot(markersize=10, linestyle='--')
-    fig13 = loc.probplot(markeredgewidth=2)
+    fig12 = loc.probplot(markersize=10, linestyle='--', color='blue', markerfacecolor='none', markeredgecolor='green')
+    fig13 = loc.probplot(markeredgewidth=2, markerfacecolor='none', markeredgecolor='green')
 
 
 @image_comparison(baseline_images=[
@@ -886,6 +886,7 @@ def setup_dataset(extra_NDs=False):
     ds = Dataset(influent, effluent, name='Test Dataset')
     plt.rcdefaults()
     return ds
+
 
 @image_comparison(baseline_images=[
     'test_ds_boxplot_default',
