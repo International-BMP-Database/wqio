@@ -746,19 +746,20 @@ class Location(object):
         '''
         fig, ax = utils.figutils._check_ax(ax)
 
-        color = plotopts.pop('color', self.color)
-        label = plotopts.pop('label', self.name)
-        marker = plotopts.pop('marker', self.plot_marker)
-        linestyle = plotopts.pop('linestyle', 'none')
+        scatter_kws = plotopts.copy()
+        scatter_kws['color'] = plotopts.get('color', self.color)
+        scatter_kws['label'] = plotopts.get('label', self.name)
+        scatter_kws['marker'] = plotopts.get('marker', self.plot_marker)
+        scatter_kws['linestyle'] = plotopts.get('linestyle', 'none')
         fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
-                                      ylabel=ylabel, color=color, label=label,
-                                      marker=marker, linestyle=linestyle, **plotopts)
+                                      bestfit=bestfit, scatter_kws=scatter_kws)
 
         if yscale == 'log':
-            label_format = mticker.FuncFormatter(
-                utils.figutils.alt_logLabelFormatter
-            )
-            ax.yaxis.set_major_formatter(label_format)
+            pass
+            # label_format = mticker.FuncFormatter(
+            #     utils.figutils.alt_logLabelFormatter
+            # )
+            # ax.yaxis.set_major_formatter(label_format)
 
         if managegrid:
             utils.figutils.gridlines(ax, yminor=True)
@@ -771,6 +772,9 @@ class Location(object):
 
         if setxlimits and axtype == 'prob':
             utils.figutils.setProbLimits(ax, self.N, 'x')
+
+        if bestfit:
+            utils.fit_line()
 
         return fig
 
@@ -1392,7 +1396,7 @@ class Dataset(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
                  clearYLabels=False, rotateticklabels=True,
-                 setxlimits=True, managegrid=True):
+                 setxlimits=True, managegrid=True, bestfit=False):
         """ Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1432,7 +1436,7 @@ class Dataset(object):
         for loc in [self.influent, self.effluent]:
             if loc.include:
                 loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
-                             yscale=yscale, managegrid=managegrid,
+                             yscale=yscale, managegrid=managegrid, bestfit=bestfit,
                              rotateticklabels=rotateticklabels)
 
         xlabels = {
