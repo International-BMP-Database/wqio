@@ -15,10 +15,7 @@ import numpy.testing as nptest
 from numpy.testing.noseclasses import NumpyTestProgram
 import pandas
 
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from six import StringIO
 
 
 def getTestROSData():
