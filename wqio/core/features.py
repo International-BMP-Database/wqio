@@ -5,6 +5,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas
+import statsmodels.api as sm
 from statsmodels.tools.decorators import (resettable_cache,
                                           cache_readonly,
                                           cache_writable)
@@ -438,19 +439,46 @@ class Location(object):
             return algo.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
 
     @cache_readonly
+    @np.deprecate
     def pnorm(self):
         if self.hasData:
             return stats.shapiro(self.data)[1]
 
     @cache_readonly
+    @np.deprecate
     def plognorm(self):
         if self.hasData:
             return stats.shapiro(np.log(self.data))[1]
 
     @cache_readonly
-    def lilliefors_p(self):
+    def shapiro(self):
         if self.hasData:
-            return sm.stats.lillifors(self.data)[1]
+            return  stats.shapiro(self.data)
+
+    @cache_readonly
+    def shapiro_log(self):
+        if self.hasData:
+            return stats.shapiro(np.log(self.data))
+
+    @cache_readonly
+    def lilliefors(self):
+        if self.hasData:
+            return sm.stats.lillifors(self.data)
+
+    @cache_readonly
+    def lilliefors_log(self):
+        if self.hasData:
+            return sm.stats.lillifors(np.log(self.data))
+
+    @cache_readonly
+    def anderson(self):
+        if self.hasData:
+            return  stats.anderson(self.data)
+
+    @cache_readonly
+    def anderson_log(self):
+        if self.hasData:
+            return stats.anderson(np.log(self.data))
 
     @cache_readonly
     def analysis_space(self):
