@@ -707,7 +707,8 @@ class Location(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
                  ylabel=None, clearYLabels=False, managegrid=True,
-                 rotateticklabels=True, setxlimits=True, **plotopts):
+                 rotateticklabels=True, setxlimits=True, bestfit=False,
+                 **plotopts):
         '''Adds a probability plot to a matplotlib figure
 
         Parameters
@@ -1559,9 +1560,10 @@ class Dataset(object):
 
         return jg
 
-    def scatterplot(self, ax=None, xscale='log', yscale='log',
-                    xlabel=None, ylabel=None, showlegend=True,
-                    one2one=False, useROS=False):
+    def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
+                    xlabel=None, ylabel=None, one2one=False, useROS=False,
+                    bestfit=False, minpoints=3, eqn_pos='lower right',
+                    equal_scales=True):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1602,8 +1604,6 @@ class Dataset(object):
         # common symbology
         markerkwargs = dict(
             linestyle='none',
-            markerfacecolor='black',
-            markeredgecolor='white',
             markeredgewidth=0.5,
             markersize=6,
             zorder=10,
