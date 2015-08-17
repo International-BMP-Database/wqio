@@ -1618,27 +1618,27 @@ class Dataset(object):
         # plot the raw results, if requested
         else:
             self._plot_nds(ax, which='neither', marker='o', alpha=0.8,
-                           label='Detected data pairs', **markerkwargs)
-            self._plot_nds(ax, which='influent', marker='v', alpha=0.6,
-                           label='Influent not detected', **markerkwargs)
-            self._plot_nds(ax, which='effluent', marker='<', alpha=0.6,
-                           label='Effluent not detected', **markerkwargs)
-            self._plot_nds(ax, which='both', marker='d', alpha=0.45,
-                           label='Both not detected', **markerkwargs)
+                           label='Detected data pairs', markerfacecolor='black',
+                           markeredgecolor='white', **markerkwargs)
+            self._plot_nds(ax, which='influent', marker='v', alpha=0.45,
+                           label='Influent not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
+            self._plot_nds(ax, which='effluent', marker='<', alpha=0.45,
+                           label='Effluent not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
+            self._plot_nds(ax, which='both', marker='d', alpha=0.25,
+                           label='Both not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
 
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
-        if xscale == 'log':
-            ax.xaxis.set_major_formatter(label_format)
-        else:
+        if xscale != 'log':
             ax.set_xlim(left=0)
 
-        if yscale == 'log':
-            ax.yaxis.set_major_formatter(label_format)
-        else:
+        if yscale != 'log':
             ax.set_ylim(bottom=0)
 
         # unify the axes limits
-        if xscale == yscale:
+        if xscale == yscale and equal_scales:
             ax.set_aspect('equal')
             axis_limits = [
                 np.min([ax.get_xlim(), ax.get_ylim()]),
@@ -1657,6 +1657,53 @@ class Dataset(object):
         if one2one:
             ax.plot(axis_limits, axis_limits, linestyle='-', linewidth=1.25,
                     alpha=0.50, color='black', zorder=5, label='1:1 line')
+
+        detects = self.paired_data.loc[
+            (self.paired_data[('inflow', 'qual')] != self.influent._ndval) &
+            (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+        ].xs('res', level='quantity', axis=1)
+        if bestfit and detects.shape[0] >= minpoints:
+            if xscale == 'log' and yscale == 'log':
+                fitlogs = 'both'
+            elif xscale == 'log':
+                fitlogs = 'x'
+            elif yscale == 'log':
+                fitlogs = 'y'
+            else:
+                fitlogs = None
+
+            x = detects['inflow']
+            y = detects['outflow']
+
+            xhat, yhat, modelres = utils.fit_line(x, y, fitlogs=fitlogs)
+
+            ax.plot(xhat, yhat, 'k--', alpha=0.75, label='Best-fit')
+
+            if eqn_pos is not None:
+                positions = {
+                    'lower left': (0.05, 0.15),
+                    'lower right': (0.59, 0.15),
+                    'upper left': (0.05, 0.95),
+                    'upper right': (0.59, 0.95)
+                }
+                vert_offset = 0.05
+                try:
+                    txt_x, txt_y = positions.get(eqn_pos.lower())
+                except KeyError:
+                    raise ValueError("`eqn_pos` must be on of ".format(list.positions.keys()))
+                # annotate axes with stats
+                ax.annotate(
+                    r'$\log(y) = m \, \log(x) + b$',
+                    (txt_x, txt_y),
+                    xycoords='axes fraction'
+                )
+                ax.annotate(
+                    r'Slope, $ m = %0.3f $' % modelres.params['inflow'],
+                    (txt_x, txt_y - vert_offset),
+                    xycoords='axes fraction'
+                )
+                #ax.annotate(r'P-value, $ p = %s $' % fmt_p, (0.59, 0.05), xycoords='axes fraction')
+
 
         # setup the axes labels
         if xlabel is None:
