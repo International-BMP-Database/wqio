@@ -863,18 +863,19 @@ def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
 
     '''
 
+    x = np.array(xdata)
     if ylog:
         if xlog:
-            yhat = np.exp(intercept) * xdata  ** slope
+            yhat = np.exp(intercept) * x  ** slope
         else:
-            yhat = np.exp(intercept) * np.exp(slope) ** xdata
+            yhat = np.exp(intercept) * np.exp(slope) ** x
 
     else:
         if xlog:
-            yhat = slope * np.log(xdata) + intercept
+            yhat = slope * np.log(x) + intercept
 
         else:
-            yhat = slope * xdata + intercept
+            yhat = slope * x + intercept
 
     return yhat
 
@@ -1070,6 +1071,82 @@ def getWaterYear(date):
         return yearstring.format(year, year + 1)
     else:
         return yearstring.format(year - 1, year)
+
+
+def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
+    """ Fits a line to x-y data in various forms (raw, log, prob scales)
+
+    Parameters
+    ----------
+    x, y : array-like
+        Independent and dependent data, respectively.
+    xhat : array-like or None, optional
+        The values at which yhat should should be estimated. If
+        not provided, falls back to the sorted values of ``x``.
+    fitprobs, fitlogs : str, options.
+        Defines how data should be transformed. Valid values are
+        'x', 'y', or 'both'. If using ``fitprobs``, variables should
+        be expressed as a percentage, i.e.,
+        Probablility transform = lambda x: ``dist``.ppf(x / 100.).
+        Log transform = lambda x: np.log(x).
+        Take care to not pass the same value to both ``fitlogs`` and
+        ``figprobs`` as both transforms will be applied.
+    dist : scipy.stats distribution or None, optional
+        A fully-spec'd scipy.stats distribution such that ``dist.ppf``
+        can be called. If not provided, defaults to scipt.stats.norm.
+
+    Returns
+    -------
+    xhat, yhat : numpy arrays
+        Linear model estimates of ``x`` and ``y``.
+    results : a statmodels result object
+        The object returned by statsmodels.OLS.fit()
+
+    """
+
+    def _check_fit_arg(arg, argname):
+        valid_args = ['x', 'y', 'both', None]
+        if arg not in valid_args:
+            msg = 'Valid value for {} ({}). Must be on of {}'
+            raise ValueError(msg.format(argname, arg, valid_args))
+
+    _check_fit_arg(fitprobs, "fitprobs")
+    _check_fit_arg(fitlogs, "fitlogs")
+
+    if xhat is None:
+        xhat = np.array([np.min(x), np.max(x)])
+
+    if dist is None:
+        dist = stats.norm
+
+    if fitprobs in ['x', 'both']:
+        x = dist.ppf(x/100.)
+        xhat = dist.ppf(np.array(xhat)/100.)
+
+    if fitprobs in ['y', 'both']:
+        y  = dist.ppf(y/100.)
+
+    if fitlogs in ['x', 'both']:
+        x = np.log(x)
+    if fitlogs in ['y', 'both']:
+        y = np.log(y)
+
+    x = sm.add_constant(x)
+    model = model = sm.OLS(y, x)
+    results = model.fit()
+
+
+    yhat = estimateFromLineParams(xhat, results.params[1],
+                                        results.params[0],
+                                        xlog=fitlogs in ['x', 'both'],
+                                        ylog=fitlogs in ['y', 'both'])
+
+    if fitprobs in ['y', 'both']:
+        yhat = 100.* dist.cdf(yhat)
+    if fitprobs in ['x', 'both']:
+        xhat = 100.* dist.cdf(xhat)
+
+    return xhat, yhat, results
 
 
 def processAndersonDarlingResults(ad_results):
