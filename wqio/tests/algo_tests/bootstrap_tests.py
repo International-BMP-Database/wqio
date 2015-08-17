@@ -18,6 +18,7 @@ def test__boot_strap():
 
 class test_Stat:
     def setup(self):
+        np.random.seed(0)
         self.data = testing.getTestROSData()
         self.statfxn = np.mean
         self.alpha = 0.10

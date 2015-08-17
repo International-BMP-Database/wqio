@@ -282,13 +282,42 @@ class _base_LocationMixin(object):
         assert_true(hasattr(self.loc, 'pctl90'))
         nptest.assert_allclose(self.loc.pctl90, self.known_pctl90, rtol=self.tolerance)
 
+    def test_pnorm(self):
+        assert_true(hasattr(self.loc, 'pnorm'))
+        nptest.assert_allclose(self.loc.pnorm, self.known_pnorm, rtol=self.tolerance)
+
     def test_plognorm(self):
         assert_true(hasattr(self.loc, 'plognorm'))
         nptest.assert_allclose(self.loc.plognorm, self.known_plognorm, rtol=self.tolerance)
 
-    def test_pnorm(self):
-        assert_true(hasattr(self.loc, 'pnorm'))
-        nptest.assert_allclose(self.loc.pnorm, self.known_pnorm, rtol=self.tolerance)
+
+    def test_shapiro(self):
+        assert_true(hasattr(self.loc, 'shapiro'))
+        nptest.assert_allclose(self.loc.shapiro, self.known_shapiro, rtol=self.tolerance)
+
+    def test_shapiro_log(self):
+        assert_true(hasattr(self.loc, 'shapiro_log'))
+        nptest.assert_allclose(self.loc.shapiro_log, self.known_shapiro_log, rtol=self.tolerance)
+
+    def test_lilliefors(self):
+        assert_true(hasattr(self.loc, 'lilliefors'))
+        nptest.assert_allclose(self.loc.lilliefors, self.known_lilliefors, rtol=self.tolerance)
+
+    def test_lilliefors_log(self):
+        assert_true(hasattr(self.loc, 'lilliefors_log'))
+        nptest.assert_allclose(self.loc.lilliefors_log, self.known_lilliefors_log, rtol=self.tolerance)
+
+    def test_anderson(self):
+        assert_true(hasattr(self.loc, 'anderson'))
+        nptest.assert_almost_equal(self.loc.anderson[0], self.known_anderson[0], decimal=5)
+        nptest.assert_allclose(self.loc.anderson[1], self.known_anderson[1], rtol=self.tolerance)
+        nptest.assert_allclose(self.loc.anderson[2], self.known_anderson[2], rtol=self.tolerance)
+
+    def test_anderson_log(self):
+        assert_true(hasattr(self.loc, 'anderson'))
+        nptest.assert_almost_equal(self.loc.anderson_log[0], self.known_anderson_log[0], decimal=5)
+        nptest.assert_allclose(self.loc.anderson_log[1], self.known_anderson_log[1], rtol=self.tolerance)
+        nptest.assert_allclose(self.loc.anderson_log[2], self.known_anderson_log[2], rtol=self.tolerance)
 
     def test_skew(self):
         assert_true(hasattr(self.loc, 'skew'))
@@ -408,8 +437,14 @@ class test_Location_ROS(_base_LocationMixin):
         self.known_pctl25 = 5.615
         self.known_pctl75 = 11.725
         self.known_pctl90 = 19.178
-        self.known_plognorm = 0.521462738514
         self.known_pnorm = 0.00179254170507
+        self.known_plognorm = 0.521462738514
+        self.known_shapiro = [ 0.886889,  0.001789]
+        self.known_shapiro_log = [ 0.972679,  0.520949]
+        self.known_lilliefors = [ 0.18518 ,  0.003756]
+        self.known_lilliefors_log = [ 0.091855,  0.635536]
+        self.known_anderson = (1.543888, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
+        self.known_anderson_log = (0.30409633964188032, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
         self.known_skew = 0.869052892573
         self.known_std = 5.52730949374
         self.known_useRos = True
@@ -454,8 +489,14 @@ class test_Location_noROS(_base_LocationMixin):
         self.known_pctl25 = 5.805
         self.known_pctl75 = 11.725
         self.known_pctl90 = 19.178
-        self.known_plognorm = 0.306435495615
         self.known_pnorm = 0.00323620648123
+        self.known_plognorm = 0.306435495615
+        self.known_shapiro = [ 0.896744,  0.003236]
+        self.known_shapiro_log = [ 0.964298,  0.306435]
+        self.known_lilliefors = [ 0.160353,  0.023078]
+        self.known_lilliefors_log = [ 0.08148,  0.84545]
+        self.known_anderson = (1.4392085, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
+        self.known_anderson_log = (0.3684061, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
         self.known_skew = 0.853756570358
         self.known_std = 5.24122841148
         self.known_useRos = False
@@ -565,8 +606,8 @@ def test_location_probplot():
     loc.plot_marker = 'd'
     fig10 = loc.probplot(rotateticklabels=False)
     fig11 = loc.probplot(setxlimits=False)
-    fig12 = loc.probplot(markersize=10, linestyle='--')
-    fig13 = loc.probplot(markeredgewidth=2)
+    fig12 = loc.probplot(markersize=10, linestyle='--', color='blue', markerfacecolor='none', markeredgecolor='green')
+    fig13 = loc.probplot(markeredgewidth=2, markerfacecolor='none', markeredgecolor='green')
 
 
 @image_comparison(baseline_images=[
@@ -886,6 +927,7 @@ def setup_dataset(extra_NDs=False):
     ds = Dataset(influent, effluent, name='Test Dataset')
     plt.rcdefaults()
     return ds
+
 
 @image_comparison(baseline_images=[
     'test_ds_boxplot_default',
