@@ -79,6 +79,9 @@ Z,9,0,1,2
 
 
 class base_sigfigsMixin(object):
+    def teardown(self):
+        pass
+
     def test_baseline(self):
         nt.assert_equal(misc.sigFigs(self.x, 3), self.known_3)
         nt.assert_equal(misc.sigFigs(self.x, 4), self.known_4)
@@ -998,7 +1001,6 @@ class test_fit_line(object):
         x, y = self.zscores, self.data
         x_, y_, res = misc.fit_line(x, y, xhat=self.custom_xhat)
         nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
-
 
 class test_processAndersonDarlingResults(object):
     def setup(self):

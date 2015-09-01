@@ -6,8 +6,8 @@ import time
 import sys
 import os
 import warnings
-
 from six import StringIO
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas
