@@ -340,6 +340,7 @@ class Storm(object):
                 'Total Outflow Volume': self.total_outflow_volume,
                 'Peak Outflow': self.peak_outflow,
                 'Peak Lag Hours': self.peak_lag_hours,
+                'Centroid Lag Hours': self.centroid_lag_hours,
                 'Season': self.season
             }
 
@@ -649,14 +650,17 @@ class HydroRecord(object):
     @property
     def storms(self):
         if self._storms is None:
-            self._storms = {
-                snum: storm for snum, storm in self.all_storms.items()
-                    if not storm.is_small(
-                        minprecip=self.minprecip,
-                        mininflow=self.mininflow,
-                        minoutflow=self.minoutflow
-                    )
-            }
+            self._storms = {}
+            for snum, storm in self.all_storms.items():
+                is_small = storm.is_small(
+                    minprecip=self.minprecip,
+                    mininflow=self.mininflow,
+                    minoutflow=self.minoutflow
+                )
+
+                if not is_small:
+                    self._storms[snum] = storm
+
         return self._storms
 
     @property
@@ -665,7 +669,7 @@ class HydroRecord(object):
             'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
             'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
             'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
-            'Peak Outflow', 'Peak Lag Hours'
+            'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
         ]
         if self._storm_stats is None:
             storm_stats = pandas.DataFrame([
