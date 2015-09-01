@@ -554,30 +554,23 @@ class HydroRecord(object):
     hydrodata : pandas.DataFrame
         DataFrame of hydrologic data of the storm. Should contain
         a unique index of type pandas.DatetimeIndex.
-
     precipcol : string, optional (default = None)
         Name of column in `hydrodata` containing precipiation data.
-
     inflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing influent flow data.
-
     outflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing effluent flow data.
-
     intereventPeriods : int, optional (default = 36)
         The number of dry records (no flow or rain) required to end
         a storm.
-
     standardizeColNames : bool, optional (default = True)
         Toggles renaming columns to standard names in the returned
         DataFrame.
-
     outputfreqMinutes : int, optional (default = 10)
         The default frequency (minutes) to which all data will be
         resampled. Precipitation data will be summed up across '
         multiple timesteps during resampling, while flow will be
         averaged.
-
     debug : bool (default = False)
         If True, diagnostic columns will not be dropped prior to
         returning the dataframe of parsed_storms.
