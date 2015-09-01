@@ -340,6 +340,7 @@ class Storm(object):
                 'Total Outflow Volume': self.total_outflow_volume,
                 'Peak Outflow': self.peak_outflow,
                 'Peak Lag Hours': self.peak_lag_hours,
+                'Centroid Lag Hours': self.centroid_lag_hours,
                 'Season': self.season
             }
 
@@ -553,30 +554,23 @@ class HydroRecord(object):
     hydrodata : pandas.DataFrame
         DataFrame of hydrologic data of the storm. Should contain
         a unique index of type pandas.DatetimeIndex.
-
     precipcol : string, optional (default = None)
         Name of column in `hydrodata` containing precipiation data.
-
     inflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing influent flow data.
-
     outflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing effluent flow data.
-
     intereventPeriods : int, optional (default = 36)
         The number of dry records (no flow or rain) required to end
         a storm.
-
     standardizeColNames : bool, optional (default = True)
         Toggles renaming columns to standard names in the returned
         DataFrame.
-
     outputfreqMinutes : int, optional (default = 10)
         The default frequency (minutes) to which all data will be
         resampled. Precipitation data will be summed up across '
         multiple timesteps during resampling, while flow will be
         averaged.
-
     debug : bool (default = False)
         If True, diagnostic columns will not be dropped prior to
         returning the dataframe of parsed_storms.
@@ -649,14 +643,17 @@ class HydroRecord(object):
     @property
     def storms(self):
         if self._storms is None:
-            self._storms = {
-                snum: storm for snum, storm in self.all_storms.items()
-                    if not storm.is_small(
-                        minprecip=self.minprecip,
-                        mininflow=self.mininflow,
-                        minoutflow=self.minoutflow
-                    )
-            }
+            self._storms = {}
+            for snum, storm in self.all_storms.items():
+                is_small = storm.is_small(
+                    minprecip=self.minprecip,
+                    mininflow=self.mininflow,
+                    minoutflow=self.minoutflow
+                )
+
+                if not is_small:
+                    self._storms[snum] = storm
+
         return self._storms
 
     @property
@@ -665,7 +662,7 @@ class HydroRecord(object):
             'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
             'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
             'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
-            'Peak Outflow', 'Peak Lag Hours'
+            'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
         ]
         if self._storm_stats is None:
             storm_stats = pandas.DataFrame([
