@@ -28,6 +28,12 @@ class fakeStormSublcass(hydro.Storm):
 
 
 class base_HydroRecordMixin(object):
+    known_storm_stats_columns = [
+        'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
+        'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
+        'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
+        'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
+    ]
     def teardown(self):
         plt.close('all')
 
@@ -84,6 +90,12 @@ class base_HydroRecordMixin(object):
         nt.assert_equal(self.hr.intereventPeriods, self.known_ie_periods)
         nt.assert_equal(self.hr.intereventHours, self.known_ie_hours)
 
+    def test_storm_stat_columns(self):
+        nt.assert_list_equal(
+            self.known_storm_stats_columns,
+            self.hr.storm_stats.columns.tolist()
+        )
+
 
 class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
@@ -104,7 +116,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
             'Storm Number': [1, 5],
             'Antecedent Days': [np.nan, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
-            'Total Precip Depth': [2.76, 4.14]
+            'Total Precip Depth': [2.76, 4.14],
         })
 
         self.orig_record = pandas.read_csv(
@@ -130,7 +142,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
             'Storm Number',
             'Antecedent Days',
             'Peak Precip Intensity',
-            'Total Precip Depth'
+            'Total Precip Depth',
         ]
 
         pdtest.assert_frame_equal(self.hr.storm_stats[cols], self.known_stats_subset[cols])
@@ -257,7 +269,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
             'Storm Number': [1, 5],
             'Antecedent Days': [-2.409722, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
-            'Total Precip Depth': [2.76, 4.14]
+            'Total Precip Depth': [2.76, 4.14],
         })
 
     def test_subclassed_storms(self):
@@ -447,6 +459,7 @@ class test_Storm(object):
             'Total Outflow Volume',
             'Peak Outflow',
             'Peak Lag Hours',
+            'Centroid Lag Hours',
             'Season'
         ]
         keys = list(self.storm.summary_dict.keys())
