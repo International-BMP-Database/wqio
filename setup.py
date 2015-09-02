@@ -38,7 +38,9 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.4',
 ]
 INSTALL_REQUIRES = ['seaborn']
-PACKAGE_DATA = {}
+PACKAGE_DATA = {
+    'wqio_data': ['testing/data/*']
+}
 DATA_FILES = [
     ('wqio_data/testing', getDataFiles('testing', 'data')),
 ]
