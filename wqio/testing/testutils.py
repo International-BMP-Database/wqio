@@ -4,6 +4,7 @@ import sys
 import subprocess
 import re
 import os
+from pkg_resources import resource_string
 
 from functools import wraps
 import nose.tools as nt
