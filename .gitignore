@@ -8,6 +8,8 @@
 *.so
 *.pyc
 */__pycache__/*
+build
+dist
 
 # Packages #
 ############

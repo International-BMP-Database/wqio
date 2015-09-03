@@ -1,6 +1,7 @@
 import os
 import sys
 import datetime
+from pkg_resources import resource_filename
 
 import numpy as np
 import pandas
@@ -23,10 +24,13 @@ from wqio.core import samples
 from wqio import utils
 
 
+@nt.nottest
+def makePath(filename):
+    path = resource_filename("wqio.data", filename)
+    return path
+
 class base_wqsampleMixin(object):
-    @nt.nottest
-    def makePath(self, filename):
-        return os.path.join(self.prefix, filename)
+
 
     @nt.nottest
     def basic_setup(self):
@@ -35,7 +39,7 @@ class base_wqsampleMixin(object):
         self.known_endtime_type = pandas.Timestamp
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
-        datafile = os.path.join(sys.prefix, 'wqio_data', 'testing', 'test_wqsample_data.csv')
+        datafile = makePath('test_wqsample_data.csv')
         self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
 
     @nt.nottest
@@ -180,7 +184,7 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
 
 @nt.nottest
 def setup_sample(sampletype, with_storm=False):
-    datafile = os.path.join(sys.prefix, 'wqio_data', 'testing', 'test_wqsample_data.csv')
+    datafile = makePath('test_wqsample_data.csv')
     rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
     if sampletype.lower() =='grab':
         st = samples.GrabSample

@@ -6,6 +6,7 @@ import sys
 import os
 from six import StringIO
 import datetime
+from pkg_resources import resource_filename
 
 import nose.tools as nt
 import numpy as np
@@ -254,7 +255,9 @@ def test_makeTexFigure():
 class tests_with_paths(object):
     @nt.nottest
     def makePath(self, filename):
-        return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
+        path = resource_filename("wqio.data", filename)
+        return path
+        #return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
 
     def setup(self):
         if os.path.split(os.getcwd())[-1] == 'src':
