@@ -1,10 +1,10 @@
 # Setup script for the wqio package
 #
-#
 # Usage: python setup.py install
 #
 import os
 from setuptools import setup, find_packages
+
 
 def getDataFiles(submodule, folder):
     datadir = os.path.join('wqio', submodule, folder)
@@ -14,13 +14,6 @@ def getDataFiles(submodule, folder):
     )]
     return files
 
-PACKAGE_DATA = {
-    'wqio.data': [ '*.csv', '*.tex', 'matplotlibrc', ],
-    'wqio.tests.core_tests.baseline_images.core_tests.features_tests': ['*png'],
-    'wqio.tests.core_tests.baseline_images.core_tests.hydro_tests': ['*png'],
-    'wqio.tests.core_tests.baseline_images.core_tests.samples_tests': ['*png'],
-    'wqio.tests.utils_tests.baseline_images.utils_tests.figutils_tests': ['*png'],
-}
 
 DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
@@ -38,18 +31,19 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Intended Audience :: Science/Research",
-    "Topic :: Formats and Protocols :: Data Formats",
-    "Topic :: Scientific/Engineering :: Earth Sciences",
     "Topic :: Software Development :: Libraries :: Python Modules",
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
 ]
 INSTALL_REQUIRES = ['seaborn']
-
-DATA_FILES = [
-    #('wqio_data/testing', getDataFiles('testing', 'data')),
-]
+PACKAGE_DATA = {
+    'wqio.data': [ '*.csv', '*.tex', 'matplotlibrc', ],
+    'wqio.tests.core_tests.baseline_images.core_tests.features_tests': ['*png'],
+    'wqio.tests.core_tests.baseline_images.core_tests.hydro_tests': ['*png'],
+    'wqio.tests.core_tests.baseline_images.core_tests.samples_tests': ['*png'],
+    'wqio.tests.utils_tests.baseline_images.utils_tests.figutils_tests': ['*png'],
+}
 
 setup(
     name=NAME,
