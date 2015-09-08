@@ -19,28 +19,33 @@ __all__ = ['rosSort', 'MR']
 
 
 def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
-    '''
-    This function prepares a dataframe for ROS. It sorts ascending with
-    non-detects on top. something like this:
+    """ Prepare a dataframe for ROS. It sorts ascending with non-detects
+    on top. So something like this:
         [2, 4, 4, 10, 3, 5, 6, 10, 12, 40, 78, 120]
-    where [2, 4, 4, 10] being the ND reults (masked the output).
+    where [2, 4, 4, 10] are the ND reults.
 
-    Input:
-        dataframe : a pandas dataframe with results and qualifiers.
-            The qualifiers of the dataframe must have two states:
-            detect and non-detect.
-        rescol (default = 'res') : name of the column in the dataframe
-            that contains result values.
-        qualcol (default = 'qual') : name of the column in the dataframe
-            that containes qualifiers. There must be a single, unique
-            qualifer that indicates that a result is non-detect.
-        ndsymbol (default = 'ND' : the value in `qualcol` that indicates
-            that a value in nondetect. *Important*: any other value will
-            be treated as a detection.
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        A DataFrame with results and qualifiers. The qualifiers must
+        have no more than two states: detect and non-detect.
+    rescol : string, optional (default = 'res')
+        Name of the column that contains result values.
+    qualcol : string, optional (default = 'res')
+        Name of the column that containes qualifiers. There must be a
+        single, unique qualifer that indicates that a result is
+        non-detect.
+    ndsymbol :  string, optional (default = 'res')
+        The value in `qualcol` that indicates that a value in nondetect.
+        *Important*: any other value will be treated as a detection.
 
-    Output:
+    Returns
+    -------
+    ros_data : pandas.DataFrame
         Sorted dataframe with a dropped index.
-    '''
+
+    """
+
     # separate detects from non-detects
     nondetects = dataframe[dataframe[qualcol] == ndsymbol].sort(columns=rescol)
     detects = dataframe[dataframe[qualcol] != ndsymbol].sort(columns=rescol)
@@ -52,25 +57,24 @@ def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
 
 
 class MR(object):
-    '''Regressiong on Order Statistics
-    This class implements the MR method outlined Hirsch and Stedinger (1987)
-    to estimate the censored (non-detect) values of a dataset. An example
-    dataset is available via the `utils.ros.getTestData` function.
+    """ Censored data analysis via regression on order statistics (ROS)
+
+    This class implements the MR method outlined Hirsch and Stedinger
+    (1987) to estimate the censored (non-detect) values of a dataset.
+    An example dataset is available via the
+    `wqio.testing.getTestROSData` function.
 
     Parameters
     ----------
     data : pandas DataFrame
         The censored dataset for which the non-detect values need to be
         estimated.
-
     rescol : optional string (default='res')
         The name of the column containing the numerical valuse of the
         dataset. Non-detect values should be set to the detection limit.
-
     qualcol : optional string (default='qual')
         The name of the column containing the qualifiers marking the
         results as censored.
-
     ndsymbol : optional string (default='ND')
         The value of the `qualcol` column of `data` that marks as result
         as being censored. In processing, all qualifiers that are equal
@@ -80,16 +84,13 @@ class MR(object):
     Attributes
     ----------
     N_tot : int
-        Total number of results in the dataset
-
+        Total number of results in the dataset/
     N_nd : int
         Total number of non-detect results in the dataset.
-
     DLs : pandas DataFrame
         A DataFrame of the unique detection limits found in `data` along
         with the `A`, `B`, `C`, and `PE` quantities computed by the
         estimation.
-
     data : pandas DataFrame
         An expanded version of the original dataset `data` passed the
         constructor. New columns include the plotting positions,
@@ -97,20 +98,18 @@ class MR(object):
         columns will have been renamed to `qual` and `res`,
         respectively. Also the qualifier values will have been
         standardized per the `ndsymbol` section above.
-
     debug : pandas DataFrame
         A full version of the `data` DataFrame that inlucdes other
         quantities computed during the estimation such as the "normal"
-        and "averaged" ranks and the preliminary Z-score
-
+        and "averaged" ranks and the preliminary Z-score.
 
     Examples
     --------
-    >>> from pybmp.utils import ros
+    >>> from wqio.utils import ros
     >>> myData = ros.MR(dataframe, rescol='Result',
                         qualcol='Qualifiers', testing=False)
 
-    '''
+    """
 
     def __init__(self, data, rescol='res', qualcol='qual', ndsymbol='ND',
                  fitlogs=True, dist='norm'):
@@ -187,14 +186,13 @@ class MR(object):
         self.data = self.data[['final_data', 'res', 'qual']]
 
     def cohn(self):
-        '''
-        Creates an array of unique detection limits in the dataset
-        '''
+        """ Creates a DataFrame of the unique detection limits in the
+        dataset and the other Cohn numbers (A, B, C).
+        """
 
         def _A(row):
-            '''
-            Helper function to compute the `A` quantity.
-            '''
+            """Helper function to compute the `A` Cohn number."""
+
             # index of results above the lower DL
             above = self.data.res >= row['lower']
 
@@ -208,9 +206,7 @@ class MR(object):
             return self.data[above & below & detect].shape[0]
 
         def _B(row):
-            '''
-            Helper function to compute the `B` quantity
-            '''
+            """Helper function to compute the `D` Cohn number."""
             # index of data less than the lower DL
             less_than = self.data.res < row['lower']
 
@@ -231,9 +227,7 @@ class MR(object):
             return LTE_nondets + LT_detects
 
         def _C(row):
-            '''
-            Helper function to compute the `C` quantity
-            '''
+            """Helper function to compute the `C` Cohn number."""
             censored_below = self.data.res[self.data.qual == 'ND'] == row['lower']
             return censored_below.sum()
 
@@ -277,26 +271,27 @@ class MR(object):
         return DLs
 
     def _ros_ranks(self):
-        '''
-        Determine the ranks of the data according to the following logic
-        rank[n] = rank[n-1] + 1 when:
+        """ Determine the ranks of the data according to the following
+        logic:
+        1) rank[n] = rank[n-1] + 1 when:
             n is 0 OR
             n > 0 and d[n].masked is True and j[n] <> d[n-1] OR
             n > 0 and d[n].masked is False and d[n-1].masked is True OR
             n > 0 and d[n].masked is False and d[n-1].masked is False and j[n] <> j[n-1]
 
-        rank[n] = 1
+        2) rank[n] = 1
             n > 0 and d[n].masked is True and j[n] == d[n-1] OR
             n > 0 and d[n].masked is False and d[n-1].masked is False and j[n] == j[n-1]
 
         where j[n] is the index of the highest DL that is less than the current data value
 
-        Then the ranks of non-censored equivalent data values are averaged.
-        '''
+        After the first pass of assigning ranks, the ranks of
+        non-censored, equivalent data values are averaged.
+
+        """
+
         # get the length of the dataset and initialize the normal (raw) ranks
         self.data['Norm Ranks'] = float(self.N_tot)
-
-        #norm_ranks = np.ones(self.N_tot, dtype='f2')
 
         # loop through each value and compare to the previous value
         # see docstring for more info on the logic behind all this
@@ -322,14 +317,10 @@ class MR(object):
         self.data['Avg Ranks'] = self.data.apply(avgrank, axis=1)
 
     def estimator(self):
-        '''
-        Estimates the values of the censored data
-        '''
+        """ Estimates the values of the censored data """
 
         def _ros_plotting_pos(row):
-            '''
-            Helper function to compute the ROS'd plotting position
-            '''
+            """Helper to compute the ROS'd plotting position."""
             dl_1 = self.DLs.iloc[row['DLIndex']]
             dl_2 = self.DLs.iloc[row['DLIndex']+1]
             if row['qual'] == 'ND':
@@ -339,19 +330,18 @@ class MR(object):
                         row['Norm Ranks'] / (dl_1['A']+1)
 
         def _select_final_data(row):
-            '''
-            Helper fucntion to select "final" data from original detects
-            and estimated non-detects
-            '''
+            """ Helper fucntion to select "final" data from original
+            detects and estimated non-detects.
+            """
             if row['qual'] == 'ND':
                 return row['modeled_data']
             else:
                 return row['res']
 
         def _select_half_DLs(row):
-            '''
-            Helper function to select half DLs when there are too few detects
-            '''
+            """ Helper function to select half DLs when there are too
+            few detects.
+            """
             if row['qual'] == 'ND':
                 return 0.5 * row['res']
             else:
@@ -419,9 +409,21 @@ class MR(object):
         return self.data
 
     def plot(self, filename):
-        '''
-        makes a simple plot showing the original and modeled data
-        '''
+        """ Makes a simple plot showing the original and modeled data
+
+        Parameters
+        ----------
+        filename : string
+            Path and filename to where the figure should be saved as an
+            image.
+
+        Returns
+        -------
+        fig : matplotlib.Figure
+            The figure containing the plot.
+
+        """
+
         fig, ax1 = plt.subplots()
         ax1.plot(self.data.Z[self.data.qual != 'ND'],
                  self.data.res[self.data.qual != 'ND'],
