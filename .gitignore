@@ -7,6 +7,9 @@
 *.o
 *.so
 *.pyc
+*/__pycache__/*
+build
+dist
 
 # Packages #
 ############
@@ -66,7 +69,7 @@ src/*/tests/*.xlsx
 .noseids
 .coverage
 wqio.egg-info/*
-results_images/*
+result_images/*
 
 # scratch files #
 #################

@@ -225,16 +225,45 @@ def test_probplot_prob():
 def test_probplot_qq():
     fig, ax = plt.subplots()
     mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq', color='r', ylabel='Test label')
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq', ylabel='Test label',
+                            scatter_kws=dict(color='r'))
 
 
 @image_comparison(baseline_images=['test_probplot_pp'], extensions=['png'])
 def test_probplot_pp():
     fig, ax = plt.subplots()
     mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', color='g',
-                            linestyle='--', yscale='linear', xlabel='test x',
-                            ylabel='test y')
+    scatter_kws = dict(color='b', linestyle='--', markeredgecolor='g', markerfacecolor='none')
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', yscale='linear',
+                            xlabel='test x', ylabel='test y', scatter_kws=scatter_kws)
+
+
+@image_comparison(baseline_images=['test_probplot_prob_bestfit'], extensions=['png'])
+def test_probplot_prob_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, xlabel='Test xlabel',
+                            bestfit=True)
+    nt.assert_true(isinstance(fig, plt.Figure))
+
+
+@image_comparison(baseline_images=['test_probplot_qq_bestfit'], extensions=['png'])
+def test_probplot_qq_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq',
+                            bestfit=True, ylabel='Test label')
+
+
+@image_comparison(baseline_images=['test_probplot_pp_bestfit'], extensions=['png'])
+def test_probplot_pp_bestfit():
+    fig, ax = plt.subplots()
+    mr = setup_plot_data()
+    scatter_kws = {'marker': 's', 'color': 'red'}
+    line_kws = {'linestyle': '--', 'linewidth': 3}
+    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', yscale='linear',
+                            xlabel='test x', bestfit=True, ylabel='test y',
+                            scatter_kws=scatter_kws, line_kws=line_kws)
 
 
 @image_comparison(baseline_images=['test_logLabelFormatter'], extensions=['png'])

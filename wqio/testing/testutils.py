@@ -4,6 +4,7 @@ import sys
 import subprocess
 import re
 import os
+from pkg_resources import resource_string
 
 from functools import wraps
 import nose.tools as nt
@@ -15,10 +16,7 @@ import numpy.testing as nptest
 from numpy.testing.noseclasses import NumpyTestProgram
 import pandas
 
-if sys.version_info.major == 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from six import StringIO
 
 
 def getTestROSData():

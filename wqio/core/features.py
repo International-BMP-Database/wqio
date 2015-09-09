@@ -5,6 +5,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas
+import statsmodels.api as sm
 from statsmodels.tools.decorators import (resettable_cache,
                                           cache_readonly,
                                           cache_writable)
@@ -438,19 +439,46 @@ class Location(object):
             return algo.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
 
     @cache_readonly
+    @np.deprecate
     def pnorm(self):
         if self.hasData:
             return stats.shapiro(self.data)[1]
 
     @cache_readonly
+    @np.deprecate
     def plognorm(self):
         if self.hasData:
             return stats.shapiro(np.log(self.data))[1]
 
     @cache_readonly
-    def lilliefors_p(self):
+    def shapiro(self):
         if self.hasData:
-            return sm.stats.lillifors(self.data)[1]
+            return  stats.shapiro(self.data)
+
+    @cache_readonly
+    def shapiro_log(self):
+        if self.hasData:
+            return stats.shapiro(np.log(self.data))
+
+    @cache_readonly
+    def lilliefors(self):
+        if self.hasData:
+            return sm.stats.lillifors(self.data)
+
+    @cache_readonly
+    def lilliefors_log(self):
+        if self.hasData:
+            return sm.stats.lillifors(np.log(self.data))
+
+    @cache_readonly
+    def anderson(self):
+        if self.hasData:
+            return  stats.anderson(self.data)
+
+    @cache_readonly
+    def anderson_log(self):
+        if self.hasData:
+            return stats.anderson(np.log(self.data))
 
     @cache_readonly
     def analysis_space(self):
@@ -707,7 +735,8 @@ class Location(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
                  ylabel=None, clearYLabels=False, managegrid=True,
-                 rotateticklabels=True, setxlimits=True, **plotopts):
+                 rotateticklabels=True, setxlimits=True, bestfit=False,
+                 **plotopts):
         '''Adds a probability plot to a matplotlib figure
 
         Parameters
@@ -745,19 +774,20 @@ class Location(object):
         '''
         fig, ax = utils.figutils._check_ax(ax)
 
-        color = plotopts.pop('color', self.color)
-        label = plotopts.pop('label', self.name)
-        marker = plotopts.pop('marker', self.plot_marker)
-        linestyle = plotopts.pop('linestyle', 'none')
+        scatter_kws = plotopts.copy()
+        scatter_kws['color'] = plotopts.get('color', self.color)
+        scatter_kws['label'] = plotopts.get('label', self.name)
+        scatter_kws['marker'] = plotopts.get('marker', self.plot_marker)
+        scatter_kws['linestyle'] = plotopts.get('linestyle', 'none')
         fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
-                                      ylabel=ylabel, color=color, label=label,
-                                      marker=marker, linestyle=linestyle, **plotopts)
+                                      bestfit=bestfit, scatter_kws=scatter_kws)
 
         if yscale == 'log':
-            label_format = mticker.FuncFormatter(
-                utils.figutils.alt_logLabelFormatter
-            )
-            ax.yaxis.set_major_formatter(label_format)
+            pass
+            # label_format = mticker.FuncFormatter(
+            #     utils.figutils.alt_logLabelFormatter
+            # )
+            # ax.yaxis.set_major_formatter(label_format)
 
         if managegrid:
             utils.figutils.gridlines(ax, yminor=True)
@@ -770,6 +800,9 @@ class Location(object):
 
         if setxlimits and axtype == 'prob':
             utils.figutils.setProbLimits(ax, self.N, 'x')
+
+        if bestfit:
+            utils.fit_line()
 
         return fig
 
@@ -1391,7 +1424,7 @@ class Dataset(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
                  clearYLabels=False, rotateticklabels=True,
-                 setxlimits=True, managegrid=True):
+                 setxlimits=True, managegrid=True, bestfit=False):
         """ Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1431,7 +1464,7 @@ class Dataset(object):
         for loc in [self.influent, self.effluent]:
             if loc.include:
                 loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
-                             yscale=yscale, managegrid=managegrid,
+                             yscale=yscale, managegrid=managegrid, bestfit=bestfit,
                              rotateticklabels=rotateticklabels)
 
         xlabels = {
@@ -1559,9 +1592,10 @@ class Dataset(object):
 
         return jg
 
-    def scatterplot(self, ax=None, xscale='log', yscale='log',
-                    xlabel=None, ylabel=None, showlegend=True,
-                    one2one=False, useROS=False):
+    def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
+                    xlabel=None, ylabel=None, one2one=False, useROS=False,
+                    bestfit=False, minpoints=3, eqn_pos='lower right',
+                    equal_scales=True):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1602,8 +1636,6 @@ class Dataset(object):
         # common symbology
         markerkwargs = dict(
             linestyle='none',
-            markerfacecolor='black',
-            markeredgecolor='white',
             markeredgewidth=0.5,
             markersize=6,
             zorder=10,
@@ -1618,27 +1650,27 @@ class Dataset(object):
         # plot the raw results, if requested
         else:
             self._plot_nds(ax, which='neither', marker='o', alpha=0.8,
-                           label='Detected data pairs', **markerkwargs)
-            self._plot_nds(ax, which='influent', marker='v', alpha=0.6,
-                           label='Influent not detected', **markerkwargs)
-            self._plot_nds(ax, which='effluent', marker='<', alpha=0.6,
-                           label='Effluent not detected', **markerkwargs)
-            self._plot_nds(ax, which='both', marker='d', alpha=0.45,
-                           label='Both not detected', **markerkwargs)
+                           label='Detected data pairs', markerfacecolor='black',
+                           markeredgecolor='white', **markerkwargs)
+            self._plot_nds(ax, which='influent', marker='v', alpha=0.45,
+                           label='Influent not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
+            self._plot_nds(ax, which='effluent', marker='<', alpha=0.45,
+                           label='Effluent not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
+            self._plot_nds(ax, which='both', marker='d', alpha=0.25,
+                           label='Both not detected',  markerfacecolor='none',
+                           markeredgecolor='black', **markerkwargs)
 
         label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
-        if xscale == 'log':
-            ax.xaxis.set_major_formatter(label_format)
-        else:
+        if xscale != 'log':
             ax.set_xlim(left=0)
 
-        if yscale == 'log':
-            ax.yaxis.set_major_formatter(label_format)
-        else:
+        if yscale != 'log':
             ax.set_ylim(bottom=0)
 
         # unify the axes limits
-        if xscale == yscale:
+        if xscale == yscale and equal_scales:
             ax.set_aspect('equal')
             axis_limits = [
                 np.min([ax.get_xlim(), ax.get_ylim()]),
@@ -1657,6 +1689,53 @@ class Dataset(object):
         if one2one:
             ax.plot(axis_limits, axis_limits, linestyle='-', linewidth=1.25,
                     alpha=0.50, color='black', zorder=5, label='1:1 line')
+
+        detects = self.paired_data.loc[
+            (self.paired_data[('inflow', 'qual')] != self.influent._ndval) &
+            (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+        ].xs('res', level='quantity', axis=1)
+        if bestfit and detects.shape[0] >= minpoints:
+            if xscale == 'log' and yscale == 'log':
+                fitlogs = 'both'
+            elif xscale == 'log':
+                fitlogs = 'x'
+            elif yscale == 'log':
+                fitlogs = 'y'
+            else:
+                fitlogs = None
+
+            x = detects['inflow']
+            y = detects['outflow']
+
+            xhat, yhat, modelres = utils.fit_line(x, y, fitlogs=fitlogs)
+
+            ax.plot(xhat, yhat, 'k--', alpha=0.75, label='Best-fit')
+
+            if eqn_pos is not None:
+                positions = {
+                    'lower left': (0.05, 0.15),
+                    'lower right': (0.59, 0.15),
+                    'upper left': (0.05, 0.95),
+                    'upper right': (0.59, 0.95)
+                }
+                vert_offset = 0.05
+                try:
+                    txt_x, txt_y = positions.get(eqn_pos.lower())
+                except KeyError:
+                    raise ValueError("`eqn_pos` must be on of ".format(list.positions.keys()))
+                # annotate axes with stats
+                ax.annotate(
+                    r'$\log(y) = m \, \log(x) + b$',
+                    (txt_x, txt_y),
+                    xycoords='axes fraction'
+                )
+                ax.annotate(
+                    r'Slope, $ m = %0.3f $' % modelres.params['inflow'],
+                    (txt_x, txt_y - vert_offset),
+                    xycoords='axes fraction'
+                )
+                #ax.annotate(r'P-value, $ p = %s $' % fmt_p, (0.59, 0.05), xycoords='axes fraction')
+
 
         # setup the axes labels
         if xlabel is None:
