@@ -197,8 +197,8 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
         jg.ax_joint.set_xlim(left=0, right=ax_limit_max)
         jg.ax_joint.set_ylim(bottom=0, top=ax_limit_max)
         jg.ax_joint.plot([0, ax_limit_max], [0, ax_limit_max], marker='None',
-                     linestyle='-', linewidth=1.75, color=color or 'k',
-                     alpha=0.45, label='1:1 line')
+                         linestyle='-', linewidth=1.75, color=color or 'k',
+                         alpha=0.45, label='1:1 line')
 
         jg.ax_joint.legend(frameon=False, loc='upper left')
 
@@ -327,9 +327,9 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
                  markerfacecolor='none', markeredgecolor=color, alpha=1)
 
 
-def probplot(data, ax=None, axtype='prob', color='b', marker='o',
-             linestyle='none', xlabel=None, ylabel=None, yscale='log',
-             **plotkwds):
+def probplot(data, ax=None, axtype='prob', yscale='log',
+             xlabel=None, ylabel=None, bestfit=False,
+             scatter_kws=None, line_kws=None, return_results=False):
     """ Probability, percentile, and quantile plots.
 
     Parameters
@@ -364,27 +364,35 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
 
     """
 
+    scatter_kws = {} if scatter_kws is None else scatter_kws
+    line_kws = {} if line_kws is None else line_kws
+
     fig, ax = _check_ax(ax)
     if axtype not in ['pp', 'qq', 'prob']:
         raise ValueError("invalid axtype: {}".format(axtype))
 
     qntls, ranked = stats.probplot(data, fit=False)
     if axtype == 'qq':
-        xdata = qntls
+        xvalues = qntls
     else:
-        xdata = stats.norm.cdf(qntls) * 100
-
-    markerfacecolor = plotkwds.pop('markerfacecolor', 'none')
-    markersize = plotkwds.pop('markersize', 4)
+        xvalues = stats.norm.cdf(qntls) * 100
 
     # plot the final ROS data versus the Z-scores
-    ax.plot(xdata, ranked, linestyle=linestyle, marker=marker,
-            markeredgecolor=color, markerfacecolor=markerfacecolor,
-            markersize=markersize, **plotkwds)
+    linestyle = scatter_kws.pop('linestyle', 'none')
+    marker = scatter_kws.pop('marker', 'o')
+    ax.plot(xvalues, ranked, linestyle=linestyle, marker=marker, **scatter_kws)
 
     ax.set_yscale(yscale)
+    if yscale == 'log':
+        fitlogs = 'y'
+    else:
+        fitlogs = None
+
     if axtype == 'prob':
+        fitprobs = 'x'
         ax.set_xscale('prob')
+    else:
+        fitprobs = None
         #left, right = ax.get_xlim()
         #ax.set_xlim(left=left*0.96, right=right*1.04)
 
@@ -394,7 +402,17 @@ def probplot(data, ax=None, axtype='prob', color='b', marker='o',
     if ylabel is not None:
         ax.set_ylabel(ylabel)
 
-    return fig
+    if bestfit:
+        xhat, yhat, modelres = misc.fit_line(xvalues, ranked, fitprobs=fitprobs,
+                                             fitlogs=fitlogs)
+        ax.plot(xhat, yhat, **line_kws)
+    else:
+        xhat, yhat, modelres = (None, None, None)
+
+    if return_results:
+        return fig, dict(q=qntls, x=xvalues, y=ranked, xhat=xhat, yhat=yhat, res=modelres)
+    else:
+        return fig
 
 
 def logLabelFormatter(tick, pos=None):
@@ -568,7 +586,7 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws)
     with seaborn.axes_style('ticks'):
         fig, axes = plt.subplots(ncols=len(cols), **subplot_kws)
         hue_vals = dataframe[hue].unique()
-        colors = seaborn.color_palette(name=palette, n_colors=len(hue_vals))
+        colors = seaborn.color_palette(palette=palette, n_colors=len(hue_vals))
         color_dict = dict(zip(hue_vals, colors))
 
         for col, ax in zip(cols, axes):

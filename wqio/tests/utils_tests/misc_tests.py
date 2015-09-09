@@ -1,9 +1,12 @@
+from collections import namedtuple
+
 import warnings
 import random
 import sys
 import os
 from six import StringIO
 import datetime
+from pkg_resources import resource_filename
 
 import nose.tools as nt
 import numpy as np
@@ -16,7 +19,9 @@ import matplotlib
 matplotlib.rcParams['text.usetex'] = usetex
 import matplotlib.pyplot as plt
 
+from scipy import stats
 import pandas
+import statsmodels.api as sm
 
 from wqio.utils import misc
 
@@ -151,6 +156,36 @@ class test_sigfig_lt1(base_sigfigsMixin):
         nt.assert_equal(misc.sigFigs(p, 3, tex=True, pval=True), '$<0.001$')
 
 
+class test__format_result(object):
+    def setup(self):
+        self.big_num = 12498.124
+        self.med_num = 12.540
+        self.small_num = 0.00257
+
+    def test_big_3(self):
+        nt.assert_equal(
+            misc.formatResult(self.big_num, '<', 3),
+            '<12,500'
+        )
+
+    def test_med_6(self):
+        nt.assert_equal(
+            misc.formatResult(self.med_num, '>', 6),
+            '>12.5400'
+        )
+
+    def test_small_2(self):
+        nt.assert_equal(
+            misc.formatResult(self.small_num, '=', 2),
+            '=0.0026'
+        )
+
+    def test_med_no_qual_3(self):
+        nt.assert_equal(
+            misc.formatResult(self.med_num, '', 3),
+            '12.5'
+        )
+
 def test__boxplot_legend():
     fig, ax = plt.subplots()
     misc._boxplot_legend(ax, notch=True)
@@ -220,7 +255,9 @@ def test_makeTexFigure():
 class tests_with_paths(object):
     @nt.nottest
     def makePath(self, filename):
-        return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
+        path = resource_filename("wqio.data", filename)
+        return path
+        #return os.path.join(sys.prefix, 'wqio_data', 'testing', filename)
 
     def setup(self):
         if os.path.split(os.getcwd())[-1] == 'src':
@@ -820,7 +857,6 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         self.transformout = lambda x: 10**x
 
 
-
 class test_getWaterYear(object):
     def setup(self):
         self.earlydate = datetime.datetime(2005, 10, 2)
@@ -840,3 +876,158 @@ class test_getWaterYear(object):
     def test_late_tstamp(self):
         date = pandas.Timestamp(self.latedate)
         nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
+
+
+class test_fit_line(object):
+    def setup(self):
+        self.data = np.array([
+            2.00,   4.0 ,   4.62,   5.00,   5.00,   5.50,   5.57,   5.66,
+            5.75,   5.86,   6.65,   6.78,   6.79,   7.50,   7.50,   7.50,
+            8.63,   8.71,   8.99,   9.50,   9.50,   9.85,  10.82,  11.00,
+           11.25,  11.25,  12.20,  14.92,  16.77,  17.81,  19.16,  19.19,
+           19.64,  20.18,  22.97
+        ])
+
+        self.zscores = np.array([
+            -2.06188401, -1.66883254, -1.4335397 , -1.25837339, -1.11509471,
+            -0.99166098, -0.8817426 , -0.78156696, -0.68868392, -0.60139747,
+            -0.51847288, -0.4389725 , -0.36215721, -0.28742406, -0.21426459,
+            -0.14223572, -0.07093824,  0.00000000,  0.07093824,  0.14223572,
+             0.21426459,  0.28742406,  0.36215721,  0.43897250,  0.51847288,
+             0.60139747,  0.68868392,  0.78156696,  0.88174260,  0.99166098,
+             1.11509471,  1.25837339,  1.43353970,  1.66883254,  2.06188401
+        ])
+
+        self.probs = stats.norm.cdf(self.zscores) * 100.
+
+        self.y = np.array([
+            0.07323274,  0.12319301,  0.16771455,  0.1779695 ,  0.21840761,
+            0.25757016,  0.2740265 ,  0.40868106,  0.44872637,  0.5367353 ,
+            0.55169933,  0.56211726,  0.62375442,  0.66631353,  0.68454978,
+            0.72137134,  0.87602096,  0.94651962,  1.01927875,  1.06040448,
+            1.07966792,  1.17969506,  1.21132273,  1.30751428,  1.45371899,
+            1.76381932,  1.98832275,  2.09275652,  2.66552831,  2.86453334,
+            3.23039631,  4.23953492,  4.25892247,  4.5834766 ,  6.53100725
+        ])
+
+        self.known_y_linlin = np.array([ -0.89650596,  21.12622025])
+        self.known_y_linlog = np.array([  2.80190754,  27.64958934])
+        self.known_y_linprob = np.array([  8.48666156,  98.51899616])
+        self.known_y_loglin = np.array([-2.57620461,  1.66767934])
+        self.known_y_loglog = np.array([ 0.0468154 ,  5.73261406])
+        self.known_y_logprob = np.array([  0.49945757,  95.23103009])
+        self.known_y_problin = np.array([ -0.89650596,  21.12622025])
+        self.known_y_problog = np.array([  2.80190754,  27.64958934])
+        self.known_y_probprob = np.array([  1.96093902,  98.03906098])
+
+        self.custom_xhat = [-2, -1, 0, 1, 2]
+        self.known_custom_yhat = np.array([-0.56601826, 4.77441944, 10.11485714,
+                                           15.45529485, 20.79573255])
+
+    def test_xlinear_ylinear(self):
+        scales = {'fitlogs': None, 'fitprobs': None}
+        x, y = self.zscores, self.data
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_linlin)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xlinear_ylog(self):
+        scales = {'fitlogs': 'y', 'fitprobs': None}
+        x, y = self.zscores, self.data
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_linlog)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xlinear_yprob(self):
+        scales = {'fitlogs': None, 'fitprobs': 'y'}
+        x, y = self.data, self.probs
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_linprob)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xlog_ylinear(self):
+        scales = {'fitlogs': 'x', 'fitprobs': None}
+        x, y = self.data, self.zscores
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_loglin)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xlog_ylog(self):
+        scales = {'fitlogs': 'both', 'fitprobs': None}
+        x, y = self.data, self.y
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_loglog)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xlog_yprob(self):
+        scales = {'fitlogs': 'x', 'fitprobs': 'y'}
+        x, y = self.data, self.probs
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_logprob)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xprob_ylinear(self):
+        scales = {'fitlogs': None, 'fitprobs': 'x'}
+        x, y = self.probs, self.data
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_problin)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xprob_ylog(self):
+        scales = {'fitlogs': 'y', 'fitprobs': 'x'}
+        x, y = self.probs, self.data
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_problog)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    def test_xprob_yprob(self):
+        z2, _y = stats.probplot(self.y, fit=False)
+        p2 = stats.norm.cdf(z2) * 100
+
+        scales = {'fitlogs': None, 'fitprobs': 'both'}
+        x, y = self.probs, p2,
+        x_, y_, res = misc.fit_line(x, y, **scales)
+        nptest.assert_array_almost_equal(y_, self.known_y_probprob)
+        nt.assert_true(isinstance(res, sm.regression.linear_model.RegressionResultsWrapper))
+
+    @nt.raises(ValueError)
+    def test_bad_fitlogs(self):
+        x, y = self.zscores, self.data
+        x_, y_, res = misc.fit_line(x, y, fitlogs='junk')
+
+    @nt.raises(ValueError)
+    def test_bad_fitprobs(self):
+        x, y = self.zscores, self.data
+        x_, y_, res = misc.fit_line(x, y, fitprobs='junk')
+
+    def test_custom_xhat(self):
+        x, y = self.zscores, self.data
+        x_, y_, res = misc.fit_line(x, y, xhat=self.custom_xhat)
+        nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
+
+class test_processAndersonDarlingResults(object):
+    def setup(self):
+        fieldnames = ['statistic', 'critical_values', 'significance_level']
+        AndersonResult = namedtuple('AndersonResult', fieldnames)
+        self.good = AndersonResult(
+            statistic=0.30194681312357829,
+            critical_values=np.array([0.529, 0.602, 0.722, 0.842, 1.002]),
+            significance_level=np.array([15., 10., 5., 2.5, 1.])
+        )
+
+        self.bad = AndersonResult(
+            statistic=np.inf,
+            critical_values=np.array([ 0.907,  1.061,  1.32 ,  1.58 ,  1.926]),
+            significance_level=np.array([ 15. ,  10. ,   5. ,   2.5,   1. ])
+        )
+
+        self.known_good = '99.0%'
+        self.known_bad = '<85.0%'
+
+    def test_good(self):
+        res = misc.processAndersonDarlingResults(self.good)
+        nt.assert_equal(res, self.known_good)
+
+    def test_bad(self):
+        res = misc.processAndersonDarlingResults(self.bad)
+        nt.assert_equal(res, self.known_bad)

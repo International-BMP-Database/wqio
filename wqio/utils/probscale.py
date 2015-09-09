@@ -15,6 +15,14 @@ from scipy import stats
 from .misc import sigFigs
 
 
+class _minimal_norm(object):
+    def ppf(self, q):
+        return np.sqrt(2) * inv_erf(2*q - 1)
+
+    def cdf(self, x):
+        return 0.5 * (1 + erf(x/np.sqrt(2)))
+
+
 def _get_probs(nobs):
     '''Returns the x-axis labels for a probability plot based
     on the number of observations (`nobs`)

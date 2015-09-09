@@ -1,9 +1,10 @@
-# Setup script for the pybmp package
+# Setup script for the wqio package
 #
 # Usage: python setup.py install
 #
 import os
 from setuptools import setup, find_packages
+
 
 def getDataFiles(submodule, folder):
     datadir = os.path.join('wqio', submodule, folder)
@@ -30,34 +31,34 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Intended Audience :: Science/Research",
-    "Topic :: Formats and Protocols :: Data Formats",
-    "Topic :: Scientific/Engineering :: Earth Sciences",
     "Topic :: Software Development :: Libraries :: Python Modules",
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
 ]
 INSTALL_REQUIRES = ['seaborn']
-PACKAGE_DATA = {}
-DATA_FILES = [
-    ('wqio_data/testing', getDataFiles('testing', 'data')),
-]
+PACKAGE_DATA = {
+    'wqio.data': [ '*.csv', '*.tex', 'matplotlibrc', ],
+    'wqio.tests.core_tests.baseline_images.core_tests.features_tests': ['*png'],
+    'wqio.tests.core_tests.baseline_images.core_tests.hydro_tests': ['*png'],
+    'wqio.tests.core_tests.baseline_images.core_tests.samples_tests': ['*png'],
+    'wqio.tests.utils_tests.baseline_images.utils_tests.figutils_tests': ['*png'],
+}
 
-if __name__ == "__main__":
-    setup(
-        name=NAME,
-        version=VERSION,
-        author=AUTHOR,
-        author_email=AUTHOR_EMAIL,
-        url=URL,
-        description=DESCRIPTION,
-        long_description=LONG_DESCRIPTION,
-        download_url=DOWNLOAD_URL,
-        license=LICENSE,
-        packages=PACKAGES,
-        package_data=PACKAGE_DATA,
-        data_files=DATA_FILES,
-        platforms=PLATFORMS,
-        classifiers=CLASSIFIERS,
-        install_requires=INSTALL_REQUIRES,
-    )
+setup(
+    name=NAME,
+    version=VERSION,
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    url=URL,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    download_url=DOWNLOAD_URL,
+    license=LICENSE,
+    packages=PACKAGES,
+    package_data=PACKAGE_DATA,
+    #data_files=DATA_FILES,
+    platforms=PLATFORMS,
+    classifiers=CLASSIFIERS,
+    install_requires=INSTALL_REQUIRES,
+)

@@ -21,7 +21,7 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda/bin:$PATH
   - conda update --yes conda
-  - cp wqio/testing/data/matplotlibrc .
+  - cp wqio/data/matplotlibrc .
 
 install:
 
@@ -41,4 +41,3 @@ script:
 
 after_success:
   - if [ ${COVERAGE} = true ]; then coveralls; fi
-

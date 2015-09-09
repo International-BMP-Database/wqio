@@ -1,6 +1,7 @@
 import os
 import sys
 import datetime
+from pkg_resources import resource_filename
 
 import numpy as np
 import pandas
@@ -22,12 +23,22 @@ import seaborn
 from wqio.core import hydro
 from wqio import utils
 
+@nt.nottest
+def makePath(filename):
+    path = resource_filename("wqio.data", filename)
+    return path
 
 class fakeStormSublcass(hydro.Storm):
     is_subclassed = True
 
 
 class base_HydroRecordMixin(object):
+    known_storm_stats_columns = [
+        'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
+        'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
+        'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
+        'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
+    ]
     def teardown(self):
         plt.close('all')
 
@@ -84,6 +95,12 @@ class base_HydroRecordMixin(object):
         nt.assert_equal(self.hr.intereventPeriods, self.known_ie_periods)
         nt.assert_equal(self.hr.intereventHours, self.known_ie_hours)
 
+    def test_storm_stat_columns(self):
+        nt.assert_list_equal(
+            self.known_storm_stats_columns,
+            self.hr.storm_stats.columns.tolist()
+        )
+
 
 class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
@@ -95,16 +112,14 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = os.path.join(
-            sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
-        )
+        self.storm_file = makePath('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
             'Antecedent Days': [np.nan, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
-            'Total Precip Depth': [2.76, 4.14]
+            'Total Precip Depth': [2.76, 4.14],
         })
 
         self.orig_record = pandas.read_csv(
@@ -130,7 +145,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
             'Storm Number',
             'Antecedent Days',
             'Peak Precip Intensity',
-            'Total Precip Depth'
+            'Total Precip Depth',
         ]
 
         pdtest.assert_frame_equal(self.hr.storm_stats[cols], self.known_stats_subset[cols])
@@ -189,9 +204,7 @@ class test_HydroRecord_Singular(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 07:00')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 07:05')
-        self.storm_file = os.path.join(
-            sys.prefix, 'wqio_data', 'testing', 'teststorm_singular.csv'
-        )
+        self.storm_file = makePath('teststorm_singular.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -212,9 +225,7 @@ class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = os.path.join(
-            sys.prefix, 'wqio_data', 'testing', 'teststorm_firstobs.csv'
-        )
+        self.storm_file = makePath('teststorm_firstobs.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -235,9 +246,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = os.path.join(
-            sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv'
-        )
+        self.storm_file = makePath('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
@@ -257,7 +266,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
             'Storm Number': [1, 5],
             'Antecedent Days': [-2.409722, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
-            'Total Precip Depth': [2.76, 4.14]
+            'Total Precip Depth': [2.76, 4.14],
         })
 
     def test_subclassed_storms(self):
@@ -268,8 +277,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
 class test_Storm(object):
     def setup(self):
         # path stuff
-
-        self.storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
+        self.storm_file = makePath('teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').fillna(0)
@@ -447,6 +455,7 @@ class test_Storm(object):
             'Total Outflow Volume',
             'Peak Outflow',
             'Peak Lag Hours',
+            'Centroid Lag Hours',
             'Season'
         ]
         keys = list(self.storm.summary_dict.keys())
@@ -460,7 +469,7 @@ class test_Storm(object):
 @nt.nottest
 def setup_storm():
     plt.rcdefaults()
-    storm_file = os.path.join(sys.prefix, 'wqio_data', 'testing', 'teststorm_simple.csv')
+    storm_file = makePath('teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )
             .resample('5T')
