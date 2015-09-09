@@ -14,10 +14,15 @@ from . import misc
 def _check_ax(ax):
     """ Checks if a value if an Axes. If None, a new one is created.
 
+    Parameters
+    ----------
+    ax : matplotlib.Axes or None
+        The value to be tested.
+
     Returns
     -------
-    fig : matplotlib Figure
-    ax : matplotlib Axes
+    fig : matplotlib.Figure
+    ax : matplotlib.Axes
 
     """
 
@@ -89,6 +94,7 @@ def setProbLimits(ax, N, which):
     Returns
     -------
     None
+
     """
 
     minval = 10 ** (-1 *np.ceil(np.log10(N) - 2))
@@ -110,8 +116,8 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         The labels of the x- and y-axis.
     xscale, yscale : string, optional
         The scale of each axis. Can be 'linear', 'log', or 'prob'.
-    xminor, yminor bool, optional
-        Toggles the grid on minor ticks. Has no effect in minor ticks
+    xminor, yminor : bool, optional
+        Toggles the grid on minor ticks. Has no effect if minor ticks
         are not present.
 
     Returns
@@ -213,7 +219,7 @@ def scatterHistogram(*args, **kwargs):
 
 def boxplot(ax, data, position, median=None, CIs=None,
             mean=None, meanmarker='o', meancolor='b'):
-    """ Adds a boxplot to an axes
+    """ Draws a boxplot on an axes
 
     Parameters
     ----------
@@ -285,7 +291,10 @@ def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
         Size (in points) of the outlier marker.
     linestyle : string
         Any valid matplotlib linestyle string for the medians
-    patch_artist : optional bool (default = False)
+    showcaps : bool (default = False)
+        Toggles the drawing of caps (short horizontal lines) on the
+        whiskers.
+    patch_artist : bool (default = False)
         Toggles the use of patch artist instead of a line artists for
         the boxes.
 
@@ -344,23 +353,29 @@ def probplot(data, ax=None, axtype='prob', yscale='log',
             - 'prob': probabilty plot
             - 'pp': percentile plot
             - 'qq': quantile plot
-    color : color string or three tuple (default = 'b')
-        Just needs to be any valid matplotlib color representation.
-    marker : string (default = 'o')
-        String representing a matplotlib marker style.
-    linestyle : string (default = 'none')
-        String representing a matplotlib line style. No line is shown by
-        default.
-    [x|y]label : string or None (default)
-        Axis label for the plot.
     yscale : string (default = 'log')
         Scale for the y-axis. Use 'log' for logarithmic (default) or
         'linear'.
-    **plotkwds : optional arguments passed directly to plt.plot(...)
+    xlabel, ylabel : string or None (default)
+        Axis labels for the plot.
+    bestfit : bool, optional (default is False)
+        Specifies whether a best-fit line should be added to the
+        plot.
+    scatter_kws, line_kws : dictionary
+        Dictionary of keyword arguments passed directly to `plt.plot`
+        when drawing the scatter points and best-fit line, respectively.
+    return_results : bool (default = False)
+        If True a dictionary of results of is returned along with the
+        figure. Keys are:
+            q - array of quantiles
+            x, y - arrays of data passed to function
+            xhat, yhat - arrays of modeled data plotted in best-fit line
+            res - a statsmodels Result object.
 
     Returns
     -------
-    fig : matplotlib.Figure instance
+    fig : matplotlib.Figure
+    result : dictionary of linear fit results.
 
     """
 
@@ -461,6 +476,11 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
         1.0 (no upper ofset). Should be between `midpoint` and 1.0.
     name : string, optional
         Just a name for the colormap. Not particularly important.
+
+    Returns
+    -------
+    newcmp : matplotlib.colors.LinearSegmentedColormap
+        The modified color map.
 
     """
 
