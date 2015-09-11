@@ -1,9 +1,36 @@
+import sys
+
 import matplotlib.pyplot as plt
 import seaborn.apionly as seaborn
 import pandas
 
 from wqio import utils
 
+
+_basic_doc = """ {} water quality sample
+
+Container to hold water quality results from many different pollutants
+collected at a single point in time.
+
+Parameters
+----------
+dataframe : pandas.DataFrame
+    The water quality data.
+starttime : datetime-like
+    The date and time at which the sample collection started.
+samplefreq : string, optional
+    A valid pandas timeoffset string specifying the frequency with which
+    sample aliquots are collected.
+endtime : datetime-like, optional
+    The date and time at which sample collection ended.
+storm : wqio.Storm object, optional
+    A Storm object (or a subclass or Storm) that triggered sample
+    collection.
+rescol, qualcol, dlcol, unitscol : string, optional
+    Strings that define the column labels for the results, qualifiers,
+    detection limits, and units if measure, respectively.
+
+"""
 
 class _basic_wq_sample(object):
     def __init__(self, dataframe, starttime, samplefreq=None,
@@ -115,6 +142,7 @@ class _basic_wq_sample(object):
 
 
 class CompositeSample(_basic_wq_sample):
+    """ Class for composite samples """
     @property
     def label(self):
         if self._label is None:
@@ -148,6 +176,7 @@ class CompositeSample(_basic_wq_sample):
 
 
 class GrabSample(_basic_wq_sample):
+    """ Class for grab (discrete) samples """
     @property
     def label(self):
         if self._label is None:
@@ -175,6 +204,7 @@ class GrabSample(_basic_wq_sample):
                 self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
         return self._sample_ts
 
-
-
-
+if sys.version_info.major >= 3:
+    _basic_wq_sample.__doc__  = _basic_doc.format("Basic")
+    CompositeSample.__doc__ = _basic_doc.format("Composite")
+    GrabSample.__doc__ = _basic_doc.format("Grab")

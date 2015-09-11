@@ -8,22 +8,21 @@ __all__ = ['Stat', 'Fit']
 
 
 class _bootstrapMixin(object):
-    '''
-    Class for using bootstrap techniques to estimate a statistic and its
-        confidence intervals.
+    """ Class for using bootstrap techniques to estimate a statistic
+    and its confidence intervals.
 
     Parameters
     ----------
     inputdata : array-like
-        The data that we're describing
-    statfxn : optional function or lambda (default is numpy.median)
+        The data that we're describing.
+    statfxn : callable, optional (default = numpy.median)
         Function that takes `inputdata` as the sole argument and return
         a single float value.
-    alpha : optional float (default = 0.05)
+    alpha : float, optional (default = 0.05)
         The uncertainty level e.g., for 95% confidence intervals,
-        `alpha` = 0.05
-    NIter : optional int (default = 5000)
-        The number of interation to use in the bootstrapping routine
+        `alpha = 0.05`.
+    NIter : int, optional (default = 5000)
+        The number of interation to use in the bootstrapping routine.
 
     Attributes
     ----------
@@ -39,26 +38,22 @@ class _bootstrapMixin(object):
     prelim_result : float
         Estimate of the statistic based on the original dataset
 
-    Methods (see individual docstrings):
-    -----------------------------------
-    _setup
-    BCA
-    percentile
+    """
 
-    '''
     def _acceleration(self):
-        '''
-        Compute the acceleration statistic
+        """ Compute the acceleration statistic.
 
-        Input:
-            None
+        Parameters
+        ----------
+        None
 
-        Writes:
-            None
+        Returns
+        -------
+        acc : float
+            The acceleration statistic.
 
-        Returns:
-            acc (float) : the acceleration statistic
-        '''
+        """
+
         # intermediate values
         SSD = np.sum((self.data.mean() - self.data)**3)
         SCD = np.sum((self.data.mean() - self.data)**2)
@@ -72,19 +67,18 @@ class _bootstrapMixin(object):
         return acc
 
     def _make_bootstrap_array(self):
-        '''
-        Generate an array of bootstrap sample sets
+        """ Generate an array of bootstrap sample sets
 
-        Input:
-            None
+        Parameters
+        ----------
+        None
 
-        Writes:
-            None
+        Returns
+        -------
+        bootArray : numpy array of floats
+            A collection of random samples pulled from the the dataset.
 
-        Returns:
-            bootArray (nump array of floats) : a collection of random samples
-                pulled from the the dataset
-        '''
+        """
 
         # stack the data together if we're
         # bootstrapping a curve fig
@@ -113,25 +107,25 @@ class _bootstrapMixin(object):
         return bootArray
 
     def _eval_BCA(self, prelim_result, boot_stats):
-        '''
-        Evaluate the BCA method of aquiring confidence intervals around a
-            statistic
+        """ Evaluate the Bias-Corrected and Accelerated method of
+        aquiring confidence intervals around a statistic.
 
-        Input:
-            prelim_result (float) : estimate of the statistic computed from the
-                full dataset
-            boot_stats (numpy array of floats) : estimates of the statistic
-                computed from iteratively resampling the dataset
+        Parameters
+        ----------
+        prelim_result :float
+            An estimate of the statistic computed from the full dataset.
+        boot_stats : array-like
+            Estimates of the statistic computed from iteratively
+            resampling the dataset with replacement.
 
-        Writes:
-            None
+        Returns
+        -------
+        result : float
+            Refined(?) estimate of the statistic.
+        CI : numpy array
+            Confidence intervals of statistic.
 
-        Returns:
-            result (float) : refined(?) estimate of the statistic
-            CI (numpy array of floats) : confidence intervals of statistic
-
-        TODO: fallback to percentile method should raise a warning
-        '''
+        """
 
         # number of results below the premlinary estimate
         NumBelow = np.sum(boot_stats < prelim_result)
@@ -162,6 +156,7 @@ class _bootstrapMixin(object):
 
             # fall back to the standard percentile method if the results
             # don't make any sense
+            # TODO: fallback to percentile method should raise a warning
             if result < CI[0] or CI[1] < result:
                 result, CI = self._eval_percentile(boot_stats)
         else:
@@ -170,21 +165,24 @@ class _bootstrapMixin(object):
         return result, CI
 
     def _eval_percentile(self, boot_stats):
-        '''
-        Evaluate the percentile method of aquiring confidence intervals around
-            a statistic
+        """ Evaluate the percentile method of aquiring confidence
+        intervals around a statistic.
 
-        Input:
-            boot_stats (numpy array of floats) : estimates of the statistic
-                computed from iteratively resampling the dataset
+        Parameters
+        ----------
+        boot_stats : array-like
+            Estimates of the statistic computed from iteratively
+            resampling the dataset with replacement.
 
-        Writes:
-            None
+        Returns
+        -------
+        result : float
+            Refined(?) estimate of the statistic.
+        CI : numpy array
+            Confidence intervals of statistic.
 
-        Returns:
-            result (float) : refined(?) estimate of the statistic
-            CI (numpy array of floats) : confidence intervals of statistic
-        '''
+        """
+
         # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
         CI = np.array([
             np.percentile(boot_stats, self.alpha*50, axis=0),
@@ -198,7 +196,6 @@ class _bootstrapMixin(object):
 
 
 class Stat(_bootstrapMixin):
-
     def __init__(self, inputdata, statfxn=np.median, alpha=0.05, NIter=5000):
         self.data = inputdata
         self.statfxn = statfxn
@@ -216,15 +213,11 @@ class Stat(_bootstrapMixin):
         self._boot_stats = self.statfxn(self._boot_array, axis=1)
 
     def BCA(self):
-        '''
-        BCA method of aquiring confidence intervals
-        '''
+        """ BCA method of aquiring confidence intervals. """
         return self._eval_BCA(self.prelim_result, self._boot_stats)
 
     def percentile(self):
-        '''
-        percentile method of aquiring confidence intervals
-        '''
+        """ Percentile method of aquiring confidence intervals. """
         return self._eval_percentile(self._boot_stats)
 
 
@@ -260,9 +253,7 @@ class Fit(_bootstrapMixin):
             self._boot_stats[r] = fitparams
 
     def BCA(self):
-        '''
-        BCA method of aquiring confidence intervals
-        '''
+        """ BCA method of aquiring confidence intervals. """
         # empty arrays of results and CIs for each
         # fit parameter
         results = np.empty(self.prelim_result.shape[0])
@@ -277,9 +268,7 @@ class Fit(_bootstrapMixin):
         return results, CI
 
     def percentile(self):
-        '''
-        percentile method of aquiring confidence intervals
-        '''
+        """ Percentile method of aquiring confidence intervals. """
         # empty arrays of results and CIs for each
         # fit parameter
         results = np.empty([self._boot_stats.shape[1]])

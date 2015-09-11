@@ -56,27 +56,21 @@ def _process_p_vals(pval):
 
 
 class Parameter(object):
-    def __init__(self, name=None, units=None, usingTex=False):
-        '''
-        Class representing a single parameter
+    def __init__(self, name, units, usingTex=False):
+        """ Class representing a single analytical parameter (pollutant).
 
-        Input:
-            name : string
-                name of the parameter
+        (Input) Parameters
+        ------------------
+        name : string
+            Name of the parameter.
+        units : string
+            Units of measure for the parameter.
+        usingTex : bool, optional (default = False)
+            If True, all returned values will be optimized for inclusion
+            in LaTeX documents.
 
-            units : string
-                units of measure for the parameter
+        """
 
-        Attributes:
-            name : string
-                standard name of the parameter found in the DB
-
-            unit : string
-                decently formatted combo of `name` and `units`
-
-        Methods:
-            None
-        '''
         self._name = name
         self._units = units
         self._usingTex = usingTex
@@ -106,17 +100,16 @@ class Parameter(object):
             raise ValueError("`usingTex` must be of type `bool`")
 
     def paramunit(self, usecomma=False):
-        '''
-        Creates a string representation of the parameter and units
+        """ Creates a string representation of the parameter and units.
 
-        Input:
-            usecomma : optional boot (default is False)
-                Toggles the format of the `paramunit` attribute...
-                If True:
-                    self.paramunit = <parameter>, <unit>
-                If False:
-                    self.paramunit = <parameter> (<unit>)
-        '''
+        Parameters
+        ----------
+        usecomma : bool, optional (default = False)
+            Toggles the format of the returned string attribute. If True
+            the returned format is "<parameter>, <unit>". Otherwise the
+            format is "<parameter> (<unit>)".
+        """
+
         if usecomma:
             paramunit = '{0}, {1}'
         else:
@@ -132,166 +125,201 @@ class Parameter(object):
         return paramunit.format(n, u)
 
     def __repr__(self):
-        return "<openpybmp Parameter object> ({})".format(
+        return "<wqio Parameter object> ({})".format(
             self.paramunit(usecomma=False)
         )
 
     def __str__(self):
-        return "<openpybmp Parameter object> ({})".format(
+        return "<wqio Parameter object> ({})".format(
             self.paramunit(usecomma=False)
         )
 
 
 class DrainageArea(object):
     def __init__(self, total_area=1.0, imp_area=1.0, bmp_area=0.0):
-        '''
-        A simple object representing the drainage area of a BMP. Units are not
-        enforced, so keep them consistent yourself. The calculations available
-        assume that the are of the BMP and the "total" area are mutually
-        exclusive. In other words, the watershed outlet is at the BMP inlet.
+        """ A simple object representing the drainage area of a BMP.
 
-        Input:
-            total_area : optional float (default=1.0)
-                The total geometric area of the BMP's catchment
+        Units are not enforced, so keep them consistent yourself. The
+        calculations available assume that the area of the BMP and the
+        "total" area are mutually exclusive. In other words,
+        the watershed outlet is at the BMP inlet.
 
-            imp_area : optional float (default=1.0)
-                The impervious area of the BMP's catchment
+        Parameters
+        ----------
+        total_area : float, optional (default = 1.0)
+            The total geometric area of the BMP's catchment
+        imp_area : float, optional (default = 1.0)
+            The impervious area of the BMP's catchment
+        bmp_area : float, optional (default = 0.0)
+            The geometric area of the BMP itself.
 
-            bmp_area : optional float (default=0.0)
-                The geometric area of the BMP itself.
+        """
 
-        Attributes:
-            See Input section.
-
-        Methods:
-            simple_method - estimates the influent volume to the BMP based on
-                storm depth.
-        '''
         self.total_area = float(total_area)
         self.imp_area = float(imp_area)
         self.bmp_area = float(bmp_area)
 
-    def simple_method(self, storm_depth, volume_conversion=1, annualFactor=1):
-        '''
+    def simple_method(self, storm_depth, volume_conversion=1.0, annualFactor=1.0):
+        """
         Estimate runoff volume via Bob Pitt's Simple Method.
 
-        Input:
-            storm_depth : float
-                Depth of the storm.
+        Parameters
+        ----------
+        storm_depth : float
+            Depth of the storm.
+        volume_conversion : float, optional (default = 1.0)
+            Conversion factor to go from [area units] * [depth units] to
+            the desired [volume units]. If [area] = m^2, [depth] = mm,
+            and [volume] = L, then `volume_conversion` = 1.
+        annualFactor : float, optional (default = 1.0)
+            The Simple Method's annual correction factor to account for
+            small storms that do not produce runoff.
 
-            volume_conversion : float (default = 1)
-                Conversion factor to go from [area units] * [depth units] to
-                the desired [volume units]. If [area] = m^2, [depth] = mm, and
-                [volume] = L, then `volume_conversion` = 1.
+        Returns
+        -------
+        runoff_volume : float
+            The volume of water entering the BMP immediately downstream
+            of the drainage area.
 
-        '''
+        """
+
         # volumetric run off coneffiecient
-        Rv = 0.05 + (0.9 * (self.imp_area/self.total_area))
+        Rv = 0.05 + (0.9 * (self.imp_area / self.total_area))
 
         # run per unit storm depth
         drainage_conversion = Rv * self.total_area * volume_conversion
         bmp_conversion = self.bmp_area * volume_conversion
 
         # total runoff based on actual storm depth
-        runoff = (drainage_conversion * annualFactor + bmp_conversion) * storm_depth
-        return runoff
+        runoff_volume = (drainage_conversion * annualFactor + bmp_conversion) * storm_depth
+        return runoff_volume
 
 
 class Location(object):
+    """ Object providing convenient access to statistical and
+    graphical methods for summarizing a single set of water quality
+    observations for a single pollutant.
+
+    Parameters
+    -----------
+    dataframe : pandas.DataFrame
+        A dataframe that contains at least two columns: one for the
+        analytical values and another for the data qualfiers. Can
+        contain any type of row index, but the column index must be
+        simple (i.e., not a pandas.MultiIndex).
+    rescol : string, optional (default = 'res')
+        Name of the column in `dataframe` that contains the
+        analytical values.
+    qualcol : string, optional (default = 'qual')
+        Name of the column in `dataframe` containing qualifiers.
+    ndval : string, optional (default = 'ND')
+        The *only* value in the `qualcol` of `dataframe` that
+        indicates that the corresponding value in `rescol` is
+        non-detect.
+    bsIter : int, optional (default = 1e4)
+        Number of interations to use when using a bootstrap
+        algorithm to refine a statistic.
+    station_type : string, optional
+        Type of location being analyzed. Valid values are:
+        'inflow' (default) or 'outflow'.
+    useROS : bool, optional (default = True)
+        Toggles the use of Regression On Order Statistics to
+        estimate non-detect values when computing statistics.
+    include : bool, optional (default = True)
+        Toggles the inclusion of the location when programmatically
+        creating many `Location` objects.
+
+    Settable Properties
+    -------------------
+    .plot_marker : string
+        Matplotlib string of the marker used in plotting methods.
+    .color : string
+        Matplotlib color for plotting.
+    .bsIter : int
+        Same as input.
+    .useROS : bool
+        Same as input.
+    .filtered_data :pandas.DataFrame
+        Subset of the input data. This is the final version used in all
+        computations and graphics. It is set to the full dataset by
+        default.
+    .name : string
+        A human-readable name for the data.
+    .definition : dict
+        A dictionary of key-value pairs that define what makes this
+        data distinct within a larger collection of `Location` objects.
+    .include : bool
+        Same as input.
+
+    Statistical Attributes
+    ----------------------
+    .N : int
+        Total number of results.
+    .ND : int
+        Number of non-detect results.
+    .NUnique : int
+        Number of unique result values in the data.
+    .fractionND : float
+        Fraction of data that is non-detect.
+    .min : float
+        Minimum value of the data.
+    .max : float
+        Maximum value of the data.
+    .min_detect : float
+        Minimum detected value of the data.
+    .min_DL : float
+        Minimum detection limit reported for the data.
+    .mean*+^ : float
+        Bootstrapped arithmetic mean of the data.
+    .std*+^ : float
+        Bootstrapped standard deviation of the data.
+    .cov : float
+        Covariance (absolute value of std/mean).
+    .skew : float
+        Skewness coefficient.
+    .median* : float
+        Median of the dataset.
+    .pctl[10/25/75/90] : float
+        Percentiles of the dataset.
+    .pnorm : float
+        Results of the Shapiro-Wilks test for normality.
+    .plognorm : float
+        Results of the Shapiro-Wilks test for normality on
+        log-transormed data (so really a test for lognormalily).
+    .lillifors+ : list of floats
+        Lillifors statistic and p-value.
+    .shapiro+ : list of floats
+        Shapiro-Wilks statistic and p-value.
+    .anderson+ : tuple
+        Anderson-Darling statistic, critical values, significance
+        levels.
+    .analysis_space : string
+        Based on the results of self.pnorm and self.plognorm, this is
+        either "normal" or "lognormal".
+
+    Statistial Notes
+    ----------------
+    * Indicates that there's an accompyaning tuple of confidence
+      interval. For example, self.mean and self.mean_conf_interval
+    + Indicatates that there's a equivalent stat for log-transormed
+      data. For example, self.mean and self.logmean or self.lilliefors
+      and self.lilliefors_log (subject to the absense of negitive
+      results).
+    ^ Indicatates that there's a equivalent stat in geometric space.
+      For example, self.mean and self.geomean_mean.
+
+    Plotting Methods
+    ----------------
+    .verticalScatter
+    .boxplot
+    .probplot
+    .statplot
+
+    """
+
     def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND',
                  bsIter=10000, station_type='inflow', useROS=True,
                  include=True):
-        '''
-        Object providing convenient access to statics for data
-
-        Input:
-            dataframe : pandas.DataFrame instance
-                A dataframe that contains at least two columns: one for the
-                analytical values and another for the data qualfiers. Can
-                contain any type of row index, but the column index must be
-                simple (i.e., not a pandas.MultiIndex).
-
-            rescol : optional string (default = 'res')
-                Name of the column in `dataframe` that contains the analytical
-                values
-
-            qualcol : optional string (default = 'qual')
-                Name of the column in `dataframe` containing qualifiers.
-
-            ndval : optional string (default = 'ND')
-                The *only* value in the `qualcol` of `dataframe` that indicates
-                that the corresponding value in `rescol` in non-detect
-
-            bsIter : optional int (default = 1e4)
-                Number of interations to use when using a bootstrap algorithm
-                to refine a statistic.
-
-            station_type : optional string ['inflow' (default) or 'outflow']
-                Type of location being analyzed
-
-            useROS : optional bool (default = True)
-                Toggles the use of Regression On Order Statistics to estimate
-                non-detect values
-
-            include : optional bool (default = True)
-                Toggles the inclusion of the location in figures generated
-                from `Datasets` compruised of this location
-
-        General Attributes:
-            .station_type (string) : Same as input
-            .station_name (string) : 'Influent' or 'Effluent' depending on
-                `station_type`
-            .plot_marker (string) : matplotlib string of the marker used in
-                plotting methods
-            .scatter_marker (string) : matplotlib string of the marker used
-                in comparitive scatter plot methods
-            .color (string) : matplotlib color for plotting
-            .filtered_data (pandas.DataFrame) : full dataset with qualifiers
-            .ros (algo.ros.MR) : MR object of the ROS'd values
-            .data (pandas.Series) : Final data for use in stats and plotting
-                based on `useROS` (no qualiers)
-            .full_data (pandas.DataFrame) : Representation of `self.data`
-                that maintains the qualifiers associated with each result.
-            .bsIter (int) : Same as input
-            .useROS (bool) : Same as input
-            .include (bool) : Same as input
-            .exclude (bool) : Opposite of `.include`
-
-        Statistical Attributes:
-            .N (int) : total number of results
-            .ND (int) : number of non-detect results
-            .NUnique (int) : number of unique result values in the data
-            .fractionND (float) : fraction of data that is non-detect
-            .min (float) : minimum value of the data
-            .max (float) : maximum value of the data
-            .min_detect (float) : minimum detected value of the data
-            .min_DL (float) : minimum detection limit reported for the data
-            .mean*+ (float) : bootstrapped arithmetic mean of the data
-            .std*+ (float) bootstrapped standard deviation of the data
-            .geomean* (float) : geometric mean
-            .geostd (float) : geometric standard deviation
-            .cov (float) : covariance (absolute value of std/mean)
-            .skew (float) : skewness coefficient
-            .median* : median of the dataset
-            .pctl[10/25/75/90] (float) : percentiles of the dataset
-            .pnorm (float) : results of the Shapiro-Wilks test for normality
-            .plognorm (float) : results of the Shapiro-Wilks test for normality
-                on log-transormed data (so test for lognormalily).
-            .analysis_space (string) : Based on the results of self.pnorm and
-                self.plognorm, this is either "normal" or "lognormal".
-
-        Statistial Notes:
-            * indicates that there's an accompyaning tuple of confidence
-              interval. For example, self.mean and self.mean_conf_interval
-            + indicatates that there's a equivalent stat for log-transormed
-              data. For example, self.mean and self.log_mean (subject
-              to the absense of negitive results).
-
-        Methods (see docstrings for more info):
-            .boxplot
-            .probplot
-            .statplot
-        '''
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -654,7 +682,7 @@ class Location(object):
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
                 width=0.8, bacteria=False, ylabel=None, minpoints=5,
                 patch_artist=False, xlims=None):
-        '''Adds a boxplot to a matplotlib figure
+        """ Draws a boxplot and whisker on a matplotlib figure
 
         Parameters
         ----------
@@ -693,7 +721,7 @@ class Location(object):
         -------
         fig : matplotlib Figure
 
-        '''
+        """
 
         fig, ax = utils.figutils._check_ax(ax)
 
@@ -737,7 +765,7 @@ class Location(object):
                  ylabel=None, clearYLabels=False, managegrid=True,
                  rotateticklabels=True, setxlimits=True, bestfit=False,
                  **plotopts):
-        '''Adds a probability plot to a matplotlib figure
+        """ Draws a probability plot on a matplotlib figure
 
         Parameters
         ----------
@@ -749,7 +777,7 @@ class Location(object):
                 - 'prob': probabilty plot
                 - 'pp': percentile plot
                 - 'qq': quantile plot
-        [x|y]label : string, optional or None (default)
+        xlabel, ylabel : string, optional or None (default)
             Axis label for the plot.
         yscale : string , optional(default = 'log')
             Scale for the y-axis. Use 'log' for logarithmic (default) or
@@ -764,14 +792,19 @@ class Location(object):
         setxlimits : bool, optional (default is True)
             If True and `axtype` == 'prob', tehe axis limits will be
             automatically set based on the number of points in the plot.
+        bestfit : bool, optional (default is False)
+            Specifies whether a best-fit line should be added to the
+            plot.
         plotopts : keyword arguments
-            Additional options passed directly to `plt.plot`
+            Additional options passed directly to `plt.plot` when
+            drawing the data points.
 
         Returns
         -------
         fig : matplotlib.Figure instance
 
-        '''
+        """
+
         fig, ax = utils.figutils._check_ax(ax)
 
         scatter_kws = plotopts.copy()
@@ -808,8 +841,8 @@ class Location(object):
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='prob',
-                 patch_artist=False):
-        """Creates a two-axis figure with a boxplot & probability plot.
+                 patch_artist=False, **plotopts):
+        """ Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
         ----------
@@ -830,12 +863,17 @@ class Location(object):
             Otherwise, the arithmetic mean is used.
         ylabel : string, optional or None (default):
             Label for y-axis
-        probAxis : bool, optional (default = True)
-            Toggles the display of probabilities (True) or Z-scores
-            (i.e., theoretical quantiles) on the x-axis
+        axtype : string, optional (default = 'pp')
+            Type of probability plot to be created. Options are:
+                - 'prob': probabilty plot
+                - 'pp': percentile plot
+                - 'qq': quantile plot
         patch_artist : bool, optional (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
+        plotopts : keyword arguments
+            Additional options passed directly to `plt.plot` when
+            drawing the data points on the probability plots.
 
         Returns
         -------
@@ -855,7 +893,7 @@ class Location(object):
                      xlims={'left': pos - (0.6*width), 'right': pos + (0.6*width)})
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
-                      ylabel=None, clearYLabels=True)
+                      ylabel=None, clearYLabels=True, **plotopts)
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
@@ -866,7 +904,8 @@ class Location(object):
     def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
                         ylabel=None, yscale='log', ignoreROS=True,
                         markersize=4, xlims=None):
-        """
+        """ Draws a clustered & jittered scatter plot of the data
+
         Parameters
         ----------
         ax : matplotlib axes object, optional or None (default)
@@ -937,22 +976,32 @@ class Location(object):
 
     # other methods
     def applyFilter(self, filterfxn, **fxnkwargs):
-        '''
-        Filter the dataset and set the `include`/`exclude` attributes based on
-        a user-defined function. Warning: this is very advanced functionality.
-        Proceed with caution and ask for help.
+        """ Filter the dataset and set the `include`/`exclude`
+        properties based on a user-defined function.
 
-        Input:
-            filterfxn : function
-                A user defined function that filters the data and determines
-                if the `include` attribute should be True or False. It *must*
-                return a pandas.DataFrame and a bool (in that order), or an
-                error will be raised. The `filterfxn` must accept the
-                `Location.data` attribute as its first argument.
+        Warning
+        -------
+        This is very advanced functionality. Proceed with caution and
+        ask for help.
 
-            **fxnkwargs : optional named arguments pass to `filterfxn`
+        Parameters
+        ----------
+        filterfxn : callable
+            A user defined function that filters the data and determines
+            if the `include` attribute should be True or False. It *must*
+            return a pandas.DataFrame and a bool (in that order), or an
+            error will be raised. The `filterfxn` must accept the
+            `Location.data` attribute as its first argument.
 
-        '''
+        **fxnkwargs : keyword arguments
+            Optional named arguments pass to `filterfxn`.
+
+        Returns
+        -------
+        None
+
+        """
+
         newdata, include = filterfxn(self.full_data, **fxnkwargs)
         if not isinstance(newdata, pandas.DataFrame):
             raise ValueError ('first item returned by filterfxn must be a pandas.DataFrame')
@@ -965,16 +1014,31 @@ class Location(object):
 
 
 class Dataset(object):
+    """ Dataset: object for comparings two Location objects
+
+    Parameters
+    ----------
+    influent, effluent : wqio.Location
+        Location objects that will be compared. Data from each Location
+        should be joinable on the dataframe's index.
+    useROS : bool (default = True)
+        Toggles the use of Regression On Order Statistics to
+        estimate non-detect values when computing statistics.
+    name : string optional
+        Name for the dataset.
+
+    Notes
+    -----
+    Currently moving away from this in favor of DataCollections.
+
+    """
+
     # TODO: constructor should take dataframe, and build Location object,
     # not the other way around. This will allow Dataset.influent = None
     # by passing in a dataframe where df.shape[0] == 0
-    def __init__(self, influent, effluent, useROS=True, name=None, xlsDataDumpFile=None):
-
-        ## TODO 2013-11-12: need to use useROS to set useROS attr of the locations,
-        ## then use [Location].data for the stats #duh
+    def __init__(self, influent, effluent, useROS=True, name=None):
 
         # basic attributes
-        self.dumpFile = xlsDataDumpFile
         self.influent = influent
         self.effluent = effluent
         self._name = name
@@ -1452,6 +1516,9 @@ class Dataset(object):
             automatically set based on the number of points in the plot.
         managegrid : bool, optional (default is True)
             If True, typical gridlines will be added to the Axes.
+        bestfit : bool, optional (default is False)
+            Specifies whether a best-fit line should be added to the
+            plot.
 
         Returns
         -------
@@ -1792,6 +1859,35 @@ class Dataset(object):
 
 
 class DataCollection(object):
+    """ WIP: object to compare an arbitrary number of Locations
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        Dataframe all of the data to analyze.
+    rescol, qualcol, stationcol, paramcol : string
+        Column labels for the results, qualifiers, stations (monitoring
+        locations), and parameters (pollutants), respectively.
+    ndval : string (default = 'ND')
+        The *only* value found in ``qualcol`` that indicates that a
+        result is a non-detect. Non-detect results should be reported
+        as the detection limits.
+    othergroups : list of strings, optional
+        Other columns besides ``stationcol`` and ``paramcol`` that
+        should be considered when grouping into subsets of data.
+    useROS : bool (default = True)
+        Toggles the use of Regression On Order Statistics to
+        estimate non-detect values when computing statistics.
+    filterfxn : callable, optional
+        Function that will we passes to a pandas.Groupby object that
+        will filter out groups that should not be analyzed (for
+        whatever reason).
+    bsIter : int
+        Number of iterations the bootstrapper should use when estimating
+        confidence intervals around a statistic.
+
+    """
+
     def __init__(self, dataframe, rescol='res', qualcol='qual',
                  stationcol='station', paramcol='parameter', ndval='ND',
                  othergroups=None, useROS=True, filterfxn=None,

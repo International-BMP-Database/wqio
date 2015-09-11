@@ -19,6 +19,25 @@ SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
 
 
 class Storm(object):
+    """ Object representing a storm event
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        A datetime-indexed Dataframe containing all of the hydrologic
+        data and am interger column indentifying distinct storms.
+    stormnumber : int
+        The storm we care about.
+    precipcol, inflowcol, outflow, tempcol, stormcol : string, optional
+        Names for columns representing each hydrologic quantity.
+    freqMinutes : float (default = 5)
+        The time period, in minutes, between observations.
+    volume_conversion : float, optional (default = 1)
+        Conversion factor to go from flow to volume for a single
+        observation.
+
+    """
+    # TODO: rename freqMinutes to periodMinutes
     def __init__(self, dataframe, stormnumber, precipcol='precip',
                  inflowcol='inflow', outflowcol='outflow',
                  tempcol='temp', stormcol='storm', freqMinutes=5,
@@ -114,14 +133,6 @@ class Storm(object):
                 'alpha': 0.4,
                 'ymin': 0
             },
-            # self.waterlevelcol: {
-            #     'name': 'Level (m)',
-            #     'ylabel': 'Water level in BMP (m)',
-            #     'color': 'Black',
-            #     'linewidth': 1.5,
-            #     'alpha': 0.5,
-            #     'ymin': 0
-            # },
             self.tempcol: {
                 'name': 'Air Temp (deg C)',
                 'ylabel': 'Air Temperature (deg. C)',
@@ -347,6 +358,21 @@ class Storm(object):
         return self._summary_dict
 
     def is_small(self, minprecip=0.0, mininflow=0.0, minoutflow=0.0):
+        """ Determines whether a storm can be considered "small".
+
+        Parameters
+        ----------
+        minprecip, mininflow, minoutflow : float, optional (default = 0)
+            The minimum amount of each hydrologic quantity below which a
+            storm can be considered "small".
+
+        Returns
+        -------
+        storm_is_small : bool
+            True if the storm is considered small.
+
+        """
+
         storm_is_small = (
             (self.total_precip_depth is not None and self.total_precip_depth < minprecip) or
             (self.total_inflow_volume is not None and self.total_inflow_volume < mininflow) or
@@ -405,23 +431,38 @@ class Storm(object):
 
         return artists, labels
 
-    def plot_hydroquantity(self, quantity, ax=None, label=None, otherlabels=None, artists=None):
-        '''Plots a hydrologic quantity to a matplotlib axes.
+    def plot_hydroquantity(self, quantity, ax=None, label=None,
+                           otherlabels=None, artists=None):
+        """ Draws a hydrologic quantity to a matplotlib axes.
 
         Parameters
         ----------
         quantity : string
             Column name of the quantity you want to plot.
-        ax : matplotlib axes object or None, optional
+        ax : matplotlib axes object, optional
             The axes on which the data will be plotted. If None, a new
             one will be created.
+        label : string, optional
+            How the series should be labeled in the figure legend.
+        otherlabels : list of strings, optional
+            A list of other legend labels that have already been plotted
+            to ``ax``. If provided, ``label`` will be appended. If not
+            provided, and new list will be created.
+        artists : list of matplotlib artists, optional
+            A list of other legend items that have already been plotted
+            to ``ax``. If provided, the artist created will be appended.
+            If not provided, and new list will be created.
 
         Returns
         -------
-        proxy : matplotlib artist
-            A proxy artist for the plotted quantity
+        fig : matplotlib.Figure
+            The figure containing the plot.
+        labels : list of strings
+            Labels to be included in a legend for the figure.
+        artists : list of matplotlib artists
+            Symbology for the figure legend.
 
-        '''
+        """
 
         # setup the figure
         if ax is None:
@@ -548,7 +589,8 @@ class Storm(object):
 
 
 class HydroRecord(object):
-    '''
+    """ Class representing an entire hydrologic record.
+
     Parameters
     ----------
     hydrodata : pandas.DataFrame
@@ -560,22 +602,31 @@ class HydroRecord(object):
         Name of column in `hydrodata` containing influent flow data.
     outflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing effluent flow data.
-    intereventPeriods : int, optional (default = 36)
-        The number of dry records (no flow or rain) required to end
-        a storm.
-    standardizeColNames : bool, optional (default = True)
-        Toggles renaming columns to standard names in the returned
-        DataFrame.
+    stormcol : string (default = 'storm')
+        Name of column in `hydrodata` indentifying distinct storms.
+    minprecip, mininflow, minoutflow : float, optional (default = 0)
+        The minimum amount of each hydrologic quantity below which a
+        storm can be considered "small".
     outputfreqMinutes : int, optional (default = 10)
         The default frequency (minutes) to which all data will be
         resampled. Precipitation data will be summed up across '
         multiple timesteps during resampling, while flow will be
         averaged.
-    debug : bool (default = False)
-        If True, diagnostic columns will not be dropped prior to
-        returning the dataframe of parsed_storms.
-    '''
+    intereventHours : int, optional (default = 6)
+        The dry duration (no flow or rain) required to signal the end of
+        a storm.
+    volume_conversion : float, optional (default = 1)
+        Conversion factor to go from flow to volume for a single
+        observation.
+    stormclass : object, optional
+        Defaults to wqio.hydro.Storm. Can be a subclass of that in cases
+        where custom functionality is needed.
+    lowmem : bool (default = False)
+        If True, all dry observations are removed from the dataframe.
 
+    """
+
+    # TODO: rename `outputfreqMinutes` to `outputPeriodMinutes`
     def __init__(self, hydrodata, precipcol=None, inflowcol=None,
                  outflowcol=None, tempcol=None, stormcol='storm',
                  minprecip=0.0, mininflow=0.0, minoutflow=0.0,
@@ -674,12 +725,11 @@ class HydroRecord(object):
         return self._storm_stats.sort(columns=['Storm Number']).reset_index(drop=True)
 
     def _define_storms(self, debug=False):
-        '''
-        Loops through the hydrologic records and parses the data into
-        storms. In this context, a storm is defined as starting whenever
-        the hydrologic records shows non-zero precipitation or
-        [in|out]flow from the BMP after a minimum inter-event dry period
-        duration specified in the the function call.
+        """ Parses the hydrologic data into distinct storms. In this
+        context, a storm is defined as starting whenever the hydrologic
+        records shows non-zero precipitation or [in|out]flow from the
+        BMP after a minimum inter-event dry period duration specified
+        in the the function call.
 
         Parameters
         ----------
@@ -700,7 +750,7 @@ class HydroRecord(object):
             belongs. Records where `storm` == 0 are not a part of any
             storm.
 
-        '''
+        """
 
         data = self._raw_data.copy()
 
@@ -769,7 +819,7 @@ class HydroRecord(object):
         return data
 
     def getStormFromTimestamp(self, timestamp, lookback_hours=0, smallstorms=False):
-        '''Get the storm associdated with a give (sample) date
+        """ Get the storm associdated with a give (sample) date
 
         Parameters
         ----------
@@ -789,7 +839,7 @@ class HydroRecord(object):
         storm_number : int
         storm : wqio.Storm
 
-        '''
+        """
 
         # santize date input
         timestamp = utils.santizeTimestamp(timestamp)
