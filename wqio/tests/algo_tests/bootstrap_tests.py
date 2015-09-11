@@ -7,13 +7,10 @@ from wqio import testing
 from wqio.algo import bootstrap
 
 
-def test__boot_strap():
-    x = bootstrap._bootstrapMixin()
-    assert_true(hasattr(x, '_acceleration'))
-    assert_true(hasattr(x, '_make_bootstrap_array'))
-    assert_true(hasattr(x, '_eval_BCA'))
-    assert_true(hasattr(x, '_eval_percentile'))
-    pass
+def test__acceleration():
+    data = testing.getTestROSData()['res']
+    known_acceleration = -0.024051865664929263
+    assert_almost_equal(bootstrap._acceleration(data), known_acceleration, places=5)
 
 
 class test_Stat:
@@ -26,12 +23,9 @@ class test_Stat:
         self.bsStat = bootstrap.Stat(np.array(self.data.res), statfxn=self.statfxn,
                                      alpha=self.alpha, NIter=self.NIter)
 
-    def test__setup(self):
-        assert_true(hasattr(self.bsStat, '_setup'))
-
     def test__boot_stats(self):
-        assert_true(hasattr(self.bsStat, '_boot_stats'))
-        assert_equal(self.bsStat._boot_stats.shape[0], self.NIter)
+        assert_true(hasattr(self.bsStat, 'boot_stats'))
+        assert_equal(self.bsStat.boot_stats.shape[0], self.NIter)
 
     def test_BCA(self):
         assert_true(hasattr(self.bsStat, 'BCA'))
@@ -47,9 +41,9 @@ class test_Stat:
         assert_almost_equal(knownPer_res, Per_res, places=1)
         nptest.assert_array_almost_equal(knownPer_ci, Per_ci, decimal=1)
 
-    def test__boot_array(self):
-        assert_true(hasattr(self.bsStat, '_boot_array'))
-        assert_tuple_equal(self.bsStat._boot_array.shape, (self.NIter, self.data.res.shape[0]))
+    def test_boot_array(self):
+        assert_true(hasattr(self.bsStat, 'boot_array'))
+        assert_tuple_equal(self.bsStat.boot_array.shape, (self.NIter, self.data.res.shape[0]))
 
     def test_data(self):
         assert_true(hasattr(self.bsStat, 'data'))
@@ -71,10 +65,6 @@ class test_Stat:
         assert_true(hasattr(self.bsStat, 'prelim_result'))
         assert_equal(self.statfxn(self.data.res), self.bsStat.prelim_result)
 
-    def test__acceleration(self):
-        known_acceleration = -0.024051865664929263
-        assert_almost_equal(self.bsStat._acceleration(), known_acceleration, places=5)
-
 
 class test_Fit:
     def setup(self):
@@ -90,12 +80,9 @@ class test_Fit:
         self.bsFit = bootstrap.Fit(np.array(self.data.index), np.array(self.data.res),
                                    curvefitfxn=cf_line, alpha=self.alpha, NIter=self.NIter)
 
-    def test__setup(self):
-        assert_true(hasattr(self.bsFit, '_setup'))
-
     def test__boot_stats(self):
-        assert_true(hasattr(self.bsFit, '_boot_stats'))
-        assert_equal(self.bsFit._boot_stats.shape[0], self.NIter)
+        assert_true(hasattr(self.bsFit, 'boot_stats'))
+        assert_equal(self.bsFit.boot_stats.shape[0], self.NIter)
 
     def test_BCA(self):
         assert_true(hasattr(self.bsFit, 'BCA'))
@@ -116,9 +103,9 @@ class test_Fit:
         nptest.assert_array_almost_equal(knownPer_res, Per_res, decimal=1)
         nptest.assert_array_almost_equal(knownPer_ci, Per_ci, decimal=1)
 
-    def test__boot_array(self):
-        assert_true(hasattr(self.bsFit, '_boot_array'))
-        assert_tuple_equal(self.bsFit._boot_array.shape, (self.NIter, self.data.res.shape[0], 2))
+    def test_boot_array(self):
+        assert_true(hasattr(self.bsFit, 'boot_array'))
+        assert_tuple_equal(self.bsFit.boot_array.shape, (self.NIter, self.data.res.shape[0], 2))
 
     def test_data(self):
         assert_true(hasattr(self.bsFit, 'data'))
@@ -148,7 +135,3 @@ class test_Fit:
         assert_true(hasattr(self.bsFit, 'prelim_result'))
         nptest.assert_array_almost_equal(np.array([0.4992521, 1.63328575]),
                                          self.bsFit.prelim_result)
-
-    def test__acceleration(self):
-        known_acceleration = 0.0
-        assert_almost_equal(self.bsFit._acceleration(), known_acceleration, places=5)
