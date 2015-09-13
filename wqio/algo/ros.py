@@ -75,6 +75,8 @@ class MR(object):
     qualcol : optional string (default='qual')
         The name of the column containing the qualifiers marking the
         results as censored.
+    finalcol : optional string (default='final_col')
+        The name of the column imputed data from ``rescol``.
     ndsymbol : optional string (default='ND')
         The value of the `qualcol` column of `data` that marks as result
         as being censored. In processing, all qualifiers that are equal
@@ -111,17 +113,27 @@ class MR(object):
 
     """
 
-    def __init__(self, data, rescol='res', qualcol='qual', ndsymbol='ND',
-                 fitlogs=True, dist='norm'):
+    def __init__(self, data, rescol='res', qualcol='qual', finalcol='final_data',
+                 ndsymbol='ND', fitlogs=True, dist='norm'):
+
+        self.rescol = rescol
+        self.qualcol = qualcol
+        self.finalcol = finalcol
+        self.ndsymbol = ndsymbol
+        self.fitlogs = fitlogs
+        if isinstance(dist, str):
+            self.dist = getattr(stats, dist)
+        else:
+            self.dist = dist
 
         def _ros_DL_index(row):
             '''
             Helper function to create an array of indices for the detection
             limits (self.DLs) corresponding to each data point
             '''
-            DLIndex = np.zeros(len(self.data.res))
+            DLIndex = np.zeros(len(self.data[self.rescol]))
             if self.DLs.shape[0] > 0:
-                index, = np.where(self.DLs['DL'] <= row['res'])
+                index, = np.where(self.DLs['DL'] <= row[self.rescol])
                 DLIndex = index[-1]
             else:
                 DLIndex = 0
@@ -134,37 +146,27 @@ class MR(object):
         if not data.index.is_unique:
             raise ValueError("Index of input DataFrame `data` must be unique")
 
-        if data[rescol].min() <= 0:
+        if data[self.rescol].min() <= 0:
             raise ValueError('All result values of `data` must be positive')
-
-        # rename the dataframe columns to the standard names
-        # these will be used throughout ros.py when convenient
-        newdata = data.rename(columns={rescol: 'res', qualcol: 'qual'})
 
         # confirm a datatype real quick
         try:
-            newdata.res = np.float64(newdata.res)
+            data[self.rescol] = np.float64(data[self.rescol])
         except ValueError:
             raise ValueError('Result data is not uniformly numeric')
 
         # and get the basic info
-        self.N_tot = newdata.shape[0]
-        self.N_nd = newdata[newdata.qual == ndsymbol].shape[0]
+        self.N_tot = data.shape[0]
+        self.N_nd = data[data[self.qualcol] == self.ndsymbol].shape[0]
 
         # clear out all of the non-ND quals
-        newdata['qual'] = newdata['qual'].apply(lambda x: 'ND' if x == ndsymbol else '=')
-        #newdata.qual[newdata.qual != ndsymbol] = '='
-        #newdata.qual[newdata.qual == ndsymbol] = 'ND'
+        data[self.qualcol] = data[self.qualcol].apply(lambda x: self.ndsymbol if x == self.ndsymbol else '=')
 
-        # sort the data
-        self.data = rosSort(newdata, rescol='res', qualcol='qual',
-                            ndsymbol=ndsymbol)
+        # sort the dataframe
+        self.data = rosSort(data, rescol=self.rescol, qualcol=self.qualcol,
+                            ndsymbol=self.ndsymbol)
 
-        self.fitlogs = fitlogs
-        if isinstance(dist, str):
-            self.dist = getattr(stats, dist)
-        else:
-            self.dist = dist
+
 
         # create a dataframe of detection limits and their parameters
         # used in the ROS estimation
@@ -183,7 +185,7 @@ class MR(object):
         self.debug = self.data.copy(deep=True)
 
         # select out only the necessary columns for data
-        self.data = self.data[['final_data', 'res', 'qual']]
+        self.data = self.data[[self.finalcol, self.rescol, self.qualcol]]
 
     def cohn(self):
         """ Creates a DataFrame of the unique detection limits in the
@@ -194,28 +196,28 @@ class MR(object):
             """Helper function to compute the `A` Cohn number."""
 
             # index of results above the lower DL
-            above = self.data.res >= row['lower']
+            above = self.data[self.rescol] >= row['lower']
 
             # index of results below the upper DL
-            below = self.data.res < row['upper']
+            below = self.data[self.rescol] < row['upper']
 
             # index of non-detect results
-            detect = self.data.qual != 'ND'
+            detect = self.data[self.qualcol] != self.ndsymbol
 
             # return the number of results where all condictions are True
             return self.data[above & below & detect].shape[0]
 
         def _B(row):
-            """Helper function to compute the `D` Cohn number."""
+            """Helper function to compute the `B` Cohn number."""
             # index of data less than the lower DL
-            less_than = self.data.res < row['lower']
+            less_than = self.data[self.rescol] < row['lower']
 
             # index of data less than or equal to the lower DL
-            less_thanequal = self.data.res <= row['lower']
+            less_thanequal = self.data[self.rescol] <= row['lower']
 
             # index of detects, non-detects
-            detect = self.data.qual != 'ND'
-            nondet = self.data.qual == 'ND'
+            detect = self.data[self.qualcol] != self.ndsymbol
+            nondet = self.data[self.qualcol] == self.ndsymbol
 
             # number results less than or equal to lower DL and non-detect
             LTE_nondets = self.data[less_thanequal & nondet].shape[0]
@@ -228,17 +230,17 @@ class MR(object):
 
         def _C(row):
             """Helper function to compute the `C` Cohn number."""
-            censored_below = self.data.res[self.data.qual == 'ND'] == row['lower']
+            censored_below = self.data[self.rescol][self.data[self.qualcol] == self.ndsymbol] == row['lower']
             return censored_below.sum()
 
         # unique values
-        DLs = pandas.unique(self.data.res[self.data.qual == 'ND'])
+        DLs = pandas.unique(self.data[self.rescol][self.data[self.qualcol] == self.ndsymbol])
 
         # if there is a results smaller than the minimum detection limit,
         # add that value to the array
         if DLs.shape[0] > 0:
-            if self.data.res.min() < DLs.min():
-                DLs = np.hstack([self.data.res.min(), DLs])
+            if self.data[self.rescol].min() < DLs.min():
+                DLs = np.hstack([self.data[self.rescol].min(), DLs])
 
             # create a dataframe
             DLs = pandas.DataFrame(DLs, columns=['DL'])
@@ -298,7 +300,7 @@ class MR(object):
         for n, index in enumerate(self.data.index):
             if n == 0 \
             or self.data['DLIndex'].iloc[n] != self.data['DLIndex'].iloc[n-1] \
-            or self.data.qual.iloc[n] != self.data.qual.iloc[n-1]:
+            or self.data[self.qualcol].iloc[n] != self.data[self.qualcol].iloc[n-1]:
                 self.data.loc[index, 'Norm Ranks'] = 1
             else:
                 self.data.loc[index, 'Norm Ranks'] = self.data['Norm Ranks'].iloc[n-1] + 1
@@ -306,10 +308,10 @@ class MR(object):
         # go through each index and see if the value is a detection
         # and average the ranks of all equivalent values,
         def avgrank(r):
-            if r['qual'] != 'ND':
+            if r[self.qualcol] != self.ndsymbol:
                 index = (self.data.DLIndex == r['DLIndex']) & \
-                        (self.data.res == r['res']) & \
-                        (self.data.qual != 'ND')
+                        (self.data[self.rescol] == r[self.rescol]) & \
+                        (self.data[self.qualcol] != self.ndsymbol)
                 return self.data['Norm Ranks'][index].mean()
             else:
                 return r['Norm Ranks']
@@ -323,7 +325,7 @@ class MR(object):
             """Helper to compute the ROS'd plotting position."""
             dl_1 = self.DLs.iloc[row['DLIndex']]
             dl_2 = self.DLs.iloc[row['DLIndex']+1]
-            if row['qual'] == 'ND':
+            if row[self.qualcol] == self.ndsymbol:
                 return (1 - dl_1['PE']) * row['Norm Ranks']/(dl_1['C']+1)
             else:
                 return (1 - dl_1['PE']) + (dl_1['PE'] - dl_2['PE']) * \
@@ -333,31 +335,31 @@ class MR(object):
             """ Helper fucntion to select "final" data from original
             detects and estimated non-detects.
             """
-            if row['qual'] == 'ND':
+            if row[self.qualcol] == self.ndsymbol:
                 return row['modeled_data']
             else:
-                return row['res']
+                return row[self.rescol]
 
         def _select_half_DLs(row):
             """ Helper function to select half DLs when there are too
             few detects.
             """
-            if row['qual'] == 'ND':
+            if row[self.qualcol] == self.ndsymbol:
                 return 0.5 * row['res']
             else:
                 return row['res']
 
         # detect/non-detect selectors
-        detect_selector = self.data.qual != 'ND'
-        nondet_selector = self.data.qual == 'ND'
+        detect_selector = self.data[self.qualcol] != self.ndsymbol
+        nondet_selector = self.data[self.qualcol] == self.ndsymbol
 
         # if there are no non-detects, just spit everything back out
         if self.N_nd == 0:
-            self.data['final_data'] = self.data['res']
+            self.data[self.finalcol] = self.data[self.rescol]
 
         # if there are too few detects, use half DL
         elif self.N_tot - self.N_nd < 2 or self.N_nd/self.N_tot > 0.8:
-            self.data['final_data'] = self.data.apply(_select_half_DLs, axis=1)
+            self.data[self.finalcol] = self.data.apply(_select_half_DLs, axis=1)
 
         # in most cases, actually use the MR method to estimate NDs
         else:
@@ -372,10 +374,10 @@ class MR(object):
             self.data['plot_pos'] = self.data.apply(_ros_plotting_pos, axis=1)
 
             # correctly sort the plotting positions of the ND data:
-            # ND_plotpos = self.data['plot_pos'][self.data['qual'] == 'ND']
+            # ND_plotpos = self.data['plot_pos'][self.data['qual'] == self.ndsymbol]
             # ND_plotpos.values.sort()
 
-            # NDs = (self.data.qual == 'ND').index
+            # NDs = (self.data[self.qualcol] == self.ndsymbol).index
             # self.data['plot_pos'].replace(ND_plotpos, inplace=True)
 
             # estimate a preliminary value of the Z-scores
@@ -383,9 +385,9 @@ class MR(object):
 
             # fit a line to the logs of the detected data
             if self.fitlogs:
-                detect_vals = np.log(self.data['res'][detect_selector])
+                detect_vals = np.log(self.data[self.rescol][detect_selector])
             else:
-                detect_vals = self.data['res'][detect_selector]
+                detect_vals = self.data[self.rescol][detect_selector]
             fit = stats.linregress(self.data['Zprelim'][detect_selector],
                                    detect_vals)
 
@@ -401,7 +403,7 @@ class MR(object):
             )
 
             # select out the final data
-            self.data['final_data'] = self.data.apply(
+            self.data[self.finalcol] = self.data.apply(
                 _select_final_data,
                 axis=1
             )
@@ -425,15 +427,15 @@ class MR(object):
         """
 
         fig, ax1 = plt.subplots()
-        ax1.plot(self.data.Z[self.data.qual != 'ND'],
-                 self.data.res[self.data.qual != 'ND'],
+        ax1.plot(self.data.Z[self.data[self.qualcol] != self.ndsymbol],
+                 self.data[self.rescol][self.data[self.qualcol] != self.ndsymbol],
                  'ko', mfc='Maroon', ms=6, label='original detects', zorder=8)
 
-        ax1.plot(self.data.Z[self.data.qual == 'ND'],
-                 self.data.res[self.data.qual == 'ND'],
+        ax1.plot(self.data.Z[self.data[self.qualcol] == self.ndsymbol],
+                 self.data[self.rescol][self.data[self.qualcol] == self.ndsymbol],
                  'ko', ms=6, label='original non-detects', zorder=8, mfc='none')
 
-        ax1.plot(self.data.Z, self.data.final_data, 'ks', ms=4, zorder=10,
+        ax1.plot(self.data.Z, self.data[self.final_col], 'ks', ms=4, zorder=10,
                  label='modeled data', mfc='DodgerBlue')
 
         ax1.set_xlabel(r'$Z$-score')

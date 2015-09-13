@@ -44,31 +44,24 @@ class _baseMR_Mixin:
     @raises(ValueError)
     def test_zero_data(self):
         data = self.data.copy()
-        data.loc[0, 'res'] = 0.0
-        mr = ros.MR(data)
+        data.loc[0, self.mr.rescol] = 0.0
+        mr = ros.MR(data, rescol=self.mr.rescol, qualcol=self.mr.qualcol, ndsymbol=self.mr.ndsymbol)
 
     @raises(ValueError)
     def test_negative_data(self):
         data = self.data.copy()
-        data.loc[0, 'res'] = -1.0
-        mr = ros.MR(data)
+        data.loc[0, self.mr.rescol] = -1.0
+        mr = ros.MR(data, rescol=self.mr.rescol, qualcol=self.mr.qualcol, ndsymbol=self.mr.ndsymbol)
 
     def test_data(self):
         assert_true(hasattr(self.mr, 'data'))
         assert_is_instance(self.mr.data, pd.DataFrame)
-
-    def test_data_cols(self):
-        assert_list_equal(self.mr.data.columns.tolist(),
-                          ['final_data', 'res', 'qual'])
+        assert_list_equal(self.mr.data.columns.tolist(), self.known_data_cols)
 
     def test_debug_attr(self):
         assert_true(hasattr(self.mr, 'debug'))
         assert_is_instance(self.mr.data, pd.DataFrame)
-
-    def test_debug_cols(self):
-        assert_list_equal(self.mr.debug.columns.tolist(),
-                          ['res', 'qual', 'DLIndex', 'Norm Ranks', 'Avg Ranks',
-                           'plot_pos', 'Zprelim', 'modeled_data', 'final_data'])
+        assert_list_equal(self.mr.debug.columns.tolist(), self.known_debug_cols)
 
     def test_N_tot(self):
         assert_true(hasattr(self.mr, 'N_tot'))
@@ -76,7 +69,7 @@ class _baseMR_Mixin:
 
     def test_N_nd(self):
         assert_true(hasattr(self.mr, 'N_nd'))
-        assert_equal(self.mr.N_nd, self.data[self.data.qual == self.ndsymbol].shape[0])
+        assert_equal(self.mr.N_nd, self.data[self.data[self.mr.qualcol] == self.ndsymbol].shape[0])
 
     def test_DLs_attr(self):
         assert_true(hasattr(self.mr, 'DLs'))
@@ -110,27 +103,18 @@ class _baseMR_Mixin:
 
         fdarray = np.array(self.mr.data.final_data)
         fdarray.sort()
-
-        # zarray = np.array(self.mr.data.Z)
-        # zarray.sort()
-
-        # nptest.assert_array_almost_equal(known_z, zarray, decimal=2)
         nptest.assert_array_almost_equal(known_fd, fdarray, decimal=2)
 
-    #@nptest.dec.skipif(not usetex)
-    #def test_MR_plot(self):
-    #    assert_true(hasattr(self.mr, 'plot'))
-    #    self.mr.plot(self.makePath('test_plot.png'))
 
     @raises(ValueError)
     def test_dup_index_error(self):
         data = self.data.append(self.data)
-        mr = ros.MR(data)
+        mr = ros.MR(data, rescol=self.mr.rescol, qualcol=self.mr.qualcol, ndsymbol=self.mr.ndsymbol)
 
     @raises(ValueError)
     def test_non_dataframe_error(self):
         data = self.data.values
-        mr = ros.MR(data)
+        mr = ros.MR(data, rescol=self.mr.rescol, qualcol=self.mr.qualcol, ndsymbol=self.mr.ndsymbol)
 
 
 class test_MR_baseline(_baseMR_Mixin):
@@ -138,10 +122,9 @@ class test_MR_baseline(_baseMR_Mixin):
         self.ndsymbol = 'ND'
         self.data = testing.getTestROSData()
         self.mr = ros.MR(self.data, ndsymbol=self.ndsymbol)
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'utils', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'utils', 'tests', 'result_images')
+        self.known_data_cols = ['final_data', 'res', 'qual']
+        self.known_debug_cols = ['res', 'qual', 'DLIndex', 'Norm Ranks', 'Avg Ranks',
+                                 'plot_pos', 'Zprelim', 'modeled_data', 'final_data']
 
 
 class test_MR_weirdNDsymbol(_baseMR_Mixin):
@@ -150,8 +133,18 @@ class test_MR_weirdNDsymbol(_baseMR_Mixin):
         self.data = testing.getTestROSData()
         self.data['qual'] = self.data['qual'].str.replace('ND', self.ndsymbol)
         self.mr = ros.MR(self.data, ndsymbol=self.ndsymbol)
-        if os.path.split(os.getcwd())[-1] == 'src':
-            self.prefix = os.path.join('.', 'utils', 'tests', 'result_images')
-        else:
-            self.prefix = os.path.join('..', 'utils', 'tests', 'result_images')
+        self.known_data_cols = ['final_data', 'res', 'qual']
+        self.known_debug_cols = ['res', 'qual', 'DLIndex', 'Norm Ranks', 'Avg Ranks',
+                                 'plot_pos', 'Zprelim', 'modeled_data', 'final_data']
+
+
+class test_MR_weirdEverything(_baseMR_Mixin):
+    def setup(self):
+        self.ndsymbol = '<<'
+        self.data = testing.getTestROSData().rename(columns={'res': 'conc', 'qual': 'cen'})
+        self.data['cen'] = self.data['cen'].str.replace('ND', self.ndsymbol)
+        self.mr = ros.MR(self.data, ndsymbol=self.ndsymbol, rescol='conc', qualcol='cen')
+        self.known_data_cols = ['final_data', 'conc', 'cen']
+        self.known_debug_cols = ['conc', 'cen', 'DLIndex', 'Norm Ranks', 'Avg Ranks',
+                                 'plot_pos', 'Zprelim', 'modeled_data', 'final_data']
 
