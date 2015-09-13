@@ -1116,7 +1116,7 @@ def test_dataset_jointplot():
 
 
 @nottest
-def make_dc_data():
+def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     np.random.seed(0)
 
     dl_map = {
@@ -1132,19 +1132,19 @@ def make_dc_data():
     ], names=['param', 'bmp', 'state', 'loc'])
 
     array = np.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
-    data = pandas.DataFrame(data=array, index=index, columns=['res'])
+    data = pandas.DataFrame(data=array, index=index, columns=[rescol])
     data['DL'] = data.apply(
         lambda r: dl_map.get(r.name[0]),
         axis=1
     )
 
-    data['res'] = data.apply(
-        lambda r: dl_map.get(r.name[0]) if r['res'] < r['DL'] else r['res'],
+    data[rescol] = data.apply(
+        lambda r: dl_map.get(r.name[0]) if r[rescol] < r['DL'] else r[rescol],
         axis=1
     )
 
-    data['qual'] = data.apply(
-        lambda r: 'ND' if r['res'] <= r['DL'] else '=',
+    data[qualcol] = data.apply(
+        lambda r: ndval if r[rescol] <= r['DL'] else '=',
         axis=1
     )
 
@@ -1154,6 +1154,7 @@ def make_dc_data():
 class _base_DataCollecionMixin(object):
     @nottest
     def _base_setup(self):
+        self.known_rescol = 'ros_res'
         self.known_raw_rescol = 'res'
         self.known_roscol = 'ros_res'
         self.known_qualcol = 'qual'
@@ -1239,12 +1240,14 @@ class _base_DataCollecionMixin(object):
 class test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
         self._base_setup()
-        self.dc = DataCollection(make_dc_data(), paramcol='param',
-                                 stationcol='loc')
+        self.data = make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
+                                 qualcol=self.known_qualcol)
+        self.dc = DataCollection(self.data, paramcol='param', stationcol='loc',
+                                 ndval=self.known_ndval, rescol=self.known_raw_rescol,
+                                 qualcol=self.known_qualcol)
 
-        self.known_rescol = 'ros_res'
         self.known_groupby = ['loc', 'param']
-        self.known_columns = ['loc', 'param', 'res', 'qual']
+        self.known_columns = ['loc', 'param', self.known_raw_rescol, self.known_qualcol]
         self.known_bsIter = 10000
         self.known_means = pandas.DataFrame({
             ('Reference', 'upper'): {
@@ -1362,3 +1365,15 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
                 'D': 0.4790, 'E': 0.7710, 'F': 0.6370, 'G': 0.3070
             }
         })
+
+
+class test_DataCollection_customNDval(test_DataCollection_baseline):
+    @nottest
+    def _base_setup(self):
+        self.known_raw_rescol = 'conc'
+        self.known_roscol = 'ros_conc'
+        self.known_rescol = 'ros_conc'
+        self.known_qualcol = 'anote'
+        self.known_stationcol = 'loc'
+        self.known_paramcol = 'param'
+        self.known_ndval = '<'

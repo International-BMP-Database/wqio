@@ -1934,7 +1934,10 @@ class DataCollection(object):
 
         if self.useROS:
             def fxn(g):
-                return algo.ros.MR(g).data
+                mr = algo.ros.MR(g, rescol=self._raw_rescol,
+                                 qualcol=self.qualcol,
+                                 ndsymbol=self.ndval)
+                return mr.data
         else:
             def fxn(g):
                 g[self.roscol] = np.nan
