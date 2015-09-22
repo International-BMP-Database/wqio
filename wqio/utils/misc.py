@@ -15,18 +15,32 @@ from scipy import stats
 import statsmodels.api as sm
 
 
-def santizeTimestamp(timestamp):
-    if not isinstance(timestamp, pandas.Timestamp):
-        try:
-            timestamp = pandas.Timestamp(timestamp)
-        except:
-            raise ValueError('{} could not be coerced into a pandas.Timestamp')
+def santizeTimestamp(datelike):
+    """ Converts datetime-like objects to pandas.Timestamp
+
+    Parameters
+    ----------
+    datelike : datetime.datetime, string, or Timestamp
+        The value to be coerced into the pandas.Timestamp.
+
+    Returns
+    -------
+    timestamp : pandas.Timestamp
+        Coerced value.
+
+    """
+
+    try:
+        timestamp = pandas.Timestamp(datelike)
+    except:
+        msg = '{} could not be coerced into a pandas.Timestamp'.format(datelike)
+        raise ValueError(msg)
 
     return timestamp
 
 
 def getSeason(date):
-    '''Defines the season from a given date.
+    """ Defines the season from a given date.
 
     Parameters
     ----------
@@ -44,7 +58,8 @@ def getSeason(date):
     start on Decemeber 22). This isn't strictly true, but it's good
     enough for now.
 
-    '''
+    """
+
     date = santizeTimestamp(date)
     if (date.month == 12 and date.day >= 22) or \
             (date.month in [1, 2]) or \
@@ -67,29 +82,73 @@ def getSeason(date):
 
 
 def addSecondColumnLevel(levelval, levelname, olddf):
-    '''
-    Takes a simple index on a dataframe's columns and adds a new level
-    with a single value.
-    E.g., df.columns = ['res', 'qual'] -> [('Infl' ,'res'), ('Infl', 'qual')]
-    '''
+    """ Add a second level to the column-index if a dataframe.
+
+    Parameters
+    ----------
+    levelval : int or string
+        Constant value to be assigned to the second level.
+    levelname : string
+        The name of the second level.
+    olddf : pandas.DataFrame
+        The original dataframe to be modified.
+
+    Returns
+    -------
+    newdf : pandas.DataFrame
+        The mutated dataframe with a MultiIndex in the columns.
+
+    Example
+    -------
+    >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
+    >>> df.columns
+    Index(['res', 'qual'], dtype='object')
+    >>> df2 = utils.addSecondColumnLevel('Infl', 'location', df)
+    >>> df2.columns
+    MultiIndex(levels=[['Infl'], ['qual', 'res']],
+               labels=[[0, 0], [1, 0]],
+               names=['loc', 'quantity'])
+
+    """
+
     if isinstance(olddf.columns, pandas.MultiIndex):
         raise ValueError('Dataframe already has MultiIndex on columns')
+
+    origlevel = 'quantity'
+    if olddf.columns.names[0] is not None:
+        origlevel = olddf.columns.names[0]
+
+    # define the index
     colarray = [[levelval]*len(olddf.columns), olddf.columns]
     colindex = pandas.MultiIndex.from_arrays(colarray)
+
+    # copy the dataframe and redefine the columns
     newdf = olddf.copy()
     newdf.columns = colindex
-    newdf.columns.names = [levelname, 'quantity']
+    newdf.columns.names = [levelname, origlevel]
     return newdf
 
 
 def getUniqueDataframeIndexVal(df, indexlevel):
-    '''
-    Confirms that a given level of a dataframe's index only has
-    one unique value. Useful for confirming consistent units.
+    """ Confirms that a given level of a dataframe's index only has
+    one unique value. Useful for confirming consistent units. Raises
+    error if level is not a single value. Returns unique value of the
+    index level.
 
-    Raises error if level is not a single value. Returns value
-    Otherwise
-    '''
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe whose index will be inspected.
+    indexlevel : int or string
+        Level of the dataframe's index to be
+
+    Returns
+    -------
+    uniqueval
+        The unique value of the index.
+
+    """
+
     index = np.unique(df.index.get_level_values(indexlevel).tolist())
     if index.shape != (1,):
         raise ValueError('index level "%s" is not unique!' % indexlevel)
@@ -98,22 +157,40 @@ def getUniqueDataframeIndexVal(df, indexlevel):
 
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
-    '''
-    Formats a number into a string with the correct number of sig figs.
+    """ Formats a number with the correct number of sig figs.
 
-    Input:
-        x (numeric) : the number you want to round
-        n (int) : the number of sig figs it should have
-        tex (bool) : toggles the scientific formatting of the number
-        pval (bool) : if True and x < 0.001, will return "<0.001"
-        forceint : if true, simply returns int(x)
+    Parameters
+    ----------
+    x : int or float
+        The number you want to format.
+    n : int
+        The number of sig figs it should have.
+    expthresh : int, optional (default = 5)
+        The absolute value of the order of magnitude at which numbers
+        are formatted in exponential notation.
+    tex : bool, optional (default is False)
+        Toggles the scientific formatting of the number either for
+        terminal output (False) or LaTeX documents (True).
+    pval : bool, optional (default is False)
+        Useful for formatting p-values from hypothesis tests. When True
+        and x < 0.001, will return "<0.001".
+    forceint : bool, optional (default is False)
+        If true, simply returns int(x)
 
-    Typical Usage:
-        >>> print(sigFigs(1247.15, 3))
-               1250
-        >>> print(sigFigs(1247.15, 7))
-               1247.150
-    '''
+    Returns
+    -------
+    formatted : str
+        The formatted number as a string
+
+    Examples
+    --------
+    >>> print(sigFigs(1247.15, 3))
+           1250
+    >>> print(sigFigs(1247.15, 7))
+           1247.150
+
+    """
+
     # check on the number provided
     if x is not None and not np.isinf(x) and not np.isnan(x):
 
@@ -169,19 +246,10 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
 
 def _sig_figs(x):
-    '''
-    Wrapper around `utils.sigFig` so it only requires 1 argument for the
-        purpose of "apply"-ing it to a pandas dataframe
+    """ Wrapper around `utils.sigFig` (n=3, tex=True) so it only requires 1
+    argument for the purpose of "apply"-ing it to a pandas dataframe.
+    """
 
-    Input:
-        x : any number you want
-
-    Writes:
-        None
-
-    Returns
-        A string representation of `x` with 3 significant figures
-    '''
     return sigFigs(x, n=3, tex=True)
 
 
@@ -213,17 +281,33 @@ def formatResult(result, qualifier, sigfigs=3):
 
 
 def _boxplot_legend(ax, notch=False, shrink=2.5, fontsize=10, showmean=False):
-    '''
-    Help function to draw a boxplot legend.
-    Input:
-        ax (matplotlib axes object) : axes on which the legend
-            will be plotted
-        notch (bool, default False) : whether or not to include
-            notches (confidence intervals) around the median
-        shrink (float, default 2.5) : some measure of how far away
-            the annotation arrows should be from the elements to
-            which they point.
-    '''
+    """ Drawas an annotated a boxplot to serve as a legend.
+
+    Parameters
+    ----------
+    ax : matplotlib.Axes
+        Axes on which the legend will be drawn.
+    notch : bool, optional (default = False)
+        Whether or not to include notches (confidence intervals) around
+        the median.
+    shrink : float, optional (default = 2.5)
+        Some measure of how far away the annotation arrows should be
+        from the elements to which they point.
+    fontsize : int, optional (default = 10)
+        Fontsize of the annotation in points.
+    showmean : bool, optonal (default = False)
+        Toggles the display of the mean on the on the plot.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Operates on an existing Axes object.
+
+    """
+
     # load static, randomly generated data
     x = np.array([[
         1.7117, 2.5470, 3.2817, 2.3303, 2.7066, 4.2024, 2.7184, 2.9790,
@@ -351,9 +435,24 @@ def _boxplot_legend(ax, notch=False, shrink=2.5, fontsize=10, showmean=False):
 
 
 def makeBoxplotLegend(filename='bmp/tex/boxplotlegend', figsize=4, **kwargs):
-    '''
-    Creates an explanatory diagram for boxplots. **kwargs are fed to _boxplot_legend
-    '''
+    """ Creates an explanatory diagram for boxplots.
+
+    Parameters
+    ----------
+    filename : string
+        File name and path (without extension) where the figure will be
+        saved.
+    figsize : float or int
+        Size of the figure in inches.
+    kwargs : keyword arguments
+        Keyword arguments passed directly to `_boxplot_legend`
+
+    Returns
+    -------
+    None
+
+    """
+
     # setup the figure
     fig, ax = plt.subplots(figsize=(figsize, figsize))
 
@@ -370,12 +469,26 @@ def makeBoxplotLegend(filename='bmp/tex/boxplotlegend', figsize=4, **kwargs):
 
 
 def processFilename(filename):
-    '''
-    Sanitizes a filename. DON'T feed it a full path
-    Typical Usage
-        >>> processFilename('FigureBenzon/Inzo_1')
-        FigureBenzonInzo1
-    '''
+    """ Sanitizes a filename for LaTeX. DON'T feed it a full path.
+
+    Parameters
+    ----------
+    filename : string
+        The name of the file to be sanitized.
+
+    Returns
+    -------
+    sanitized : string
+        Mutated filename without characters that might cause errors in
+        LaTeX.
+
+    Example
+    -------
+    >>> processFilename('FigureBenzon/Inzo_1')
+    FigureBenzonInzo1
+
+    """
+
     badchars = [' ', ',', '+', '$', '_', '{', '}', '/', '&']
     fn = filename
     for bc in badchars:
@@ -383,6 +496,7 @@ def processFilename(filename):
     return fn
 
 
+@np.deprecate
 def constructPath(name, ext, *args):
     '''
     Builds a path from a filename, extension, and directories.
@@ -403,21 +517,24 @@ def constructPath(name, ext, *args):
     return filepath
 
 
+@np.deprecate
 def makeTablesFromCSVStrings(tablestring, texpath=None, csvpath=None):
-    '''
-    Takes a string already in CSV format and writes it to a CSV file and a
-        LaTeX table
+    """ Takes a string already in CSV format and writes it to a CSV
+    and LaTeX files.
 
-    Input:
-        tablestring (string) : CSV-formatted string of data
-        filename (string) : filename of the output files
+    Parameters
+    ----------
+    tablestring : string
+        CSV-formatted string of the data.
+    texpath, csvpath : string or None, optional
+        Filenames of the output files.
 
-    Writes:
-         CSV and LaTeX files of the data
+    Returns
+    -------
+    None
 
-    Returns:
-        None
-    '''
+    """
+
     # make a dataframe of the csvstring
     df = pandas.read_csv(StringIO(tablestring))
 
@@ -431,25 +548,27 @@ def makeTablesFromCSVStrings(tablestring, texpath=None, csvpath=None):
         with open(texpath, 'w') as tex:
             tex.write(df.to_latex(index=False).replace("Unnamed: 1", ""))
 
-
+@np.deprecate
 def addStatsToOutputSummary(csvpath, index_cols=['Date'], na_values='--'):
-    '''
-    Reads a CSV file in to a pandas dataframe and appends stats to the bottom
+    """ Reads a CSV file and appends its stats to the bottom.
 
-    Input:
-        filepath (string) : full path to a file *without* the extension
+    Parameters
+    ----------
+    csvpath : string
+        Full path to the CSV file.
+    index_cols : list
+        List of columns in the CSV to treat as the dataframe's index.
+    na_values : string
+        How NA/NaN values are represented in the file.
 
-    Writes:
-        1) a CSV file of the data in `filepath + '.csv'` with stats at the
-            bottom of the file
-        2) a LaTeX table version of the file above
+    Returns
+    -------
+    summary : pandas.DataFrame
+        The statistics that were appended to the file.
 
-    Returns:
-        None
+    """
 
-    TODO: figure out what to do with -counts-
-    '''
-
+    # TODO: figure out what to do with -counts-
     # read in the data, pretending that the dates are strings
     summary = pandas.read_csv(csvpath, parse_dates=False, index_col=index_cols,
                               na_values=na_values)
@@ -470,6 +589,7 @@ def addStatsToOutputSummary(csvpath, index_cols=['Date'], na_values='--'):
     return summary
 
 
+@np.deprecate
 def addExternalValueToOutputSummary(csvpath, comparedict, comparecol,
                                     index_cols=['Date'], na_values='--'):
     # read in the data, pretending that the dates are strings
@@ -494,6 +614,20 @@ def addExternalValueToOutputSummary(csvpath, comparedict, comparecol,
 
 
 def sanitizeTex(texstring):
+    """ Cleans up overly eager LaTeX renderings from pandas.
+
+    Parameters
+    ----------
+    texstring : string
+        The string of LaTeX code to be cleaned up
+
+    Returns
+    -------
+    sanitized : string
+        Cleaned up LaTeX string.
+
+    """
+
     newstring = (
         texstring.replace(r'\\%', r'\%')
                  .replace(r'\\', r'\tabularnewline')
@@ -511,23 +645,36 @@ def sanitizeTex(texstring):
 
 def csvToTex(csvpath, texpath, na_rep='--', float_format=_sig_figs, pcols=15,
              addmidrules=None, replaceTBrules=True, replacestats=True):
-    '''
-    Convert data in CSV format to a LaTeX table
+    """ Convert data in CSV format to a LaTeX table
 
-    Input:
-        csvpath (string) : full name and file path of the input data file
-        texpath (string) : full name and file path of the output LaTeX file
-        na_rep (string, default "--") : how NA values should be written
-        float_format (fxn, default `_sig_figs`) : single input function that
-            will return the correct representation of floating point numbers
+    Parameters
+    ----------
+    csvpath : string
+        Full name and file path of the input data file.
+    texpath : string
+        Full name and file path of the output LaTeX file.
+    na_rep : string, default "--"
+        How NA values should be written.
+    float_format : callable (default = `_sig_figs`)
+        Single input function that will return the correct
+        representation of floating point numbers.
+    pcols : int (default = 15)
+        Width of the columns for the LaTeX table.
+    addmidrules : string or list of strings, optional
+        (List of) string(s) to be replaced with "\midrule".
+    replaceTBrules : bool, default = True
+        When True, replaces "\toprule" and "\bottomrule" with
+        "\midrule".
+    replacestats : bool, default = True
+        When True, the labels of statistics are cleaned up a bit (e.g.,
+        "75%" -> "75th Percentile")
 
-    Writes:
-        A LaTeX table representation of the data found in `csvpath`
+    Returns
+    -------
+    None
 
-    Returns:
-        None
+    """
 
-    '''
     # read in the data pandas
     data = pandas.read_csv(csvpath, parse_dates=False, na_values=[na_rep])
 
@@ -584,23 +731,25 @@ def csvToTex(csvpath, texpath, na_rep='--', float_format=_sig_figs, pcols=15,
 
 
 def csvToXlsx(csvpath, xlsxpath, na_rep='--', float_format=None):
-    '''
-    Convert data in CSV format to a Excel workbook
+    """ Convert data in CSV format to an Excel workbook
 
-    Input:
-        csvpath (string) : full name and file path of the input data file
-        xlsxpath (string) : full name and file path of the output .xlsx file
-        na_rep (string, default "--") : how NA values should be written
-        float_format (fxn, default `_sig_figs`) : single input function that
-            will return the correct representation of floating point numbers
+    Parameters
+    ----------
+    csvpath : string
+        Full name and file path of the input data file.
+    xlsxpath : string
+        Full name and file path of the output .xlsx file.
+    na_rep : string (default = "--")
+        How NA values should be represented.
+    float_format : callable, optional
+        Single input function that will return the correct
+        representation of floating point numbers.
 
-    Writes:
-        A LaTeX table representation of the data found in `csvpath`
+    Returns
+    -------
+    None
 
-    Returns:
-        None
-
-    '''
+    """
     # read in the data pandas
     data = pandas.read_csv(csvpath, parse_dates=False, na_values=[na_rep])
 
@@ -609,23 +758,27 @@ def csvToXlsx(csvpath, xlsxpath, na_rep='--', float_format=None):
 
 
 def nested_getattr(baseobject, attribute):
-    '''
-    Returns the value of an attribute of an object that
-    is nested several layers deep.
+    """  Returns the value of an attribute of an object that is nested
+    several layers deep.
 
-    Input:
-        baseobject : this seriously can be anything
-        attribute (string) : and string representation of what you want
+    Parameters
+    ----------
+    baseobject : this seriously can be anything
+        The top-level object
+    attribute : string
+        Any string of what you want.
 
-    Writes:
-        None
+    Returns
+    -------
+    output : object
+        No telling what type it is. It depends on what you ask for.
 
-    Output:
-        No telling. It depends on what you ask for.
+    Examples
+    --------
+    >>> nested_getattr(dataset, 'influent.mean')
 
-    Example:
-        >>> nested_getattr(dataset, 'influent.stats.mean')
-    '''
+    """
+
     for attr in attribute.split('.'):
         baseobject = getattr(baseobject, attr)
     return baseobject
@@ -633,6 +786,38 @@ def nested_getattr(baseobject, attribute):
 
 def normalize_units(dataframe, units_map, targetunit, paramcol='parameter',
                     rescol='Outflow_res', unitcol='Outflow_unit'):
+    """ Normalize units of measure in a dataframe.
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        Dataframe contained results and units of measure data.
+    units_map : dictionary
+        Dictionary where keys are the units present in the dataframe and
+        values are the conversion factors required to standardize
+        results to a common unit.
+    targetunit : string
+        The desired final units of measure. Must be present in
+        ``units_map``.
+    paramcol, rescol, unitcol : string
+        Labels for the parameter, results, and units columns in the
+        dataframe.
+
+    Returns
+    -------
+    dataframe : pandas.DataFrame
+        Dataframe with normalized units of measure.
+
+    Notes
+    -----
+    Input dataframes are modified in-placed and returned. If you need
+    to preserve the original dataframe, pass a copy to this function.
+
+    See also
+    --------
+    normalize_units2
+
+    """
 
     try:
         units_map[targetunit]
@@ -654,11 +839,45 @@ def normalize_units(dataframe, units_map, targetunit, paramcol='parameter',
     return dataframe
 
 
-def normalize_units2(data, normFxn, convFxn, unitFxn, paramcol='parameter',
+def normalize_units2(data, normfxn, convfxn, unitfxn, paramcol='parameter',
                      rescol='res', unitcol='unit', dlcol=None):
+    """ Another units normalizer
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Dataframe contained results and units of measure data.
+    normfxn, convfxn, unitfxn : callable
+        Functions to normalize, convert, and specify the target units,
+        respectively.
+          - ``normfxn`` only accepts values from ``unitcol`` as input
+          - ``convfxn`` only accepts values from ``paramcol`` as input
+          - ``unitfxn`` only accepts values from ``paramcol`` as input
+    paramcol, rescol, unitcol : string
+        Labels for the parameter, results, and units columns in the
+        dataframe.
+    dlcol : string, optional
+        Label for column containing detection limits. If present, they
+        will be normalized as well.
+
+    Returns
+    -------
+    dataframe : pandas.DataFrame
+        Dataframe with normalized units of measure.
+
+    Notes
+    -----
+    Input dataframes are copied and remain unmodified.
+
+    See also
+    --------
+    normalize_units
+
+    """
+
     d = data.copy()
-    normalization = d[unitcol].apply(normFxn)
-    conversion = d[paramcol].apply(convFxn)
+    normalization = d[unitcol].apply(normfxn)
+    conversion = d[paramcol].apply(convfxn)
 
     factor = normalization / conversion
 
@@ -666,12 +885,41 @@ def normalize_units2(data, normFxn, convFxn, unitFxn, paramcol='parameter',
     if dlcol is not None:
         d[dlcol] *= factor
 
-    d.loc[:, unitcol] = d[paramcol].apply(unitFxn)
+    d.loc[:, unitcol] = d[paramcol].apply(unitfxn)
     return d
 
 
 def makeTexTable(tablefile, caption, sideways=False, footnotetext=None,
                  clearpage=False, pos='h!'):
+    """ Creates a table block for a LaTeX document. Does not add it any
+    file.
+
+    Parameters
+    ----------
+    tablefile : string
+        Name of the .tex file that actually contains the table.
+    caption : string
+        Caption/title that should be given to the table.
+    sideways : bool (default = False)
+        When True, a landscape table block is produced. Otherwise, the
+        table is in portrait mode.
+    footnotetext : string, optional
+        Any text that should be added as a footnote.
+    clearpage : bool (default = False)
+        When True, a "\clearpage" command is appended to the end of the
+        table block.
+    pos : string (default = "h!")
+        LaTeX float position specification. Default values tries its
+        best to place the table where the block appears in the LaTeX
+        document.
+
+    Returns
+    -------
+    tablestring : string
+        The table block text that can be -- but has not been -- added
+        to a LaTeX document.
+
+    """
     if sideways:
         tabletype = 'sidewaystable'
         clearpage = True
@@ -702,6 +950,30 @@ def makeTexTable(tablefile, caption, sideways=False, footnotetext=None,
 
 
 def makeLongLandscapeTexTable(df, caption, label, footnotetext=None, index=False):
+    """ Create a multi-page landscape label for a LaTeX document.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe to be turned into the table.
+    caption : string
+        Caption/title to be given to the table.
+    label : string
+        Unique identifier for references to table within LaTeX.
+    footnotetext : string, optional
+        Any text that should be added as a footnote.
+    index : bool (default = False)
+        Toggles the inclusion of the dataframe's index in to the table.
+        Default behavior omits it.
+
+    Returns
+    -------
+    tablestring : string
+        The table block text that can be -- but has not been -- added
+        to a LaTeX document.
+
+    """
+
     if footnotetext is None:
         notes = ''
     else:
@@ -768,38 +1040,80 @@ def makeLongLandscapeTexTable(df, caption, label, footnotetext=None, index=False
 
 
 def makeTexFigure(figFile, caption, pos='hb', clearpage=True):
-    '''
-    Create the LaTeX for include a figure in a document
+    """ Create the LaTeX for include a figure in a document. Does not
+    actually add it to any document.
 
-    Input:
-        figFile (string) : path to the image you want to include
-        caption (string) : what it should say in the figure's caption
-        pos (string, default 'hb') : placement preferences
-            (h='here' or b='below')
-        clearpage (bool, default True) : whether or not the LaTeX
-            command "\clearpage" should be called after the figure
+    Parameters
+    ----------
+    figfile : string
+        Name of the image (.pdf) file that actually contains the figure.
+    caption : string
+        Caption/title that should be given to the table.
+    sideways : bool (default = False)
+        When True, a landscape table block is produced. Otherwise, the
+        table is in portrait mode.
+    footnotetext : string, optional
+        Any text that should be added as a footnote.
+    clearpage : bool (default = False)
+        When True, a "\clearpage" command is appended to the end of the
+        table block.
+    pos : string (default = "h!")
+        LaTeX float position specification. Default values tries its
+        best to place the table where the block appears in the LaTeX
+        document.
 
-    Returns:
-        figurestring (string) : the LaTeX string to include a figure
-            in the appendix reports
-    '''
+    Returns
+    -------
+    tablestring : string
+        The table block text that can be -- but has not been -- added
+        to a LaTeX document.
+
+    """
     if clearpage:
         clearpagetext = r'\clearpage'
     else:
         clearpagetext = ''
 
-    figurestring = r"""
+    figurestring = r'''
     \begin{figure}[%s]   %% FIGURE
         \centering
         \includegraphics[scale=1.00]{%s}
         \caption{%s}
     \end{figure}         %% FIGURE
     %s
-    """ % (pos, figFile, caption, clearpagetext)
+    ''' % (pos, figFile, caption, clearpagetext)
     return figurestring
 
 
 def stringify(value, fmt, attribute=None):
+    """ Weird wrapper to format attributes of objects as strings
+
+    Parameters
+    ----------
+    value : object
+        The item or top-level container of the item to be formatted.
+    fmt : str
+        A valid old-style(e.g., %0.3f) python format string
+    attribute : string, optional
+        Bottom-level attribute of ``value`` to be formatted.
+
+    Returns
+    -------
+    formatted_value : string
+        The formatted version of ``value.<attribute>``. If
+        ``value.<attribute>`` is None, "--" is returned instead.
+
+    Examples
+    --------
+    >>> stringify(None, '%s')
+    '--'
+    >>> stringify(1.2, '%0.3f')
+    '1.200'
+    >>> stringify(dataset, '%d', 'influent.N')
+    '4'
+
+    """
+
     if attribute is not None and value is not None:
         quantity = nested_getattr(value, attribute)
     else:
@@ -812,10 +1126,20 @@ def stringify(value, fmt, attribute=None):
 
 
 def pH2concentration(pH, *args):
-    '''
-    Takes a pH value and converts it to proton concentration
-    in mg/L
-    '''
+    """ Converts pH values to proton concentrations in mg/L
+
+    Parameters
+    ----------
+    pH : int or float
+        Number between 0 and 14 representing the pH
+
+    Returns
+    -------
+    conc : float
+        Concentration of protons in mg/L
+
+    """
+
     # check that we recieved a valid input:
     if pH < 0 or pH > 14:
         raise ValueError('pH = %f but must be between 0 and 14' % pH)
@@ -836,32 +1160,27 @@ def pH2concentration(pH, *args):
 
 
 def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
-    '''
-    Estimate the dependent of a linear fit given x-data and linear parameters
+    """ Estimate the dependent of a linear fit given x-data and linear
+    parameters.
 
     Parameters
     ----------
     xdata : numpy array or pandas Series/DataFrame
         The input independent variable of the fit
-
     slope : float
         Slope of the best-fit line
-
     intercept : float
         y-intercept of the best-fit line
-
-    xlog : bool (default = False)
-        Toggles whether or not the x-data are lognormally distributed
-
-    ylog : bool (default = False)
-        Toggles whether or not the y-data are lognormally distributed
+    xlog, ylog : bool (default = False)
+        Toggles whether or not the logs of the x- or y- data should be
+        used to perform the regression.
 
     Returns
     -------
     yhat : same type as xdata
         Estimate of the dependent variable.
 
-    '''
+    """
 
     x = np.array(xdata)
     if ylog:
@@ -881,36 +1200,36 @@ def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
 
 
 def redefineIndexLevel(dataframe, levelname, value, criteria=None, dropold=True):
-    '''
-    Redefine a selection of BMPs into another or new category
-    Input:
-        dataframe : pandas DataFrame.
+    """ Redefine a index values in a dataframe.
 
-        levelname : string
-            The name of the index level that needs to be modified. The catch
-            here is that this value needs to be valid after calling
-            `dataframe.reset_index()`. In otherwords, if you have a 3-level
-            column index and you want to modify the "Units" level of the index,
-            you should actually pass `("Units", "", "")`. Annoying, but that's
-            life right now.
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        Dataframe to be modified.
+    levelname : string
+        The name of the index level that needs to be modified. The catch
+        here is that this value needs to be valid after calling
+        `dataframe.reset_index()`. In otherwords, if you have a 3-level
+        column index and you want to modify the "Units" level of the
+        index, you should actually pass `("Units", "", "")`. Annoying,
+        but that's life right now.
+    value : string or int
+        The replacement value for the index level.
+    critera : function/lambda expression or None
+        This should return True/False in a manner consitent with the
+        `.select()` method of a pandas dataframe. See that docstring
+        for more info. If None, the redifinition will apply to the whole
+        dataframe.
+    dropold : optional bool (defaul is True)
+        Toggles the replacement (True) or addition (False) of the data
+        of the redefined BMPs into the the `data` dataframe.
 
-        value : string or int
-            The replacement value for the index level.
+    Returns
+    -------
+    appended : pandas.DataFrame
+        Dataframe with the modified index.
 
-        critera : function/lambda expression or None
-            This should return True/False in a manner consitent with the
-            `.select()` method of a pandas dataframe. See that docstring
-            for more info. If None, the redifinition will apply to the whole
-            dataframe.
-
-        dropold : optional bool (defaul is True)
-            Toggles the replacement (True) or addition (False) of the data
-            of the redefined BMPs into the the `data` dataframe.
-
-    Returns:
-        None
-
-    '''
+    """
 
     if criteria is not None:
         selection = dataframe.select(criteria)
@@ -928,24 +1247,27 @@ def redefineIndexLevel(dataframe, levelname, value, criteria=None, dropold=True)
 
 
 def checkIntervalOverlap(interval1, interval2, oneway=False):
-    '''Checks if two numeric intervals overlaps
+    """ Checks if two numeric intervals overlaps.
 
     Parameters
     ----------
     interval1, interval2 : array like
         len = 2 sequences to compare
-
-    oneway : bool, default = False
-        if true, only checks that interval1 falls at least partially
-        inside interval2, but not the other way around
+    oneway : bool (default = False)
+        If True, only checks that ``interval1`` falls at least partially
+        inside ``interval2``, but not the other way around
 
     Returns
     -------
-    bool
+    overlap : bool
+        True if an overlap exists. Otherwise, False.
 
-    '''
+    """
+
     test1 = np.min(interval2) <= np.max(interval1) <= np.max(interval2)
     test2 =  np.min(interval2) <= np.min(interval1) <= np.max(interval2)
+
+    # TODO: try test1 or test2 or (not oneway and test3)
 
     if oneway:
         return test1 or test2
@@ -956,23 +1278,24 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
 
 def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
                   issuewarnings=False):
-    '''Makes a pandas.Timestamp from separate date/time columns
+    """ Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
     ----------
-
     row : dict-like (ideallty a row in a dataframe)
-    datecol : optional string (default = 'sampledate')
+    datecol : string (default = 'sampledate')
         Name of the column containing the dates
-    timecol : optional string (default = 'sampletime')
+    timecol : string (default = 'sampletime')
         Name of the column containing the times
+    issuewarnings : bool (default = False)
+        Toggles UserWarnings when the fallback date (1901-01-01) or
+        fallback time (00:00) must be used.
 
     Returns
     -------
-
     tstamp : pandas.Timestamp
 
-    '''
+    """
 
     fallback_datetime = pandas.Timestamp('1901-01-01 00:00')
 
@@ -1010,10 +1333,44 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
     return tstamp
 
 
-def whiskers_and_fliers(x, q1, q3, transformout=None):
+def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
+    """ Computes extent of whiskers and fliers on optionally transformed
+    data for box and whisker plots.
+
+    Parameters
+    ----------
+    x : array-like
+        Sequence of optionally transformed data.
+    q1, q3 : floats, optional
+        First and third quartiles of the optionally transformed data.
+    transformout : callable, optional
+        Function to un-transform the results back into the original
+        space of the data.
+
+    Returns
+    -------
+    whiskers_and_fliers : dict
+        Dictionary of whisker and fliers values.
+
+    Examples
+    --------
+    >>> x = np.random.lognormal(size=37)
+    >>> whisk_fly = whiskers_and_fliers(np.log(x), transformout=np.exp)
+
+    See also
+    --------
+    wqio.utils.figutils.boxplot
+
+    """
     wnf = {}
     if transformout is None:
         transformout = lambda x: x
+
+    if q1 is None:
+        q1 = np.percentile(x, 25)
+
+    if q3 is None:
+        q1 = np.percentile(x, 75)
 
     iqr = q3 - q1
     # get low extreme
