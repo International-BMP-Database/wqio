@@ -536,7 +536,8 @@ def setup_location(station_type):
     'test_loc_boxplot_with_ylabel',
     'test_loc_boxplot_fallback_to_vert_scatter',
     'test_loc_boxplot_provided_ax',
-    'test_loc_boxplot_custom_position'
+    'test_loc_boxplot_custom_position',
+    'test_loc_boxplot_with_xlabel',
 ], extensions=['png'])
 def test_location_boxplot():
     xlims = {'left': 0, 'right': 2}
@@ -565,7 +566,7 @@ def test_location_boxplot():
     assert_raises(ValueError, loc.boxplot, ax='junk')
 
     fig11 = loc.boxplot(pos=1.5, xlims=xlims)
-
+    fig12 = loc.boxplot(xlabel='Test Xlabel', xlims=xlims)
 
 @image_comparison(baseline_images=[
     'test_loc_probplot_default',
@@ -969,7 +970,6 @@ def test_dataset_boxplot():
     fig13 = ds.boxplot(bothTicks=False, xlims=xlims)
     ds.name = None
     fig14 = ds.boxplot(bothTicks=False, xlims=xlims)
-
 
 @image_comparison(baseline_images=[
     'test_ds_probplot_default',
