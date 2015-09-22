@@ -680,7 +680,7 @@ class Location(object):
 
     # plotting methods
     def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, minpoints=5,
+                width=0.8, bacteria=False, ylabel=None, xlabel=None, minpoints=5,
                 patch_artist=False, xlims=None):
         """ Draws a boxplot and whisker on a matplotlib figure
 
@@ -706,6 +706,8 @@ class Location(object):
             Otherwise, the arithmetic mean is used.
         ylabel : string or None (default):
             Label for y-axis
+        xlabel : string or None (default):
+            Label for x-axis. If None, uses self.name
         minpoints : int, optional (default = 5)
             The minimum number of data points required to draw a
             boxplot. If too few points are present, the drawing will
@@ -732,6 +734,9 @@ class Location(object):
 
         if self.N >= minpoints:
             bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
+            if xlabel is not None:
+                bxpstats[0]['label'] = xlabel
+
             bp = ax.bxp(bxpstats, positions=[pos], widths=width,
                         showmeans=showmean, shownotches=notch, showcaps=False,
                         manage_xticks=False, patch_artist=patch_artist,
@@ -755,6 +760,8 @@ class Location(object):
         ax.set_xticks([pos])
         if self.name is not None:
             ax.set_xticklabels([self.name])
+        if xlabel is not None:
+            ax.set_xticklabels([xlabel])
 
         if xlims is not None:
             ax.set_xlim(**xlims)
@@ -840,8 +847,8 @@ class Location(object):
         return fig
 
     def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, axtype='prob',
-                 patch_artist=False, **plotopts):
+                 width=0.8, bacteria=False, ylabel=None, xlabel=None,
+                 axtype='prob', patch_artist=False, **plotopts):
         """ Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
@@ -863,6 +870,8 @@ class Location(object):
             Otherwise, the arithmetic mean is used.
         ylabel : string, optional or None (default):
             Label for y-axis
+        xlabel : string or None (default):
+            Label for x-axis of boxplot. If None, uses self.name
         axtype : string, optional (default = 'pp')
             Type of probability plot to be created. Options are:
                 - 'prob': probabilty plot
@@ -889,7 +898,7 @@ class Location(object):
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
-                     ylabel=ylabel, patch_artist=patch_artist,
+                     ylabel=ylabel, xlabel=xlabel, patch_artist=patch_artist,
                      xlims={'left': pos - (0.6*width), 'right': pos + (0.6*width)})
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
