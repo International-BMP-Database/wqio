@@ -1005,6 +1005,7 @@ class test_fit_line(object):
         x_, y_, res = misc.fit_line(x, y, xhat=self.custom_xhat)
         nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
 
+
 class test_processAndersonDarlingResults(object):
     def setup(self):
         fieldnames = ['statistic', 'critical_values', 'significance_level']
@@ -1031,3 +1032,35 @@ class test_processAndersonDarlingResults(object):
     def test_bad(self):
         res = misc.processAndersonDarlingResults(self.bad)
         nt.assert_equal(res, self.known_bad)
+
+
+class test_LaTeXDirecory(object):
+    def setup(self):
+        self.origdir = os.getcwd()
+        self.deepdir = os.path.join(os.getcwd(), 'test1', 'test2', 'test3')
+        self.deepfile = os.path.join(self.deepdir, 'f.tex')
+
+        if os.path.exists(self.deepfile):
+            self.teardown()
+
+        os.makedirs(self.deepdir)
+        with open(self.deepfile, 'w'):
+            pass
+
+    def teardown(self):
+        os.remove(self.deepfile)
+        os.removedirs(self.deepdir)
+
+    def test_dir(self):
+        nt.assert_equal(os.getcwd(), self.origdir)
+        with misc.LaTeXDirecory(self.deepdir):
+            nt.assert_equal(os.getcwd(), self.deepdir)
+
+        nt.assert_equal(os.getcwd(), self.origdir)
+
+    def test_file(self):
+        nt.assert_equal(os.getcwd(), self.origdir)
+        with misc.LaTeXDirecory(self.deepfile):
+            nt.assert_equal(os.getcwd(), self.deepdir)
+
+        nt.assert_equal(os.getcwd(), self.origdir)

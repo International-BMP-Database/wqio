@@ -1579,3 +1579,31 @@ class ProgressBar:
 
     def __str__(self):
         return str(self.prog_bar)
+
+
+class LaTeXDirecory(object):
+    """ Context manager to help compile latex docs from python.
+
+    Switches to the latex document's folder and remains there while
+    inside the manager. The present working directory is restored once
+    the context manager exits.
+
+    Parameters
+    ----------
+    texpath : string
+        The LaTeX source file or the directory in which it is found.
+
+    """
+
+    def __init__(self, texpath):
+        self.home = os.getcwd()
+        if os.path.isfile(texpath):
+            self.texpath = os.path.dirname(texpath)
+        else:
+            self.texpath = texpath
+
+    def __enter__(self):
+        os.chdir(self.texpath)
+
+    def __exit__(self, *args):
+        os.chdir(self.home)
