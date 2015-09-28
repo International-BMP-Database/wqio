@@ -186,6 +186,16 @@ class test__format_result(object):
             '12.5'
         )
 
+
+def test_process_p_value():
+    nt.assert_equal(misc.process_p_vals(None), 'NA')
+    nt.assert_equal(misc.process_p_vals(0.0009), '<0.001')
+    nt.assert_equal(misc.process_p_vals(0.001), '0.001')
+    nt.assert_equal(misc.process_p_vals(0.0012), '0.001')
+    nt.assert_equal(misc.process_p_vals(0.01), '0.010')
+    nt.assert_raises(ValueError, misc.process_p_vals, 1.001)
+
+
 def test__boxplot_legend():
     fig, ax = plt.subplots()
     misc._boxplot_legend(ax, notch=True)

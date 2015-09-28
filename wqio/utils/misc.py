@@ -496,6 +496,19 @@ def processFilename(filename):
     return fn
 
 
+def process_p_vals(pval):
+    if pval is None:
+        out = 'NA'
+    elif pval < 0.001:
+        out = "<0.001"
+    elif pval > 1:
+        raise ValueError('p-values cannot be greater than 1')
+    else:
+        out = '%0.3f' % pval
+
+    return out
+
+
 @np.deprecate
 def constructPath(name, ext, *args):
     '''
