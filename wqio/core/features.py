@@ -43,18 +43,6 @@ def sanitizeTexUnit(x):
     return x
 
 
-def _process_p_vals(pval):
-    if pval is None:
-        out = 'NA'
-
-    elif pval < 0.001:
-        out = "<0.001"
-    else:
-        out = '%0.3f' % pval
-
-    return out
-
-
 class Parameter(object):
     def __init__(self, name, units, usingTex=False):
         """ Class representing a single analytical parameter (pollutant).
