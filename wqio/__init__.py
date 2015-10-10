@@ -1,4 +1,4 @@
-from .algo import bootstrap, ros
+from .algo import bootstrap, ros, robustros
 from . import utils
 from .core import *
 
