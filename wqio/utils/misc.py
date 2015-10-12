@@ -1594,7 +1594,7 @@ class ProgressBar:
         return str(self.prog_bar)
 
 
-class LaTeXDirecory(object):
+class LaTeXDirectory(object):
     """ Context manager to help compile latex docs from python.
 
     Switches to the latex document's folder and remains there while

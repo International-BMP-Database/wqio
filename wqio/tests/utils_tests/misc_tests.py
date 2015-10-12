@@ -1044,7 +1044,7 @@ class test_processAndersonDarlingResults(object):
         nt.assert_equal(res, self.known_bad)
 
 
-class test_LaTeXDirecory(object):
+class test_LaTeXDirectory(object):
     def setup(self):
         self.origdir = os.getcwd()
         self.deepdir = os.path.join(os.getcwd(), 'test1', 'test2', 'test3')
@@ -1063,14 +1063,14 @@ class test_LaTeXDirecory(object):
 
     def test_dir(self):
         nt.assert_equal(os.getcwd(), self.origdir)
-        with misc.LaTeXDirecory(self.deepdir):
+        with misc.LaTeXDirectory(self.deepdir):
             nt.assert_equal(os.getcwd(), self.deepdir)
 
         nt.assert_equal(os.getcwd(), self.origdir)
 
     def test_file(self):
         nt.assert_equal(os.getcwd(), self.origdir)
-        with misc.LaTeXDirecory(self.deepfile):
+        with misc.LaTeXDirectory(self.deepfile):
             nt.assert_equal(os.getcwd(), self.deepdir)
 
         nt.assert_equal(os.getcwd(), self.origdir)
