@@ -290,7 +290,6 @@ class _base_LocationMixin(object):
         assert_true(hasattr(self.loc, 'plognorm'))
         nptest.assert_allclose(self.loc.plognorm, self.known_plognorm, rtol=self.tolerance)
 
-
     def test_shapiro(self):
         assert_true(hasattr(self.loc, 'shapiro'))
         nptest.assert_allclose(self.loc.shapiro, self.known_shapiro, rtol=self.tolerance)

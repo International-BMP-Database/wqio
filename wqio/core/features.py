@@ -311,9 +311,9 @@ class Location(object):
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
-        self._plot_marker = markers[self.station_name][0]
+        self.plot_marker = markers[self.station_name][0]
         self.scatter_marker = markers[self.station_name][1]
-        self._color = colors[self.station_name]
+        self.color = colors[self.station_name]
 
         # basic stuff
         self._name = self.station_name
@@ -324,45 +324,18 @@ class Location(object):
         self._cache = resettable_cache()
 
         # properties of the dataframe and analysis
-        self._bsIter = bsIter
-        self._useROS = useROS
+        self.bsIter = bsIter
+        self.useROS = useROS
         self._rescol = rescol
         self._qualcol = qualcol
-        self._ndval = ndval
+        if np.isscalar(ndval):
+            self._ndval = [ndval]
+        else:
+            self._ndval = ndval
 
         # original data and quantity
         self._raw_data = dataframe
         self._filtered_data = self._raw_data.copy()
-
-    @property
-    def color(self):
-        return self._color
-    @color.setter
-    def color(self, value):
-        self._color = value
-
-    @property
-    def plot_marker(self):
-        return self._plot_marker
-    @plot_marker.setter
-    def plot_marker(self, value):
-        self._plot_marker = value
-
-    @property
-    def bsIter(self):
-        return self._bsIter
-    @bsIter.setter
-    def bsIter(self, value):
-        self._bsIter = value
-        self._cache.clear()
-
-    @property
-    def useROS(self):
-        return self._useROS
-    @useROS.setter
-    def useROS(self, value):
-        self._cache.clear()
-        self._useROS = value
 
     @property
     def filtered_data(self):
@@ -375,26 +348,31 @@ class Location(object):
         self._cache.clear()
         self._filtered_data = value
 
+    @np.deprecate
     @property
     def data(self):
-        if self.hasData:
-            if self.useROS:
-               output = self.ros.data['final_data']
-            else:
-                output = self.filtered_data[self._rescol]
-            return output.values
+        return self.values
 
     @property
     def full_data(self):
         if self.hasData:
             if self.useROS:
-                output = self.ros.data[['final_data', 'qual']]
-                rename_dict = {'final_data': 'res'}
+                output = self.ros._result_df[['modeled', 'cen']]
+                rename_dict = {'modeled': 'res'}
             else:
                 output = self.filtered_data[[self._rescol, self._qualcol]]
                 rename_dict = {self._qualcol: 'qual', self._rescol: 'res'}
 
             return output.rename(columns=rename_dict)
+
+    @property
+    def values(self):
+        if self.hasData:
+            if self.useROS:
+               output = self.ros.estimated_values
+            else:
+                output = self.filtered_data[self._rescol].values
+            return output
 
     @property
     def name(self):
@@ -439,7 +417,7 @@ class Location(object):
 
     @cache_readonly
     def ND(self):
-        return (self.filtered_data[self._qualcol] == self._ndval).sum()
+        return (self.filtered_data[self._qualcol].isin(self._ndval)).sum()
 
     @cache_readonly
     def NUnique(self):
@@ -452,7 +430,14 @@ class Location(object):
     @cache_readonly
     def ros(self):
         if self.hasData:
-            return algo.ros.MR(self.filtered_data, rescol=self._rescol, qualcol=self._qualcol)
+            data = self.filtered_data.assign(cen=self.filtered_data[self._qualcol].isin(self._ndval))
+            mr = algo.robustros.RobustROSEstimator(
+                data=data,
+                result=self._rescol,
+                censorship='cen',
+                lazy=True
+            )
+            return mr
 
     @cache_readonly
     @np.deprecate
