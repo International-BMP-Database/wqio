@@ -570,7 +570,7 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **lin
     return connector
 
 
-def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws):
+def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws):
     """ Produce a parallel coordinates plot from a dataframe.
 
     Parameters
@@ -607,7 +607,11 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws)
         fig, axes = plt.subplots(ncols=len(cols), **subplot_kws)
         hue_vals = dataframe[hue].unique()
         colors = seaborn.color_palette(palette=palette, n_colors=len(hue_vals))
-        color_dict = dict(zip(hue_vals, colors))
+        color_dict = {}
+        lines = []
+        for h, c in zip(hue_vals, colors):
+            lines.append(plt.Line2D([0,], [0], linestyle='-', color=c, label=h))
+            color_dict[h] = c
 
         for col, ax in zip(cols, axes):
             data_limits =[(0, dataframe[col].min()), (0, dataframe[col].max())]
@@ -622,6 +626,8 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, **subplot_kws)
             for n, (ax1, ax2) in enumerate(zip(axes[:-1], axes[1:])):
                 line = _connect_spines(ax1, ax2, row[n], row[n+1], color=color_dict[row[-1]])
 
+    if showlegend:
+        fig.legend(lines, hue_vals)
 
     fig.subplots_adjust(wspace=0)
     seaborn.despine(fig=fig, bottom=True, trim=True)
