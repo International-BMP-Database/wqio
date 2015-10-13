@@ -1627,11 +1627,30 @@ class LaTeXDirectory(object):
         os.chdir(self.home)
 
     def compile(self, texdoc, clean=False):
+        """ Compile a LaTeX document inside the context manager
+
+        Parameters
+        ----------
+        texdoc : string
+            File name of a .tex file in the LaTeX directory
+        clean : bool (default = False)
+            When True, all of non-PDF files resulting from compilation
+            are removed. By default, they are left on the file system.
+
+        Returns
+        -------
+        tex : int or None
+            The status (1 or 0) of the compilation. If LaTeX is not
+            available, None is returned.
+
+        """
+
         if testing.checkdep_tex() is not None:
             # use ``pdflatex`` to compile the document
-            tex = subprocess.call(['pdflatex', texdoc, '--quiet'], shell=False,
+            tex = subprocess.call(['pdflatex', texdoc, '--quiet'],
                                   stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
+                                  stderr=subprocess.PIPE,
+                                  shell=False)
 
             if clean:
                 extensions = ['aux', 'log', 'nav', 'out', 'snm', 'toc']
@@ -1639,3 +1658,8 @@ class LaTeXDirectory(object):
                     junkfiles = glob.glob('*.{}'.format(ext))
                     for junk in junkfiles:
                         os.remove(junk)
+
+        else:
+            tex = None
+
+        return tex
