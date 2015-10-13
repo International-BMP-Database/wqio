@@ -1,18 +1,22 @@
 from __future__ import print_function, division
 
+import subprocess
 import types
 import pdb
 import time
 import sys
 import os
+import glob
 import warnings
-from six import StringIO
 
+from six import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas
 from scipy import stats
 import statsmodels.api as sm
+
+from wqio import testing
 
 
 def santizeTimestamp(datelike):
@@ -1594,7 +1598,7 @@ class ProgressBar:
         return str(self.prog_bar)
 
 
-class LaTeXDirecory(object):
+class LaTeXDirectory(object):
     """ Context manager to help compile latex docs from python.
 
     Switches to the latex document's folder and remains there while
@@ -1617,6 +1621,21 @@ class LaTeXDirecory(object):
 
     def __enter__(self):
         os.chdir(self.texpath)
+        return self
 
     def __exit__(self, *args):
         os.chdir(self.home)
+
+    def compile(self, texdoc, clean=False):
+        if testing.checkdep_tex() is not None:
+            # use ``pdflatex`` to compile the document
+            tex = subprocess.call(['pdflatex', texdoc, '--quiet'], shell=False,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+
+            if clean:
+                extensions = ['aux', 'log', 'nav', 'out', 'snm', 'toc']
+                for ext in extensions:
+                    junkfiles = glob.glob('*.{}'.format(ext))
+                    for junk in junkfiles:
+                        os.remove(junk)

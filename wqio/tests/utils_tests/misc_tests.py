@@ -7,6 +7,8 @@ import os
 from six import StringIO
 import datetime
 from pkg_resources import resource_filename
+from textwrap import dedent
+import glob
 
 import nose.tools as nt
 import numpy as np
@@ -24,6 +26,7 @@ import pandas
 import statsmodels.api as sm
 
 from wqio.utils import misc
+from wqio import testing
 
 
 testcsv = StringIO("""\
@@ -1044,33 +1047,88 @@ class test_processAndersonDarlingResults(object):
         nt.assert_equal(res, self.known_bad)
 
 
-class test_LaTeXDirecory(object):
+class test_LaTeXDirectory(object):
     def setup(self):
         self.origdir = os.getcwd()
         self.deepdir = os.path.join(os.getcwd(), 'test1', 'test2', 'test3')
         self.deepfile = os.path.join(self.deepdir, 'f.tex')
+        tex_content = dedent(r"""
+            \documentclass[12pt]{article}
+            \usepackage{lingmacros}
+            \usepackage{tree-dvips}
+            \begin{document}
 
-        if os.path.exists(self.deepfile):
+            \section*{Notes for My Paper}
+
+            Don't forget to include examples of topicalization.
+            They look like this:
+
+            {\small
+            \enumsentence{Topicalization from sentential subject:\\
+            \shortex{7}{a John$_i$ [a & kltukl & [el &
+              {\bf l-}oltoir & er & ngii$_i$ & a Mary]]}
+            { & {\bf R-}clear & {\sc comp} &
+              {\bf IR}.{\sc 3s}-love   & P & him & }
+            {John, (it's) clear that Mary loves (him).}}
+            }
+
+            \subsection*{How to handle topicalization}
+
+            I'll just assume a tree structure like (\ex{1}).
+
+            {\small
+            \enumsentence{Structure of A$'$ Projections:\\ [2ex]
+            \begin{tabular}[t]{cccc}
+                & \node{i}{CP}\\ [2ex]
+                \node{ii}{Spec} &   &\node{iii}{C$'$}\\ [2ex]
+                    &\node{iv}{C} & & \node{v}{SAgrP}
+            \end{tabular}
+            \nodeconnect{i}{ii}
+            \nodeconnect{i}{iii}
+            \nodeconnect{iii}{iv}
+            \nodeconnect{iii}{v}
+            }
+            }
+
+            \subsection*{Mood}
+
+            Mood changes when there is a topic, as well as when
+            there is WH-movement.  \emph{Irrealis} is the mood when
+            there is a non-subject topic or WH-phrase in Comp.
+            \emph{Realis} is the mood when there is a subject topic
+            or WH-phrase.
+
+            \end{document}
+        """)
+
+        if os.path.exists(self.deepdir):
             self.teardown()
 
         os.makedirs(self.deepdir)
-        with open(self.deepfile, 'w'):
-            pass
+        with open(self.deepfile, 'w') as dfile:
+            dfile.write(tex_content)
 
     def teardown(self):
-        os.remove(self.deepfile)
+        allfiles = glob.glob(os.path.join(self.deepdir, "f.*"))
+        for af in allfiles:
+            os.remove(af)
         os.removedirs(self.deepdir)
 
     def test_dir(self):
         nt.assert_equal(os.getcwd(), self.origdir)
-        with misc.LaTeXDirecory(self.deepdir):
+        with misc.LaTeXDirectory(self.deepdir):
             nt.assert_equal(os.getcwd(), self.deepdir)
 
         nt.assert_equal(os.getcwd(), self.origdir)
 
     def test_file(self):
         nt.assert_equal(os.getcwd(), self.origdir)
-        with misc.LaTeXDirecory(self.deepfile):
+        with misc.LaTeXDirectory(self.deepfile):
             nt.assert_equal(os.getcwd(), self.deepdir)
 
         nt.assert_equal(os.getcwd(), self.origdir)
+
+    @nptest.dec.skipif(testing.checkdep_tex() is None)
+    def test_compile_smoke(self):
+        with misc.LaTeXDirectory(self.deepfile) as latex:
+            latex.compile(self.deepfile)
