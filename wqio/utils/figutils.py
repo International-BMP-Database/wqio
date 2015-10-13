@@ -584,6 +584,8 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
         used.
     palette : string, optional
         Name of the seaborn color palette to use.
+    showlegend : bool (default = True)
+        Toggles including a legend on the plot.
     **subplot_kws : keyword arguments
         Options passed directly to plt.subplots()
 
