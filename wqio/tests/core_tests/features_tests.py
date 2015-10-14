@@ -19,7 +19,6 @@ from matplotlib.testing.decorators import image_comparison, cleanup
 
 from wqio.core.features import (
     Parameter,
-    DrainageArea,
     Location,
     Dataset,
     DataCollection
@@ -77,53 +76,6 @@ class test_Parameter_complex(_base_Parameter_Mixin):
         self.known_pu_nocomma = 'Nitrate & Nitrite (mg/L)'
         self.known_pu_comma = 'Nitrate & Nitrite, mg/L'
         self.param = Parameter(name=self.known_name, units=self.known_units)
-
-
-class test_DrainageArea(object):
-    def setup(self):
-        self.total_area = 100.0
-        self.imp_area = 75.0
-        self.bmp_area = 10.0
-        self.da = DrainageArea(self.total_area, self.imp_area, self.bmp_area)
-        self.volume_conversion = 5
-        self.known_storm_runoff = 82.5
-        self.known_annual_runoff = 75.25
-        self.storm_depth = 1.0
-        self.storm_volume = self.storm_depth * (self.total_area + self.bmp_area)
-        self.annualFactor = 0.9
-
-    def test_total_area(self):
-        assert_true(hasattr(self.da, 'total_area'))
-        assert_equal(self.total_area, self.da.total_area)
-
-    def test_imp_area(self):
-        assert_true(hasattr(self.da, 'imp_area'))
-        assert_equal(self.imp_area, self.da.imp_area)
-
-    def test_bmp_area(self):
-        assert_true(hasattr(self.da, 'bmp_area'))
-        assert_equal(self.bmp_area, self.da.bmp_area)
-
-    def test_simple_method_noConversion(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1)
-        nptest.assert_almost_equal(self.known_storm_runoff, runoff, decimal=3)
-        assert_greater(self.storm_volume, runoff)
-
-    def test_simple_method_Conversion(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1, volume_conversion=self.volume_conversion)
-        nptest.assert_almost_equal(self.known_storm_runoff * self.volume_conversion, runoff, decimal=3)
-        assert_greater(self.storm_volume * self.volume_conversion, runoff)
-
-    def test_simple_method_annualFactor(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1, annualFactor=self.annualFactor)
-        nptest.assert_almost_equal(self.known_annual_runoff, runoff, decimal=3)
-        assert_greater(self.storm_volume, runoff)
-
-    def teardown(self):
-        plt.close('all')
 
 
 class _base_LocationMixin(object):
