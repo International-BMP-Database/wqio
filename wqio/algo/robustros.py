@@ -30,8 +30,8 @@ def _ros_sort(dataframe, result='res', censorship='cen'):
     '''
 
     # separate uncensored data from censored data
-    censored = dataframe[dataframe[censorship]].sort(columns=result)
-    uncensored = dataframe[~dataframe[censorship]].sort(columns=result)
+    censored = dataframe[dataframe[censorship]].sort_values(by=result)
+    uncensored = dataframe[~dataframe[censorship]].sort_values(by=result)
 
     return censored.append(uncensored)
 
@@ -155,8 +155,7 @@ class RobustROSEstimator(object):
         self._result_df = data.copy()
         self._cohn = None
         self._estimated_values = None
-        if not lazy:
-            self.estimate()
+        self.estimate()
 
     @property
     def cohn(self):
@@ -167,6 +166,7 @@ class RobustROSEstimator(object):
     @property
     def estimated_values(self):
         if self._estimated_values is None:
+            self.estimate()
             self._estimated_values = self._result_df['modeled'].values
         return self._estimated_values
 
