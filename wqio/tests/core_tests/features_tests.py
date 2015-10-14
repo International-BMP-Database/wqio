@@ -331,33 +331,6 @@ class _base_LocationMixin(object):
         assert_equal(self.loc.include, not self.known_include)
         assert_equal(self.loc.exclude, not self.known_exclude)
 
-    def test_applyFilter_exists(self):
-        assert_true(hasattr(self.loc, 'applyFilter'))
-
-    def test_applyFilter_works(self):
-        self.loc.applyFilter(testfilter)
-        assert_tuple_equal(self.loc.filtered_data.shape, self.known_filtered_shape)
-        assert_tuple_equal(self.loc.full_data.shape, self.known_filtered_shape)
-        assert_tuple_equal(self.loc.data.shape, self.known_filtered_data_shape)
-        assert_equal(self.loc.include, self.known_filtered_include)
-
-    @raises(ValueError)
-    def test_applyFilter_badDataOutput(self):
-
-        def badTestFilter(data):
-            return 4, False
-
-        self.loc.applyFilter(badTestFilter)
-
-    @raises(ValueError)
-    def test_applyFilter_badIncludeOutput(self):
-
-        def badTestFilter(data):
-            df = pandas.Series(np.random.normal(size=37))
-            return df, 'JUNK'
-
-        self.loc.applyFilter(badTestFilter)
-
 
 class test_Location_ROS(_base_LocationMixin):
     def setup(self):
