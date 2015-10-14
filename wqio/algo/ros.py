@@ -42,8 +42,8 @@ def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
     """
 
     # separate detects from non-detects
-    nondetects = dataframe[dataframe[qualcol] == ndsymbol].sort(columns=rescol)
-    detects = dataframe[dataframe[qualcol] != ndsymbol].sort(columns=rescol)
+    nondetects = dataframe[dataframe[qualcol] == ndsymbol].sort_values(by=rescol)
+    detects = dataframe[dataframe[qualcol] != ndsymbol].sort_values(by=rescol)
 
     # remerge the separated values
     ros_data = nondetects.append(detects)

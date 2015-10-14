@@ -1,6 +1,5 @@
 from .features import (
     Parameter,
-    DrainageArea,
     Location,
     Dataset,
     DataCollection
@@ -14,6 +13,7 @@ from .samples import (
 from . hydro import (
     HydroRecord,
     Storm,
+    DrainageArea,
 )
 
 from ..testing import NoseWrapper

@@ -19,7 +19,6 @@ from matplotlib.testing.decorators import image_comparison, cleanup
 
 from wqio.core.features import (
     Parameter,
-    DrainageArea,
     Location,
     Dataset,
     DataCollection
@@ -77,53 +76,6 @@ class test_Parameter_complex(_base_Parameter_Mixin):
         self.known_pu_nocomma = 'Nitrate & Nitrite (mg/L)'
         self.known_pu_comma = 'Nitrate & Nitrite, mg/L'
         self.param = Parameter(name=self.known_name, units=self.known_units)
-
-
-class test_DrainageArea(object):
-    def setup(self):
-        self.total_area = 100.0
-        self.imp_area = 75.0
-        self.bmp_area = 10.0
-        self.da = DrainageArea(self.total_area, self.imp_area, self.bmp_area)
-        self.volume_conversion = 5
-        self.known_storm_runoff = 82.5
-        self.known_annual_runoff = 75.25
-        self.storm_depth = 1.0
-        self.storm_volume = self.storm_depth * (self.total_area + self.bmp_area)
-        self.annualFactor = 0.9
-
-    def test_total_area(self):
-        assert_true(hasattr(self.da, 'total_area'))
-        assert_equal(self.total_area, self.da.total_area)
-
-    def test_imp_area(self):
-        assert_true(hasattr(self.da, 'imp_area'))
-        assert_equal(self.imp_area, self.da.imp_area)
-
-    def test_bmp_area(self):
-        assert_true(hasattr(self.da, 'bmp_area'))
-        assert_equal(self.bmp_area, self.da.bmp_area)
-
-    def test_simple_method_noConversion(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1)
-        nptest.assert_almost_equal(self.known_storm_runoff, runoff, decimal=3)
-        assert_greater(self.storm_volume, runoff)
-
-    def test_simple_method_Conversion(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1, volume_conversion=self.volume_conversion)
-        nptest.assert_almost_equal(self.known_storm_runoff * self.volume_conversion, runoff, decimal=3)
-        assert_greater(self.storm_volume * self.volume_conversion, runoff)
-
-    def test_simple_method_annualFactor(self):
-        assert_true(hasattr(self.da, 'simple_method'))
-        runoff = self.da.simple_method(1, annualFactor=self.annualFactor)
-        nptest.assert_almost_equal(self.known_annual_runoff, runoff, decimal=3)
-        assert_greater(self.storm_volume, runoff)
-
-    def teardown(self):
-        plt.close('all')
 
 
 class _base_LocationMixin(object):
@@ -290,7 +242,6 @@ class _base_LocationMixin(object):
         assert_true(hasattr(self.loc, 'plognorm'))
         nptest.assert_allclose(self.loc.plognorm, self.known_plognorm, rtol=self.tolerance)
 
-
     def test_shapiro(self):
         assert_true(hasattr(self.loc, 'shapiro'))
         nptest.assert_allclose(self.loc.shapiro, self.known_shapiro, rtol=self.tolerance)
@@ -379,33 +330,6 @@ class _base_LocationMixin(object):
         self.loc.include = not self.known_include
         assert_equal(self.loc.include, not self.known_include)
         assert_equal(self.loc.exclude, not self.known_exclude)
-
-    def test_applyFilter_exists(self):
-        assert_true(hasattr(self.loc, 'applyFilter'))
-
-    def test_applyFilter_works(self):
-        self.loc.applyFilter(testfilter)
-        assert_tuple_equal(self.loc.filtered_data.shape, self.known_filtered_shape)
-        assert_tuple_equal(self.loc.full_data.shape, self.known_filtered_shape)
-        assert_tuple_equal(self.loc.data.shape, self.known_filtered_data_shape)
-        assert_equal(self.loc.include, self.known_filtered_include)
-
-    @raises(ValueError)
-    def test_applyFilter_badDataOutput(self):
-
-        def badTestFilter(data):
-            return 4, False
-
-        self.loc.applyFilter(badTestFilter)
-
-    @raises(ValueError)
-    def test_applyFilter_badIncludeOutput(self):
-
-        def badTestFilter(data):
-            df = pandas.Series(np.random.normal(size=37))
-            return df, 'JUNK'
-
-        self.loc.applyFilter(badTestFilter)
 
 
 class test_Location_ROS(_base_LocationMixin):
@@ -876,12 +800,6 @@ class test_Dataset(object):
         assert_true('estimated_effluent' in list(self.ds._theil_stats.keys()))
         assert_true('estimate_error' in list(self.ds._theil_stats.keys()))
 
-    def test_theil_effluent_ties(self):
-        cache_theil_stats = self.ds._theil_stats
-        self.ds.useROS = True
-        self.ds.effluent.useROS = False # restores ties in the effl data
-        assert_true(self.ds._theil_stats['is_inverted'])
-
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
@@ -891,19 +809,6 @@ class test_Dataset(object):
     def test_repr__None(self):
         self.ds.definition = None
         self.ds.__repr__
-
-    def test_reset_useROS(self):
-        #warnings.simplefilter("error")
-        self.ds.useROS = True
-        infl_ros_mean = self.ds.influent.mean
-        effl_ros_mean = self.ds.effluent.mean
-
-        self.ds.useROS = False
-        infl_raw_mean = self.ds.influent.mean
-        effl_raw_mean = self.ds.effluent.mean
-
-        assert_true(infl_ros_mean != infl_raw_mean)
-        assert_true(effl_ros_mean != effl_raw_mean)
 
 
 @nottest
@@ -1084,15 +989,23 @@ def test_dataset__plot_NDs():
 
     fig1, ax1 = plt.subplots()
     ds._plot_nds(ax1, which='both', marker='d', **markerkwargs)
+    ax1.set_xlim(0, 30)
+    ax1.set_ylim(0, 30)
 
     fig2, ax2 = plt.subplots()
     ds._plot_nds(ax2, which='effluent', marker='<', **markerkwargs)
+    ax2.set_xlim(0, 30)
+    ax2.set_ylim(0, 30)
 
     fig3, ax3 = plt.subplots()
     ds._plot_nds(ax3, which='influent', marker='v', **markerkwargs)
+    ax3.set_xlim(0, 30)
+    ax3.set_ylim(0, 30)
 
     fig4, ax4 = plt.subplots()
     ds._plot_nds(ax4, which='neither', marker='o', **markerkwargs)
+    ax4.set_xlim(0, 30)
+    ax4.set_ylim(0, 30)
 
 
 @image_comparison(baseline_images=[
@@ -1152,15 +1065,13 @@ def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
 
 
 class _base_DataCollecionMixin(object):
-    @nottest
-    def _base_setup(self):
-        self.known_rescol = 'ros_res'
-        self.known_raw_rescol = 'res'
-        self.known_roscol = 'ros_res'
-        self.known_qualcol = 'qual'
-        self.known_stationcol = 'loc'
-        self.known_paramcol = 'param'
-        self.known_ndval = 'ND'
+    known_rescol = 'ros_res'
+    known_raw_rescol = 'res'
+    known_roscol = 'ros_res'
+    known_qualcol = 'qual'
+    known_stationcol = 'loc'
+    known_paramcol = 'param'
+    known_ndval = 'ND'
 
     def teardown(self):
         plt.close('all')
@@ -1187,13 +1098,13 @@ class _base_DataCollecionMixin(object):
         assert_equal(self.dc.paramcol, self.known_paramcol)
 
     def test_ndval(self):
-        assert_equal(self.dc.ndval, self.known_ndval)
+        assert_list_equal(self.dc.ndval, [self.known_ndval])
 
     def test_bsIter(self):
         assert_equal(self.dc.bsIter, self.known_bsIter)
 
     def test_groupby(self):
-        assert_equal(self.dc.groupby, self.known_groupby)
+        assert_equal(self.dc.groupcols, self.known_groupcols)
 
     def test_columns(self):
         assert_equal(self.dc.columns, self.known_columns)
@@ -1239,15 +1150,14 @@ class _base_DataCollecionMixin(object):
 
 class test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
-        self._base_setup()
         self.data = make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
                                  qualcol=self.known_qualcol)
         self.dc = DataCollection(self.data, paramcol='param', stationcol='loc',
                                  ndval=self.known_ndval, rescol=self.known_raw_rescol,
                                  qualcol=self.known_qualcol)
 
-        self.known_groupby = ['loc', 'param']
-        self.known_columns = ['loc', 'param', self.known_raw_rescol, self.known_qualcol]
+        self.known_groupcols = ['loc', 'param']
+        self.known_columns = ['loc', 'param', self.known_raw_rescol, 'cen']
         self.known_bsIter = 10000
         self.known_means = pandas.DataFrame({
             ('Reference', 'upper'): {
@@ -1368,12 +1278,9 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
 
 
 class test_DataCollection_customNDval(test_DataCollection_baseline):
-    @nottest
-    def _base_setup(self):
-        self.known_raw_rescol = 'conc'
-        self.known_roscol = 'ros_conc'
-        self.known_rescol = 'ros_conc'
-        self.known_qualcol = 'anote'
-        self.known_stationcol = 'loc'
-        self.known_paramcol = 'param'
-        self.known_ndval = '<'
+    known_raw_rescol = 'conc'
+    known_roscol = 'ros_conc'
+    known_rescol = 'ros_conc'
+    known_qualcol = 'anote'
+    known_stationcol = 'loc'
+    known_paramcol = 'param'

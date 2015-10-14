@@ -869,3 +869,63 @@ class HydroRecord(object):
             return storm_number, self.all_storms.get(storm_number, None)
         else:
             return storm_number, self.storms.get(storm_number, None)
+
+
+class DrainageArea(object):
+    def __init__(self, total_area=1.0, imp_area=1.0, bmp_area=0.0):
+        """ A simple object representing the drainage area of a BMP.
+
+        Units are not enforced, so keep them consistent yourself. The
+        calculations available assume that the area of the BMP and the
+        "total" area are mutually exclusive. In other words,
+        the watershed outlet is at the BMP inlet.
+
+        Parameters
+        ----------
+        total_area : float, optional (default = 1.0)
+            The total geometric area of the BMP's catchment
+        imp_area : float, optional (default = 1.0)
+            The impervious area of the BMP's catchment
+        bmp_area : float, optional (default = 0.0)
+            The geometric area of the BMP itself.
+
+        """
+
+        self.total_area = float(total_area)
+        self.imp_area = float(imp_area)
+        self.bmp_area = float(bmp_area)
+
+    def simple_method(self, storm_depth, volume_conversion=1.0, annualFactor=1.0):
+        """
+        Estimate runoff volume via Bob Pitt's Simple Method.
+
+        Parameters
+        ----------
+        storm_depth : float
+            Depth of the storm.
+        volume_conversion : float, optional (default = 1.0)
+            Conversion factor to go from [area units] * [depth units] to
+            the desired [volume units]. If [area] = m^2, [depth] = mm,
+            and [volume] = L, then `volume_conversion` = 1.
+        annualFactor : float, optional (default = 1.0)
+            The Simple Method's annual correction factor to account for
+            small storms that do not produce runoff.
+
+        Returns
+        -------
+        runoff_volume : float
+            The volume of water entering the BMP immediately downstream
+            of the drainage area.
+
+        """
+
+        # volumetric run off coneffiecient
+        Rv = 0.05 + (0.9 * (self.imp_area / self.total_area))
+
+        # run per unit storm depth
+        drainage_conversion = Rv * self.total_area * volume_conversion
+        bmp_conversion = self.bmp_area * volume_conversion
+
+        # total runoff based on actual storm depth
+        runoff_volume = (drainage_conversion * annualFactor + bmp_conversion) * storm_depth
+        return runoff_volume
