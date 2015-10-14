@@ -13,6 +13,8 @@ import pandas
 __all__ = ['rosSort', 'MR']
 
 
+
+@np.deprecate(message="algo.ros is deprectate. use algo.robustros instead.")
 def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
     """ Prepare a dataframe for ROS. It sorts ascending with non-detects
     on top. So something like this:
@@ -50,7 +52,7 @@ def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
 
     return ros_data #.reset_index(drop=True)
 
-
+@np.deprecate(message="algo.ros is deprectate. use algo.robustros instead.")
 class MR(object):
     """ Censored data analysis via regression on order statistics (ROS)
 

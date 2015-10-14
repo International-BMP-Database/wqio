@@ -722,7 +722,7 @@ class HydroRecord(object):
 
             self._storm_stats = storm_stats[col_order]
 
-        return self._storm_stats.sort(columns=['Storm Number']).reset_index(drop=True)
+        return self._storm_stats.sort_values(by=['Storm Number']).reset_index(drop=True)
 
     def _define_storms(self, debug=False):
         """ Parses the hydrologic data into distinct storms. In this

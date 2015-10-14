@@ -352,7 +352,7 @@ class RobustROSEstimator(object):
         # if there are no non-detects, just spit everything back out
         if self.ncen == 0:
             self._result_df['modeled'] = self._result_df[self.result_name]
-            self._result_df.sort(columns=[self.result_name], inplace=True)
+            self._result_df.sort_values(by=[self.result_name], inplace=True)
             ppos, sorted_res = stats.probplot(
                 self._result_df[self.result_name], fit=False
             )
