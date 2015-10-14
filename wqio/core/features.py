@@ -144,33 +144,24 @@ class Location(object):
         The *only* value in the `qualcol` of `dataframe` that
         indicates that the corresponding value in `rescol` is
         non-detect.
-    bsIter : int, optional (default = 1e4)
-        Number of interations to use when using a bootstrap
-        algorithm to refine a statistic.
     station_type : string, optional
         Type of location being analyzed. Valid values are:
         'inflow' (default) or 'outflow'.
     useROS : bool, optional (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
+    cencol : string, optional (default = 'cen')
+        Name of the column indicaticating if a results is censored.
+        These values will be computed from ``qualcol`` and ``ndval``.
+    bsIter : int, optional (default = 1e4)
+        Number of interations to use when using a bootstrap
+        algorithm to refine a statistic.
     include : bool, optional (default = True)
         Toggles the inclusion of the location when programmatically
         creating many `Location` objects.
 
     Settable Properties
     -------------------
-    .plot_marker : string
-        Matplotlib string of the marker used in plotting methods.
-    .color : string
-        Matplotlib color for plotting.
-    .bsIter : int
-        Same as input.
-    .useROS : bool
-        Same as input.
-    .filtered_data :pandas.DataFrame
-        Subset of the input data. This is the final version used in all
-        computations and graphics. It is set to the full dataset by
-        default.
     .name : string
         A human-readable name for the data.
     .definition : dict
@@ -234,7 +225,7 @@ class Location(object):
       and self.lilliefors_log (subject to the absense of negitive
       results).
     ^ Indicatates that there's a equivalent stat in geometric space.
-      For example, self.mean and self.geomean_mean.
+      For example, self.mean and self.geomean.
 
     Plotting Methods
     ----------------
@@ -246,8 +237,8 @@ class Location(object):
     """
 
     def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND',
-                 bsIter=10000, station_type='inflow', useROS=True,
-                 include=True):
+                 station_type='inflow', useROS=True, cencol='cen',
+                 bsIter=10000, include=True):
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -266,52 +257,49 @@ class Location(object):
         # properties of the dataframe and analysis
         self.bsIter = bsIter
         self.useROS = useROS
-        self._rescol = rescol
-        self._qualcol = qualcol
+        self.rescol = rescol
+        self.qualcol = qualcol
+        self.cencol = cencol
         if np.isscalar(ndval):
-            self._ndval = [ndval]
+            self.ndvals = [ndval]
         else:
-            self._ndval = ndval
+            self.ndvals = ndval
 
         # original data and quantity
-        self._raw_data = dataframe
-        self._filtered_data = self._raw_data.copy()
+        self.raw_data = dataframe
+        self._dataframe = None
+        self._data = None
 
     @property
-    def filtered_data(self):
-        if self._filtered_data is None:
-            return self._raw_data
-        else:
-            return self._filtered_data
-    @filtered_data.setter
-    def filtered_data(self, value):
-        self._cache.clear()
-        self._filtered_data = value
+    def dataframe(self):
+        if self.hasData:
+            if self._dataframe is None:
+                df = self.raw_data.copy()
+                df[self.cencol] = df[self.qualcol].isin(self.ndvals)
+                if self.useROS:
+                    ros = algo.RobustROSEstimator(data=df, result=self.rescol, censorship=self.cencol)
+                    self._dataframe = ros._result_df[['modeled', self.cencol]]
+                else:
+                    self._dataframe = df[[self.rescol, self.cencol]]
+        return self._dataframe
 
     @property
     @np.deprecate
-    def data(self):
-        return self.values
+    def filtered_data(self):
+        return self.dataframe
 
     @property
+    @np.deprecate
     def full_data(self):
-        if self.hasData:
-            if self.useROS:
-                output = self.ros._result_df[['modeled', 'cen']]
-                rename_dict = {'modeled': 'res'}
-            else:
-                output = self.filtered_data[[self._rescol, self._qualcol]]
-                rename_dict = {self._qualcol: 'qual', self._rescol: 'res'}
-
-            return output.rename(columns=rename_dict)
+        return self.dataframe
 
     @property
-    def values(self):
+    def data(self):
         if self.hasData:
             if self.useROS:
-               output = self.ros.estimated_values
+               output = self.dataframe['modeled'].values
             else:
-                output = self.filtered_data[self._rescol].values
+                output = self.dataframe[self.rescol].values
             return output
 
     @property
@@ -341,7 +329,7 @@ class Location(object):
 
     @cache_readonly
     def N(self):
-        return self.filtered_data.shape[0]
+        return self.raw_data.shape[0]
 
     @cache_readonly
     def hasData(self):
@@ -357,7 +345,7 @@ class Location(object):
 
     @cache_readonly
     def ND(self):
-        return (self.filtered_data[self._qualcol].isin(self._ndval)).sum()
+        return self.dataframe[self.cencol].sum()
 
     @cache_readonly
     def NUnique(self):
@@ -370,11 +358,11 @@ class Location(object):
     @cache_readonly
     def ros(self):
         if self.hasData:
-            data = self.filtered_data.assign(cen=self.filtered_data[self._qualcol].isin(self._ndval))
+            data = self.filtered_data.assign(cen=self.filtered_data[self.qualcol].isin(self.ndvals))
             mr = algo.robustros.RobustROSEstimator(
                 data=data,
-                result=self._rescol,
-                censorship='cen',
+                result=self.rescol,
+                censorship=self.cencol,
                 lazy=True
             )
             return mr
@@ -441,12 +429,12 @@ class Location(object):
     @cache_readonly
     def min_detect(self):
         if self.hasData:
-            return self._filtered_data[self._rescol][self._filtered_data[self._qualcol] != self._ndval].min()
+            return self.raw_data[self.rescol][~self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cache_readonly
     def min_DL(self):
         if self.hasData:
-            return self._filtered_data[self._rescol][self._filtered_data[self._qualcol] == self._ndval].min()
+            return self.raw_data[self.rescol][self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cache_readonly
     def max(self):
@@ -876,8 +864,8 @@ class Location(object):
                     markerfacecolor=self.color, markeredgecolor='white',
                     linestyle='none', alpha=alpha)
         else:
-            y_nondet = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]==self._ndval]
-            y_detect = self.filtered_data[self._rescol][self.filtered_data[self._qualcol]!=self._ndval]
+            y_nondet = self.raw_data[self.rescol][self.dataframe[self.cencol]]
+            y_detect = self.raw_data[self.rescol][~self.dataframe[self.cencol]]
 
             ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
                     markerfacecolor='none', markeredgecolor=self.color,
@@ -897,6 +885,7 @@ class Location(object):
         return fig
 
     # other methods
+    @np.deprecate
     def applyFilter(self, filterfxn, **fxnkwargs):
         """ Filter the dataset and set the `include`/`exclude`
         properties based on a user-defined function.
@@ -931,7 +920,6 @@ class Location(object):
         if not isinstance(include, bool):
             raise ValueError ('second item returned by filterfxn must be a bool')
 
-        self.filtered_data = newdata
         self.include = include
 
 
@@ -965,33 +953,23 @@ class Dataset(object):
         self.effluent = effluent
         self._name = name
         self._include = None
-        self._useROS = useROS
+        self.useROS = useROS
         self._definition = {}
         self._cache = resettable_cache()
-
-    @property
-    def useROS(self):
-        return self._useROS
-    @useROS.setter
-    def useROS(self, value):
-        self._cache.clear()
-        self.influent.useROS = value
-        self.effluent.useROS = value
-        self._useROS = value
 
     @cache_readonly
     def data(self):
         if self.effluent.hasData:
-            effl = self.effluent._raw_data.copy()
+            effl = self.effluent.raw_data.copy()
         else:
             raise ValueError("effluent must have data")
 
         if self.influent.hasData:
-            infl = self.influent._raw_data.copy()
+            infl = self.influent.raw_data.copy()
         else:
             infl = pandas.DataFrame(
-                index=self.effluent._raw_data.index,
-                columns=self.effluent._raw_data.columns
+                index=self.effluent.raw_data.index,
+                columns=self.effluent.raw_data.columns
             )
 
         infl = utils.addSecondColumnLevel('inflow', 'station', infl)
@@ -1680,8 +1658,8 @@ class Dataset(object):
                     alpha=0.50, color='black', zorder=5, label='1:1 line')
 
         detects = self.paired_data.loc[
-            (self.paired_data[('inflow', 'qual')] != self.influent._ndval) &
-            (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+            (self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) &
+            (self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
         ].xs('res', level='quantity', axis=1)
         if bestfit and detects.shape[0] >= minpoints:
             if xscale == 'log' and yscale == 'log':
@@ -1755,20 +1733,20 @@ class Dataset(object):
 
 
         if which == 'both':
-            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
-                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
+            index = (self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
+                    (self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
 
         elif which == 'influent':
-            index = (self.paired_data[('inflow', 'qual')] == self.influent._ndval) & \
-                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+            index = (self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
+                    (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
 
         elif which == 'effluent':
-            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
-                    (self.paired_data[('outflow', 'qual')] == self.effluent._ndval)
+            index = (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
+                    (self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
 
         elif which == 'neither':
-            index = (self.paired_data[('inflow', 'qual')] != self.influent._ndval) & \
-                    (self.paired_data[('outflow', 'qual')] != self.effluent._ndval)
+            index = (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
+                    (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
 
         else:
             msg = '`which` must be "both", "influent", ' \

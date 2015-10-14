@@ -989,6 +989,8 @@ def test_dataset__plot_NDs():
 
     fig1, ax1 = plt.subplots()
     ds._plot_nds(ax1, which='both', marker='d', **markerkwargs)
+    ax1.set_xlim(0, 30)
+    ax1.set_ylim(0, 30)
 
     fig2, ax2 = plt.subplots()
     ds._plot_nds(ax2, which='effluent', marker='<', **markerkwargs)
