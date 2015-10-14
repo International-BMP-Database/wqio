@@ -994,12 +994,18 @@ def test_dataset__plot_NDs():
 
     fig2, ax2 = plt.subplots()
     ds._plot_nds(ax2, which='effluent', marker='<', **markerkwargs)
+    ax2.set_xlim(0, 30)
+    ax2.set_ylim(0, 30)
 
     fig3, ax3 = plt.subplots()
     ds._plot_nds(ax3, which='influent', marker='v', **markerkwargs)
+    ax3.set_xlim(0, 30)
+    ax3.set_ylim(0, 30)
 
     fig4, ax4 = plt.subplots()
     ds._plot_nds(ax4, which='neither', marker='o', **markerkwargs)
+    ax4.set_xlim(0, 30)
+    ax4.set_ylim(0, 30)
 
 
 @image_comparison(baseline_images=[
