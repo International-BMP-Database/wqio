@@ -800,12 +800,6 @@ class test_Dataset(object):
         assert_true('estimated_effluent' in list(self.ds._theil_stats.keys()))
         assert_true('estimate_error' in list(self.ds._theil_stats.keys()))
 
-    def test_theil_effluent_ties(self):
-        cache_theil_stats = self.ds._theil_stats
-        self.ds.useROS = True
-        self.ds.effluent.useROS = False # restores ties in the effl data
-        assert_true(self.ds._theil_stats['is_inverted'])
-
     def test_medianCIsOverlap(self):
         assert_equal(self.known_medianCIsOverlap, self.ds.medianCIsOverlap)
 
@@ -815,19 +809,6 @@ class test_Dataset(object):
     def test_repr__None(self):
         self.ds.definition = None
         self.ds.__repr__
-
-    def test_reset_useROS(self):
-        #warnings.simplefilter("error")
-        self.ds.useROS = True
-        infl_ros_mean = self.ds.influent.mean
-        effl_ros_mean = self.ds.effluent.mean
-
-        self.ds.useROS = False
-        infl_raw_mean = self.ds.influent.mean
-        effl_raw_mean = self.ds.effluent.mean
-
-        assert_true(infl_ros_mean != infl_raw_mean)
-        assert_true(effl_ros_mean != effl_raw_mean)
 
 
 @nottest
