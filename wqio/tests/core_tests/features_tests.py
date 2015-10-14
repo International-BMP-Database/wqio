@@ -1057,15 +1057,13 @@ def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
 
 
 class _base_DataCollecionMixin(object):
-    @nottest
-    def _base_setup(self):
-        self.known_rescol = 'ros_res'
-        self.known_raw_rescol = 'res'
-        self.known_roscol = 'ros_res'
-        self.known_qualcol = 'qual'
-        self.known_stationcol = 'loc'
-        self.known_paramcol = 'param'
-        self.known_ndval = 'ND'
+    known_rescol = 'ros_res'
+    known_raw_rescol = 'res'
+    known_roscol = 'ros_res'
+    known_qualcol = 'qual'
+    known_stationcol = 'loc'
+    known_paramcol = 'param'
+    known_ndval = 'ND'
 
     def teardown(self):
         plt.close('all')
@@ -1144,7 +1142,6 @@ class _base_DataCollecionMixin(object):
 
 class test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
-        self._base_setup()
         self.data = make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
                                  qualcol=self.known_qualcol)
         self.dc = DataCollection(self.data, paramcol='param', stationcol='loc',
@@ -1273,12 +1270,9 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
 
 
 class test_DataCollection_customNDval(test_DataCollection_baseline):
-    @nottest
-    def _base_setup(self):
-        self.known_raw_rescol = 'conc'
-        self.known_roscol = 'ros_conc'
-        self.known_rescol = 'ros_conc'
-        self.known_qualcol = 'anote'
-        self.known_stationcol = 'loc'
-        self.known_paramcol = 'param'
-        self.known_ndval = '<'
+    known_raw_rescol = 'conc'
+    known_roscol = 'ros_conc'
+    known_rescol = 'ros_conc'
+    known_qualcol = 'anote'
+    known_stationcol = 'loc'
+    known_paramcol = 'param'
