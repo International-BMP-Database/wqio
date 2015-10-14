@@ -1098,13 +1098,13 @@ class _base_DataCollecionMixin(object):
         assert_equal(self.dc.paramcol, self.known_paramcol)
 
     def test_ndval(self):
-        assert_equal(self.dc.ndval, self.known_ndval)
+        assert_list_equal(self.dc.ndval, [self.known_ndval])
 
     def test_bsIter(self):
         assert_equal(self.dc.bsIter, self.known_bsIter)
 
     def test_groupby(self):
-        assert_equal(self.dc.groupby, self.known_groupby)
+        assert_equal(self.dc.groupcols, self.known_groupcols)
 
     def test_columns(self):
         assert_equal(self.dc.columns, self.known_columns)
@@ -1156,8 +1156,8 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
                                  ndval=self.known_ndval, rescol=self.known_raw_rescol,
                                  qualcol=self.known_qualcol)
 
-        self.known_groupby = ['loc', 'param']
-        self.known_columns = ['loc', 'param', self.known_raw_rescol, self.known_qualcol]
+        self.known_groupcols = ['loc', 'param']
+        self.known_columns = ['loc', 'param', self.known_raw_rescol, 'cen']
         self.known_bsIter = 10000
         self.known_means = pandas.DataFrame({
             ('Reference', 'upper'): {

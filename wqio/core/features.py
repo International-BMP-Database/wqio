@@ -6,10 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas
 import statsmodels.api as sm
-from statsmodels.tools.decorators import (resettable_cache,
-                                          cache_readonly,
-                                          cache_writable)
-
+from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn.apionly as seaborn
 from wqio import utils
 from wqio import algo
@@ -18,20 +15,20 @@ from wqio import algo
 station_names = {
     'inflow': 'Influent',
     'outflow': 'Effluent',
-    'reference': 'Reference Flow'
+    'reference': 'Reference Flow',
 }
 
 markers = {
     'Influent': ['o', 'v'],
     'Effluent': ['s', '<'],
-    'Reference Flow': ['D', 'd']
+    'Reference Flow': ['D', 'd'],
 }
 
 palette = seaborn.color_palette(palette='deep', n_colors=3, desat=0.88)
 colors = {
     'Influent': palette[0],
     'Effluent': palette[1],
-    'Reference Flow': palette[2]
+    'Reference Flow': palette[2],
 }
 
 
@@ -1788,7 +1785,7 @@ class DataCollection(object):
 
     """
 
-    def __init__(self, dataframe, rescol='res', qualcol='qual',
+    def __init__(self, dataframe, rescol='res', qualcol='qual', cencol='cen',
                  stationcol='station', paramcol='parameter', ndval='ND',
                  othergroups=None, useROS=True, filterfxn=None,
                  bsIter=10000):
@@ -1797,7 +1794,6 @@ class DataCollection(object):
         self._raw_rescol = rescol
         self._cache = resettable_cache()
 
-        self.data = dataframe
         self.useROS = useROS
         self.roscol = 'ros_' + rescol
         if self.useROS:
@@ -1807,16 +1803,21 @@ class DataCollection(object):
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
-        self.ndval = ndval
+        self.cencol = cencol
+        self.ndval = [ndval] if np.isscalar(ndval) else ndval
         self.bsIter = bsIter
 
-        self.groupby = [stationcol, paramcol]
+        self.groupcols = [stationcol, paramcol]
         if othergroups is not None:
             if np.isscalar(othergroups):
                 othergroups = [othergroups]
-            self.groupby.extend(othergroups)
+            self.groupcols.extend(othergroups)
 
-        self.columns = self.groupby + [self._raw_rescol, self.qualcol]
+        self.columns = self.groupcols + [self._raw_rescol, self.cencol]
+
+        self.data = dataframe.copy()
+        self.data[cencol] = self.data[self.qualcol].isin(self.ndval)
+        self.data
 
     @property
     def filterfxn(self):
@@ -1831,13 +1832,12 @@ class DataCollection(object):
 
     @cache_readonly
     def tidy(self):
-
         if self.useROS:
             def fxn(g):
-                mr = algo.ros.MR(g, rescol=self._raw_rescol,
-                                 qualcol=self.qualcol,
-                                 ndsymbol=self.ndval)
-                return mr.data
+                rosdf = algo.RobustROSEstimator(data=g, result=self._raw_rescol,
+                                                censorship=self.cencol)._result_df
+                rosdf = rosdf.rename(columns={'modeled': self.roscol})
+                return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
         else:
             def fxn(g):
                 g[self.roscol] = np.nan
@@ -1846,13 +1846,12 @@ class DataCollection(object):
         _tidy = (
             self.data
                 .reset_index()[self.columns]
-                .groupby(by=self.groupby)
+                .groupby(by=self.groupcols)
                 .filter(self.filterfxn)
-                .groupby(by=self.groupby)
+                .groupby(by=self.groupcols)
                 .apply(fxn)
                 .reset_index()
-                .rename(columns={'final_data': self.roscol})
-                .sort_values(by=self.groupby)
+                .sort_values(by=self.groupcols)
         )
 
         keep_cols = self.columns + [self.roscol]
@@ -1865,12 +1864,12 @@ class DataCollection(object):
         _locations = []
         groups = (
             self.data
-                .groupby(level=self.groupby)
+                .groupby(level=self.groupcols)
                 .filter(self.filterfxn)
-                .groupby(level=self.groupby)
+                .groupby(level=self.groupcols)
         )
         for names, data in groups:
-            loc_dict = dict(zip(self.groupby, names))
+            loc_dict = dict(zip(self.groupcols, names))
             locdata = data.copy()
             locdata.index = locdata.index.droplevel(level=self.stationcol)
             loc = Location(
@@ -1887,7 +1886,7 @@ class DataCollection(object):
     @cache_readonly
     def datasets(self):
         _datasets = []
-        groupcols = list(filter(lambda g: g != self.stationcol, self.groupby))
+        groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
         for names, data in self.data.groupby(level=groupcols):
             ds_dict = dict(zip(groupcols, names))
@@ -1959,14 +1958,14 @@ class DataCollection(object):
         if bootstrap:
             stat = (
                 self.tidy
-                    .groupby(by=self.groupby)
+                    .groupby(by=self.groupcols)
                     .apply(CIs)
                     .unstack(level=self.stationcol)
             )
         else:
             stat = (
                 self.tidy
-                    .groupby(by=self.groupby)
+                    .groupby(by=self.groupcols)
                     .agg({self.rescol: statfxn})
                     .unstack(level=self.stationcol)
             )
@@ -2011,7 +2010,7 @@ class DataCollection(object):
             col = self.rescol
 
         if groupcols is None:
-            groupcols = self.groupby
+            groupcols = self.groupcols
 
         ptiles = [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
