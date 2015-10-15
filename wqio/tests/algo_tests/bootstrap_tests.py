@@ -23,6 +23,9 @@ class test_Stat:
         self.bsStat = bootstrap.Stat(np.array(self.data.res), statfxn=self.statfxn,
                                      alpha=self.alpha, NIter=self.NIter)
 
+        self.known_secondary = 10.121394742857142
+        self.known_primary = 10.120571428571429
+
     def test__boot_stats(self):
         assert_true(hasattr(self.bsStat, 'boot_stats'))
         assert_equal(self.bsStat.boot_stats.shape[0], self.NIter)
@@ -61,9 +64,17 @@ class test_Stat:
         assert_true(hasattr(self.bsStat, 'NIter'))
         assert_equal(self.NIter, self.bsStat.NIter)
 
-    def test_prelim_result(self):
-        assert_true(hasattr(self.bsStat, 'prelim_result'))
-        assert_equal(self.statfxn(self.data.res), self.bsStat.prelim_result)
+    def test_primary_result(self):
+        assert_true(hasattr(self.bsStat, 'primary_result'))
+        assert_equal(self.known_primary, self.bsStat.primary_result)
+
+    def test_secondary_result(self):
+        assert_true(hasattr(self.bsStat, 'secondary_result'))
+        assert_equal(self.known_secondary, self.bsStat.secondary_result)
+
+    def test_final_result(self):
+        assert_true(hasattr(self.bsStat, 'final_result'))
+        assert_equal(self.known_primary, self.bsStat.final_result)
 
 
 class test_Fit:
@@ -98,7 +109,6 @@ class test_Fit:
         knownPer_res, knownPer_ci = (np.array([0.49918029, 1.66417978]),
                                      np.array([[0.43425858, 0.55355437],
                                                [0.65338572, 2.43818938]]))
-        BCA_res, BCA_ci = self.bsFit.BCA()
         Per_res, Per_ci = self.bsFit.percentile()
         nptest.assert_array_almost_equal(knownPer_res, Per_res, decimal=1)
         nptest.assert_array_almost_equal(knownPer_ci, Per_ci, decimal=1)
@@ -131,7 +141,7 @@ class test_Fit:
         assert_true(hasattr(self.bsFit, 'NIter'))
         assert_equal(self.NIter, self.bsFit.NIter)
 
-    def test_prelim_result(self):
-        assert_true(hasattr(self.bsFit, 'prelim_result'))
+    def test_primary_result(self):
+        assert_true(hasattr(self.bsFit, 'primary_result'))
         nptest.assert_array_almost_equal(np.array([0.4992521, 1.63328575]),
-                                         self.bsFit.prelim_result)
+                                         self.bsFit.primary_result)
