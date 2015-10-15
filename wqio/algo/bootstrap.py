@@ -73,7 +73,7 @@ class Stat(object):
         self._primary_result = None
         self._boot_array = None
         self._boot_stats = None
-        self._secondary_result = None
+        self._boot_result = None
 
     @property
     def boot_array(self):
@@ -94,17 +94,17 @@ class Stat(object):
         return self._boot_stats
 
     @property
-    def secondary_result(self):
-        if self._secondary_result is None:
-            self._secondary_result = self.boot_stats.mean()
-        return self._secondary_result
+    def boot_result(self):
+        if self._boot_result is None:
+            self._boot_result = self.boot_stats.mean()
+        return self._boot_result
 
     @property
     def final_result(self):
         if self.use_prelim:
             return self.primary_result
         else:
-            return self.secondary_result
+            return self.boot_result
 
     def _make_bootstrap_array(self):
         """ Generate an array of bootstrap sample sets
@@ -195,7 +195,7 @@ class Stat(object):
 
             # fall back to the standard percentile method if the results
             # don't make any sense
-            if self.secondary_result < CI[0] or CI[1] < self.secondary_result:
+            if self.boot_result < CI[0] or CI[1] < self.boot_result:
                 warnings.warn("secondary result outside of CI", UserWarning)
                 CI = self._eval_percentile(boot_stats)
         else:
@@ -278,7 +278,7 @@ class Fit(Stat):
         self._primary_result = None
         self._boot_array = None
         self._boot_stats = None
-        self._secondary_result = None
+        self._boot_result = None
         self.use_prelim = use_prelim
 
 
@@ -305,17 +305,17 @@ class Fit(Stat):
         return self._boot_stats
 
     @property
-    def secondary_result(self):
-        if self._secondary_result is None:
-            self._secondary_result = self.boot_stats.mean()
-        return self._secondary_result
+    def boot_result(self):
+        if self._boot_result is None:
+            self._boot_result = self.boot_stats.mean()
+        return self._boot_result
 
     @property
     def final_result(self):
         if self.use_prelim:
             return self.primary_result
         else:
-            return self.secondary_result
+            return self.boot_result
 
 
     def BCA(self):
