@@ -186,10 +186,11 @@ class Stat(object):
 
             # fall back to the standard percentile method if the results
             # don't make any sense
-            # TODO: fallback to percentile method should raise a warning
             if self.secondary_result < CI[0] or CI[1] < self.secondary_result:
+                warnings.warn("secondary result outside of CI", UserWarning)
                 CI = self._eval_percentile(boot_stats)
         else:
+            warnings.warn("All results below primary_result", UserWarning)
             CI = self._eval_percentile(boot_stats)
 
         return CI
