@@ -1,3 +1,6 @@
+from __future__ import division
+import warnings
+
 import numpy as np
 import scipy.stats as stats
 import scipy.stats.distributions as dist
@@ -143,7 +146,7 @@ class Stat(object):
         # we're done
         return bootArray
 
-    def _eval_BCA(self, primary_result, boot_stats):
+    def _eval_BCA(self, primary_result=None, boot_stats=None):
         """ Evaluate the Bias-Corrected and Accelerated method of
         aquiring confidence intervals around a statistic.
 
@@ -163,6 +166,12 @@ class Stat(object):
             Confidence intervals of statistic.
 
         """
+
+        if primary_result is None:
+            primary_result = self.primary_result
+
+        if boot_stats is None:
+            boot_stats = self.boot_stats
 
         # number of results below the premlinary estimate
         NumBelow = np.sum(boot_stats < primary_result)
@@ -195,7 +204,7 @@ class Stat(object):
 
         return CI
 
-    def _eval_percentile(self, boot_stats):
+    def _eval_percentile(self, boot_stats=None):
         """ Evaluate the percentile method of aquiring confidence
         intervals around a statistic.
 
@@ -213,6 +222,8 @@ class Stat(object):
             Confidence intervals of statistic.
 
         """
+        if boot_stats is None:
+            boot_stats = self.boot_stats
 
         # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
         CI = np.percentile(boot_stats, [self.alpha*50, 100-self.alpha*50], axis=0)
@@ -221,12 +232,12 @@ class Stat(object):
 
     def BCA(self):
         """ BCA method of aquiring confidence intervals. """
-        CI = self._eval_BCA(self.primary_result, self.boot_stats)
+        CI = self._eval_BCA()
         return self.final_result, CI
 
     def percentile(self):
         """ Percentile method of aquiring confidence intervals. """
-        CI = self._eval_percentile(self.boot_stats)
+        CI = self._eval_percentile()
         return self.final_result, CI
 
 
