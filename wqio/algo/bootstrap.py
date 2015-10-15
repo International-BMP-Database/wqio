@@ -174,19 +174,15 @@ class Stat(object):
 
         # z-stats on the % of `NumBelow` and the confidence limits
         if NumBelow != self.NIter:
-            z0 = dist.norm.ppf(float(NumBelow)/self.NIter)
-            z1 = dist.norm.ppf(self.alpha/2.0)
-            z2 = dist.norm.ppf(1-self.alpha/2.0)
+            z0 = dist.norm.ppf(NumBelow / self.NIter)
+            z = dist.norm.ppf([0.5 * self.alpha, 1 - (0.5 * self.alpha)])
 
             # refine the confidence limits (alphas)
-            z1Total = (z0 + (z0 + z1)) / (1 - a_hat*(z0+z1))
-            z2Total = (z0 + (z0 + z2)) / (1 - a_hat*(z0+z2))
-            alpha1 = dist.norm.cdf(z1Total)*100.0
-            alpha2 = dist.norm.cdf(z2Total)*100.0
+            zTotal = (z0 + (z0 + z) / (1 - a_hat*(z0 + z)))
+            alpha = dist.norm.cdf(zTotal) * 100.0
 
             # confidence intervals from the new alphas
-            CI = np.array([stats.scoreatpercentile(boot_stats, alpha1),
-                           stats.scoreatpercentile(boot_stats, alpha2)])
+            CI = stats.scoreatpercentile(boot_stats, alpha)
 
             # fall back to the standard percentile method if the results
             # don't make any sense
@@ -218,10 +214,7 @@ class Stat(object):
         """
 
         # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
-        CI = np.array([
-            np.percentile(boot_stats, self.alpha*50, axis=0),
-            np.percentile(boot_stats, 100-self.alpha*50, axis=0),
-        ])
+        CI = np.percentile(boot_stats, [self.alpha*50, 100-self.alpha*50], axis=0)
 
         return CI
 
