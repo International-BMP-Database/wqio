@@ -68,9 +68,9 @@ class test_Stat:
         assert_true(hasattr(self.bsStat, 'primary_result'))
         assert_equal(self.known_primary, self.bsStat.primary_result)
 
-    def test_secondary_result(self):
-        assert_true(hasattr(self.bsStat, 'secondary_result'))
-        assert_equal(self.known_secondary, self.bsStat.secondary_result)
+    def test_boot_result(self):
+        assert_true(hasattr(self.bsStat, 'boot_result'))
+        assert_equal(self.known_secondary, self.bsStat.boot_result)
 
     def test_final_result(self):
         assert_true(hasattr(self.bsStat, 'final_result'))
