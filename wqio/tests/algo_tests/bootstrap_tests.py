@@ -109,7 +109,6 @@ class test_Fit:
         knownPer_res, knownPer_ci = (np.array([0.49918029, 1.66417978]),
                                      np.array([[0.43425858, 0.55355437],
                                                [0.65338572, 2.43818938]]))
-        BCA_res, BCA_ci = self.bsFit.BCA()
         Per_res, Per_ci = self.bsFit.percentile()
         nptest.assert_array_almost_equal(knownPer_res, Per_res, decimal=1)
         nptest.assert_array_almost_equal(knownPer_ci, Per_ci, decimal=1)
