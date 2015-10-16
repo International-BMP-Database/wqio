@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import warnings
 
 import numpy as np
 from scipy import stats
@@ -8,9 +9,10 @@ import pandas as pd
 
 
 def _ros_sort(dataframe, result='res', censorship='cen'):
-    '''
+    """
     This function prepares a dataframe for ROS. It sorts ascending with
-    left-censored observations on top.
+    left-censored observations on top. Censored results larger than the
+    maximum uncensored results are removed from the dataframe.
 
     Parameters
     ----------
@@ -27,17 +29,22 @@ def _ros_sort(dataframe, result='res', censorship='cen'):
     ------
     Sorted pandas DataFrame.
 
-    '''
+    """
 
     # separate uncensored data from censored data
     censored = dataframe[dataframe[censorship]].sort_values(by=result)
     uncensored = dataframe[~dataframe[censorship]].sort_values(by=result)
 
+    if censored[result].max() > uncensored[result].max():
+        msg = "Dropping censored results greater than the max uncensored result."
+        warnings.warn(msg)
+        censored = censored[censored[result] <= uncensored[result].max()]
+
     return censored.append(uncensored)
 
 
 class RobustROSEstimator(object):
-    '''
+    """
     Class to implement the Robust regression-on-order statistics (ROS)
     method outlined in Nondetects and Data Analysis by Dennis R. Helsel
     (2005) to estimate the left-censored (non-detect) values of a
@@ -103,7 +110,7 @@ class RobustROSEstimator(object):
     Also, this code is still considered expirmental and it's APIs may
     change dramatically in subsequent releases.
 
-    '''
+    """
 
     def __init__(self, data=None, result='res', censorship='cen',
                  min_uncensored=2, max_fraction_censored=0.8,
@@ -171,24 +178,29 @@ class RobustROSEstimator(object):
         return self._estimated_values
 
     def _get_cohn_numbers(self):
-        '''
-        Computes the Cohn numbers for the detection limits in the dataset.
+        """
+        Computes the Cohn numbers for the detection limits in the
+        dataset.
 
         The Cohn Numbers are:
             + A_j = the number of uncensored obs above the jth threshold.
-            + B_j = the number of observations (cen & uncen) below the jth
+            + B_j = the number of observations (cen & uncen) below the
+              jth threshold.
+            + C_j = the number of censored observations at the jth
               threshold.
-            + C_j = the number of censored observations at the jth threshold
             + PE_j = the probability of exceeding the jth threshold
             + detection_limit = unique detection limits in the dataset.
             + lower -> a copy of the detection_limit column
             + upper -> lower shifted down 1 step
-        '''
+        """
 
         def nuncen_above(row):
-            '''
-            The number of uncensored obs above the given threshold. (A_j)
-            '''
+            """
+            The number of uncensored obs above the given
+            threshold (A_j).
+
+            """
+
             # index of results above the lower DL
             above = self._result_df[self.result_name] >= row['lower']
 
@@ -202,10 +214,12 @@ class RobustROSEstimator(object):
             return self._result_df[above & below & detect].shape[0]
 
         def nobs_below(row):
-            '''
+            """
             The number of observations (cen & uncen) below the given
-            threshold. (B_j)
-            '''
+            threshold (B_j).
+
+            """
+
             # index of data less than the lower DL
             less_than = self._result_df[self.result_name] < row['lower']
 
@@ -226,9 +240,12 @@ class RobustROSEstimator(object):
             return LTE_censored + LT_uncensored
 
         def ncen_equal(row):
-            '''
-            The number of censored observations at the given threshold (C_j)
-            '''
+            """
+            The number of censored observations at the given
+            threshold (C_j).
+
+            """
+
             censored_index = self._result_df[self.censorship_name]
             censored_data = self._result_df[self.result_name][censored_index]
             censored_below = censored_data == row['lower']
@@ -274,9 +291,11 @@ class RobustROSEstimator(object):
 
     def _compute_plotting_positions(self, data):
         def _ros_plotting_pos(row):
-            '''
-            Helper function to compute the ROS'd plotting position
-            '''
+            """
+            Helper function to compute the ROS'd plotting position.
+
+            """
+
             dl_1 = self.cohn.iloc[row['det_limit_index']]
             dl_2 = self.cohn.iloc[row['det_limit_index']+1]
             if row[self.censorship_name]:
@@ -293,15 +312,17 @@ class RobustROSEstimator(object):
         data.loc[data[self.censorship_name], 'plot_pos'] = ND_plotpos
 
     def estimate(self):
-        '''
+        """
         Estimates the values of the censored data
-        '''
+        """
         def _detection_limit_index(row):
-            '''
+            """
             Helper function to create an array of indices for the
             detection  limits (self.cohn) corresponding to each
-            data point
-            '''
+            data point.
+
+            """
+
             det_limit_index = np.zeros(len(self._result_df[self.result_name]))
             if self.cohn.shape[0] > 0:
                 index, = np.where(self.cohn['DL'] <= row[self.result_name])
@@ -312,20 +333,24 @@ class RobustROSEstimator(object):
             return det_limit_index
 
         def _select_modeled(row):
-            '''
+            """
             Helper fucntion to select "final" data from original detects
-            and estimated non-detects
-            '''
+            and estimated non-detects.
+
+            """
+
             if row[self.censorship_name]:
                 return row['modeled_data']
             else:
                 return row[self.result_name]
 
         def _select_half_detection_limit(row, fraction=0.5):
-            '''
+            """
             Helper function to select half cohn when there are
-            too few detections
-            '''
+            too few detection.
+
+            """
+
             if row[self.censorship_name]:
                 return fraction * row[self.result_name]
             else:
@@ -410,7 +435,7 @@ class RobustROSEstimator(object):
 
     def plot(self, ax=None, show_raw=True, raw_kwds={}, model_kwds={},
              leg_kwds={}, ylog=True):
-        '''
+        """
         Generate a QQ plot of the raw (censored) and modeled data.
 
         Parameters
@@ -437,7 +462,7 @@ class RobustROSEstimator(object):
         -------
         ax : matplotlib Axes
 
-        '''
+        """
 
         fig, ax = figutils._check_ax(ax)
 
