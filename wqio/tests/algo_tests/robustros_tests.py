@@ -209,13 +209,15 @@ class testROSHelselAppendixB_withArrays(testROSHelselAppendixB):
 
 
 class testRNADAdata(CheckROSMixin):
-    '''
+    """
     Arsenic Dataset from the R-Ndata Package.
 
     Plotting positions are fudged since relative to source data since
     modeled data is what matters and (source data plot positions are
     not uniformly spaced, which seems weird)
-    '''
+
+    """
+
     datastring = StringIO("""res cen
         0.090  True
         0.090  True
@@ -405,5 +407,14 @@ class testROShalfDLs1noncensored(CheckROSMixin):
     ]
 
 
-# class testROSMaxCenGTMaxUncen(CheckROSMixin):
-#     pass
+class testROSMaxCenGTMaxUncen(testROSHelselAppendixB):
+    obs = np.array([
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
+        3.0, 7.0, 9.0, 12., 15., 20., 27., 33., 50.,
+        60, 70
+    ])
+    cen = np.array([
+        True, True, True, True, True, True, True, True, True,
+        False, False, False, False, False, False, False,
+        False, False, True, True
+    ])
