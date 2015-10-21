@@ -14,9 +14,6 @@ from wqio.utils import reportutils, numutils
 from wqio import testing
 
 
-usetex = False #testing.compare_versions(utility='latex')
-
-
 def test__sig_figs_helper():
     x = 1.2
     nt.assert_equal(reportutils._sig_figs(x), numutils.sigFigs(x, 3, tex=True))
@@ -50,7 +47,7 @@ class tests_with_paths(object):
         with open(self.testcsvpath, 'w') as testfile:
             testfile.write(self.tablestring)
 
-    @nptest.dec.skipif(not usetex)
+    @nptest.dec.skipif(True)
     def test_makeBoxplotLegend(self):
         reportutils.makeBoxplotLegend(self.makePath('bplegendtest'))
 

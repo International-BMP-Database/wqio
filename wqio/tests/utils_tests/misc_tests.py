@@ -8,10 +8,9 @@ import numpy.testing as nptest
 import pandas.util.testing as pdtest
 
 from wqio import testing
-usetex = False #testing.compare_versions(utility='latex')
 
 import matplotlib
-matplotlib.rcParams['text.usetex'] = usetex
+matplotlib.rcParams['text.usetex'] = False
 import matplotlib.pyplot as plt
 
 from scipy import stats
