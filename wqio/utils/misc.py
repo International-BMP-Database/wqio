@@ -1545,6 +1545,35 @@ def processAndersonDarlingResults(ad_results):
         return '<%0.1f%%' % (ci,)
 
 
+def winsorize_dataframe(dataframe, **limits):
+    """ Winsorizes columns in a dataframe
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        The data to be modified (a copy is created).
+    **limits : optional kwargs (floats, or two-tuples of floats)
+        Optional key-value pairs of column names and (two-tuples of)
+        floats that are the windsor limits to be applied to the
+        respective column. Values should be between 0 and 1.
+
+    Returns
+    -------
+    winsored_df : pandas.DataFrame
+        The modified dataframe.
+
+    See also
+    --------
+    scipy.stats.mstats.winsorize
+
+    """
+    df = dataframe.copy()
+    for colname, limit in limits.items():
+        df[colname] = stats.mstats.winsorize(df[colname], limits=limit)
+
+    return df
+
+
 class ProgressBar:
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
         '''Progress bar for notebookes:
