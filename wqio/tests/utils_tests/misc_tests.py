@@ -29,12 +29,12 @@ from wqio.utils import numutils
 from wqio import testing
 
 
-testcsv = StringIO("""\
+testcsv = """\
 Date,A,B,C,D
 X,1,2,3,4
 Y,5,6,7,8
 Z,9,0,1,2
-""")
+"""
 
 
 @nt.nottest
@@ -67,12 +67,7 @@ def test__sig_figs_helper():
 
 class test_addSecondColumnLevel(object):
     def setup(self):
-        self.testcsv = StringIO("""\
-Date,A,B,C,D
-X,1,2,3,4
-Y,5,6,7,8
-Z,9,0,1,2
-        """)
+        self.testcsv = StringIO(testcsv)
         self.data = pandas.read_csv(self.testcsv, index_col=['Date'])
         self.known = pandas.MultiIndex.from_tuples([(u'test', u'A'), (u'test', u'B'),
                                                     (u'test', u'C'), (u'test', u'D')])
