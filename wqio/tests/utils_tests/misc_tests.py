@@ -13,6 +13,7 @@ import glob
 import nose.tools as nt
 import numpy as np
 import numpy.testing as nptest
+import pandas.util.testing as pdtest
 
 from wqio import testing
 usetex = False #testing.compare_versions(utility='latex')
@@ -1045,6 +1046,63 @@ class test_processAndersonDarlingResults(object):
     def test_bad(self):
         res = misc.processAndersonDarlingResults(self.bad)
         nt.assert_equal(res, self.known_bad)
+
+
+class test_winsorize_dataframe(object):
+    def setup(self):
+        self.x = np.array([
+            0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+        ])
+
+        self.w_05 = np.array([
+            1,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 19
+        ])
+
+        self.w_10 = np.array([
+            2,  2,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 18, 18
+        ])
+
+        self.w_20 = np.array([
+            4,  4,  4,  4,  4,  5,  6,  7,  8,  9, 10,
+            11, 12, 13, 14, 15, 16, 16, 16, 16, 16
+        ])
+
+        self.w_05_20 = np.array([
+            1,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            11, 12, 13, 14, 15, 16, 16, 16, 16, 16
+        ])
+
+        self.df = pandas.DataFrame({'A': self.x, 'B': self.x, 'C': self.x})
+
+    def test_no_op(self):
+        w = misc.winsorize_dataframe(self.df)
+        expected = self.df.copy()
+        pdtest.assert_frame_equal(w, expected)
+
+    def test_one_col(self):
+        w = misc.winsorize_dataframe(self.df, A=0.05)
+        expected = pandas.DataFrame({'A': self.w_05, 'B': self.x, 'C': self.x})
+        pdtest.assert_frame_equal(w, expected)
+
+    def test_two_col(self):
+        w = misc.winsorize_dataframe(self.df, A=0.05, C=0.10)
+        expected = pandas.DataFrame({'A': self.w_05, 'B': self.x, 'C': self.w_10})
+        pdtest.assert_frame_equal(w, expected)
+
+    def test_three_col(self):
+        w = misc.winsorize_dataframe(self.df, A=0.20, C=0.10, B=0.20)
+        expected = pandas.DataFrame({'A': self.w_20,'B': self.w_20, 'C': self.w_10})
+        pdtest.assert_frame_equal(w, expected)
+
+    def test_tuple_limit(self):
+        w = misc.winsorize_dataframe(self.df, A=(0.05, 0.20), C=0.10, B=0.20)
+        expected = pandas.DataFrame({'A': self.w_05_20, 'B': self.w_20, 'C': self.w_10})
+        pdtest.assert_frame_equal(w, expected)
+
+
 
 
 class test_LaTeXDirectory(object):
