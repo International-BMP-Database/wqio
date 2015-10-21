@@ -5,7 +5,7 @@ import random
 import sys
 import os
 from six import StringIO
-import datetime
+
 from pkg_resources import resource_filename
 from textwrap import dedent
 import glob
@@ -628,76 +628,6 @@ def test_sanitizeTex():
     nt.assert_equal(misc.sanitizeTex(inputstring), desiredstring)
 
 
-class _base_getSeason(object):
-    def setup(self):
-        self.winter = self.makeDate('1998-12-25')
-        self.spring = self.makeDate('2015-03-22')
-        self.summer = self.makeDate('1965-07-04')
-        self.autumn = self.makeDate('1982-11-24')
-
-    def test_winter(self):
-        nt.assert_equal(misc.getSeason(self.winter), 'winter')
-
-    def test_spring(self):
-        nt.assert_equal(misc.getSeason(self.spring), 'spring')
-
-    def test_summer(self):
-        nt.assert_equal(misc.getSeason(self.summer), 'summer')
-
-    def test_autumn(self):
-        nt.assert_equal(misc.getSeason(self.autumn), 'autumn')
-
-
-class test_getSeason_Datetime(_base_getSeason):
-    @nt.nottest
-    def makeDate(self, date_string):
-        return datetime.datetime.strptime(date_string, '%Y-%m-%d')
-
-
-class test_getSeason_Timestamp(_base_getSeason):
-    @nt.nottest
-    def makeDate(self, date_string):
-        return pandas.Timestamp(date_string)
-
-
-class test_makeTimestamp(object):
-    def setup(self):
-        warnings.resetwarnings()
-        warnings.simplefilter("always")
-        self.known_tstamp = pandas.Timestamp('2012-05-25 16:54')
-        self.known_tstamp_fbdate = pandas.Timestamp('1901-01-01 16:54')
-        self.known_tstamp_fbtime = pandas.Timestamp('2012-05-25 00:00')
-        self.known_tstamp_fbboth = pandas.Timestamp('1901-01-01 00:00')
-
-    def teardown(self):
-        warnings.resetwarnings()
-
-    def test_default_cols(self):
-        row = {'sampledate': '2012-05-25', 'sampletime': '16:54'}
-        tstamp = misc.makeTimestamp(row)
-        nt.assert_equal(self.known_tstamp, tstamp)
-
-    def test_custom_cols(self):
-        row = {'mydate': '2012-05-25', 'mytime': '16:54'}
-        tstamp = misc.makeTimestamp(row, datecol='mydate', timecol='mytime')
-        nt.assert_equal(self.known_tstamp, tstamp)
-
-    def test_fallback_date(self):
-        row = {'sampledate': None, 'sampletime': '16:54'}
-        tstamp = misc.makeTimestamp(row)
-        nt.assert_equal(self.known_tstamp_fbdate, tstamp)
-
-    def test_fallback_time(self):
-        row = {'sampledate': '2012-05-25', 'sampletime': None}
-        tstamp = misc.makeTimestamp(row)
-        nt.assert_equal(self.known_tstamp_fbtime, tstamp)
-
-    def test_fallback_both(self):
-        row = {'sampledate': None, 'sampletime': None}
-        tstamp = misc.makeTimestamp(row)
-        nt.assert_equal(self.known_tstamp_fbboth, tstamp)
-
-
 class base_whiskers_and_fliersMixin(object):
     def teardown(self):
         pass
@@ -869,27 +799,6 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         }
         self.transformin = lambda x: np.log10(x)
         self.transformout = lambda x: 10**x
-
-
-class test_getWaterYear(object):
-    def setup(self):
-        self.earlydate = datetime.datetime(2005, 10, 2)
-        self.latedate = datetime.datetime(2006, 9, 2)
-        self.known_wateryear = '2005/2006'
-
-    def test_early_dt(self):
-        nt.assert_equal(misc.getWaterYear(self.earlydate), self.known_wateryear)
-
-    def test_late_dt(self):
-        nt.assert_equal(misc.getWaterYear(self.latedate), self.known_wateryear)
-
-    def test_early_tstamp(self):
-        date = pandas.Timestamp(self.earlydate)
-        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
-
-    def test_late_tstamp(self):
-        date = pandas.Timestamp(self.latedate)
-        nt.assert_equal(misc.getWaterYear(date), self.known_wateryear)
 
 
 class test_fit_line(object):
@@ -1101,8 +1010,6 @@ class test_winsorize_dataframe(object):
         w = misc.winsorize_dataframe(self.df, A=(0.05, 0.20), C=0.10, B=0.20)
         expected = pandas.DataFrame({'A': self.w_05_20, 'B': self.w_20, 'C': self.w_10})
         pdtest.assert_frame_equal(w, expected)
-
-
 
 
 class test_LaTeXDirectory(object):
