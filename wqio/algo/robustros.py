@@ -154,12 +154,19 @@ class RobustROSEstimator(object):
             transform_out if transform_out is not None else lambda x: x
         )
 
-        # and get the basic info
-        self.nobs = data.shape[0]
-        self.ncen = data[data[self.censorship_name]].shape[0]
-
+        # basic data
         self._raw_data = data.copy()
-        self._result_df = data.copy()
+        self._result_df = _ros_sort(
+            data,
+            result=self.result_name,
+            censorship=self.censorship_name
+        )[[self.result_name, self.censorship_name]]
+
+        # and get the basic info
+        self.nobs = self._result_df.shape[0]
+        self.ncen = self._result_df[self._result_df[self.censorship_name]].shape[0]
+
+        # properties
         self._cohn = None
         self._estimated_values = None
         self.estimate()
@@ -192,6 +199,7 @@ class RobustROSEstimator(object):
             + detection_limit = unique detection limits in the dataset.
             + lower -> a copy of the detection_limit column
             + upper -> lower shifted down 1 step
+
         """
 
         def nuncen_above(row):
@@ -355,10 +363,6 @@ class RobustROSEstimator(object):
                 return fraction * row[self.result_name]
             else:
                 return row[self.result_name]
-
-        self._result_df = self._raw_data.copy()[[self.result_name, self.censorship_name]]
-        self._result_df = _ros_sort(self._result_df, result=self.result_name,
-                              censorship=self.censorship_name)
 
         # create a det_limit_index column that references self.cohn
         self._result_df['det_limit_index'] = self._result_df.apply(_detection_limit_index, axis=1)
