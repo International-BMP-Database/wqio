@@ -1,6 +1,7 @@
 from matplotlib.scale import register_scale
 
 from .misc import *
+from .dateutils import *
 from .probscale import ProbScale
 from . import figutils
 
