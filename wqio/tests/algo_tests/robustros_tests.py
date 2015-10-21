@@ -55,11 +55,11 @@ class CheckROSMixin(object):
 
     def test_nobs(self):
         ntools.assert_true(hasattr(self.ros, 'nobs'))
-        npt.assert_equal(self.ros.nobs, self.data.shape[0])
+        npt.assert_equal(self.ros.nobs, self.known_nobs)
 
     def test_ncen(self):
         ntools.assert_true(hasattr(self.ros, 'ncen'))
-        npt.assert_equal(self.ros.ncen, self.data[self.data.cen].shape[0])
+        npt.assert_equal(self.ros.ncen, self.known_ncen)
 
     def test_cohn_attr(self):
         ntools.assert_true(hasattr(self.ros, 'cohn'))
@@ -166,6 +166,8 @@ class testROSHelselArsenic(CheckROSMixin):
     ])
 
     known_modeled.sort()
+    known_ncen = 13
+    known_nobs = 24
 
 
 class testROSHelselAppendixB(CheckROSMixin):
@@ -198,6 +200,8 @@ class testROSHelselAppendixB(CheckROSMixin):
         4.80, 7.00, 9.00, 12.0, 15.0, 20.0, 27.0, 33.0, 50.0
     ])
     known_modeled.sort()
+    known_ncen = 9
+    known_nobs = 18
 
 
 class testROSHelselAppendixB_withArrays(testROSHelselAppendixB):
@@ -300,9 +304,11 @@ class testRNADAdata(CheckROSMixin):
     ])
     known_plot_pos.sort()
     known_modeled.sort()
+    known_ncen = 23
+    known_nobs = 50
 
 
-class testROSNoNDs(CheckROSMixin):
+class testROS_ZeroNDs(CheckROSMixin):
     np.random.seed(0)
     N = 20
     obs = np.random.lognormal(size=N)
@@ -315,19 +321,22 @@ class testROSNoNDs(CheckROSMixin):
     known_modeled = np.array([
         0.38, 0.43, 0.81, 0.86, 0.90, 1.13, 1.15, 1.37, 1.40,
         1.49, 1.51, 1.56, 2.14, 2.59, 2.66, 4.28, 4.46, 5.84,
-        6.47, 9.4 ])
+        6.47, 9.4
+    ])
     known_plot_pos = np.array([
         0.034,  0.083,  0.132,  0.181,  0.230,  0.279,  0.328,
         0.377,  0.426,  0.475,  0.525,  0.574,  0.623,  0.672,
         0.721,  0.770,  0.819,  0.868,  0.917,  0.966
-        ])
+    ])
     known_modeled.sort()
     known_result_cols = [
         'res', 'cen', 'det_limit_index', 'rank', 'modeled', 'plot_pos'
     ]
+    known_ncen = 0
+    known_nobs = 20
 
 
-class testROSoneND(CheckROSMixin):
+class testROS_OneND(CheckROSMixin):
     obs = np.array([
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
         3.0, 7.0, 9.0, 12., 15., 20., 27., 33., 50.
@@ -356,9 +365,11 @@ class testROSoneND(CheckROSMixin):
         'res', 'cen', 'det_limit_index', 'rank', 'plot_pos',
         'Zprelim', 'modeled_data', 'modeled'
     ]
+    known_ncen = 1
+    known_nobs = 18
 
 
-class testROShalfDLs80pctNDs(CheckROSMixin):
+class testROS_HalfDLs80pctNDs(CheckROSMixin):
     obs = np.array([
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
         3.0, 7.0, 9.0, 12., 15., 20., 27., 33., 50.
@@ -387,9 +398,11 @@ class testROShalfDLs80pctNDs(CheckROSMixin):
     known_result_cols = [
         'res', 'cen', 'det_limit_index', 'rank', 'modeled', 'plot_pos'
     ]
+    known_ncen = 15
+    known_nobs = 18
 
 
-class testROShalfDLs1noncensored(CheckROSMixin):
+class testROS_HalfDLs1noncensored(CheckROSMixin):
     obs = np.array([1.0, 1.0, 12., 15., ])
     cen = np.array([True, True, True, False ])
 
@@ -405,6 +418,8 @@ class testROShalfDLs1noncensored(CheckROSMixin):
     known_result_cols = [
         'res', 'cen', 'det_limit_index', 'rank', 'modeled', 'plot_pos'
     ]
+    known_ncen = 3
+    known_nobs = 4
 
 
 class testROSMaxCenGTMaxUncen(testROSHelselAppendixB):
@@ -418,3 +433,14 @@ class testROSMaxCenGTMaxUncen(testROSHelselAppendixB):
         False, False, False, False, False, False, False,
         False, False, True, True
     ])
+
+
+class testROS_OnlyDL_isGTMaxUncen(testROS_ZeroNDs):
+    np.random.seed(0)
+    N = 20
+    obs =  [
+        0.38, 0.43, 0.81, 0.86, 0.90, 1.13, 1.15, 1.37, 1.40,
+        1.49, 1.51, 1.56, 2.14, 2.59, 2.66, 4.28, 4.46, 5.84,
+        6.47, 9.40, 10.0, 10.0
+    ]
+    cen = ([False] * N) + [True, True]
