@@ -12,7 +12,7 @@ from matplotlib.ticker import (
 import matplotlib.pyplot as plt
 from scipy import stats
 
-from .misc import sigFigs
+from .numutils import sigFigs
 
 
 class _minimal_norm(object):

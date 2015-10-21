@@ -8,8 +8,10 @@ import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn.apionly as seaborn
+
 from wqio import utils
 from wqio import algo
+
 
 # meta data mappings based on station
 station_names = {
@@ -559,14 +561,14 @@ class Location(object):
         }
 
         if log:
-            wnf = utils.whiskers_and_fliers(
+            wnf = utils.figutils.whiskers_and_fliers(
                 np.log(self.data),
                 np.log(self.pctl25),
                 np.log(self.pctl75),
                 transformout=np.exp
             )
         else:
-            wnf = utils.whiskers_and_fliers(
+            wnf = utils.figutils.whiskers_and_fliers(
                 self.data,
                 self.pctl25,
                 self.pctl75,
