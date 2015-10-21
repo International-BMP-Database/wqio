@@ -245,7 +245,7 @@ def makeTexTable(tablefile, caption, sideways=False, footnotetext=None,
     else:
         notes = footnotetext
 
-    tablestring = r"""
+    tablestring = dedent(r"""
     \begin{%s}[%s]
         \rowcolors{1}{CVCWhite}{CVCLightGrey}
         \caption{%s}
@@ -254,7 +254,7 @@ def makeTexTable(tablefile, caption, sideways=False, footnotetext=None,
     \end{%s}
     %s
     %s
-    """ % (tabletype, pos, caption, tablefile, tabletype, notes, clearpagetext)
+    """) % (tabletype, pos, caption, tablefile, tabletype, notes, clearpagetext)
     return tablestring
 
 
@@ -308,42 +308,42 @@ def makeLongLandscapeTexTable(df, caption, label, footnotetext=None, index=False
     colalignment = ''.join(colalignlist)
 
     col_enum = list(enumerate(dfcols))
-    columns = ' &\n\t\t'.join(list(map(_multicol_format, col_enum)))
+    columns = ' &\n        '.join(list(map(_multicol_format, col_enum)))
 
-    tablestring = r"""
+    tablestring = dedent(r"""
     \begin{landscape}
         \centering
         \rowcolors{1}{CVCWhite}{CVCLightGrey}
         \begin{longtable}{%s}
             \caption{%s} \label{%s} \\
             \toprule
-                %s \\
+            %s \\
             \toprule
             \endfirsthead
 
             \multicolumn{%d}{c}
             {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
             \toprule
-                %s \\
+            %s \\
             \toprule
             \endhead
 
             \toprule
-                \rowcolor{CVCWhite}
-                \multicolumn{%d}{r}{{Continued on next page...}} \\
+            \rowcolor{CVCWhite}
+            \multicolumn{%d}{r}{{Continued on next page...}} \\
             \bottomrule
             \endfoot
 
             \bottomrule
             \endlastfoot
 
-%s
+    %s
 
         \end{longtable}
     \end{landscape}
     %s
     \clearpage
-    """ % (colalignment, caption, label, columns, len(dfcols),
+    """) % (colalignment, caption, label, columns, len(dfcols),
            columns, len(dfcols), valuestring, notes)
     return tablestring
 
@@ -383,14 +383,14 @@ def makeTexFigure(figFile, caption, pos='hb', clearpage=True):
     else:
         clearpagetext = ''
 
-    figurestring = r'''
+    figurestring = dedent(r'''
     \begin{figure}[%s]   %% FIGURE
         \centering
         \includegraphics[scale=1.00]{%s}
         \caption{%s}
     \end{figure}         %% FIGURE
     %s
-    ''' % (pos, figFile, caption, clearpagetext)
+    ''') % (pos, figFile, caption, clearpagetext)
     return figurestring
 
 

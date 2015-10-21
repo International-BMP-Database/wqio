@@ -103,17 +103,32 @@ class tests_with_paths(object):
 
 
 def test_makeTexTable_normal():
-    known = '\n    \\begin{table}[h!]\n        \\rowcolors{1}{CVCWhite}{CVCLightGrey}\n    ' \
-            '    \\caption{test caption}\n        \\centering\n        \\input{fake.tex}\n    ' \
-            '\\end{table}\n    \n    \n    '
+    known = dedent(r"""
+        \begin{table}[h!]
+            \rowcolors{1}{CVCWhite}{CVCLightGrey}
+            \caption{test caption}
+            \centering
+            \input{fake.tex}
+        \end{table}
+
+
+    """)
+
     test = reportutils.makeTexTable('fake.tex', 'test caption')
     nt.assert_equal(known, test)
 
 
 def test_makeTexTable_allOptions():
-    known = '\n    \\begin{sidewaystable}[bt]\n        \\rowcolors{1}{CVCWhite}{CVCLightGrey}' \
-            '\n        \\caption{test caption}\n        \\centering\n        \\input{fake.tex}\n    ' \
-            '\\end{sidewaystable}\n    test footnote\n    \\clearpage\n    '
+    known = dedent(r"""
+    \begin{sidewaystable}[bt]
+        \rowcolors{1}{CVCWhite}{CVCLightGrey}
+        \caption{test caption}
+        \centering
+        \input{fake.tex}
+    \end{sidewaystable}
+    test footnote
+    \clearpage
+    """)
     test = reportutils.makeTexTable('fake.tex', 'test caption', sideways=True,
            footnotetext='test footnote', clearpage=True, pos='bt')
     nt.assert_equal(known, test)
@@ -137,8 +152,85 @@ class test_makeLongLandscapeTexTable(object):
             },
         }
         self.df = pandas.DataFrame.from_dict(dfdict)
-        self.known_nofootnote =   '\n    \\begin{landscape}\n        \\centering\n        \\rowcolors{1}{CVCWhite}{CVCLightGrey}\n        \\begin{longtable}{lcc}\n            \\caption{test caption} \\label{label} \\\\\n            \\toprule\n                \\multicolumn{1}{l}{W} &\n\t\t\\multicolumn{1}{p{16mm}}{X} &\n\t\t\\multicolumn{1}{p{16mm}}{Y} \\\\\n            \\toprule\n            \\endfirsthead\n\n            \\multicolumn{3}{c}\n            {{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n            \\toprule\n                \\multicolumn{1}{l}{W} &\n\t\t\\multicolumn{1}{p{16mm}}{X} &\n\t\t\\multicolumn{1}{p{16mm}}{Y} \\\\\n            \\toprule\n            \\endhead\n\n            \\toprule\n                \\rowcolor{CVCWhite}\n                \\multicolumn{3}{r}{{Continued on next page...}} \\\\\n            \\bottomrule\n            \\endfoot\n\n            \\bottomrule\n            \\endlastfoot\n\n 0.844 & 0.700 & -1.35 \\\\\n-0.221 &  1.48 & -1.19 \\\\\n\n        \\end{longtable}\n    \\end{landscape}\n    \n    \\clearpage\n    '
-        self.known_withfootnote = '\n    \\begin{landscape}\n        \\centering\n        \\rowcolors{1}{CVCWhite}{CVCLightGrey}\n        \\begin{longtable}{lcc}\n            \\caption{test caption} \\label{label} \\\\\n            \\toprule\n                \\multicolumn{1}{l}{W} &\n\t\t\\multicolumn{1}{p{16mm}}{X} &\n\t\t\\multicolumn{1}{p{16mm}}{Y} \\\\\n            \\toprule\n            \\endfirsthead\n\n            \\multicolumn{3}{c}\n            {{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n            \\toprule\n                \\multicolumn{1}{l}{W} &\n\t\t\\multicolumn{1}{p{16mm}}{X} &\n\t\t\\multicolumn{1}{p{16mm}}{Y} \\\\\n            \\toprule\n            \\endhead\n\n            \\toprule\n                \\rowcolor{CVCWhite}\n                \\multicolumn{3}{r}{{Continued on next page...}} \\\\\n            \\bottomrule\n            \\endfoot\n\n            \\bottomrule\n            \\endlastfoot\n\n 0.844 & 0.700 & -1.35 \\\\\n-0.221 &  1.48 & -1.19 \\\\\n\n        \\end{longtable}\n    \\end{landscape}\n    test note\n    \\clearpage\n    '
+        self.known_nofootnote = dedent(r"""
+            \begin{landscape}
+                \centering
+                \rowcolors{1}{CVCWhite}{CVCLightGrey}
+                \begin{longtable}{lcc}
+                    \caption{test caption} \label{label} \\
+                    \toprule
+                    \multicolumn{1}{l}{W} &
+                    \multicolumn{1}{p{16mm}}{X} &
+                    \multicolumn{1}{p{16mm}}{Y} \\
+                    \toprule
+                    \endfirsthead
+
+                    \multicolumn{3}{c}
+                    {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+                    \toprule
+                    \multicolumn{1}{l}{W} &
+                    \multicolumn{1}{p{16mm}}{X} &
+                    \multicolumn{1}{p{16mm}}{Y} \\
+                    \toprule
+                    \endhead
+
+                    \toprule
+                    \rowcolor{CVCWhite}
+                    \multicolumn{3}{r}{{Continued on next page...}} \\
+                    \bottomrule
+                    \endfoot
+
+                    \bottomrule
+                    \endlastfoot
+
+             0.844 & 0.700 & -1.35 \\
+            -0.221 &  1.48 & -1.19 \\
+
+                \end{longtable}
+            \end{landscape}
+
+            \clearpage
+        """)
+
+        self.known_withfootnote = dedent(r"""
+            \begin{landscape}
+                \centering
+                \rowcolors{1}{CVCWhite}{CVCLightGrey}
+                \begin{longtable}{lcc}
+                    \caption{test caption} \label{label} \\
+                    \toprule
+                    \multicolumn{1}{l}{W} &
+                    \multicolumn{1}{p{16mm}}{X} &
+                    \multicolumn{1}{p{16mm}}{Y} \\
+                    \toprule
+                    \endfirsthead
+
+                    \multicolumn{3}{c}
+                    {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+                    \toprule
+                    \multicolumn{1}{l}{W} &
+                    \multicolumn{1}{p{16mm}}{X} &
+                    \multicolumn{1}{p{16mm}}{Y} \\
+                    \toprule
+                    \endhead
+
+                    \toprule
+                    \rowcolor{CVCWhite}
+                    \multicolumn{3}{r}{{Continued on next page...}} \\
+                    \bottomrule
+                    \endfoot
+
+                    \bottomrule
+                    \endlastfoot
+
+             0.844 & 0.700 & -1.35 \\
+            -0.221 &  1.48 & -1.19 \\
+
+                \end{longtable}
+            \end{landscape}
+            test note
+            \clearpage
+        """)
 
     def test_makeLongLandscapeTexTable_noFootnote(self):
         test = reportutils.makeLongLandscapeTexTable(self.df, 'test caption', 'label')
@@ -150,9 +242,14 @@ class test_makeLongLandscapeTexTable(object):
 
 
 def test_makeTexFigure():
-    known =  '\n    \\begin{figure}[hb]   % FIGURE\n        \\centering\n        ' \
-             '\\includegraphics[scale=1.00]{fake.pdf}\n        \\caption{test caption}\n    ' \
-             '\\end{figure}         % FIGURE\n    \\clearpage\n    '
+    known = dedent(r"""
+    \begin{figure}[hb]   % FIGURE
+        \centering
+        \includegraphics[scale=1.00]{fake.pdf}
+        \caption{test caption}
+    \end{figure}         % FIGURE
+    \clearpage
+    """)
     test = reportutils.makeTexFigure('fake.pdf', 'test caption')
     nt.assert_equal(known, test)
 
