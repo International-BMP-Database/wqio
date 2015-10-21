@@ -8,7 +8,7 @@ import matplotlib.gridspec as gridspec
 import scipy.stats as stats
 import seaborn.apionly as seaborn
 
-from . import misc
+from . import numutils
 
 
 def _check_ax(ax):
@@ -418,8 +418,8 @@ def probplot(data, ax=None, axtype='prob', yscale='log',
         ax.set_ylabel(ylabel)
 
     if bestfit:
-        xhat, yhat, modelres = misc.fit_line(xvalues, ranked, fitprobs=fitprobs,
-                                             fitlogs=fitlogs)
+        xhat, yhat, modelres = numutils.fit_line(xvalues, ranked, fitprobs=fitprobs,
+                                                 fitlogs=fitlogs)
         ax.plot(xhat, yhat, **line_kws)
     else:
         xhat, yhat, modelres = (None, None, None)
