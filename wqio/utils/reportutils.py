@@ -8,6 +8,7 @@ import pandas
 
 from wqio import testing
 from . import numutils
+from . import figutils
 
 
 def _sig_figs(x):
@@ -17,6 +18,41 @@ def _sig_figs(x):
     """
 
     return numutils.sigFigs(x, n=3, tex=True)
+
+
+def makeBoxplotLegend(filename='bmp/tex/boxplotlegend', figsize=4, **kwargs):
+    """ Creates an explanatory diagram for boxplots.
+
+    Parameters
+    ----------
+    filename : string
+        File name and path (without extension) where the figure will be
+        saved.
+    figsize : float or int
+        Size of the figure in inches.
+    kwargs : keyword arguments
+        Keyword arguments passed directly to `_boxplot_legend`
+
+    Returns
+    -------
+    None
+
+    """
+
+    # setup the figure
+    fig, ax = plt.subplots(figsize=(figsize, figsize))
+
+    # call the helper function that does the heavy lifting
+    figutils.boxplot_legend(ax, **kwargs)
+
+    # optimize the figure's layout
+    fig.tight_layout()
+
+    # save and close
+    fig.savefig(filename + '.pdf', transparent=True, dpi=300)
+    fig.savefig(filename + '.png', transparent=True, dpi=300)
+    plt.close(fig)
+
 
 def sanitizeTex(texstring):
     """ Cleans up overly eager LaTeX renderings from pandas.
@@ -356,7 +392,6 @@ def makeTexFigure(figFile, caption, pos='hb', clearpage=True):
     %s
     ''' % (pos, figFile, caption, clearpagetext)
     return figurestring
-
 
 
 def processFilename(filename):
