@@ -34,14 +34,6 @@ colors = {
 }
 
 
-def sanitizeTexParam(x):
-    return x
-
-
-def sanitizeTexUnit(x):
-    return x
-
-
 class Parameter(object):
     def __init__(self, name, units, usingTex=False):
         """ Class representing a single analytical parameter (pollutant).
