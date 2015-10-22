@@ -34,14 +34,6 @@ colors = {
 }
 
 
-def sanitizeTexParam(x):
-    return x
-
-
-def sanitizeTexUnit(x):
-    return x
-
-
 class Parameter(object):
     def __init__(self, name, units, usingTex=False):
         """ Class representing a single analytical parameter (pollutant).
@@ -102,10 +94,6 @@ class Parameter(object):
         else:
             paramunit = '{0} ({1})'
 
-        #if self.usingTex:
-        #    n = sanitizeTexParam(self.name)
-        #    u = sanitizeTexUnit(self.units)
-        #else:
         n = self.name
         u = self.units
 
@@ -281,11 +269,6 @@ class Location(object):
                 else:
                     self._dataframe = df[[self.rescol, self.cencol]]
         return self._dataframe
-
-    @property
-    @np.deprecate
-    def filtered_data(self):
-        return self.dataframe
 
     @property
     @np.deprecate
@@ -882,44 +865,6 @@ class Location(object):
             ax.set_xlim(**xlims)
 
         return fig
-
-    # other methods
-    @np.deprecate
-    def applyFilter(self, filterfxn, **fxnkwargs):
-        """ Filter the dataset and set the `include`/`exclude`
-        properties based on a user-defined function.
-
-        Warning
-        -------
-        This is very advanced functionality. Proceed with caution and
-        ask for help.
-
-        Parameters
-        ----------
-        filterfxn : callable
-            A user defined function that filters the data and determines
-            if the `include` attribute should be True or False. It *must*
-            return a pandas.DataFrame and a bool (in that order), or an
-            error will be raised. The `filterfxn` must accept the
-            `Location.data` attribute as its first argument.
-
-        **fxnkwargs : keyword arguments
-            Optional named arguments pass to `filterfxn`.
-
-        Returns
-        -------
-        None
-
-        """
-
-        newdata, include = filterfxn(self.full_data, **fxnkwargs)
-        if not isinstance(newdata, pandas.DataFrame):
-            raise ValueError ('first item returned by filterfxn must be a pandas.DataFrame')
-
-        if not isinstance(include, bool):
-            raise ValueError ('second item returned by filterfxn must be a bool')
-
-        self.include = include
 
 
 class Dataset(object):

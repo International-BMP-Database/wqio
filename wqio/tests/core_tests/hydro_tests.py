@@ -11,7 +11,7 @@ import numpy.testing as nptest
 import pandas.util.testing as pdtest
 
 from wqio import testing
-from wqio.testing.testutils import assert_timestamp_equal, setup_prefix
+from wqio.testing.testutils import assert_timestamp_equal
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib

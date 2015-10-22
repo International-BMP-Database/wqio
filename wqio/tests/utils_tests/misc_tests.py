@@ -97,30 +97,31 @@ class tests_with_objects(object):
 
 
 class test_uniqueIndex(object):
-    def setup():
+    def setup(self):
         dates = range(5)
         params = list('ABCDE')
         locations = ['Inflow', 'Outflow']
+        dual = []
         for d in dates:
             for p in params:
                 for loc in locations:
                     dual.append([d,p,loc])
-
+        dual_array = np.array(dual)
         index = pandas.MultiIndex.from_arrays([dual_array[:,0],
-                                                    dual_array[:,1],
-                                                    dual_array[:,2]])
+                                               dual_array[:,1],
+                                               dual_array[:,2]])
         index.names = ['date', 'param', 'loc']
 
-        self.data = pandas.DataFrame(np.range.normal(size=len(index)), index=index)
+        self.data = pandas.DataFrame(np.random.normal(size=len(index)), index=index)
 
-        def test_getUniqueDataframeIndexVal():
-            test = misc.getUniqueDataframeIndexVal(self.data.select(lambda x: x[0]=='0'), 'date')
-            known = '0'
-            nt.assert_equal(test, known)
+    def test_getUniqueDataframeIndexVal(self):
+        test = misc.getUniqueDataframeIndexVal(self.data.select(lambda x: x[0]=='0'), 'date')
+        known = '0'
+        nt.assert_equal(test, known)
 
-        @nptest.raises(ValueError)
-        def test_getUniqueDataframeIndexVal_error():
-            misc.getUniqueDataframeIndexVal(self.data, 'date')
+    @nptest.raises(ValueError)
+    def test_getUniqueDataframeIndexVal_error(self):
+        misc.getUniqueDataframeIndexVal(self.data, 'date')
 
 
 class test_redefineIndexLevel(object):
