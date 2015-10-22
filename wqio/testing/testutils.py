@@ -44,25 +44,11 @@ def assert_timestamp_equal(x, y):
     nptest.assert_equal(x.strftime('%x %X'), y.strftime('%x %X'))
 
 
-def setup_prefix(folder):
-    for imgdir in ['baseline_images', 'result_images']:
-        subdir = os.path.join('.', imgdir)
-        subsubdir = os.path.join(subdir, folder)
-
-        if not os.path.exists(subdir):
-            os.mkdir(subdir)
-
-        if not os.path.exists(subsubdir):
-            os.mkdir(subsubdir)
-
-    return subsubdir
-
-
-def fail(message):
+def fail(message): # pragma: no cover
     raise AssertionError(message)
 
 
-def wip(f):
+def wip(f):  # pragma: no cover
     @wraps(f)
     def run_test(*args, **kwargs):
         try:
@@ -74,7 +60,7 @@ def wip(f):
     return attr('wip')(run_test)
 
 
-def compare_versions(utility='latex'):
+def compare_versions(utility='latex'):  # pragma: no cover
     "return True if a is greater than or equal to b"
     requirements = {
     	'latex': '3.1415'
@@ -97,12 +83,12 @@ def compare_versions(utility='latex'):
     	return False
 
 
-def _show_package_info(package, name):
+def _show_package_info(package, name):  # pragma: no cover
     packagedir = os.path.dirname(package.__file__)
     print("%s version %s is installed in %s" % (name, package.__version__, packagedir))
 
 
-def _show_system_info():
+def _show_system_info():  # pragma: no cover
     import nose
 
     pyversion = sys.version.replace('\n','')
@@ -125,7 +111,7 @@ def _show_system_info():
     _show_package_info(pandas, 'pandas')
 
 
-class NoseWrapper(nptest.Tester):
+class NoseWrapper(nptest.Tester):  # pragma: no cover
     '''
     This is simply a monkey patch for numpy.testing.Tester.
 
@@ -188,13 +174,13 @@ if sys.version_info[0] >= 3:
 
     def byte2str(b): return b.decode('ascii')
 
-else:
+else:  # pragma: no cover
     ascii = str
 
     def byte2str(b): return b
 
 
-def checkdep_tex():
+def checkdep_tex():  # pragma: no cover
     try:
         s = subprocess.Popen(['tex','-version'], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
@@ -207,7 +193,7 @@ def checkdep_tex():
         return None
 
 
-def assert_bigstring_equal(input_string, known_string, input_out, known_out):
+def assert_bigstring_equal(input_string, known_string, input_out, known_out):  # pragma: no cover
     try:
         nt.assert_equal(input_string, known_string)
     except:
