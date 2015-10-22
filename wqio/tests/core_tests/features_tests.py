@@ -5,7 +5,6 @@ import numpy as np
 import numpy.testing as nptest
 
 from wqio import testing
-from wqio.testing.testutils import setup_prefix
 usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
