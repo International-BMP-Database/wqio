@@ -201,8 +201,7 @@ def stringify(value, fmt, attribute=None):
         return fmt % quantity
 
 
-
-class ProgressBar:
+class ProgressBar: # pragma: no cover
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
         '''Progress bar for notebookes:
 
