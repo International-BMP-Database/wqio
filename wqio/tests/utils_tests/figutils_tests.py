@@ -20,15 +20,21 @@ import numpy.testing as nptest
 from wqio import testing
 
 from wqio.utils import figutils
-from wqio.algo import ros
+from wqio.algo import robustros
 
 
 @nt.nottest
 def setup_plot_data():
     plt.rcdefaults()
-    data = testing.getTestROSData()
-    mr = ros.MR(data)
-    return mr
+    data = np.array([
+         3.113,   3.606,   4.046,   4.046,   4.71 ,   6.14 ,   6.978,
+         2.   ,   4.2  ,   4.62 ,   5.57 ,   5.66 ,   5.86 ,   6.65 ,
+         6.78 ,   6.79 ,   7.5  ,   7.5  ,   7.5  ,   8.63 ,   8.71 ,
+         8.99 ,   9.85 ,  10.82 ,  11.25 ,  11.25 ,  12.2  ,  14.92 ,
+        16.77 ,  17.81 ,  19.16 ,  19.19 ,  19.64 ,  20.18 ,  22.97
+    ])
+    return data
+
 
 @cleanup
 class test__check_ax(object):
@@ -107,25 +113,25 @@ def test_setProblimits_y_ax_GT100():
 
 @image_comparison(baseline_images=['test_gridlines_basic'], extensions=['png'])
 def test_gridlines_basic():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    ax.plot(mr.data.final_data)
+    ax.plot(data)
     figutils.gridlines(ax, 'xlabel', 'ylabel')
 
 
 @image_comparison(baseline_images=['test_gridlines_ylog'], extensions=['png'])
 def test_gridlines_ylog():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    ax.plot(mr.data.final_data)
+    ax.plot(data)
     figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log')
 
 
 @image_comparison(baseline_images=['test_gridlines_ylog_noyminor'], extensions=['png'])
 def test_gridlines_ylog_noyminor():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    ax.plot(mr.data.final_data)
+    ax.plot(data)
     figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log', yminor=False)
 
 
@@ -363,31 +369,31 @@ def test__boxplot_legend():
 
 @image_comparison(baseline_images=['test_boxplot_basic'], extensions=['png'])
 def test_boxplot_basic():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    figutils.boxplot(ax, mr.data.final_data, 1)
+    figutils.boxplot(ax, data, 1)
 
 
 @image_comparison(baseline_images=['test_boxplot_manual_median'], extensions=['png'])
 def test_boxplot_manual_median():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25])
+    figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25])
 
 
 @image_comparison(baseline_images=['test_boxplot_with_mean'], extensions=['png'])
 def test_boxplot_with_mean():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25],
+    figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25],
                      mean=7.25, meanmarker='^', meancolor='red')
 
 
 @image_comparison(baseline_images=['test_boxplot_formatted'], extensions=['png'])
 def test_boxplot_formatted():
-    mr = setup_plot_data()
+    data = setup_plot_data()
     fig, ax = plt.subplots()
-    bp = figutils.boxplot(ax, mr.data.final_data, 1, median=7.75, CIs=[7.5, 8.25],
+    bp = figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25],
                           mean=7.25, meanmarker='^', meancolor='red')
     figutils.formatBoxplot(bp)
 
@@ -395,33 +401,33 @@ def test_boxplot_formatted():
 @image_comparison(baseline_images=['test_probplot_prob'], extensions=['png'])
 def test_probplot_prob():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, xlabel='Test xlabel')
+    data = setup_plot_data()
+    fig = figutils.probplot(data, ax=ax, xlabel='Test xlabel')
     nt.assert_true(isinstance(fig, plt.Figure))
 
 
 @image_comparison(baseline_images=['test_probplot_qq'], extensions=['png'])
 def test_probplot_qq():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq', ylabel='Test label',
+    data = setup_plot_data()
+    fig = figutils.probplot(data, ax=ax, axtype='qq', ylabel='Test label',
                             scatter_kws=dict(color='r'))
 
 
 @image_comparison(baseline_images=['test_probplot_pp'], extensions=['png'])
 def test_probplot_pp():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
+    data = setup_plot_data()
     scatter_kws = dict(color='b', linestyle='--', markeredgecolor='g', markerfacecolor='none')
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', yscale='linear',
+    fig = figutils.probplot(data, ax=ax, axtype='pp', yscale='linear',
                             xlabel='test x', ylabel='test y', scatter_kws=scatter_kws)
 
 
 @image_comparison(baseline_images=['test_probplot_prob_bestfit'], extensions=['png'])
 def test_probplot_prob_bestfit():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, xlabel='Test xlabel',
+    data = setup_plot_data()
+    fig = figutils.probplot(data, ax=ax, xlabel='Test xlabel',
                             bestfit=True)
     nt.assert_true(isinstance(fig, plt.Figure))
 
@@ -429,18 +435,18 @@ def test_probplot_prob_bestfit():
 @image_comparison(baseline_images=['test_probplot_qq_bestfit'], extensions=['png'])
 def test_probplot_qq_bestfit():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='qq',
+    data = setup_plot_data()
+    fig = figutils.probplot(data, ax=ax, axtype='qq',
                             bestfit=True, ylabel='Test label')
 
 
 @image_comparison(baseline_images=['test_probplot_pp_bestfit'], extensions=['png'])
 def test_probplot_pp_bestfit():
     fig, ax = plt.subplots()
-    mr = setup_plot_data()
+    data = setup_plot_data()
     scatter_kws = {'marker': 's', 'color': 'red'}
     line_kws = {'linestyle': '--', 'linewidth': 3}
-    fig = figutils.probplot(mr.data.final_data, ax=ax, axtype='pp', yscale='linear',
+    fig = figutils.probplot(data, ax=ax, axtype='pp', yscale='linear',
                             xlabel='test x', bestfit=True, ylabel='test y',
                             scatter_kws=scatter_kws, line_kws=line_kws)
 
@@ -463,7 +469,7 @@ def test_logLabelFormatter_alt():
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
 
 
-@image_comparison(baseline_images=['test_connect_spines'], extensions=['png'])
+@image_comparison(baseline_images=['test_connect_spines'], extensions=['png'], remove_text=True)
 def test__connect_spines():
     fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2)
     figutils._connect_spines(ax1, ax2, 0.5, 0.75)
