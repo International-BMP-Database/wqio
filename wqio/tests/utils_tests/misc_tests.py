@@ -7,8 +7,6 @@ import numpy as np
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
 
-from wqio import testing
-
 import matplotlib
 matplotlib.rcParams['text.usetex'] = False
 import matplotlib.pyplot as plt
