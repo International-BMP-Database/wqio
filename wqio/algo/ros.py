@@ -15,7 +15,7 @@ __all__ = ['rosSort', 'MR']
 
 
 @np.deprecate(message="algo.ros is deprectated. use algo.robustros instead.")
-def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
+def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'): # pragma: no cover
     """ Prepare a dataframe for ROS. It sorts ascending with non-detects
     on top. So something like this:
         [2, 4, 4, 10, 3, 5, 6, 10, 12, 40, 78, 120]
@@ -53,7 +53,7 @@ def rosSort(dataframe, rescol='res', qualcol='qual', ndsymbol='ND'):
     return ros_data #.reset_index(drop=True)
 
 @np.deprecate(message="algo.ros is deprectated. use algo.robustros instead.")
-class MR(object):
+class MR(object): # pragma: no cover
     """ Censored data analysis via regression on order statistics (ROS)
 
     This class implements the MR method outlined Hirsch and Stedinger
@@ -111,7 +111,7 @@ class MR(object):
     """
 
     def __init__(self, data, rescol='res', qualcol='qual', finalcol='final_data',
-                 ndsymbol='ND', fitlogs=True, dist='norm'):
+                 ndsymbol='ND', fitlogs=True, dist='norm'): # pragma: no cover
 
         self.rescol = rescol
         self.qualcol = qualcol
@@ -184,7 +184,7 @@ class MR(object):
         # select out only the necessary columns for data
         self.data = self.data[[self.finalcol, self.rescol, self.qualcol]]
 
-    def cohn(self):
+    def cohn(self): # pragma: no cover
         """ Creates a DataFrame of the unique detection limits in the
         dataset and the other Cohn numbers (A, B, C).
         """
@@ -269,7 +269,7 @@ class MR(object):
 
         return DLs
 
-    def _ros_ranks(self):
+    def _ros_ranks(self): # pragma: no cover
         """ Determine the ranks of the data according to the following
         logic:
         1) rank[n] = rank[n-1] + 1 when:
@@ -315,7 +315,7 @@ class MR(object):
 
         self.data['Avg Ranks'] = self.data.apply(avgrank, axis=1)
 
-    def estimator(self):
+    def estimator(self): # pragma: no cover
         """ Estimates the values of the censored data """
 
         def _ros_plotting_pos(row):
@@ -407,7 +407,7 @@ class MR(object):
 
         return self.data
 
-    def plot(self, filename):
+    def plot(self, filename): # pragma: no cover
         """ Makes a simple plot showing the original and modeled data
 
         Parameters
