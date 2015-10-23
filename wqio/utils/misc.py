@@ -60,6 +60,38 @@ def addSecondColumnLevel(levelval, levelname, df):
     return newdf
 
 
+def addColumnLevel(df, levelvalue, levelname):
+    """ Adds a second level to the column-index if a dataframe.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The original dataframe to be modified.
+    levelval : int or string
+        Constant value to be assigned to the second level.
+    levelname : string
+        The name of the second level.
+
+    Returns
+    -------
+    newdf : pandas.DataFrame
+        The mutated dataframe with a MultiIndex in the columns.
+
+    Example
+    -------
+    >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
+    >>> df.columns
+    Index(['res', 'qual'], dtype='object')
+    >>> df2 = utils.addColumnLevel(df, 'Infl', 'location')
+    >>> df2.columns
+    MultiIndex(levels=[['Infl'], ['qual', 'res']],
+               labels=[[0, 0], [1, 0]],
+               names=['loc', 'quantity'])
+
+    """
+    return addSecondColumnLevel(levelvalue, levelname, df)
+
+
 def getUniqueDataframeIndexVal(df, indexlevel):
     """ Confirms that a given level of a dataframe's index only has
     one unique value. Useful for confirming consistent units. Raises
