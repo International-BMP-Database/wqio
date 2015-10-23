@@ -166,6 +166,16 @@ def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
     return df.append(selection).sort_index()
 
 
+def categorize_columns(df, *columns):
+    newdf = df.copy()
+    for c in columns:
+        if newdf[c].dtype != object:
+            raise ValueError("column {} is not an object type".format(c))
+        newdf[c] = newdf[c].astype('category')
+
+    return newdf
+
+
 def nested_getattr(baseobject, attribute):
     """  Returns the value of an attribute of an object that is nested
     several layers deep.
