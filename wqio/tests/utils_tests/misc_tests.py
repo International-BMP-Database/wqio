@@ -1,3 +1,4 @@
+from textwrap import dedent
 import random
 import glob
 
@@ -68,32 +69,15 @@ class test_addSecondColumnLevel(object):
         newdata2 = misc.addSecondColumnLevel('test2', 'testlevel2', newdata1)
 
 
-class tests_with_objects(object):
-    def setup(self):
-        self.known_N = 50
-        self.known_float = 123.4567
-        self.inflow = [random.random() for n in range(self.known_N)]
-        self.outflow = [random.random() for n in range(self.known_N)]
-        self.dataset = Dataset(self.inflow, self.outflow)
+class test_addColumnLevel(test_addSecondColumnLevel):
+    def test_normal(self):
+        newdata = misc.addColumnLevel(self.data, 'test', 'testlevel')
+        nt.assert_list_equal(self.known.tolist(), newdata.columns.tolist())
 
-    def test_nested_getattr(self):
-        nt.assert_almost_equal(misc.nested_getattr(self.dataset, 'inflow.stats.max'),
-                            self.dataset.inflow.stats.max)
-
-    def test_stringify_int(self):
-        test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.N')
-        known_val = '%d' % self.known_N
-        nt.assert_equal(test_val, known_val)
-
-    def test_stringify_float(self):
-        test_val = misc.stringify(self.known_float, '%0.2f', attribute=None)
-        known_val = '123.46'
-        nt.assert_equal(test_val, known_val)
-
-    def test_stringify_None(self):
-        test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.nonething')
-        known_val = '--'
-        nt.assert_equal(test_val, known_val)
+    @nptest.raises(ValueError)
+    def test_error(self):
+        newdata1 = misc.addColumnLevel(self.data, 'test1', 'testlevel1')
+        newdata2 = misc.addColumnLevel(newdata1, 'test2', 'testlevel2')
 
 
 class test_uniqueIndex(object):
@@ -203,3 +187,59 @@ class test_redefineIndexLevel(object):
             columns=['a', 'b']
         )
         nt.assert_true(newdf.equals(knowndf))
+
+
+class tests_with_objects(object):
+    def setup(self):
+        self.known_N = 50
+        self.known_float = 123.4567
+        self.inflow = [random.random() for n in range(self.known_N)]
+        self.outflow = [random.random() for n in range(self.known_N)]
+        self.dataset = Dataset(self.inflow, self.outflow)
+
+    def test_nested_getattr(self):
+        nt.assert_almost_equal(misc.nested_getattr(self.dataset, 'inflow.stats.max'),
+                            self.dataset.inflow.stats.max)
+
+    def test_stringify_int(self):
+        test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.N')
+        known_val = '%d' % self.known_N
+        nt.assert_equal(test_val, known_val)
+
+    def test_stringify_float(self):
+        test_val = misc.stringify(self.known_float, '%0.2f', attribute=None)
+        known_val = '123.46'
+        nt.assert_equal(test_val, known_val)
+
+    def test_stringify_None(self):
+        test_val = misc.stringify(self.dataset, '%d', attribute='inflow.stats.nonething')
+        known_val = '--'
+        nt.assert_equal(test_val, known_val)
+
+
+class test_categorize_columns(object):
+    def setup(self):
+        csvdata = StringIO(dedent("""\
+            parameter,units,season,lower,NSQD Median,upper
+            Cadmium (Cd),ug/L,autumn,0.117,0.361,0.52
+            Cadmium (Cd),ug/L,spring,0.172,0.352,0.53
+            Cadmium (Cd),ug/L,summer,0.304,0.411,0.476
+            Cadmium (Cd),ug/L,winter,0.355,0.559,1.125
+            Dissolved Chloride (Cl),mg/L,autumn,0.342,2.3,5.8
+            Dissolved Chloride (Cl),mg/L,spring,2.5,2.5,2.5
+            Dissolved Chloride (Cl),mg/L,summer,0.308,0.762,1.24
+            Escherichia coli,MPN/100 mL,autumn,1200.0,15500.0,24000.0
+            Escherichia coli,MPN/100 mL,spring,10.0,630.0,810.0
+            Escherichia coli,MPN/100 mL,summer,21000.0,27000.0,35000.0
+            Escherichia coli,MPN/100 mL,winter,20.0,200.0,800.0
+        """))
+        self.df = pandas.read_csv(csvdata)
+
+    def test_basic(self):
+        df2 = misc.categorize_columns(self.df, 'parameter', 'units', 'season')
+        nt.assert_true(object in self.df.dtypes.values)
+        nt.assert_false(object in df2.dtypes.values)
+
+    @nt.raises(ValueError)
+    def test_float_col(self):
+        misc.categorize_columns(self.df, 'parameter', 'upper')
