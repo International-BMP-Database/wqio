@@ -12,7 +12,7 @@ import statsmodels.api as sm
 from wqio import testing
 
 
-def addSecondColumnLevel(levelval, levelname, olddf):
+def addSecondColumnLevel(levelval, levelname, df):
     """ Add a second level to the column-index if a dataframe.
 
     Parameters
@@ -21,7 +21,7 @@ def addSecondColumnLevel(levelval, levelname, olddf):
         Constant value to be assigned to the second level.
     levelname : string
         The name of the second level.
-    olddf : pandas.DataFrame
+    df : pandas.DataFrame
         The original dataframe to be modified.
 
     Returns
@@ -42,22 +42,54 @@ def addSecondColumnLevel(levelval, levelname, olddf):
 
     """
 
-    if isinstance(olddf.columns, pandas.MultiIndex):
+    if isinstance(df.columns, pandas.MultiIndex):
         raise ValueError('Dataframe already has MultiIndex on columns')
 
     origlevel = 'quantity'
-    if olddf.columns.names[0] is not None:
-        origlevel = olddf.columns.names[0]
+    if df.columns.names[0] is not None:
+        origlevel = df.columns.names[0]
 
     # define the index
-    colarray = [[levelval]*len(olddf.columns), olddf.columns]
+    colarray = [[levelval]*len(df.columns), df.columns]
     colindex = pandas.MultiIndex.from_arrays(colarray)
 
     # copy the dataframe and redefine the columns
-    newdf = olddf.copy()
+    newdf = df.copy()
     newdf.columns = colindex
     newdf.columns.names = [levelname, origlevel]
     return newdf
+
+
+def addColumnLevel(df, levelvalue, levelname):
+    """ Adds a second level to the column-index if a dataframe.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The original dataframe to be modified.
+    levelval : int or string
+        Constant value to be assigned to the second level.
+    levelname : string
+        The name of the second level.
+
+    Returns
+    -------
+    newdf : pandas.DataFrame
+        The mutated dataframe with a MultiIndex in the columns.
+
+    Example
+    -------
+    >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
+    >>> df.columns
+    Index(['res', 'qual'], dtype='object')
+    >>> df2 = utils.addColumnLevel(df, 'Infl', 'location')
+    >>> df2.columns
+    MultiIndex(levels=[['Infl'], ['qual', 'res']],
+               labels=[[0, 0], [1, 0]],
+               names=['loc', 'quantity'])
+
+    """
+    return addSecondColumnLevel(levelvalue, levelname, df)
 
 
 def getUniqueDataframeIndexVal(df, indexlevel):
@@ -87,17 +119,17 @@ def getUniqueDataframeIndexVal(df, indexlevel):
     return index[0]
 
 
-def redefineIndexLevel(dataframe, levelname, value, criteria=None, dropold=True):
+def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
     Parameters
     ----------
-    dataframe : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe to be modified.
     levelname : string
         The name of the index level that needs to be modified. The catch
         here is that this value needs to be valid after calling
-        `dataframe.reset_index()`. In otherwords, if you have a 3-level
+        `df.reset_index()`. In otherwords, if you have a 3-level
         column index and you want to modify the "Units" level of the
         index, you should actually pass `("Units", "", "")`. Annoying,
         but that's life right now.
@@ -107,10 +139,10 @@ def redefineIndexLevel(dataframe, levelname, value, criteria=None, dropold=True)
         This should return True/False in a manner consitent with the
         `.select()` method of a pandas dataframe. See that docstring
         for more info. If None, the redifinition will apply to the whole
-        dataframe.
+        df.
     dropold : optional bool (defaul is True)
         Toggles the replacement (True) or addition (False) of the data
-        of the redefined BMPs into the the `data` dataframe.
+        of the redefined BMPs into the the `data` df.
 
     Returns
     -------
@@ -120,18 +152,28 @@ def redefineIndexLevel(dataframe, levelname, value, criteria=None, dropold=True)
     """
 
     if criteria is not None:
-        selection = dataframe.select(criteria)
+        selection = df.select(criteria)
     else:
-        selection = dataframe.copy()
+        selection = df.copy()
 
     if dropold:
-        dataframe = dataframe.drop(selection.index)
+        df = df.drop(selection.index)
 
     selection.reset_index(inplace=True)
     selection[levelname] = value
-    selection = selection.set_index(dataframe.index.names)
+    selection = selection.set_index(df.index.names)
 
-    return dataframe.append(selection).sort_index()
+    return df.append(selection).sort_index()
+
+
+def categorize_columns(df, *columns):
+    newdf = df.copy()
+    for c in columns:
+        if newdf[c].dtype != object:
+            raise ValueError("column {} is not an object type".format(c))
+        newdf[c] = newdf[c].astype('category')
+
+    return newdf
 
 
 def nested_getattr(baseobject, attribute):
