@@ -134,7 +134,8 @@ class _basic_wq_sample(object):
         else:
             timeseries.plot(ax=ax, marker=self.marker, markersize=4,
                             linestyle=self.linestyle, color='Black',
-                            zorder=10, label='_nolegend', alpha=alpha)
+                            zorder=10, label='_nolegend', alpha=alpha,
+                            mew=0.75)
             line = plt.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
                               color='black', alpha=alpha, linestyle='none')
 
