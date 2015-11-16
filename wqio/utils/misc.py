@@ -9,8 +9,6 @@ import pandas
 from scipy import stats
 import statsmodels.api as sm
 
-from wqio import testing
-
 
 def addSecondColumnLevel(levelval, levelname, df):
     """ Add a second level to the column-index if a dataframe.
