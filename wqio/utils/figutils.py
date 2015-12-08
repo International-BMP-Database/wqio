@@ -1,4 +1,5 @@
 import copy
+from functools import partial
 
 import numpy as np
 import matplotlib
@@ -8,6 +9,7 @@ import matplotlib.gridspec as gridspec
 import scipy.stats as stats
 import seaborn.apionly as seaborn
 
+from . import misc
 from . import numutils
 
 
@@ -853,4 +855,71 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
 
     fig.subplots_adjust(wspace=0)
     seaborn.despine(fig=fig, bottom=True, trim=True)
+    return fig
+
+
+def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
+
+    """ Plot a faceted, categorical histogram of storms.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe of storm information such as precipitation depth,
+        duration, presence of outflow, flow volume, etc.
+    valuecol : str
+        The name of the column that should be categorized and plotted.
+    bins : array-like
+        The right-edges of the histogram bins.
+    classifier : callable, optional
+        Function-like object that classifies the values in ``valuecol``.
+        Should accept a float scalar and return a string.
+    factoropts : keyword arguments, optional
+        Options passed directly to seaborn.factorplot
+
+    Returns
+    -------
+    fig : seaborn.FacetGrid
+
+    See also
+    --------
+    seaborn.factorplot
+
+
+    """
+
+    def format_col(colname):
+        return colname.replace('_', ' ').title()
+
+    def process_column(colname):
+        if colname is None:
+            return colname
+        else:
+            return format_col(colname)
+
+    if classifier is None:
+        classifier = partial(misc._classifier, bins=bins, units='mm')
+
+    cats = misc._unique_categories(classifier, bins)
+    aspect = factoropts.pop('aspect', 1.6)
+
+    display_col = format_col(valuecol)
+
+    processed_opts = dict(
+        row=process_column(factoropts.pop('row', None)),
+        col=process_column(factoropts.pop('col', None)),
+        hue=process_column(factoropts.pop('hue', None)),
+    )
+
+    factoropts.update(processed_opts)
+
+    fig = (
+        df.assign(display=df[valuecol].apply(classifier).astype("category", categories=cats, ordered=True))
+          .drop([valuecol], axis=1)
+          .rename(columns={'display': valuecol})
+          .rename(columns=lambda c: format_col(c))
+          .pipe((seaborn.factorplot, 'data'), x=display_col, kind='count', aspect=aspect, **factoropts)
+          .set_ylabels("Occurences")
+    )
+
     return fig
