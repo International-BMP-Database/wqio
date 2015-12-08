@@ -1,3 +1,4 @@
+from functools import partial
 from textwrap import dedent
 import random
 import glob
@@ -243,3 +244,52 @@ class test_categorize_columns(object):
     @nt.raises(ValueError)
     def test_float_col(self):
         misc.categorize_columns(self.df, 'parameter', 'upper')
+
+
+class Check__classifier_Mixin(object):
+    bins = np.arange(5, 36, 5)
+
+    def test_small_value(self):
+        result = misc._classifier(3, self.bins, units=self.units)
+        nt.assert_equal(result, self.known_small_value)
+
+    def test_between_value(self):
+        result = misc._classifier(17, self.bins, units=self.units)
+        nt.assert_equal(result, self.known_between_value)
+
+    def test_edge_value(self):
+        result = misc._classifier(25, self.bins, units=self.units)
+        nt.assert_equal(result, self.known_edge_value)
+
+    def test_big_value(self):
+        result = misc._classifier(40, self.bins, units=self.units)
+        nt.assert_equal(result, self.known_big_value)
+
+
+class Test__classifier_without_units(Check__classifier_Mixin):
+    def setup(self):
+        self.units = None
+        self.known_small_value = '<5'
+        self.known_between_value = '15 - 20'
+        self.known_edge_value = '20 - 25'
+        self.known_big_value = '>35'
+
+
+class Test__classifier_with_units(Check__classifier_Mixin):
+    def setup(self):
+        self.units = 'mm'
+        self.known_small_value = '<5 mm'
+        self.known_between_value = '15 - 20 mm'
+        self.known_edge_value = '20 - 25 mm'
+        self.known_big_value = '>35 mm'
+
+
+def test__unique_categories():
+    bins = [5, 10, 15]
+    classifier = partial(misc._classifier, bins=bins, units='mm')
+
+    known_categories = ['<5 mm', '5 - 10 mm', '10 - 15 mm', '>15 mm']
+    result_categories = misc._unique_categories(classifier, bins)
+
+    nt.assert_list_equal(result_categories, known_categories)
+
