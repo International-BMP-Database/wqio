@@ -169,7 +169,8 @@ class RobustROSEstimator(object):
         # properties
         self._cohn = None
         self._estimated_values = None
-        self.estimate()
+        if not lazy:
+            self.estimate()
 
     @property
     def cohn(self):
@@ -331,7 +332,6 @@ class RobustROSEstimator(object):
 
             """
 
-            det_limit_index = np.zeros(len(self._result_df[self.result_name]))
             if self.cohn.shape[0] > 0:
                 index, = np.where(self.cohn['DL'] <= row[self.result_name])
                 det_limit_index = index[-1]
@@ -435,7 +435,6 @@ class RobustROSEstimator(object):
 
             # select out the final data
             self._result_df['modeled'] = self._result_df.apply(_select_modeled, axis=1).values
-
 
     def plot(self, ax=None, show_raw=True, raw_kwds={}, model_kwds={},
              leg_kwds={}, ylog=True):
