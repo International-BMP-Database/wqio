@@ -482,6 +482,33 @@ def test_parallel_coordinates():
     fig = figutils.parallel_coordinates(df, hue='species')
 
 
+@nt.nottest
+def cat_hist_data():
+    np.random.seed(0)
+    N = 100
+    years = [2011, 2012, 2013, 2014]
+    df = pandas.DataFrame({
+        'depth': np.random.uniform(low=0.2, high=39, size=N),
+        'year': np.random.choice(years, size=N),
+        'has_outflow': np.random.choice([False, True], size=N)
+    })
+    return df
+
+
+@image_comparison(baseline_images=['storm_hist_simple'], extensions=['png'])
+def test_categorical_histogram_simple():
+    df = cat_hist_data()
+    bins = np.arange(5, 35, 5)
+    fig1 = figutils.categorical_histogram(df, 'depth', bins)
+
+
+@image_comparison(baseline_images=['storm_hist_complex'], extensions=['png'])
+def test_categorical_histogram_complex():
+    df = cat_hist_data()
+    bins = np.arange(5, 35, 5)
+    fig2 = figutils.categorical_histogram(df, 'depth', bins, hue='year', row='has_outflow')
+
+
 class test_shiftedColorMap:
     def setup(self):
         self.orig_cmap = matplotlib.cm.coolwarm

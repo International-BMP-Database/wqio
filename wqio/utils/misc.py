@@ -241,6 +241,86 @@ def stringify(value, fmt, attribute=None):
         return fmt % quantity
 
 
+def _classifier(value, bins, units=None):
+    """
+    An example classifier function for `storm_histogram`
+
+    Parameters
+    ----------
+    value : float
+        Valueue to classify.
+    bins : array-like
+        Finite right-edges of the classification bins.
+    units : string, optional
+        Units of measure to be appended to the returned categories.
+
+    Returns
+    -------
+    category : string
+
+    Examples
+    --------
+    >>> bins = [5, 10, 15, 20, 25]
+    >>> _classifier(3, bins)
+    "<5"
+    >>> _classifier(12, bins, units='feet')
+    "10 - 15 feet"
+    >>> _classifier(48, bins, units='mm')
+    ">25 mm"
+
+    """
+
+    units = units or ''
+    # below the lower edge
+    if value <= min(bins):
+        output = '<{}'.format(min(bins))
+
+    # above the upper edge
+    elif value > max(bins):
+        output = '>{}'.format(max(bins))
+
+    # everything else with the range of bins
+    else:
+        for left, right in zip(bins[:-1], bins[1:]):
+            if left < value <= right:
+                output = '{} - {}'.format(left, right)
+                break
+
+    # add the units (or don't)
+    return '{} {}'.format(output, units or '').strip()
+
+
+def _unique_categories(classifier, bins):
+    """
+    Computs all of the unique category returned by a classifier.
+
+    Parameters
+    ----------
+    classifier : callable
+        A function or class that we called categorizes continuous
+        (floating point) values.
+    bins : array-like
+        Finite right-edges of the classification bins.
+
+    Returns
+    -------
+    categories : list
+        List, sequentially ordered with the possible input values, of
+        all of the possible categories returned from ``classifier``.
+
+    Examples
+    --------
+    >>> from pycvc import viz
+    >>> bins = [5, 10, 15]
+    >>> viz._unique_categories(_viz._classifier, bins)
+    ['<5', '5 - 10', '10 - 15', '>15']
+
+    """
+    bins = np.asarray(bins)
+    midpoints = 0.5 * (bins[:-1] + bins[1:])
+    all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
+    return [classifier(value) for value in all_bins]
+
 class ProgressBar: # pragma: no cover
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
         '''Progress bar for notebookes:
