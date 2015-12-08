@@ -1790,6 +1790,7 @@ class DataCollection(object):
                 g[self.roscol] = np.nan
                 return g
 
+        keep_cols = self.columns + [self.roscol]
         _tidy = (
             self.data
                 .reset_index()[self.columns]
@@ -1799,10 +1800,7 @@ class DataCollection(object):
                 .apply(fxn)
                 .reset_index()
                 .sort_values(by=self.groupcols)
-        )
-
-        keep_cols = self.columns + [self.roscol]
-        _tidy = _tidy[keep_cols]
+        )[keep_cols]
 
         return _tidy
 
