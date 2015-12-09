@@ -103,6 +103,7 @@ class base_HydroRecordMixin(object):
         )
 
 @image_comparison(baseline_images=['HR_histogram_simple'], extensions=['png'])
+@nptest.dec.knownfailureif(sys.platform != 'win32')
 def test_HydroRecord_histogram():
     stormfile = makePath('teststorm_simple.csv')
     orig_record = pandas.read_csv(
