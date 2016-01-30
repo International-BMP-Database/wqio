@@ -5,10 +5,10 @@ matrix:
     - python: 2.7
       env:
         - COVERAGE=false
-    - python: 3.5
+    - python: 3.4
       env:
         - COVERAGE=false
-    - python: 3.4
+    - python: 3.5
       env:
         - COVERAGE=true
 
@@ -31,7 +31,7 @@ install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
   #- conda config --add channels phobson
-  - conda install --yes matplotlib=1.4 seaborn statsmodels numexpr openpyxl nose mock
+  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl nose mock
   - conda install --yes coverage docopt requests pyyaml
   - pip install coveralls
   - pip install .
