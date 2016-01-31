@@ -499,16 +499,18 @@ def cat_hist_data():
 def test_categorical_histogram_simple():
     df = cat_hist_data()
     bins = np.arange(5, 35, 5)
-    fig1 = figutils.categorical_histogram(df, 'depth', bins)
-    fig1.fig.tight_layout()
+    fg = figutils.categorical_histogram(df, 'depth', bins)
+    fg.fig.tight_layout()
+    fig = fg.fig
 
 
 @image_comparison(baseline_images=['storm_hist_complex'], extensions=['png'])
 def test_categorical_histogram_complex():
     df = cat_hist_data()
     bins = np.arange(5, 35, 5)
-    fig2 = figutils.categorical_histogram(df, 'depth', bins, hue='year', row='has_outflow')
-    fig2.fig.tight_layout()
+    fg = figutils.categorical_histogram(df, 'depth', bins, hue='year', row='has_outflow')
+    fg.fig.tight_layout()
+    fig = fg.fig
 
 
 class test_shiftedColorMap:
