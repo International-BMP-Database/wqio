@@ -361,7 +361,7 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         self.transformout = lambda x: 10**x
 
 
-
+@cleanup
 def test__boxplot_legend():
     fig, ax = plt.subplots()
     figutils.boxplot_legend(ax, notch=True)
@@ -500,13 +500,6 @@ def test_categorical_histogram_simple():
     df = cat_hist_data()
     bins = np.arange(5, 35, 5)
     fig1 = figutils.categorical_histogram(df, 'depth', bins)
-
-
-@image_comparison(baseline_images=['storm_hist_complex'], extensions=['png'])
-def test_categorical_histogram_complex():
-    df = cat_hist_data()
-    bins = np.arange(5, 35, 5)
-    fig2 = figutils.categorical_histogram(df, 'depth', bins, hue='year', row='has_outflow')
 
 
 class test_shiftedColorMap:
