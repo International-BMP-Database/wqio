@@ -495,13 +495,13 @@ def cat_hist_data():
     return df
 
 
-@image_comparison(baseline_images=['storm_hist_simple'], extensions=['png'])
-def test_categorical_histogram_simple():
-    df = cat_hist_data()
-    bins = np.arange(5, 35, 5)
-    fg = figutils.categorical_histogram(df, 'depth', bins)
-    fg.fig.tight_layout()
-    fig = fg.fig
+# @image_comparison(baseline_images=['storm_hist_simple'], extensions=['png'])
+# def test_categorical_histogram_simple():
+#     df = cat_hist_data()
+#     bins = np.arange(5, 35, 5)
+#     fg = figutils.categorical_histogram(df, 'depth', bins)
+#     fg.fig.tight_layout()
+#     fig = fg.fig
 
 
 @image_comparison(baseline_images=['storm_hist_complex'], extensions=['png'])
