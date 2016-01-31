@@ -136,6 +136,7 @@ def test_gridlines_ylog_noyminor():
 
 
 @nt.nottest
+@cleanup
 def setup_jointplot():
     plt.rcdefaults()
     np.random.seed(0)
@@ -361,7 +362,7 @@ class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
         self.transformout = lambda x: 10**x
 
 
-
+@cleanup
 def test__boxplot_legend():
     fig, ax = plt.subplots()
     figutils.boxplot_legend(ax, notch=True)
@@ -528,6 +529,7 @@ class test_shiftedColorMap:
     def teardown(self):
         plt.close('all')
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_start_low(self):
         figutils.shiftedColorMap(
@@ -537,6 +539,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_start_high(self):
         figutils.shiftedColorMap(
@@ -546,6 +549,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_midpoint_low(self):
         figutils.shiftedColorMap(
@@ -555,6 +559,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_midpoint_high(self):
         figutils.shiftedColorMap(
@@ -564,6 +569,7 @@ class test_shiftedColorMap:
             stop=self.stop
         )
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_stop_low(self):
         figutils.shiftedColorMap(
@@ -573,6 +579,7 @@ class test_shiftedColorMap:
             stop=self.midpoint-0.01
         )
 
+    @cleanup
     @nt.raises(ValueError)
     def test_bad_stop_high(self):
         figutils.shiftedColorMap(
