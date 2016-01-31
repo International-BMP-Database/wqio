@@ -102,6 +102,21 @@ class base_HydroRecordMixin(object):
             self.hr.storm_stats.columns.tolist()
         )
 
+@image_comparison(baseline_images=['HR_histogram_simple'], extensions=['png'])
+@nptest.dec.skipif(sys.platform != 'win32')
+def test_HydroRecord_histogram():
+    stormfile = makePath('teststorm_simple.csv')
+    orig_record = pandas.read_csv(
+        stormfile, index_col='date', parse_dates=True
+    ).resample('5T').fillna(0)
+    hr = hydro.HydroRecord(
+        orig_record, precipcol='rain', inflowcol='influent',
+        outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
+        intereventHours=3
+    )
+
+    fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
+
 
 class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
@@ -273,6 +288,8 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
     def test_subclassed_storms(self):
         for sn in self.hr.all_storms:
             nt.assert_true(self.hr.all_storms[sn].is_subclassed)
+
+
 
 
 class test_Storm(object):

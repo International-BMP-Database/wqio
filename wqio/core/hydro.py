@@ -870,6 +870,33 @@ class HydroRecord(object):
         else:
             return storm_number, self.storms.get(storm_number, None)
 
+    def histogram(self, valuecol, bins, **factoropts):
+        """ Plot a faceted, categorical histogram of storms.
+
+        valuecol : str, optional
+            The name of the column that should be categorized and plotted.
+        bins : array-like, optional
+            The right-edges of the histogram bins.
+        factoropts : keyword arguments, optional
+            Options passed directly to seaborn.factorplot
+
+        Returns
+        -------
+        fig : seaborn.FacetGrid
+
+        See also
+        --------
+        utils.figutils.categorical_histogram
+        seaborn.factorplot
+
+        """
+
+        fg = utils.figutils.categorical_histogram(
+            self.storm_stats, valuecol, bins, **factoropts
+        )
+        fg.fig.tight_layout()
+        return fg
+
 
 class DrainageArea(object):
     def __init__(self, total_area=1.0, imp_area=1.0, bmp_area=0.0):
