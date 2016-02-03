@@ -1,0 +1,54 @@
+package:
+  name: wqio
+  version: 0.3.x
+
+source:
+  path: ../../
+#  patches:
+   # List any patch files here
+   # - fix.patch
+
+build:
+  number: 2
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - numpy
+    - scipy
+    - matplotlib
+    - pandas
+    - numexpr
+    - statsmodels
+    - seaborn
+
+  run:
+    - python
+    - setuptools
+    - seaborn
+    - statsmodels
+    - numexpr
+    - openpyxl
+    - xlrd
+    - six
+
+test:
+  requires:
+    - nose
+
+  imports:
+    - wqio
+    - wqio.utils
+
+  commands:
+    - python -c "import wqio; wqio.test()"
+
+about:
+  home: https://github.com/Geosyntec/wqio.git
+  license:  BSD License
+  summary: 'Basic water quality inflow/outflow analysis tools'
+
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml/configure
