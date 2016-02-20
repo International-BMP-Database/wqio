@@ -265,6 +265,9 @@ class Check__classifier_Mixin(object):
         result = misc._classifier(40, self.bins, units=self.units)
         nt.assert_equal(result, self.known_big_value)
 
+    def test_nan(self):
+        nt.assert_true(np.isnan(misc._classifier(np.nan, self.bins, units=self.units)))
+
 
 class Test__classifier_without_units(Check__classifier_Mixin):
     def setup(self):
