@@ -271,8 +271,12 @@ def _classifier(value, bins, units=None):
     """
 
     units = units or ''
+
+    if np.isnan(value):
+        return np.nan
+
     # below the lower edge
-    if value <= min(bins):
+    elif value <= min(bins):
         output = '<{}'.format(min(bins))
 
     # above the upper edge
@@ -320,6 +324,7 @@ def _unique_categories(classifier, bins):
     midpoints = 0.5 * (bins[:-1] + bins[1:])
     all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
     return [classifier(value) for value in all_bins]
+
 
 class ProgressBar: # pragma: no cover
     def __init__(self, sequence, width=50, labels=None, labelfxn=None):
