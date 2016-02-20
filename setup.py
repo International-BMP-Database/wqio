@@ -18,7 +18,7 @@ def getDataFiles(submodule, folder):
 DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
 NAME = "wqio"
-VERSION = "0.3.x"
+VERSION = "0.3.2"
 AUTHOR = "Paul Hobson (Geosyntec Consultants)"
 AUTHOR_EMAIL = "phobson@geosyntec.com"
 URL = "https://github.com/Geosyntec/wqio"
