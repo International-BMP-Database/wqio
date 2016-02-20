@@ -635,7 +635,7 @@ class test_Dataset(object):
         self.known_kendall_tau = self.known_kendall_stats[0]
         self.known_kendall_p = self.known_kendall_stats[1]
 
-        self.known_mannwhitney_stats = (2.980000e+02,   1.125761e-04)
+        self.known_mannwhitney_stats = (9.270000e+02,   2.251523e-04)
         self.known_mannwhitney_u = self.known_mannwhitney_stats[0]
         self.known_mannwhitney_p = self.known_mannwhitney_stats[1] * 2
 
