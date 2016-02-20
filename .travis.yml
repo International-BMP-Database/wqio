@@ -5,7 +5,7 @@ matrix:
     - python: 2.7
       env:
         - COVERAGE=false
-    - python: 3.5
+    - python: 3.4
       env:
         - COVERAGE=false
     - python: 3.5
@@ -30,7 +30,7 @@ install:
 
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl nose mock
+  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl nose mock scipy
   - conda install --yes coverage docopt requests pyyaml
   - pip install coveralls
   - pip install .
