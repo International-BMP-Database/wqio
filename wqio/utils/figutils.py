@@ -8,6 +8,7 @@ import matplotlib.ticker as mticker
 import matplotlib.gridspec as gridspec
 import scipy.stats as stats
 import seaborn.apionly as seaborn
+import probscale
 
 from . import misc
 from . import numutils
