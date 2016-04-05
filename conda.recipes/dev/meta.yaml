@@ -15,10 +15,10 @@ requirements:
   build:
     - python
     - setuptools
+    - pandas>=0.18
     - numpy
     - scipy
     - matplotlib
-    - pandas
     - numexpr
     - statsmodels
     - seaborn
@@ -26,6 +26,7 @@ requirements:
   run:
     - python
     - setuptools
+    - pandas>=0.18
     - seaborn
     - statsmodels
     - numexpr
