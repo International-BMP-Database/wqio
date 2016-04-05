@@ -172,7 +172,11 @@ class CompositeSample(_basic_wq_sample):
                     freq=self.samplefreq
                 )
             else:
-                self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
+                self._sample_ts = pandas.DatetimeIndex(
+                    start=self.starttime,
+                    end=self.endtime,
+                    freq=self.endtime - self.starttime
+                )
         return self._sample_ts
 
 
@@ -202,7 +206,11 @@ class GrabSample(_basic_wq_sample):
             if self.endtime is None:
                 self._sample_ts = pandas.DatetimeIndex(data=[self.starttime])
             else:
-                self._sample_ts = pandas.DatetimeIndex(data=[self.starttime, self.endtime])
+                self._sample_ts = pandas.DatetimeIndex(
+                    start=self.starttime,
+                    end=self.endtime,
+                    freq=self.endtime - self.starttime
+                )
         return self._sample_ts
 
 if sys.version_info.major >= 3:

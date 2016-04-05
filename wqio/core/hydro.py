@@ -775,23 +775,20 @@ class HydroRecord(object):
 
         # bool column where True means there's rain or flow of some kind
         water_columns = [precipcol, inflowcol, outflowcol]
-        data.loc[:, 'wet'] = np.any(data[water_columns] > 0, axis=1)
+        data = (
+            data.assign(wet=np.any(data[water_columns] > 0, axis=1))
+                .assign(windiff=lambda df:
+                    df['wet'].rolling(int(self.intereventPeriods), min_periods=1)
+                        .apply(lambda w: w.any())
+                        .diff())
+                .assign(event_start=False, event_end=False)
 
-        # copy the bool column into its own df and add a bunch
-        # shifted columns so each row looks backwards and forwards
-        data.loc[:, 'windiff'] = pandas.rolling_apply(
-            data['wet'],
-            self.intereventPeriods,
-            lambda x: x.any(),
-            min_periods=1
-        ).diff()
-
+        )
+        # # copy the bool column into its own df and add a bunch
+        # # shifted columns so each row looks backwards and forwards
         firstrow = data.iloc[0]
         if firstrow['wet']:
             data.loc[firstrow.name, 'windiff'] = 1
-
-        data.loc[:, 'event_start'] = False
-        data.loc[:, 'event_end'] = False
 
         starts = data['windiff'] == 1
         data.loc[starts, 'event_start'] = True

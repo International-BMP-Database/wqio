@@ -125,7 +125,7 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
 
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
+        ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
@@ -209,7 +209,7 @@ class test_HydroRecord_Singular(base_HydroRecordMixin):
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
+        ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5,
@@ -230,7 +230,7 @@ class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
+        ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5,
@@ -252,7 +252,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
+        ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(
             self.orig_record, precipcol='rain', inflowcol='influent',
             outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
@@ -281,7 +281,7 @@ class test_Storm(object):
         self.storm_file = makePath('teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
-        ).resample('5T').fillna(0)
+        ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(self.orig_record,
                                      precipcol='rain',
                                      inflowcol='influent',
@@ -473,7 +473,7 @@ def setup_storm():
     storm_file = makePath('teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )
-            .resample('5T')
+            .resample('5T').asfreq()
             .fillna(0)
     )
 

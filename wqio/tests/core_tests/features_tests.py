@@ -739,11 +739,11 @@ class test_Dataset(object):
 
     def test_spearman_rho(self):
         assert_true(hasattr(self.ds, 'spearman_rho'))
-        nptest.assert_allclose(self.ds.spearman_rho, self.known_spearman_rho, rtol=self.tolerance)
+        nptest.assert_allclose(self.ds.spearman_rho, self.known_spearman_rho, atol=0.0001)
 
     def test_spearman_p(self):
         assert_true(hasattr(self.ds, 'spearman_p'))
-        nptest.assert_allclose(self.ds.spearman_p, self.known_spearman_p, rtol=self.tolerance)
+        nptest.assert_allclose(self.ds.spearman_p, self.known_spearman_p, atol=0.0001)
 
     def test_theil_medslope(self):
         assert_true(hasattr(self.ds, 'theil_medslope'))
@@ -775,7 +775,7 @@ class test_Dataset(object):
 
     def test_spearman_stats(self):
         assert_true(hasattr(self.ds, '_spearman_stats'))
-        nptest.assert_allclose(self.ds._spearman_stats, self.known_spearman_stats, rtol=self.tolerance)
+        nptest.assert_allclose(self.ds._spearman_stats, self.known_spearman_stats, atol=0.0001)
 
     def test_theil_stats(self):
         assert_true(hasattr(self.ds, '_theil_stats'))

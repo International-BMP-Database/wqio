@@ -29,9 +29,8 @@ def makePath(filename):
     path = resource_filename("wqio.data", filename)
     return path
 
+
 class base_wqsampleMixin(object):
-
-
     @nt.nottest
     def basic_setup(self):
         self.known_wqdata_type = pandas.DataFrame
@@ -68,7 +67,6 @@ class base_wqsampleMixin(object):
 
     def test_samplefreq(self):
         nt.assert_true(hasattr(self.wqs, 'samplefreq'))
-        nt.assert_true(isinstance(self.wqs.samplefreq, self.known_samplefreq_type))
         nt.assert_equal(self.wqs.samplefreq, self.known_samplefreq)
 
     def test_sample_ts_form(self):
@@ -82,7 +80,7 @@ class base_wqsampleMixin(object):
         nt.assert_equal(self.wqs.sample_ts[-1], pandas.Timestamp(self.known_endtime))
 
     def test_sample_ts_freq(self):
-        nt.assert_equal(self.wqs.sample_ts.freq, self.known_samplefreq)
+        nt.assert_equal(self.wqs.sample_ts.freq, self.known_ts_samplefreq)
 
     def test_sample_ts_len(self):
         nt.assert_equal(len(self.wqs.sample_ts), self.known_sample_ts_len)
@@ -125,8 +123,8 @@ class test_GrabSample_NoStorm(base_wqsample_NoStorm):
         self.known_endtime = '2013-02-24 16:59'
         self.known_season = 'winter'
         self.known_sample_ts_len = 2
+        self.known_ts_samplefreq = pandas.offsets.Minute(5)
         self.known_samplefreq = None
-        self.known_samplefreq_type = type(None)
 
         self.known_marker = '+'
         self.known_label = 'Grab Sample'
@@ -146,8 +144,8 @@ class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
         self.known_endtime = '2013-02-25 02:59'
         self.known_season = 'winter'
         self.known_sample_ts_len = 31
-        self.known_samplefreq = pandas.tseries.offsets.Minute(20)
-        self.known_samplefreq_type = pandas.tseries.offsets.Minute
+        self.known_samplefreq = pandas.offsets.Minute(20)
+        self.known_ts_samplefreq = pandas.offsets.Minute(20)
         self.known_marker = 'x'
         self.known_label = 'Composite Sample'
         self.wqs = samples.CompositeSample(self.rawdata, self.known_starttime,
@@ -169,8 +167,8 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
         self.known_endtime = '2013-02-25 02:59'
         self.known_season = 'winter'
         self.known_sample_ts_len = 2
-        self.known_samplefreq = None
-        self.known_samplefreq_type = type(None)
+        self.known_samplefreq = pandas.offsets.Hour(10)
+        self.known_ts_samplefreq = pandas.offsets.Hour(10)
         self.known_marker = 'x'
         self.known_label = 'Composite Sample'
         self.wqs = samples.CompositeSample(self.rawdata, self.known_starttime,
