@@ -260,6 +260,21 @@ class RobustROSEstimator(object):
             censored_below = censored_data == row['lower']
             return censored_below.sum()
 
+        def set_upper_limit(DL):
+            if DL.shape[0] > 1:
+                return DL.shift(-1).fillna(value=np.inf)
+            else:
+                return [np.inf]
+
+        def compute_PE(A, B):
+            N = len(A)
+            PE = np.empty(N, dtype='float64')
+            PE[-1] = 0.0
+            for j in range(N-2, -1, -1):
+                PE[j] = PE[j+1] + (1 - PE[j+1]) * A[j] / (A[j] + B[j])
+
+            return PE
+
         # unique values
         censored_data = self._result_df[self.censorship_name]
         cohn = pd.unique(self._result_df[self.result_name][censored_data])
@@ -271,25 +286,16 @@ class RobustROSEstimator(object):
                 cohn = np.hstack([self._result_df[self.result_name].min(), cohn])
 
             # create a dataframe
-            cohn = pd.DataFrame(cohn, columns=['DL'])
-
-            # copy the cohn in two columns. offset the 2nd (upper) column
-            cohn['lower'] = cohn['DL']
-            if cohn.shape[0] > 1:
-                cohn['upper'] = cohn.DL.shift(-1).fillna(value=np.inf)
-            else:
-                cohn['upper'] = np.inf
-
-            # compute A, B, and C
-            cohn['nuncen_above'] = cohn.apply(nuncen_above, axis=1)
-            cohn['nobs_below'] = cohn.apply(nobs_below, axis=1)
-            cohn['ncen_equal'] = cohn.apply(ncen_equal, axis=1)
-
-            # add an extra row
-            cohn = cohn.reindex(range(cohn.shape[0]+1))
-
-            # add the 'prob_exceedance' column, initialize with zeros
-            cohn['prob_exceedance'] = 0.0
+            cohn = (
+                pd.DataFrame(cohn, columns=['DL'])
+                  .assign(lower=lambda df: df['DL'])
+                  .assign(upper=lambda df: set_upper_limit(df['DL']))
+                  .assign(nuncen_above=lambda df: df.apply(nuncen_above, axis=1))
+                  .assign(nobs_below=lambda df: df.apply(nobs_below, axis=1))
+                  .assign(ncen_equal=lambda df: df.apply(ncen_equal, axis=1))
+                  .reindex(range(cohn.shape[0]+1))
+                  .assign(prob_exceedance=lambda df: compute_PE(df['nuncen_above'], df['nobs_below']))
+            )
 
         else:
             dl_cols = ['DL', 'lower', 'upper', 'nuncen_above',
@@ -400,18 +406,6 @@ class RobustROSEstimator(object):
 
         # in most cases, actually use the MR method to estimate NDs
         else:
-            # compute the PE values
-            # (TODO: remove loop in place of apply)
-            for j in self.cohn.index[:-1][::-1]:
-                self.cohn.iloc[j]['prob_exceedance'] = (
-                    self.cohn.iloc[j+1]['prob_exceedance'] +
-                    self.cohn.iloc[j]['nuncen_above'] /
-                   (
-                        self.cohn.iloc[j]['nuncen_above'] +
-                        self.cohn.iloc[j]['nobs_below']
-                   ) * (1 - self.cohn.loc[j+1]['prob_exceedance'])
-                )
-
 
             # compute the plotting position of the data (uses the PE stuff)
             self._compute_plotting_positions(self._result_df)
