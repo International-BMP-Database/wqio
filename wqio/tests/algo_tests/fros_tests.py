@@ -1,13 +1,13 @@
 import sys
 import nose.tools as ntools
 
-import numpy as np
+import numpy
 import numpy.testing as npt
 from numpy.testing import dec
 import pandas.util.testing as pdtest
 from wqio import testing
 
-import pandas as pd
+import pandas
 
 from wqio.algo import fros
 from statsmodels.compat.python import StringIO
@@ -31,11 +31,31 @@ def load_basic_data():
     return df
 
 
+def load_basic_cohn():
+    cohn = pandas.DataFrame([
+        {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
+         'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
+        {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
+         'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.5},
+        {'DL': 5.5, 'lower': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.75},
+        {'DL': 5.75, 'lower': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
+         'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper': 9.5},
+        {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
+        {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
+         'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': numpy.inf},
+        {'DL': numpy.nan, 'lower': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
+         'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper': numpy.nan}
+    ])
+    return cohn
+
+
 class Test__ros_sort(object):
     def setup(self):
         self.df = load_basic_data()
 
-        self.expected_baseline = pd.DataFrame([
+        self.expected_baseline = pandas.DataFrame([
             {'censored': True,  'conc': 5.0},   {'censored': True,  'conc': 5.0},
             {'censored': True,  'conc': 5.5},   {'censored': True,  'conc': 5.75},
             {'censored': True,  'conc': 9.5},   {'censored': True,  'conc': 9.5},
@@ -76,7 +96,7 @@ class Test_cohn_numbers(object):
         self.final_cols = ['DL', 'lower', 'upper', 'nuncen_above', 'nobs_below',
                            'ncen_equal', 'prob_exceedance']
 
-        self.expected_baseline = pd.DataFrame([
+        self.expected_baseline = pandas.DataFrame([
             {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
              'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
             {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
@@ -93,6 +113,7 @@ class Test_cohn_numbers(object):
              'nuncen_above': np.nan, 'prob_exceedance': 0.0, 'upper': np.nan}
         ])[self.final_cols]
 
+
     def test_baseline(self):
         result = fros.cohn_numbers(self.df, result='conc', censorship='censored')
         pdtest.assert_frame_equal(result, self.expected_baseline)
@@ -104,24 +125,8 @@ class Test_cohn_numbers(object):
 
 class Test__detection_limit_index(object):
     def setup(self):
-        self.cohn = pd.DataFrame([
-            {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
-             'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
-            {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
-             'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.5},
-            {'DL': 5.5, 'lower': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.75},
-            {'DL': 5.75, 'lower': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
-             'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper': 9.5},
-            {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
-            {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
-             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': np.inf},
-            {'DL': np.nan, 'lower': np.nan, 'ncen_equal': np.nan, 'nobs_below': np.nan,
-             'nuncen_above': np.nan, 'prob_exceedance': 0.0, 'upper': np.nan}
-        ])
-
-        self.empty_cohn = pd.DataFrame(np.empty((0, 7)))
+        self.cohn = load_basic_cohn()
+        self.empty_cohn = pandas.DataFrame(numpy.empty((0, 7)))
 
     def test_empty(self):
         ntools.assert_equal(fros._detection_limit_index(None, self.empty_cohn), 0)
@@ -137,12 +142,12 @@ class Test__detection_limit_index(object):
 
 
 def test__ros_group_rank():
-    df = pd.DataFrame({
+    df = pandas.DataFrame({
         'params': list('AABCCCDE') + list('DCBA'),
         'values': list(range(12))
     })
 
     result = fros._ros_group_rank(df, ['params'])
-    expected = pd.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
+    expected = pandas.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
     pdtest.assert_series_equal(result, expected)
 

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import warnings
 
-import numpy as np
+import numpy
 from scipy import stats
 import pandas
 
@@ -122,13 +122,13 @@ def cohn_numbers(df, result='res', censorship='cen'):
 
     def set_upper_limit(cohn):
         if cohn.shape[0] > 1:
-            return cohn['DL'].shift(-1).fillna(value=np.inf)
+            return cohn['DL'].shift(-1).fillna(value=numpy.inf)
         else:
-            return [np.inf]
+            return [numpy.inf]
 
     def compute_PE(A, B):
         N = len(A)
-        PE = np.empty(N, dtype='float64')
+        PE = numpy.empty(N, dtype='float64')
         PE[-1] = 0.0
         for j in range(N-2, -1, -1):
             PE[j] = PE[j+1] + (1 - PE[j+1]) * A[j] / (A[j] + B[j])
@@ -144,7 +144,7 @@ def cohn_numbers(df, result='res', censorship='cen'):
     # add that value to the array
     if cohn.shape[0] > 0:
         if df[result].min() < cohn.min():
-            cohn = np.hstack([df[result].min(), cohn])
+            cohn = numpy.hstack([df[result].min(), cohn])
 
         # create a dataframe
         cohn = (
@@ -161,7 +161,7 @@ def cohn_numbers(df, result='res', censorship='cen'):
     else:
         dl_cols = ['DL', 'lower', 'upper', 'nuncen_above',
                    'nobs_below', 'ncen_equal', 'prob_exceedance']
-        cohn = pandas.DataFrame(np.empty((0,7)), columns=dl_cols)
+        cohn = pandas.DataFrame(numpy.empty((0,7)), columns=dl_cols)
 
     return cohn
 
@@ -175,7 +175,7 @@ def _detection_limit_index(res, cohn):
     """
 
     if cohn.shape[0] > 0:
-        index, = np.where(cohn['DL'] <= res)
+        index, = numpy.where(cohn['DL'] <= res)
         det_limit_index = index[-1]
     else:
         det_limit_index = 0
