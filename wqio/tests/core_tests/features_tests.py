@@ -1142,7 +1142,7 @@ class _base_DataCollecionMixin(object):
     def test__generic_stat(self):
         np.random.seed(0)
         pdtest.assert_frame_equal(
-            np.round(self.dc._generic_stat(np.min), 3),
+            np.round(self.dc._generic_stat(np.min, bootstrap=False), 3),
             self.known_genericstat,
             check_names=False
         )
@@ -1238,41 +1238,17 @@ class test_DataCollection_baseline(_base_DataCollecionMixin):
         })
 
         self.known_genericstat = pandas.DataFrame({
-            ('Inflow', 'stat'): {
-                'H': 0.2100, 'A': 0.1780, 'B': 0.4330, 'C': 0.1160,
-                'D': 0.1070, 'E': 0.2360, 'F': 0.1570, 'G': 0.0960
+            ('Reference', self.known_roscol): {
+                'D': 0.209, 'A': 0.119, 'B': 0.307, 'H': 0.221,
+                'G': 0.189, 'F': 0.099, 'E': 0.211, 'C': 0.135,
             },
-            ('Outflow', 'lower'): {
-                'H': 0.1280, 'A': 0.3440, 'B': 0.4090, 'C': 0.2190,
-                'D': 0.1180, 'E': 0.1260, 'F': 0.3000, 'G': 0.1240
+            ('Inflow', self.known_roscol): {
+                'D': 0.107, 'A': 0.178, 'B': 0.433, 'H': 0.210,
+                'G': 0.096, 'F': 0.157, 'E': 0.236, 'C': 0.116,
             },
-            ('Inflow', 'lower'): {
-                'H': 0.2100, 'A': 0.1780, 'B': 0.4330, 'C': 0.1160,
-                'D': 0.1070, 'E': 0.2360, 'F': 0.1570, 'G': 0.0960
-            },
-            ('Reference', 'upper'): {
-                'H': 0.4620, 'A': 0.4840, 'B': 0.4580, 'C': 0.3570,
-                'D': 0.5630, 'E': 0.2970, 'F': 0.3600, 'G': 0.4000
-            },
-            ('Reference', 'lower'): {
-                'H': 0.2210, 'A': 0.1190, 'B': 0.3070, 'C': 0.1350,
-                'D': 0.2090, 'E': 0.2110, 'F': 0.0990, 'G': 0.1890
-            },
-            ('Reference', 'stat'): {
-                'H': 0.2210, 'A': 0.1190, 'B': 0.3070, 'C': 0.1350,
-                'D': 0.2090, 'E': 0.2110, 'F': 0.0990, 'G': 0.1890
-            },
-            ('Inflow', 'upper'): {
-                'H': 0.6600, 'A': 0.2760, 'B': 1.2250, 'C': 0.4990,
-                'D': 0.4130, 'E': 0.3510, 'F': 0.5930, 'G': 0.2790
-            },
-            ('Outflow', 'stat'): {
-                'H': 0.1280, 'A': 0.3440, 'B': 0.4090, 'C': 0.2190,
-                'D': 0.1180, 'E': 0.1260, 'F': 0.3000, 'G': 0.1240
-            },
-            ('Outflow', 'upper'): {
-                'H': 0.3150, 'A': 0.5710, 'B': 0.5490, 'C': 0.4920,
-                'D': 0.4790, 'E': 0.7710, 'F': 0.6370, 'G': 0.3070
+            ('Outflow', self.known_roscol): {
+                'D': 0.118, 'A': 0.344, 'B': 0.409, 'H': 0.128,
+                'G': 0.124, 'F': 0.300, 'E': 0.126, 'C': 0.219,
             }
         })
 
@@ -1284,3 +1260,4 @@ class test_DataCollection_customNDval(test_DataCollection_baseline):
     known_qualcol = 'anote'
     known_stationcol = 'loc'
     known_paramcol = 'param'
+
