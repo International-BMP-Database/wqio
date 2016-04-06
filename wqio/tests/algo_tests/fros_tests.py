@@ -175,3 +175,9 @@ class Test__ros_plot_pos(object):
         result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
         ntools.assert_equal(result, 0.41739130434782606)
 
+
+def test__norm_plot_pos():
+    result = fros._norm_plot_pos([1, 2, 3, 4])
+    expected = numpy.array([ 0.159104,  0.385452,  0.614548,  0.840896])
+    npt.assert_array_almost_equal(result, expected)
+

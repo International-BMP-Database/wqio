@@ -211,3 +211,7 @@ def _ros_plot_pos(row, cohn, censorship='cen'):
                 rank / (dl_1['nuncen_above']+1)
 
 
+def _norm_plot_pos(results):
+    ppos, sorted_res = stats.probplot(results, fit=False)
+    return stats.norm.cdf(ppos)
+
