@@ -151,3 +151,27 @@ def test__ros_group_rank():
     expected = pandas.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
     pdtest.assert_series_equal(result, expected)
 
+class Test__ros_plot_pos(object):
+    def setup(self):
+        self.cohn = load_basic_cohn()
+
+    def test_uncensored_1(self):
+        row = {'censored': False, 'det_limit_index': 2, 'rank': 1}
+        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        ntools.assert_equal(result, 0.24713958810068648)
+
+    def test_uncensored_2(self):
+        row = {'censored': False, 'det_limit_index': 2, 'rank': 12}
+        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        ntools.assert_equal(result, 0.51899313501144173)
+
+    def test_censored_1(self):
+        row = {'censored': True, 'det_limit_index': 5, 'rank': 4}
+        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        ntools.assert_equal(result, 1.3714285714285714)
+
+    def test_censored_2(self):
+        row = {'censored': True, 'det_limit_index': 4, 'rank': 2}
+        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        ntools.assert_equal(result, 0.41739130434782606)
+

@@ -191,3 +191,23 @@ def _ros_group_rank(df, groupcols):
     )
     return ranks
 
+
+def _ros_plot_pos(row, cohn, censorship='cen'):
+    """
+    Helper function to compute the ROS'd plotting position.
+
+    """
+
+    DL_index = row['det_limit_index']
+    rank = row['rank']
+    censored = row[censorship]
+
+    dl_1 = cohn.iloc[DL_index]
+    dl_2 = cohn.iloc[DL_index + 1]
+    if censored:
+        return (1 - dl_1['prob_exceedance']) * rank / (dl_1['ncen_equal']+1)
+    else:
+        return (1 - dl_1['prob_exceedance']) + (dl_1['prob_exceedance'] - dl_2['prob_exceedance']) * \
+                rank / (dl_1['nuncen_above']+1)
+
+
