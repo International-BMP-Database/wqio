@@ -11,12 +11,21 @@ import nose.tools as nt
 from nose.plugins.attrib import attr
 from nose.plugins.skip import SkipTest
 
-from numpy import errstate
+import numpy
 import numpy.testing as nptest
 from numpy.testing.noseclasses import NumpyTestProgram
 import pandas
 
 from six import StringIO
+
+
+def seed(func):
+    """ Decorator to seed the RNG before any function. """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        numpy.random.seed(0)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 def getTestROSData():
@@ -163,7 +172,7 @@ class NoseWrapper(nptest.Tester):  # pragma: no cover
                                                doctests, coverage)
 
         # with catch_warnings():
-        with errstate(**kwargs):
+        with numpy.errstate(**kwargs):
             simplefilter('ignore', category=DeprecationWarning)
             t = NumpyTestProgram(argv=argv, exit=False, plugins=plugins)
         return t.result
