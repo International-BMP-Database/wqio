@@ -135,3 +135,14 @@ class Test__detection_limit_index(object):
     def test_out_of_bounds(self):
         fros._detection_limit_index(0, self.cohn)
 
+
+def test__ros_group_rank():
+    df = pd.DataFrame({
+        'params': list('AABCCCDE') + list('DCBA'),
+        'values': list(range(12))
+    })
+
+    result = fros._ros_group_rank(df, ['params'])
+    expected = pd.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
+    pdtest.assert_series_equal(result, expected)
+

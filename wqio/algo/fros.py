@@ -182,3 +182,12 @@ def _detection_limit_index(res, cohn):
 
     return det_limit_index
 
+
+def _ros_group_rank(df, groupcols):
+    ranks = (
+        df.assign(rank=1)
+          .groupby(by=groupcols)['rank']
+          .transform(lambda g: g.cumsum())
+    )
+    return ranks
+
