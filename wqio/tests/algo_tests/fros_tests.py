@@ -101,3 +101,37 @@ class Test_cohn_numbers(object):
         result = fros.cohn_numbers(self.df.assign(qual=False), result='conc', censorship='qual')
         ntools.assert_tuple_equal(result.shape, (0, 7))
 
+
+class Test__detection_limit_index(object):
+    def setup(self):
+        self.cohn = pd.DataFrame([
+            {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
+             'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
+            {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
+             'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.5},
+            {'DL': 5.5, 'lower': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
+             'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.75},
+            {'DL': 5.75, 'lower': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
+             'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper': 9.5},
+            {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
+             'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
+            {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
+             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': np.inf},
+            {'DL': np.nan, 'lower': np.nan, 'ncen_equal': np.nan, 'nobs_below': np.nan,
+             'nuncen_above': np.nan, 'prob_exceedance': 0.0, 'upper': np.nan}
+        ])
+
+        self.empty_cohn = pd.DataFrame(np.empty((0, 7)))
+
+    def test_empty(self):
+        ntools.assert_equal(fros._detection_limit_index(None, self.empty_cohn), 0)
+
+    def test_populated(self):
+         ntools.assert_equal(fros._detection_limit_index(3.5, self.cohn), 0)
+         ntools.assert_equal(fros._detection_limit_index(6.0, self.cohn), 3)
+         ntools.assert_equal(fros._detection_limit_index(12.0, self.cohn), 5)
+
+    @ntools.raises(IndexError)
+    def test_out_of_bounds(self):
+        fros._detection_limit_index(0, self.cohn)
+

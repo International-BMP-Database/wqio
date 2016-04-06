@@ -165,3 +165,20 @@ def cohn_numbers(df, result='res', censorship='cen'):
 
     return cohn
 
+
+def _detection_limit_index(res, cohn):
+    """
+    Helper function to create an array of indices for the
+    detection  limits (cohn) corresponding to each
+    data point.
+
+    """
+
+    if cohn.shape[0] > 0:
+        index, = np.where(cohn['DL'] <= res)
+        det_limit_index = index[-1]
+    else:
+        det_limit_index = 0
+
+    return det_limit_index
+
