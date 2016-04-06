@@ -215,3 +215,16 @@ def _norm_plot_pos(results):
     ppos, sorted_res = stats.probplot(results, fit=False)
     return stats.norm.cdf(ppos)
 
+
+def _substitute_NDs(row, fraction=0.5, result='res', censorship='cen'):
+    """
+    Helper function to select half cohn when there are
+    too few detection.
+
+    """
+
+    if row[censorship]:
+        return fraction * row[result]
+    else:
+        return row[result]
+

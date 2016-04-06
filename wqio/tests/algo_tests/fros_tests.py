@@ -151,6 +151,7 @@ def test__ros_group_rank():
     expected = pandas.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
     pdtest.assert_series_equal(result, expected)
 
+
 class Test__ros_plot_pos(object):
     def setup(self):
         self.cohn = load_basic_cohn()
@@ -180,4 +181,17 @@ def test__norm_plot_pos():
     result = fros._norm_plot_pos([1, 2, 3, 4])
     expected = numpy.array([ 0.159104,  0.385452,  0.614548,  0.840896])
     npt.assert_array_almost_equal(result, expected)
+
+
+class Test__substitute_NDs(object):
+    def test_censored(self):
+        row = {'censored': True, 'value': 10}
+        result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
+        ntools.assert_equal(result, 7.5)
+
+
+    def test_uncensored(self):
+        row = {'censored': False, 'value': 10}
+        result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
+        ntools.assert_equal(result, 10)
 
