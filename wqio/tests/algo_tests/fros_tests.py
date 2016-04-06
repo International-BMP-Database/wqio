@@ -31,6 +31,50 @@ def load_basic_data():
     return df
 
 
+@ntools.nottest
+def load_intermediate_data():
+    df = pandas.DataFrame([
+        {'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'rank': 1},
+        {'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'rank': 2},
+        {'censored': True, 'conc': 5.5, 'det_limit_index': 2, 'rank': 1},
+        {'censored': True, 'conc': 5.75, 'det_limit_index': 3, 'rank': 1},
+        {'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'rank': 1},
+        {'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'rank': 2},
+        {'censored': True, 'conc': 11.0, 'det_limit_index': 5, 'rank': 1},
+        {'censored': False, 'conc': 2.0, 'det_limit_index': 0, 'rank': 1},
+        {'censored': False, 'conc': 4.2, 'det_limit_index': 0, 'rank': 2},
+        {'censored': False, 'conc': 4.62, 'det_limit_index': 0, 'rank': 3},
+        {'censored': False, 'conc': 5.57, 'det_limit_index': 2, 'rank': 1},
+        {'censored': False, 'conc': 5.66, 'det_limit_index': 2, 'rank': 2},
+        {'censored': False, 'conc': 5.86, 'det_limit_index': 3, 'rank': 1},
+        {'censored': False, 'conc': 6.65, 'det_limit_index': 3, 'rank': 2},
+        {'censored': False, 'conc': 6.78, 'det_limit_index': 3, 'rank': 3},
+        {'censored': False, 'conc': 6.79, 'det_limit_index': 3, 'rank': 4},
+        {'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'rank': 5},
+        {'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'rank': 6},
+        {'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'rank': 7},
+        {'censored': False, 'conc': 8.63, 'det_limit_index': 3, 'rank': 8},
+        {'censored': False, 'conc': 8.71, 'det_limit_index': 3, 'rank': 9},
+        {'censored': False, 'conc': 8.99, 'det_limit_index': 3, 'rank': 10},
+        {'censored': False, 'conc': 9.85, 'det_limit_index': 4, 'rank': 1},
+        {'censored': False, 'conc': 10.82, 'det_limit_index': 4, 'rank': 2},
+        {'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'rank': 1},
+        {'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'rank': 2},
+        {'censored': False, 'conc': 12.2, 'det_limit_index': 5, 'rank': 3},
+        {'censored': False, 'conc': 14.92, 'det_limit_index': 5, 'rank': 4},
+        {'censored': False, 'conc': 16.77, 'det_limit_index': 5, 'rank': 5},
+        {'censored': False, 'conc': 17.81, 'det_limit_index': 5, 'rank': 6},
+        {'censored': False, 'conc': 19.16, 'det_limit_index': 5, 'rank': 7},
+        {'censored': False, 'conc': 19.19, 'det_limit_index': 5, 'rank': 8},
+        {'censored': False, 'conc': 19.64, 'det_limit_index': 5, 'rank': 9},
+        {'censored': False, 'conc': 20.18, 'det_limit_index': 5, 'rank': 10},
+        {'censored': False, 'conc': 22.97, 'det_limit_index': 5, 'rank': 11}
+    ])
+
+    return df
+
+
+@ntools.nottest
 def load_basic_cohn():
     cohn = pandas.DataFrame([
         {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
@@ -206,3 +250,19 @@ class Test__select_modeled(object):
         result = fros._select_modeled(row, modeled='est', result='value', censorship='censored')
         ntools.assert_equal(result, 10)
 
+
+def test_plotting_positions():
+    df = load_intermediate_data()
+    cohn = load_basic_cohn()
+
+    results = fros.plotting_positions(df, cohn, censorship='censored')
+    expected = numpy.array([
+        0.07414188,  0.11121281,  0.14828375,  0.14828375,  0.20869565,
+        0.34285714,  0.4173913 ,  0.05560641,  0.11121281,  0.16681922,
+        0.24713959,  0.27185355,  0.32652382,  0.35648013,  0.38643645,
+        0.41639276,  0.44634907,  0.47630539,  0.5062617 ,  0.53621802,
+        0.56617433,  0.59613064,  0.64596273,  0.66583851,  0.71190476,
+        0.73809524,  0.76428571,  0.79047619,  0.81666667,  0.84285714,
+        0.86904762,  0.8952381 ,  0.92142857,  0.94761905,  0.97380952
+    ])
+    npt.assert_array_almost_equal(results, expected)

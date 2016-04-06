@@ -242,3 +242,13 @@ def _select_modeled(row, modeled='modeled', result='res', censorship='cen'):
         return row[result]
 
 
+def plotting_positions(df, cohn, censorship='cen'):
+
+    plot_pos = df.apply(lambda r: _ros_plot_pos(r, cohn, censorship=censorship), axis=1)
+
+    # correctly sort the plotting positions of the ND data:
+    ND_plotpos = plot_pos[df[censorship]]
+    ND_plotpos.values.sort()
+    plot_pos.loc[df[censorship]] = ND_plotpos
+
+    return plot_pos
