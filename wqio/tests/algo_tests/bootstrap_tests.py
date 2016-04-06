@@ -13,6 +13,37 @@ def test__acceleration():
     assert_almost_equal(bootstrap._acceleration(data), known_acceleration, places=5)
 
 
+def test__make_boot_index():
+    result = bootstrap._make_boot_index(5, 5000)
+    assert_tuple_equal(result.shape, (5000, 5))
+    assert_equal(result.min(), 0)
+    assert_equal(result.max(), 4)
+
+
+class TestBootStrappers(object):
+    def setup(self):
+        np.random.seed(0)
+        self.data = testing.getTestROSData()['res'].values
+        self.statfxn = np.mean
+        self.alpha = 0.10
+        self.NIter = 2500
+        self.known_res = self.statfxn(self.data)
+        self.known_BCA_ci = np.array([8.74244187, 11.71177557])
+        self.known_pct_ci = np.array([8.70867143, 11.68634286])
+
+    @testing.seed
+    def test_BCA(self):
+        res, ci = bootstrap.BCA(self.data, self.statfxn, self.NIter, self.alpha)
+        assert_almost_equal(self.known_res, res, places=3)
+        nptest.assert_array_almost_equal(self.known_BCA_ci, ci, decimal=3)
+
+    @testing.seed
+    def test_percentile(self):
+        res, ci = bootstrap.percentile(self.data, self.statfxn, self.NIter, self.alpha)
+        assert_almost_equal(self.known_res, res, places=3)
+        nptest.assert_array_almost_equal(self.known_pct_ci, ci, decimal=3)
+
+
 class test_Stat:
     def setup(self):
         np.random.seed(0)
@@ -27,18 +58,20 @@ class test_Stat:
         self.known_primary = 10.120571428571429
 
 
+    @testing.seed
     def test_BCA(self):
         assert_true(hasattr(self.bsStat, 'BCA'))
-        knownBCA_res, knownBCA_ci = (10.127740624999999, np.array([8.64771461, 11.63041132]))
+        knownBCA_ci = np.array([8.74244187, 11.71177557])
         BCA_res, BCA_ci = self.bsStat.BCA()
-        assert_almost_equal(knownBCA_res, BCA_res, places=1)
+        assert_almost_equal(self.known_primary, BCA_res, places=1)
         nptest.assert_array_almost_equal(knownBCA_ci, BCA_ci, decimal=1)
 
+    @testing.seed
     def test_percentile(self):
         assert_true(hasattr(self.bsStat, 'percentile'))
-        knownPer_res, knownPer_ci = (10.102715015411377, np.array([8.67312818, 11.65695653]))
+        knownPer_ci = np.array([8.70867143, 11.68634286])
         Per_res, Per_ci = self.bsStat.percentile()
-        assert_almost_equal(knownPer_res, Per_res, places=1)
+        assert_almost_equal(self.known_primary, Per_res, places=1)
         nptest.assert_array_almost_equal(knownPer_ci, Per_ci, decimal=1)
 
     def test_data(self):
