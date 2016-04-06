@@ -189,9 +189,20 @@ class Test__substitute_NDs(object):
         result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
         ntools.assert_equal(result, 7.5)
 
-
     def test_uncensored(self):
         row = {'censored': False, 'value': 10}
         result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
+        ntools.assert_equal(result, 10)
+
+
+class Test__select_modeled(object):
+    def test_censored(self):
+        row = {'censored': True, 'value': 10, 'est': 0.75}
+        result = fros._select_modeled(row, modeled='est', result='value', censorship='censored')
+        ntools.assert_equal(result, 0.75)
+
+    def test_uncensored(self):
+        row = {'censored': False, 'value': 10, 'est': 0.75}
+        result = fros._select_modeled(row, modeled='est', result='value', censorship='censored')
         ntools.assert_equal(result, 10)
 

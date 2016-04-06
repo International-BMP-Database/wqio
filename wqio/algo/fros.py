@@ -228,3 +228,17 @@ def _substitute_NDs(row, fraction=0.5, result='res', censorship='cen'):
     else:
         return row[result]
 
+
+def _select_modeled(row, modeled='modeled', result='res', censorship='cen'):
+    """
+    Helper fucntion to select "final" data from original detects
+    and estimated non-detects.
+
+    """
+
+    if row[censorship]:
+        return row[modeled]
+    else:
+        return row[result]
+
+
