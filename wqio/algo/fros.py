@@ -252,3 +252,37 @@ def plotting_positions(df, cohn, censorship='cen'):
     plot_pos.loc[df[censorship]] = ND_plotpos
 
     return plot_pos
+
+
+def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
+                  transform_in=numpy.log, transform_out=numpy.exp):
+    # detect/non-detect selectors
+    uncensored_mask = df[censorship] == False
+    censored_mask = df[censorship] == True
+
+    # fit a line to the logs of the detected data
+    fit_params = stats.linregress(
+        df[Zcol][uncensored_mask],
+        transform_in(df[result][uncensored_mask])
+    )
+
+    # pull out the slope and intercept for use later
+    slope, intercept = fit_params[:2]
+
+    # model the data based on the best-fit curve
+    df = (
+        df.assign(estimated=transform_out(slope * df[Zcol][censored_mask] + intercept))
+          .assign(final=lambda df: df.apply(_select_final, result=result, censorship=censorship, axis=1))
+    )
+
+    return df
+
+
+
+
+
+
+
+
+
+
