@@ -195,14 +195,14 @@ class Test__ros_sort(object):
         self.expected_with_warning = self.expected_baseline.iloc[:-1]
 
     def test_baseline(self):
-        result = fros._ros_sort(self.df, result='conc', censorship='censored')
+        result = fros._ros_sort(self.df, 'conc', 'censored')
         pdtest.assert_frame_equal(result, self.expected_baseline)
 
     def test_censored_greater_than_max(self):
         df = self.df.copy()
         max_row = df['conc'].argmax()
         df.loc[max_row, 'censored'] = True
-        result = fros._ros_sort(df, result='conc', censorship='censored')
+        result = fros._ros_sort(df, 'conc', 'censored')
         pdtest.assert_frame_equal(result, self.expected_with_warning)
 
 
@@ -274,22 +274,22 @@ class Test__ros_plot_pos(object):
 
     def test_uncensored_1(self):
         row = {'censored': False, 'det_limit_index': 2, 'rank': 1}
-        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        result = fros._ros_plot_pos(row, self.cohn, 'censored')
         ntools.assert_equal(result, 0.24713958810068648)
 
     def test_uncensored_2(self):
         row = {'censored': False, 'det_limit_index': 2, 'rank': 12}
-        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        result = fros._ros_plot_pos(row, self.cohn, 'censored')
         ntools.assert_equal(result, 0.51899313501144173)
 
     def test_censored_1(self):
         row = {'censored': True, 'det_limit_index': 5, 'rank': 4}
-        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        result = fros._ros_plot_pos(row, self.cohn, 'censored')
         ntools.assert_equal(result, 1.3714285714285714)
 
     def test_censored_2(self):
         row = {'censored': True, 'det_limit_index': 4, 'rank': 2}
-        result = fros._ros_plot_pos(row, self.cohn, censorship='censored')
+        result = fros._ros_plot_pos(row, self.cohn, 'censored')
         ntools.assert_equal(result, 0.41739130434782606)
 
 
@@ -328,7 +328,8 @@ def test__ros_estimate():
         16.77      ,  17.81      ,  19.16      ,  19.19      ,
         19.64      ,  20.18      ,  22.97
     ])
-    df = load_advanced_data().pipe(fros._ros_estimate, result='conc', censorship='censored')
+    df = load_advanced_data().pipe(fros._ros_estimate, 'conc', 'censored',
+                                   numpy.log, numpy.exp)
     result = df['final'].values
     npt.assert_array_almost_equal(result, expected)
 
@@ -346,7 +347,8 @@ def test__do_ros():
         19.64      ,  20.18      ,  22.97
     ])
 
-    df = load_basic_data().pipe(fros._do_ros, 'conc', 'censored', numpy.log, numpy.exp)
+    df = load_basic_data().pipe(fros._do_ros, 'conc', 'censored',
+                                numpy.log, numpy.exp)
     result = df['final'].values
     npt.assert_array_almost_equal(result, expected)
 

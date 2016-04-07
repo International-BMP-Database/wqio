@@ -8,7 +8,7 @@ import pandas
 from wqio.utils import figutils
 
 
-def _ros_sort(df, result='res', censorship='cen'):
+def _ros_sort(df, result, censorship):
     """
     This function prepares a dataframe for ROS. It sorts ascending with
     left-censored observations on top. Censored results larger than the
@@ -46,7 +46,7 @@ def _ros_sort(df, result='res', censorship='cen'):
     return censored.append(uncensored)[[result, censorship]].reset_index(drop=True)
 
 
-def cohn_numbers(df, result='res', censorship='cen'):
+def cohn_numbers(df, result, censorship):
     """
     Computes the Cohn numbers for the detection limits in the
     dataset.
@@ -193,7 +193,7 @@ def _ros_group_rank(df, groupcols):
     return ranks
 
 
-def _ros_plot_pos(row, cohn, censorship='cen'):
+def _ros_plot_pos(row, cohn, censorship):
     """
     Helper function to compute the ROS'd plotting position.
 
@@ -217,7 +217,7 @@ def _norm_plot_pos(results):
     return stats.norm.cdf(ppos)
 
 
-def plotting_positions(df, cohn, censorship='cen'):
+def plotting_positions(df, cohn, censorship):
 
     plot_pos = df.apply(lambda r: _ros_plot_pos(r, cohn, censorship=censorship), axis=1)
 
@@ -229,15 +229,14 @@ def plotting_positions(df, cohn, censorship='cen'):
     return plot_pos
 
 
-def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
-                  transform_in=numpy.log, transform_out=numpy.exp):
+def _ros_estimate(df, result, censorship, transform_in, transform_out):
     # detect/non-detect selectors
     uncensored_mask = df[censorship] == False
     censored_mask = df[censorship] == True
 
     # fit a line to the logs of the detected data
     fit_params = stats.linregress(
-        df[Zcol][uncensored_mask],
+        df['Zprelim'][uncensored_mask],
         transform_in(df[result][uncensored_mask])
     )
 
@@ -246,7 +245,7 @@ def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
 
     # model the data based on the best-fit curve
     df = (
-        df.assign(estimated=transform_out(slope * df[Zcol][censored_mask] + intercept))
+        df.assign(estimated=transform_out(slope * df['Zprelim'][censored_mask] + intercept))
           .assign(final=lambda df: numpy.where(df[censorship], df['estimated'], df[result]))
     )
 
@@ -266,8 +265,7 @@ def _do_ros(df, result, censorship, transform_in, transform_out):
           .assign(rank=lambda df: _ros_group_rank(df, ['det_limit_index', censorship]))
           .assign(plot_pos=lambda df: plotting_positions(df, cohn, censorship=censorship))
           .assign(Zprelim=lambda df: stats.norm.ppf(df['plot_pos']))
-          .pipe(_ros_estimate, result=result, censorship=censorship,
-                transform_in=transform_in, transform_out=transform_out)
+          .pipe(_ros_estimate, result, censorship, transform_in, transform_out)
     )
 
     return modeled
