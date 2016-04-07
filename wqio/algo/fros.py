@@ -278,6 +278,27 @@ def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
     return df
 
 
+def _do_ros(df, result='res', censorship='cen',
+            transform_in=numpy.log, transform_out=numpy.exp):
+    """
+    Estimates the values of the censored data
+    """
+    # compute the Cohn numbers
+    cohn = cohn_numbers(df, result=result, censorship=censorship)
+
+    modeled = (
+        df.pipe(_ros_sort, result=result, censorship=censorship)
+          .assign(det_limit_index=lambda df: df[result].apply(_detection_limit_index, args=(cohn,)))
+          .assign(rank=lambda df: _ros_group_rank(df, ['det_limit_index', censorship]))
+          .assign(plot_pos=lambda df: plotting_positions(df, cohn, censorship=censorship))
+          .assign(Zprelim=lambda df: stats.norm.ppf(df['plot_pos']))
+          .pipe(_ros_estimate, result=result, censorship=censorship,
+                transform_in=transform_in, transform_out=transform_out)
+    )
+
+    return modeled
+
+
 
 
 
