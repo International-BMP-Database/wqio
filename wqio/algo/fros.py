@@ -139,6 +139,7 @@ def cohn_numbers(df, result='res', censorship='cen'):
     # unique values
     censored_data = df[censorship]
     cohn = pandas.unique(df.loc[censored_data, result])
+    cohn.sort()
 
     # if there is a results smaller than the minimum detection limit,
     # add that value to the array
@@ -278,8 +279,7 @@ def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
     return df
 
 
-def _do_ros(df, result='res', censorship='cen',
-            transform_in=numpy.log, transform_out=numpy.exp):
+def _do_ros(df, result, censorship, transform_in, transform_out):
     """
     Estimates the values of the censored data
     """
@@ -307,4 +307,34 @@ def _do_substitution(df, result, censorship, fraction):
           .sort_values(by=[result])
     )
 
-    return df
+    return df[[result, censorship, 'final']]
+
+
+def ros(df, result, censorship, min_uncensored=2,
+        max_fraction_censored=0.8, fraction=0.5,
+        transform_in=numpy.log, transform_out=numpy.exp,
+        as_array=True):
+    # basic counts/metrics of the dataset
+    N_observations = df.shape[0]
+    N_censored = df[censorship].astype(int).sum()
+    N_uncensored = N_observations - N_censored
+    fraction_censored = N_censored / N_observations
+
+    # add plotting positions if there are no censored values
+    if N_censored == 0:
+        output = df[[result, censorship]].assign(final=df[result])
+
+    # substitute w/ fraction of the DLs if there's insufficient
+    # uncensored data
+    elif (N_uncensored < min_uncensored) or (fraction_censored > max_fraction_censored):
+        output = _do_substitution(df, result, censorship, fraction)
+
+    # normal ROS stuff
+    else:
+        output = _do_ros(df, result, censorship, transform_in, transform_out)
+
+    # convert to an array if necessary
+    if as_array:
+        output = output['final'].values
+
+    return output
