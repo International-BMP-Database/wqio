@@ -12,13 +12,6 @@ import pandas
 from wqio.algo import fros
 from statsmodels.compat.python import StringIO
 
-try:
-    import matplotlib.pyplot as plt
-    have_matplotlib = True
-except:
-    have_matplotlib = False
-
-
 
 @ntools.nottest
 def load_basic_data():
@@ -152,9 +145,9 @@ class Test_cohn_numbers(object):
             {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
              'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
             {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
-             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': np.inf},
-            {'DL': np.nan, 'lower': np.nan, 'ncen_equal': np.nan, 'nobs_below': np.nan,
-             'nuncen_above': np.nan, 'prob_exceedance': 0.0, 'upper': np.nan}
+             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': numpy.inf},
+            {'DL': numpy.nan, 'lower': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
+             'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper': numpy.nan}
         ])[self.final_cols]
 
 
@@ -239,15 +232,15 @@ class Test__substitute_NDs(object):
         ntools.assert_equal(result, 10)
 
 
-class Test__select_modeled(object):
+class Test__select_final(object):
     def test_censored(self):
         row = {'censored': True, 'value': 10, 'est': 0.75}
-        result = fros._select_modeled(row, modeled='est', result='value', censorship='censored')
+        result = fros._select_final(row, estimated='est', result='value', censorship='censored')
         ntools.assert_equal(result, 0.75)
 
     def test_uncensored(self):
         row = {'censored': False, 'value': 10, 'est': 0.75}
-        result = fros._select_modeled(row, modeled='est', result='value', censorship='censored')
+        result = fros._select_final(row, estimated='est', result='value', censorship='censored')
         ntools.assert_equal(result, 10)
 
 
