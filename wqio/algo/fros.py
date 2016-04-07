@@ -299,11 +299,12 @@ def _do_ros(df, result='res', censorship='cen',
     return modeled
 
 
+def _do_substitution(df, result, censorship, fraction):
+    df = (
+        df.assign(final=df.apply(_substitute_NDs, result=result,
+                                 censorship=censorship, fraction=fraction,
+                                 axis=1))
+          .sort_values(by=[result])
+    )
 
-
-
-
-
-
-
-
+    return df

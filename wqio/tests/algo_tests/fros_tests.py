@@ -372,3 +372,17 @@ def test__do_ros():
     result = df['final'].values
     npt.assert_array_almost_equal(result, expected)
 
+
+def test__do_substitution():
+    expected = numpy.array([
+         2.    ,   4.2   ,   4.62  ,   1.25  ,   1.25  ,   1.375 ,
+         5.57  ,   5.66  ,   1.4375,   5.86  ,   6.65  ,   6.78  ,
+         6.79  ,   7.5   ,   7.5   ,   7.5   ,   8.63  ,   8.71  ,
+         8.99  ,   2.375 ,   2.375 ,   9.85  ,  10.82  ,   2.75  ,
+        11.25  ,  11.25  ,  12.2   ,  14.92  ,  16.77  ,  17.81  ,
+        19.16  ,  19.19  ,  19.64  ,  20.18  ,  22.97
+    ])
+    df = load_basic_data().pipe(fros._do_substitution, result='conc',
+                                censorship='censored', fraction=0.25)
+    result = df['final'].values
+    npt.assert_array_almost_equal(result, expected)
