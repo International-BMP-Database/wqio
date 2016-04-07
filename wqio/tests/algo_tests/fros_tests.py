@@ -668,6 +668,7 @@ class Test_ROS_MaxCen_GT_MaxUncen(Test_ROS_HelselAppendixB):
         False, False, True, True
     ])
 
+
 class Test_ROS_OnlyDL_GT_MaxUncen(Test_NoOp_ZeroND):
     numpy.random.seed(0)
     N = 20

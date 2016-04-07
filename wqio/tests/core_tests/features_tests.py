@@ -342,7 +342,7 @@ class test_Location_ROS(_base_LocationMixin):
         self.known_N = 35
         self.known_ND = 7
         self.known_fractionND = 0.2
-        self.known_NUnique = 31
+        self.known_NUnique = 32
         self.known_analysis_space = 'lognormal'
         self.known_cov = 0.597430584141
         self.known_geomean = 8.08166947637
