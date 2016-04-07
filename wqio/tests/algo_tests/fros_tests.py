@@ -299,30 +299,6 @@ def test__norm_plot_pos():
     npt.assert_array_almost_equal(result, expected)
 
 
-class Test__substitute_NDs(object):
-    def test_censored(self):
-        row = {'censored': True, 'value': 10}
-        result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
-        ntools.assert_equal(result, 7.5)
-
-    def test_uncensored(self):
-        row = {'censored': False, 'value': 10}
-        result = fros._substitute_NDs(row, fraction=0.75, result='value', censorship='censored')
-        ntools.assert_equal(result, 10)
-
-
-class Test__select_final(object):
-    def test_censored(self):
-        row = {'censored': True, 'value': 10, 'est': 0.75}
-        result = fros._select_final(row, estimated='est', result='value', censorship='censored')
-        ntools.assert_equal(result, 0.75)
-
-    def test_uncensored(self):
-        row = {'censored': False, 'value': 10, 'est': 0.75}
-        result = fros._select_final(row, estimated='est', result='value', censorship='censored')
-        ntools.assert_equal(result, 10)
-
-
 def test_plotting_positions():
     df = load_intermediate_data()
     cohn = load_basic_cohn()
@@ -371,21 +347,6 @@ def test__do_ros():
     ])
 
     df = load_basic_data().pipe(fros._do_ros, 'conc', 'censored', numpy.log, numpy.exp)
-    result = df['final'].values
-    npt.assert_array_almost_equal(result, expected)
-
-
-def test__do_substitution():
-    expected = numpy.array([
-         2.    ,   4.2   ,   4.62  ,   1.25  ,   1.25  ,   1.375 ,
-         5.57  ,   5.66  ,   1.4375,   5.86  ,   6.65  ,   6.78  ,
-         6.79  ,   7.5   ,   7.5   ,   7.5   ,   8.63  ,   8.71  ,
-         8.99  ,   2.375 ,   2.375 ,   9.85  ,  10.82  ,   2.75  ,
-        11.25  ,  11.25  ,  12.2   ,  14.92  ,  16.77  ,  17.81  ,
-        19.16  ,  19.19  ,  19.64  ,  20.18  ,  22.97
-    ])
-    df = load_basic_data().pipe(fros._do_substitution, result='conc',
-                                censorship='censored', fraction=0.25)
     result = df['final'].values
     npt.assert_array_almost_equal(result, expected)
 

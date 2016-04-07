@@ -217,32 +217,6 @@ def _norm_plot_pos(results):
     return stats.norm.cdf(ppos)
 
 
-def _substitute_NDs(row, fraction=0.5, result='res', censorship='cen'):
-    """
-    Helper function to select half cohn when there are
-    too few detection.
-
-    """
-
-    if row[censorship]:
-        return fraction * row[result]
-    else:
-        return row[result]
-
-
-def _select_final(row, estimated='estimated', result='res', censorship='cen'):
-    """
-    Helper fucntion to select "final" data from original detects
-    and estimated non-detects.
-
-    """
-
-    if row[censorship]:
-        return row[estimated]
-    else:
-        return row[result]
-
-
 def plotting_positions(df, cohn, censorship='cen'):
 
     plot_pos = df.apply(lambda r: _ros_plot_pos(r, cohn, censorship=censorship), axis=1)
@@ -273,7 +247,7 @@ def _ros_estimate(df, result='res', censorship='cen', Zcol='Zprelim',
     # model the data based on the best-fit curve
     df = (
         df.assign(estimated=transform_out(slope * df[Zcol][censored_mask] + intercept))
-          .assign(final=lambda df: df.apply(_select_final, result=result, censorship=censorship, axis=1))
+          .assign(final=lambda df: numpy.where(df[censorship], df['estimated'], df[result]))
     )
 
     return df
@@ -299,21 +273,11 @@ def _do_ros(df, result, censorship, transform_in, transform_out):
     return modeled
 
 
-def _do_substitution(df, result, censorship, fraction):
-    df = (
-        df.assign(final=df.apply(_substitute_NDs, result=result,
-                                 censorship=censorship, fraction=fraction,
-                                 axis=1))
-          .sort_values(by=[result])
-    )
-
-    return df[[result, censorship, 'final']]
-
-
 def ros(df, result, censorship, min_uncensored=2,
         max_fraction_censored=0.8, fraction=0.5,
         transform_in=numpy.log, transform_out=numpy.exp,
         as_array=True):
+
     # basic counts/metrics of the dataset
     N_observations = df.shape[0]
     N_censored = df[censorship].astype(int).sum()
@@ -327,7 +291,8 @@ def ros(df, result, censorship, min_uncensored=2,
     # substitute w/ fraction of the DLs if there's insufficient
     # uncensored data
     elif (N_uncensored < min_uncensored) or (fraction_censored > max_fraction_censored):
-        output = _do_substitution(df, result, censorship, fraction)
+        final = numpy.where(df[censorship], df[result] * fraction, df[result])
+        output = df.assign(final=final)[[result, censorship, 'final']]
 
     # normal ROS stuff
     else:
