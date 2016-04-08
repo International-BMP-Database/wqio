@@ -149,20 +149,20 @@ def load_advanced_data():
 @ntools.nottest
 def load_basic_cohn():
     cohn = pandas.DataFrame([
-        {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
-         'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
-        {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
-         'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.5},
-        {'DL': 5.5, 'lower': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
-         'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.75},
-        {'DL': 5.75, 'lower': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
-         'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper': 9.5},
-        {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
-         'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
-        {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
-         'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': numpy.inf},
-        {'DL': numpy.nan, 'lower': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
-         'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper': numpy.nan}
+        {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
+         'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
+        {'lower_dl': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
+         'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.5},
+        {'lower_dl': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.75},
+        {'lower_dl': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
+         'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper_dl': 9.5},
+        {'lower_dl': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper_dl': 11.0},
+        {'lower_dl': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
+         'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper_dl': numpy.inf},
+        {'lower_dl': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
+         'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper_dl': numpy.nan}
     ])
     return cohn
 
@@ -209,24 +209,24 @@ class Test__ros_sort(object):
 class Test_cohn_numbers(object):
     def setup(self):
         self.df = load_basic_data()
-        self.final_cols = ['DL', 'lower', 'upper', 'nuncen_above', 'nobs_below',
+        self.final_cols = ['lower_dl', 'upper_dl', 'nuncen_above', 'nobs_below',
                            'ncen_equal', 'prob_exceedance']
 
         self.expected_baseline = pandas.DataFrame([
-            {'DL': 2.0, 'lower': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
-             'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper': 5.0},
-            {'DL': 5.0, 'lower': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
-             'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.5},
-            {'DL': 5.5, 'lower': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper': 5.75},
-            {'DL': 5.75, 'lower': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
-             'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper': 9.5},
-            {'DL': 9.5, 'lower': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper': 11.0},
-            {'DL': 11.0, 'lower': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
-             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper': numpy.inf},
-            {'DL': numpy.nan, 'lower': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
-             'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper': numpy.nan}
+            {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
+             'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
+            {'lower_dl': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
+             'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.5},
+            {'lower_dl': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
+             'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.75},
+            {'lower_dl': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
+             'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper_dl': 9.5},
+            {'lower_dl': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
+             'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper_dl': 11.0},
+            {'lower_dl': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
+             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper_dl': numpy.inf},
+            {'lower_dl': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
+             'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper_dl': numpy.nan}
         ])[self.final_cols]
 
 
@@ -236,7 +236,7 @@ class Test_cohn_numbers(object):
 
     def test_no_NDs(self):
         result = fros.cohn_numbers(self.df.assign(qual=False), result='conc', censorship='qual')
-        ntools.assert_tuple_equal(result.shape, (0, 7))
+        ntools.assert_tuple_equal(result.shape, (0, 6))
 
 
 class Test__detection_limit_index(object):
@@ -259,11 +259,12 @@ class Test__detection_limit_index(object):
 
 def test__ros_group_rank():
     df = pandas.DataFrame({
+        'dl_idx': [1] * 12,
         'params': list('AABCCCDE') + list('DCBA'),
         'values': list(range(12))
     })
 
-    result = fros._ros_group_rank(df, ['params'])
+    result = fros._ros_group_rank(df, 'dl_idx', 'params')
     expected = pandas.Series([1, 2, 1, 1, 2, 3, 1, 1, 2, 4, 2, 3], name='rank')
     pdtest.assert_series_equal(result, expected)
 
@@ -274,22 +275,22 @@ class Test__ros_plot_pos(object):
 
     def test_uncensored_1(self):
         row = {'censored': False, 'det_limit_index': 2, 'rank': 1}
-        result = fros._ros_plot_pos(row, self.cohn, 'censored')
+        result = fros._ros_plot_pos(row, 'censored', self.cohn)
         ntools.assert_equal(result, 0.24713958810068648)
 
     def test_uncensored_2(self):
         row = {'censored': False, 'det_limit_index': 2, 'rank': 12}
-        result = fros._ros_plot_pos(row, self.cohn, 'censored')
+        result = fros._ros_plot_pos(row, 'censored', self.cohn)
         ntools.assert_equal(result, 0.51899313501144173)
 
     def test_censored_1(self):
         row = {'censored': True, 'det_limit_index': 5, 'rank': 4}
-        result = fros._ros_plot_pos(row, self.cohn, 'censored')
+        result = fros._ros_plot_pos(row, 'censored', self.cohn)
         ntools.assert_equal(result, 1.3714285714285714)
 
     def test_censored_2(self):
         row = {'censored': True, 'det_limit_index': 4, 'rank': 2}
-        result = fros._ros_plot_pos(row, self.cohn, 'censored')
+        result = fros._ros_plot_pos(row, 'censored', self.cohn)
         ntools.assert_equal(result, 0.41739130434782606)
 
 
@@ -303,7 +304,7 @@ def test_plotting_positions():
     df = load_intermediate_data()
     cohn = load_basic_cohn()
 
-    results = fros.plotting_positions(df, cohn, censorship='censored')
+    results = fros.plotting_positions(df, 'censored', cohn)
     expected = numpy.array([
         0.07414188,  0.11121281,  0.14828375,  0.14828375,  0.20869565,
         0.34285714,  0.4173913 ,  0.05560641,  0.11121281,  0.16681922,
@@ -354,8 +355,16 @@ def test__do_ros():
 
 
 class CheckROSMixin(object):
-    def test_ros(self):
-        result = fros.ros(self.df, self.rescol, self.cencol)
+    def test_ros_df(self):
+        result = fros.ros(self.rescol, self.cencol, df=self.df)
+        npt.assert_array_almost_equal(
+            sorted(result),
+            sorted(self.expected_final),
+            decimal=self.decimal
+        )
+
+    def test_ros_arrays(self):
+        result = fros.ros(self.df[self.rescol], self.df[self.cencol], df=None)
         npt.assert_array_almost_equal(
             sorted(result),
             sorted(self.expected_final),
