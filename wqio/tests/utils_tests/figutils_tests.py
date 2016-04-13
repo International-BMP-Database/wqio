@@ -469,6 +469,24 @@ def test_logLabelFormatter_alt():
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
 
 
+
+@image_comparison(
+    baseline_images=[
+        'test_easy_logfmt',
+        'test_easy_logfmt_alt'
+    ], extensions=['png']
+)
+def test_log_formatter():
+    fig, (ax1, ax2) = plt.subplots(ncols=2)
+    ax1.set_yscale('log')
+    ax1.set_ylim((1e-4, 1e5))
+    ax1.yaxis.set_major_formatter(figutils.log_formatter(threshold=4))
+
+    ax2.set_yscale('log')
+    ax2.set_ylim((1e-7, 1e5))
+    ax2.yaxis.set_major_formatter(figutils.log_formatter(threshold=4, use_1x=False))
+
+
 @image_comparison(baseline_images=['test_connect_spines'], extensions=['png'], remove_text=True)
 def test__connect_spines():
     fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2)

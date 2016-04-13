@@ -652,26 +652,35 @@ def probplot(data, ax=None, axtype='prob', yscale='log',
         return fig
 
 
-def logLabelFormatter(tick, pos=None):
+def logLabelFormatter(tick, pos=None, threshold=3):
     """ Formats log axes as `1 x 10^N` when N > 4 or N < -4. """
 
-    if 10**3 >= tick > 1:
-        tick = int(tick)
-    elif tick > 10**3 or tick < 10**-3:
+    if 10**threshold >= tick > 1:
+        tick = '{:,d}'.format(int(tick))
+    elif tick > 10**threshold or tick < 10**(-1 * threshold):
         tick = r'$1 \times 10 ^ {%d}$' % int(np.log10(tick))
 
     return tick
 
 
-def alt_logLabelFormatter(tick, pos=None):
+def alt_logLabelFormatter(tick, pos=None, threshold=3):
     """ Formats log axes as `10^N` when N > 4 or N < -4. """
 
-    if 10**3 >= tick > 1:
-        tick = int(tick)
-    elif tick > 10**3 or tick < 10**-3:
+    if 10**threshold >= tick > 1:
+        tick = '{:,d}'.format(int(tick))
+    elif tick > 10**threshold or tick < 10**(-1 * threshold):
         tick = r'$10 ^ {%d}$' % int(np.log10(tick))
 
     return tick
+
+
+def log_formatter(threshold=5, use_1x=True):
+    if use_1x:
+        func = logLabelFormatter
+    else:
+        func = alt_logLabelFormatter
+
+    return mticker.FuncFormatter(partial(func, threshold=threshold))
 
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
