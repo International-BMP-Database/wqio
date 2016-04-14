@@ -148,6 +148,7 @@ def setup_jointplot():
 
     return df
 
+
 @image_comparison(
     baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
                      'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
@@ -467,6 +468,23 @@ def test_logLabelFormatter_alt():
     ax.set_yscale('log')
     ax.set_ylim([0.0001, 1e7])
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
+
+
+@image_comparison(
+    baseline_images=[
+        'test_easy_logfmt',
+        'test_easy_logfmt_alt'
+    ], extensions=['png']
+)
+def test_log_formatter():
+    fig, (ax1, ax2) = plt.subplots(ncols=2)
+    ax1.set_yscale('log')
+    ax1.set_ylim((1e-4, 1e5))
+    ax1.yaxis.set_major_formatter(figutils.log_formatter(threshold=4))
+
+    ax2.set_yscale('log')
+    ax2.set_ylim((1e-7, 1e5))
+    ax2.yaxis.set_major_formatter(figutils.log_formatter(threshold=4, use_1x=False))
 
 
 @image_comparison(baseline_images=['test_connect_spines'], extensions=['png'], remove_text=True)
