@@ -895,7 +895,6 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
     --------
     seaborn.factorplot
 
-
     """
 
     def format_col(colname):
