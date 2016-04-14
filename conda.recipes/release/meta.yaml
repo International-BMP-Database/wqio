@@ -1,10 +1,10 @@
 package:
   name: wqio
-  version: !!str 0.3.2
+  version: "0.4.0"
 
 source:
   git_url: https://github.com/Geosyntec/wqio.git
-  git_tag: v0.3.2
+  git_tag: v0.4.0
 #  patches:
    # List any patch files here
    # - fix.patch
@@ -16,24 +16,26 @@ requirements:
   build:
     - python
     - setuptools
-    - pandas>=0.18
+    - pandas
     - numpy
     - scipy
     - matplotlib
     - numexpr
     - statsmodels
     - seaborn
+    - mpl-probscale
 
   run:
     - python
     - setuptools
-    - pandas>=0.18
+    - pandas
     - seaborn
     - statsmodels
     - numexpr
     - openpyxl
     - xlrd
     - six
+    - mpl-probscale
 
 test:
   requires:
