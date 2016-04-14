@@ -148,6 +148,7 @@ def setup_jointplot():
 
     return df
 
+
 @image_comparison(
     baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
                      'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
@@ -467,7 +468,6 @@ def test_logLabelFormatter_alt():
     ax.set_yscale('log')
     ax.set_ylim([0.0001, 1e7])
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
-
 
 
 @image_comparison(
