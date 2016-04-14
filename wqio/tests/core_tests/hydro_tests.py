@@ -103,6 +103,22 @@ class base_HydroRecordMixin(object):
         )
 
 
+@image_comparison(baseline_images=['HR_histogram_simple'], extensions=['png'])
+def test_HydroRecord_histogram():
+    stormfile = makePath('teststorm_simple.csv')
+    orig_record = pandas.read_csv(
+        stormfile, index_col='date', parse_dates=True
+    ).resample('5T').asfreq().fillna(0)
+    hr = hydro.HydroRecord(
+        orig_record, precipcol='rain', inflowcol='influent',
+        outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
+        intereventHours=3
+    )
+
+    fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
+
+
+
 class test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
         self.known_ie_hours = 3
