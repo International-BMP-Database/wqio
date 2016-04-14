@@ -26,10 +26,10 @@ class TestBootStrappers(object):
         self.data = testing.getTestROSData()['res'].values
         self.statfxn = np.mean
         self.alpha = 0.10
-        self.NIter = 2500
+        self.NIter = 10000
         self.known_res = self.statfxn(self.data)
-        self.known_BCA_ci = np.array([8.74244187, 11.71177557])
-        self.known_pct_ci = np.array([8.70867143, 11.68634286])
+        self.known_BCA_ci = np.array([8.686, 11.661])
+        self.known_pct_ci = np.array([8.670, 11.647])
 
     @testing.seed
     def test_BCA(self):
@@ -50,7 +50,7 @@ class test_Stat:
         self.data = testing.getTestROSData()
         self.statfxn = np.mean
         self.alpha = 0.10
-        self.NIter = 2500
+        self.NIter = 10000
         self.bsStat = bootstrap.Stat(np.array(self.data.res), statfxn=self.statfxn,
                                      alpha=self.alpha, NIter=self.NIter)
 

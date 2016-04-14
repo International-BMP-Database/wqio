@@ -57,7 +57,7 @@ def _make_boot_index(elements, niter):
         sample a dataset ``niter`` times.
 
     """
-    return np.random.random_integers(low=0, high=elements-1, size=(niter, elements))
+    return np.random.randint(low=0, high=elements, size=(niter, elements))
 
 
 def BCA(data, statfxn, niter=5000, alpha=0.05):
