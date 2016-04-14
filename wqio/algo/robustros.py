@@ -42,7 +42,7 @@ def _ros_sort(dataframe, result='res', censorship='cen'):
 
     return censored.append(uncensored)
 
-
+@np.deprecate(new_name="ros.ros")
 class RobustROSEstimator(object):
     """
     Class to implement the Robust regression-on-order statistics (ROS)
@@ -111,7 +111,6 @@ class RobustROSEstimator(object):
     change dramatically in subsequent releases.
 
     """
-
     def __init__(self, data=None, result='res', censorship='cen',
                  min_uncensored=2, max_fraction_censored=0.8,
                  transform_in=np.log, transform_out=np.exp,
@@ -326,6 +325,7 @@ class RobustROSEstimator(object):
         ND_plotpos.values.sort()
         data.loc[data[self.censorship_name], 'plot_pos'] = ND_plotpos
 
+    @np.deprecate
     def estimate(self):
         """
         Estimates the values of the censored data

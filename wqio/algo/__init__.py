@@ -1,3 +1,3 @@
 from . import bootstrap
 from .robustros import RobustROSEstimator
-from . import fros
+from .ros import ROS, cohn_numbers

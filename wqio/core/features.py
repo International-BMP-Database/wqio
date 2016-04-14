@@ -266,7 +266,7 @@ class Location(object):
                 df = self.raw_data.copy()
                 df[self.cencol] = df[self.qualcol].isin(self.ndvals)
                 if self.useROS:
-                    ros = algo.fros.ros(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
+                    ros = algo.ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
                     self._dataframe = ros[['final', self.cencol]]
                 else:
                     self._dataframe = df[[self.rescol, self.cencol]]
@@ -1784,7 +1784,7 @@ class DataCollection(object):
     def tidy(self):
         if self.useROS:
             def fxn(g):
-                rosdf = algo.fros.ros(df=g, result=self._raw_rescol,
+                rosdf = algo.ROS(df=g, result=self._raw_rescol,
                                       censorship=self.cencol, as_array=False)
                 rosdf = rosdf.rename(columns={'final': self.roscol})
                 return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
