@@ -36,11 +36,10 @@ def _ros_sort(dataframe, result='res', censorship='cen'):
     uncensored = dataframe[~dataframe[censorship]].sort_values(by=result)
 
     if censored[result].max() > uncensored[result].max():
-        msg = "Dropping censored results greater than the max uncensored result."
-        warnings.warn(msg)
         censored = censored[censored[result] <= uncensored[result].max()]
 
     return censored.append(uncensored)
+
 
 @np.deprecate(new_name="ros.ros")
 class RobustROSEstimator(object):
