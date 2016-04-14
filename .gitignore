@@ -68,8 +68,8 @@ src/*/tests/*.tex
 src/*/tests/*.xlsx
 .noseids
 .coverage
-wqio.egg-info/*
-result_images/*
+wqio.egg-info
+result_images
 
 # scratch files #
 #################

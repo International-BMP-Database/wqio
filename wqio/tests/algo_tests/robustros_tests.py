@@ -383,7 +383,8 @@ class testROS_HalfDLs80pctNDs(CheckROSMixin):
     known_cohn_nuncen_above = np.array([0., 0., 0., 0., 0., 0., 0., 3., np.nan])
     known_cohn_nobs_below = np.array([6., 7., 8., 9., 12., 13., 14., 15., np.nan])
     known_cohnncen_equal = np.array([6., 1., 1., 1., 3., 1., 1., 1., np.nan])
-    known_cohn_prob_exceedance = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0.])
+    known_cohn_prob_exceedance = np.array([0.1667, 0.1667, 0.1667, 0.1667, 0.1667,
+                                           0.1667, 0.1667, 0.1667, 0.])
     known_plot_pos = np.array([
         0.038,  0.092,  0.146,  0.201,  0.255,  0.309,  0.364,  0.418,
         0.473,  0.527,  0.582,  0.636,  0.691,  0.745,  0.799,  0.854,
@@ -409,7 +410,7 @@ class testROS_HalfDLs1noncensored(CheckROSMixin):
     known_cohn_nuncen_above = np.array([0., 1., np.nan])
     known_cohn_nobs_below = np.array([2., 3., np.nan])
     known_cohnncen_equal = np.array([2., 1., np.nan])
-    known_cohn_prob_exceedance = np.array([0., 0., 0.])
+    known_cohn_prob_exceedance = np.array([0.25, 0.25, 0.])
     known_plot_pos = np.array([ 0.159,  0.385,  0.615,  0.841])
 
     known_modeled = np.array([0.5,   0.5,   6. ,  15.])

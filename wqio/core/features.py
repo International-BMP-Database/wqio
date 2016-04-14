@@ -253,7 +253,9 @@ class Location(object):
             self.ndvals = ndval
 
         # original data and quantity
-        self.raw_data = dataframe
+        self.raw_data = dataframe.assign(
+            **{self.cencol: dataframe[qualcol].isin(self.ndvals)}
+        )
         self._dataframe = None
         self._data = None
 
@@ -264,8 +266,8 @@ class Location(object):
                 df = self.raw_data.copy()
                 df[self.cencol] = df[self.qualcol].isin(self.ndvals)
                 if self.useROS:
-                    ros = algo.RobustROSEstimator(data=df, result=self.rescol, censorship=self.cencol)
-                    self._dataframe = ros._result_df[['modeled', self.cencol]]
+                    ros = algo.ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
+                    self._dataframe = ros[['final', self.cencol]]
                 else:
                     self._dataframe = df[[self.rescol, self.cencol]]
         return self._dataframe
@@ -279,7 +281,7 @@ class Location(object):
     def data(self):
         if self.hasData:
             if self.useROS:
-               output = self.dataframe['modeled'].values
+               output = self.dataframe['final'].values
             else:
                 output = self.dataframe[self.rescol].values
             return output
@@ -338,6 +340,7 @@ class Location(object):
         return self.ND/self.N
 
     @cache_readonly
+    @np.deprecate
     def ros(self):
         if self.hasData:
             data = self.filtered_data.assign(cen=self.filtered_data[self.qualcol].isin(self.ndvals))
@@ -846,8 +849,8 @@ class Location(object):
                     markerfacecolor=self.color, markeredgecolor='white',
                     linestyle='none', alpha=alpha)
         else:
-            y_nondet = self.raw_data[self.rescol][self.dataframe[self.cencol]]
-            y_detect = self.raw_data[self.rescol][~self.dataframe[self.cencol]]
+            y_nondet = self.raw_data.loc[self.raw_data[self.cencol], self.rescol]
+            y_detect = self.raw_data.loc[~self.raw_data[self.cencol], self.rescol]
 
             ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
                     markerfacecolor='none', markeredgecolor=self.color,
@@ -1781,9 +1784,9 @@ class DataCollection(object):
     def tidy(self):
         if self.useROS:
             def fxn(g):
-                rosdf = algo.RobustROSEstimator(data=g, result=self._raw_rescol,
-                                                censorship=self.cencol)._result_df
-                rosdf = rosdf.rename(columns={'modeled': self.roscol})
+                rosdf = algo.ROS(df=g, result=self._raw_rescol,
+                                      censorship=self.cencol, as_array=False)
+                rosdf = rosdf.rename(columns={'final': self.roscol})
                 return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
         else:
             def fxn(g):
