@@ -1,6 +1,6 @@
 package:
   name: wqio
-  version: 0.3.x
+  version: 0.4.x
 
 source:
   path: ../../
@@ -15,24 +15,26 @@ requirements:
   build:
     - python
     - setuptools
-    - pandas>=0.18
+    - pandas
     - numpy
     - scipy
     - matplotlib
     - numexpr
     - statsmodels
     - seaborn
+    - mpl-probscale
 
   run:
     - python
     - setuptools
-    - pandas>=0.18
+    - pandas
     - seaborn
     - statsmodels
     - numexpr
     - openpyxl
     - xlrd
     - six
+    - mpl-probscale
 
 test:
   requires:

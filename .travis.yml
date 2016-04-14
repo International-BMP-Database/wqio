@@ -31,12 +31,13 @@ install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
   - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl nose mock scipy
+  - conda install --yes mpl-probscale --channel=phobson
   - conda install --yes coverage docopt requests pyyaml
   - pip install coveralls
   - pip install .
 
 script:
-  - nosetests --with-coverage --cover-package=wqio --verbose
+  - python check_wqio.py
 
 after_success:
   - if [ ${COVERAGE} = true ]; then coveralls; fi
