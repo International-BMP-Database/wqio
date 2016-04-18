@@ -9,7 +9,7 @@ source:
    # - fix.patch
 
 build:
-  number: 2
+  number: 3
 
 requirements:
   build:
@@ -23,6 +23,7 @@ requirements:
     - statsmodels
     - seaborn
     - mpl-probscale
+    - nose
 
   run:
     - python
@@ -35,6 +36,7 @@ requirements:
     - xlrd
     - six
     - mpl-probscale
+    - nose
 
 test:
   requires:
