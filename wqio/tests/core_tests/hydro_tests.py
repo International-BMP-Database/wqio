@@ -3,31 +3,23 @@ import sys
 import datetime
 from pkg_resources import resource_filename
 
-import numpy as np
+import numpy
 import pandas
 
-import nose.tools as nt
+import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
-
 from wqio import testing
-from wqio.testing.testutils import assert_timestamp_equal
-usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
-matplotlib.rcParams['text.usetex'] = False
-from matplotlib.testing.decorators import image_comparison, cleanup
-import matplotlib.pyplot as plt
-import seaborn
+matplotlib.use('agg')
+from matplotlib import pyplot
 
 from wqio.core import hydro
-from wqio import utils
 
 
-@nt.nottest
-def makePath(filename):
-    path = resource_filename("wqio.data", filename)
-    return path
+BASELINE_IMAGES = '../_baseline_images/core_tests/hydro_tests'
+
 
 class fakeStormSublcass(hydro.Storm):
     is_subclassed = True
@@ -41,71 +33,68 @@ class base_HydroRecordMixin(object):
         'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
     ]
     def teardown(self):
-        plt.close('all')
+        pyplot.close('all')
 
     def test_attributes(self):
-        nt.assert_true(hasattr(self.hr, '_raw_data'))
-        nt.assert_true(isinstance(self.hr._raw_data, pandas.DataFrame))
+        assert hasattr(self.hr, '_raw_data')
+        assert isinstance(self.hr._raw_data, pandas.DataFrame)
 
 
-        nt.assert_true(hasattr(self.hr, 'data'))
-        nt.assert_true(isinstance(self.hr.data, pandas.DataFrame))
-        nt.assert_true(isinstance(self.hr.data.index, pandas.DatetimeIndex))
+        assert hasattr(self.hr, 'data')
+        assert isinstance(self.hr.data, pandas.DataFrame)
+        assert isinstance(self.hr.data.index, pandas.DatetimeIndex)
         for col in self.known_std_columns:
-            nt.assert_true(col in self.hr.data.columns.tolist())
+            assert col in self.hr.data.columns.tolist()
 
-        nt.assert_true(hasattr(self.hr, 'all_storms'))
-        nt.assert_true(isinstance(self.hr.all_storms, dict))
+        assert hasattr(self.hr, 'all_storms')
+        assert isinstance(self.hr.all_storms, dict)
 
-        nt.assert_true(hasattr(self.hr, 'storms'))
-        nt.assert_true(isinstance(self.hr.storms, dict))
+        assert hasattr(self.hr, 'storms')
+        assert isinstance(self.hr.storms, dict)
 
-        nt.assert_true(hasattr(self.hr, 'storm_stats'))
-        nt.assert_true(isinstance(self.hr.storm_stats, pandas.DataFrame))
+        assert hasattr(self.hr, 'storm_stats')
+        assert isinstance(self.hr.storm_stats, pandas.DataFrame)
 
     def test_check_type_and_columns(self):
-        nt.assert_true(isinstance(self.hr.data, pandas.DataFrame))
+        assert isinstance(self.hr.data, pandas.DataFrame)
 
     def test_check_nan_col(self):
-        nt.assert_true(np.all(np.isnan(self.hr.data['outflow'])))
+        assert numpy.all(numpy.isnan(self.hr.data['outflow']))
 
     def test_number_storms(self):
         last_storm = self.hr.data['storm'].max()
-        nt.assert_equal(last_storm, self.known_number_of_storms)
+        assert last_storm == self.known_number_of_storms
 
     def test_first_storm_start(self):
         storm1 = self.hr.data[self.hr.data['storm'] == 1]
-        assert_timestamp_equal(storm1.index[0], self.known_storm1_start)
+        assert storm1.index[0] == self.known_storm1_start
 
     def test_first_storm_end(self):
         storm1 = self.hr.data[self.hr.data['storm'] == 1]
-        assert_timestamp_equal(storm1.index[-1], self.known_storm1_end)
+        assert storm1.index[-1] == self.known_storm1_end
 
     def test_second_storm_start(self):
         storm2 = self.hr.data[self.hr.data['storm'] == 2]
-        assert_timestamp_equal(storm2.index[0], self.known_storm2_start)
+        assert storm2.index[0] == self.known_storm2_start
 
     def test_second_storm_end(self):
         storm2 = self.hr.data[self.hr.data['storm'] == 2]
-        assert_timestamp_equal(storm2.index[-1], self.known_storm2_end)
+        assert storm2.index[-1] == self.known_storm2_end
 
     def test_interevent_stuff(self):
-        nt.assert_true(hasattr(self.hr, 'intereventPeriods'))
-        nt.assert_true(hasattr(self.hr, 'intereventHours'))
+        assert hasattr(self.hr, 'intereventPeriods')
+        assert hasattr(self.hr, 'intereventHours')
 
-        nt.assert_equal(self.hr.intereventPeriods, self.known_ie_periods)
-        nt.assert_equal(self.hr.intereventHours, self.known_ie_hours)
+        assert self.hr.intereventPeriods == self.known_ie_periods
+        assert self.hr.intereventHours == self.known_ie_hours
 
     def test_storm_stat_columns(self):
-        nt.assert_list_equal(
-            self.known_storm_stats_columns,
-            self.hr.storm_stats.columns.tolist()
-        )
+        assert self.known_storm_stats_columns == self.hr.storm_stats.columns.tolist()
 
 
-@image_comparison(baseline_images=['HR_histogram_simple'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_HydroRecord_histogram():
-    stormfile = makePath('teststorm_simple.csv')
+    stormfile = testing.test_data_path('teststorm_simple.csv')
     orig_record = pandas.read_csv(
         stormfile, index_col='date', parse_dates=True
     ).resample('5T').asfreq().fillna(0)
@@ -116,10 +105,10 @@ def test_HydroRecord_histogram():
     )
 
     fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
+    return fig
 
 
-
-class test_HydroRecord_Simple(base_HydroRecordMixin):
+class Test_HydroRecord_Simple(base_HydroRecordMixin):
     def setup(self):
         self.known_ie_hours = 3
         self.known_ie_periods = 36
@@ -129,12 +118,12 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = makePath('teststorm_simple.csv')
+        self.storm_file = testing.test_data_path('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
-            'Antecedent Days': [np.nan, 0.708333],
+            'Antecedent Days': [numpy.nan, 0.708333],
             'Peak Precip Intensity': [1.200, 1.200],
             'Total Precip Depth': [2.76, 4.14],
         })
@@ -153,8 +142,8 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_storm = 2
 
     def test_storm_attr_lengths(self):
-        nt.assert_equal(len(self.hr.storms), self.known_number_of_bigstorms)
-        nt.assert_equal(len(self.hr.all_storms), self.known_number_of_storms)
+        assert len(self.hr.storms) == self.known_number_of_bigstorms
+        assert len(self.hr.all_storms) == self.known_number_of_storms
 
     def test_storm_stats(self):
 
@@ -169,50 +158,50 @@ class test_HydroRecord_Simple(base_HydroRecordMixin):
 
     def test_getStormFromTimestamp_basic(self):
         sn, storm = self.hr.getStormFromTimestamp(self.storm_date)
-        nt.assert_equal(sn, self.known_storm)
-        nt.assert_true(storm is None)
+        assert sn == self.known_storm
+        assert storm is None
 
     def test_getStormFromTimestamp_string(self):
         datestring = '{}'.format(self.storm_date)
         sn, storm = self.hr.getStormFromTimestamp(datestring)
-        nt.assert_equal(sn, self.known_storm)
-        nt.assert_true(storm is None)
+        assert sn == self.known_storm
+        assert storm is None
 
     def test_getStormFromTimestamp_datetime(self):
         pydt = self.storm_date.to_pydatetime()
         sn, storm = self.hr.getStormFromTimestamp(pydt)
-        nt.assert_equal(sn, self.known_storm)
-        nt.assert_true(storm is None)
+        assert sn == self.known_storm
+        assert storm is None
 
     def test_getStormFromTimestamp_small(self):
         sn, storm = self.hr.getStormFromTimestamp(self.storm_date, smallstorms=True)
-        nt.assert_equal(sn, self.known_storm)
-        nt.assert_true(isinstance(storm, hydro.Storm))
+        assert sn == self.known_storm
+        assert isinstance(storm, hydro.Storm)
 
 
     def test_getStormFromTimestame_big(self):
         sn, storm = self.hr.getStormFromTimestamp(self.known_storm1_start)
-        nt.assert_equal(sn, 1)
-        nt.assert_true(isinstance(storm, hydro.Storm))
+        assert sn == 1
+        assert isinstance(storm, hydro.Storm)
 
     def test_getStormFromTimestamp_lookback_6(self):
         sn, storm = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=6)
-        nt.assert_equal(sn, self.known_storm)
+        assert sn == self.known_storm
 
     def test_getStormFromTimestamp_lookback_2(self):
         sn, storm = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=2)
-        nt.assert_equal(sn, None)
+        assert sn is None
 
-    @nt.raises(ValueError)
     def test_getStormFromTimestamp_bad_date(self):
-        self.hr.getStormFromTimestamp('junk')
+        with pytest.raises(ValueError):
+            self.hr.getStormFromTimestamp('junk')
 
-    @nt.raises(ValueError)
     def test_getStormFromTimestamp_bad_lookback(self):
-        sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=-3)
+        with pytest.raises(ValueError):
+            sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=-3)
 
 
-class test_HydroRecord_Singular(base_HydroRecordMixin):
+class Test_HydroRecord_Singular(base_HydroRecordMixin):
     def setup(self):
         self.known_ie_hours = 3
         self.known_ie_periods = 36
@@ -221,7 +210,7 @@ class test_HydroRecord_Singular(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 07:00')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 07:05')
-        self.storm_file = makePath('teststorm_singular.csv')
+        self.storm_file = testing.test_data_path('teststorm_singular.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -233,7 +222,7 @@ class test_HydroRecord_Singular(base_HydroRecordMixin):
         )
 
 
-class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
+class Test_HydroRecord_FirstObservation(base_HydroRecordMixin):
     def setup(self):
         self.known_ie_hours = 3
         self.known_ie_periods = 36
@@ -242,7 +231,7 @@ class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = makePath('teststorm_firstobs.csv')
+        self.storm_file = testing.test_data_path('teststorm_firstobs.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -254,7 +243,7 @@ class test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         )
 
 
-class testHydroRecord_diffStormClass(base_HydroRecordMixin):
+class TestHydroRecord_diffStormClass(base_HydroRecordMixin):
     def setup(self):
         self.known_ie_hours = 3
         self.known_ie_periods = 36
@@ -263,7 +252,7 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = makePath('teststorm_simple.csv')
+        self.storm_file = testing.test_data_path('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
@@ -288,13 +277,13 @@ class testHydroRecord_diffStormClass(base_HydroRecordMixin):
 
     def test_subclassed_storms(self):
         for sn in self.hr.all_storms:
-            nt.assert_true(self.hr.all_storms[sn].is_subclassed)
+            assert self.hr.all_storms[sn].is_subclassed
 
 
-class test_Storm(object):
+class Test_Storm(object):
     def setup(self):
         # path stuff
-        self.storm_file = makePath('teststorm_simple.csv')
+        self.storm_file = testing.test_data_path('teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
@@ -339,126 +328,122 @@ class test_Storm(object):
         self.known_centroid_lag_time = 0.255672966
 
     def teardown(self):
-        plt.close('all')
+        pyplot.close('all')
         pass
 
-    @nt.nottest
-    def makePath(self, filename):
-        return os.path.join(self.prefix, filename)
-
     def test_columns(self):
-        nt.assert_list_equal(self.known_columns, self.storm.data.columns.tolist())
+        assert self.known_columns == self.storm.data.columns.tolist()
 
     def test_index_type(self):
-        nt.assert_true(isinstance(self.storm.data.index, pandas.DatetimeIndex))
+        assert isinstance(self.storm.data.index, pandas.DatetimeIndex)
 
     def test_start(self):
-        nt.assert_true(hasattr(self.storm, 'start'))
-        assert_timestamp_equal(self.storm.start, self.known_start)
+        assert hasattr(self.storm, 'start')
+        assert self.storm.start == self.known_start
 
     def test_end(self):
-        nt.assert_true(hasattr(self.storm, 'end'))
-        assert_timestamp_equal(self.storm.end, self.known_end)
+        assert hasattr(self.storm, 'end')
+        assert self.storm.end == self.known_end
 
     def test_season(self):
-        nt.assert_true(hasattr(self.storm, 'season'))
-        nt.assert_equal(self.storm.season, self.known_season)
+        assert hasattr(self.storm, 'season')
+        assert self.storm.season == self.known_season
 
     def test_season_setter(self):
         self.storm.season = 'spring'
-        nt.assert_equal(self.storm.season, 'spring')
+        assert self.storm.season == 'spring'
 
     def test_precip_start(self):
-        nt.assert_true(hasattr(self.storm, 'precip_start'))
-        assert_timestamp_equal(self.storm.precip_start, self.known_precip_start)
+        assert hasattr(self.storm, 'precip_start')
+        assert self.storm.precip_start == self.known_precip_start
 
     def test_precip_end(self):
-        nt.assert_true(hasattr(self.storm, 'precip_end'))
-        assert_timestamp_equal(self.storm.precip_end, self.known_precip_end)
+        assert hasattr(self.storm, 'precip_end')
+        assert self.storm.precip_end == self.known_precip_end
 
     def test_inflow_start(self):
-        nt.assert_true(hasattr(self.storm, 'inflow_start'))
-        assert_timestamp_equal(self.storm.inflow_start, self.known_inflow_start)
+        assert hasattr(self.storm, 'inflow_start')
+        assert self.storm.inflow_start == self.known_inflow_start
 
     def test_inflow_end(self):
-        nt.assert_true(hasattr(self.storm, 'inflow_end'))
-        assert_timestamp_equal(self.storm.inflow_end, self.known_inflow_end)
+        assert hasattr(self.storm, 'inflow_end')
+        assert self.storm.inflow_end == self.known_inflow_end
 
     def test_outflow_start(self):
-        nt.assert_true(hasattr(self.storm, 'outflow_start'))
-        assert_timestamp_equal(self.storm.outflow_start, self.known_outflow_start)
+        assert hasattr(self.storm, 'outflow_start')
+        assert self.storm.outflow_start == self.known_outflow_start
 
     def test_outflow_end(self):
-        nt.assert_true(hasattr(self.storm, 'outflow_end'))
-        assert_timestamp_equal(self.storm.outflow_end, self.known_outflow_end)
+        assert hasattr(self.storm, 'outflow_end')
+        assert self.storm.outflow_end == self.known_outflow_end
 
     def test_duration_hours(self):
-        nt.assert_true(hasattr(self.storm, 'duration_hours'))
-        nptest.assert_almost_equal(self.storm.duration_hours, self.known_duration_hours)
+        assert hasattr(self.storm, 'duration_hours')
+        assert abs(self.storm.duration_hours - self.known_duration_hours) < 0.0001
 
     def test_antecedent_period_days(self):
-        nt.assert_true(hasattr(self.storm, 'antecedent_period_days'))
-        nptest.assert_almost_equal(self.storm.antecedent_period_days, self.known_antecedent_period_days)
+        assert hasattr(self.storm, 'antecedent_period_days')
+        assert abs(self.storm.antecedent_period_days - self.known_antecedent_period_days) < 0.0001
 
     def test_peak_precip_intensity(self):
-        nt.assert_true(hasattr(self.storm, 'peak_precip_intensity'))
-        nptest.assert_almost_equal(self.storm.peak_precip_intensity, self.known_peak_precip_intensity)
+        assert hasattr(self.storm, 'peak_precip_intensity')
+        assert abs(self.storm.peak_precip_intensity - self.known_peak_precip_intensity) < 0.0001
 
     def test_peak_inflow(self):
-        nt.assert_true(hasattr(self.storm, 'peak_inflow'))
-        nptest.assert_almost_equal(self.storm.peak_inflow, self.known_peak_inflow)
+        assert hasattr(self.storm, 'peak_inflow')
+        assert abs(self.storm.peak_inflow - self.known_peak_inflow) < 0.0001
 
     def test_peak_outflow(self):
-        nt.assert_true(hasattr(self.storm, 'peak_outflow'))
-        nptest.assert_almost_equal(self.storm.peak_outflow, self.known_peak_outflow)
+        assert hasattr(self.storm, 'peak_outflow')
+        assert abs(self.storm.peak_outflow - self.known_peak_outflow) < 0.0001
 
     def test_peak_precip_intensity_time(self):
-        nt.assert_true(hasattr(self.storm, 'peak_precip_intensity_time'))
-        assert_timestamp_equal(self.storm.peak_precip_intensity_time, self.known_peak_precip_intensity_time)
+        assert hasattr(self.storm, 'peak_precip_intensity_time')
+        assert self.storm.peak_precip_intensity_time == self.known_peak_precip_intensity_time
 
     def test_peak_inflow_time(self):
-        nt.assert_true(hasattr(self.storm, 'peak_inflow_time'))
-        assert_timestamp_equal(self.storm.peak_inflow_time, self.known_peak_inflow_time)
+        assert hasattr(self.storm, 'peak_inflow_time')
+        assert self.storm.peak_inflow_time == self.known_peak_inflow_time
 
     def test_peak_outflow_time(self):
-        nt.assert_true(hasattr(self.storm, 'peak_outflow_time'))
-        assert_timestamp_equal(self.storm.peak_outflow_time, self.known_peak_outflow_time)
+        assert hasattr(self.storm, 'peak_outflow_time')
+        assert self.storm.peak_outflow_time == self.known_peak_outflow_time
 
     def test_centroid_precip(self):
-        nt.assert_true(hasattr(self.storm, 'centroid_precip_time'))
-        assert_timestamp_equal(self.storm.centroid_precip_time, self.known_centroid_precip)
+        assert hasattr(self.storm, 'centroid_precip_time')
+        assert self.storm.centroid_precip_time.strftime('%x %X') == self.known_centroid_precip.strftime('%x %X')
 
     def test_centroid_inflow(self):
-        nt.assert_true(hasattr(self.storm, 'centroid_inflow_time'))
-        assert_timestamp_equal(self.storm.centroid_inflow_time, self.known_centroid_inflow)
+        assert hasattr(self.storm, 'centroid_inflow_time')
+        assert self.storm.centroid_inflow_time.strftime('%x %X') == self.known_centroid_inflow.strftime('%x %X')
 
     def test_centroid_outflow(self):
-        nt.assert_true(hasattr(self.storm, 'centroid_outflow_time'))
-        assert_timestamp_equal(self.storm.centroid_outflow_time, self.known_centroid_outflow)
+        assert hasattr(self.storm, 'centroid_outflow_time')
+        assert self.storm.centroid_outflow_time.strftime('%x %X') == self.known_centroid_outflow.strftime('%x %X')
 
     def test_total_precip_depth(self):
-        nt.assert_true(hasattr(self.storm, 'total_precip_depth'))
-        nptest.assert_almost_equal(self.storm.total_precip_depth, self.known_total_precip_depth)
+        assert hasattr(self.storm, 'total_precip_depth')
+        assert abs(self.storm.total_precip_depth - self.known_total_precip_depth) < 0.0001
 
     def test_total_inflow_volume(self):
-        nt.assert_true(hasattr(self.storm, 'total_inflow_volume'))
-        nptest.assert_almost_equal(self.storm.total_inflow_volume, self.known_total_inflow_volume)
+        assert hasattr(self.storm, 'total_inflow_volume')
+        assert abs(self.storm.total_inflow_volume - self.known_total_inflow_volume) < 0.0001
 
     def test_total_outflow_volume(self):
-        nt.assert_true(hasattr(self.storm, 'total_outflow_volume'))
-        nptest.assert_almost_equal(self.storm.total_outflow_volume, self.known_total_outflow_volume)
+        assert hasattr(self.storm, 'total_outflow_volume')
+        assert abs(self.storm.total_outflow_volume - self.known_total_outflow_volume) < 0.0001
 
     def test_peak_lag_hours(self):
-        nt.assert_true(hasattr(self.storm, 'peak_lag_hours'))
-        nptest.assert_almost_equal(self.storm.peak_lag_hours, self.known_peak_lag_time)
+        assert hasattr(self.storm, 'peak_lag_hours')
+        assert abs(self.storm.peak_lag_hours - self.known_peak_lag_time) < 0.0001
 
     def test_centroid_lag_hours(self):
-        nt.assert_true(hasattr(self.storm, 'centroid_lag_hours'))
-        nptest.assert_almost_equal(self.storm.centroid_lag_hours, self.known_centroid_lag_time)
+        assert hasattr(self.storm, 'centroid_lag_hours')
+        assert abs(self.storm.centroid_lag_hours - self.known_centroid_lag_time) < 0.0001
 
     def test_summary_dict(self):
-        nt.assert_true(hasattr(self.storm, 'summary_dict'))
-        nt.assert_true(isinstance(self.storm.summary_dict, dict))
+        assert hasattr(self.storm, 'summary_dict')
+        assert isinstance(self.storm.summary_dict, dict)
         known_keys = [
             'Storm Number',
             'Antecedent Days',
@@ -476,17 +461,16 @@ class test_Storm(object):
             'Season'
         ]
         keys = list(self.storm.summary_dict.keys())
-        nt.assert_list_equal(sorted(keys), sorted(known_keys))
+        assert sorted(keys) == sorted(known_keys)
 
     def test_is_small(self):
-        nt.assert_true(self.storm.is_small(minprecip=5.0))
-        nt.assert_false(self.storm.is_small(minprecip=1.0))
+        assert self.storm.is_small(minprecip=5.0)
+        assert not self.storm.is_small(minprecip=1.0)
 
 
-@nt.nottest
 def setup_storm():
-    plt.rcdefaults()
-    storm_file = makePath('teststorm_simple.csv')
+    pyplot.rcdefaults()
+    storm_file = testing.test_data_path('teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )
             .resample('5T').asfreq()
@@ -501,7 +485,8 @@ def setup_storm():
 
     return hr.storms[2]
 
-@image_comparison(baseline_images=['test_stormplot'], extensions=['png'])
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_plot_storm_summary():
     storm = setup_storm()
     def doplot(storm):
@@ -514,9 +499,10 @@ def test_plot_storm_summary():
         return fig
 
     fig = doplot(storm)
+    return fig
 
 
-class test_DrainageArea(object):
+class Test_DrainageArea(object):
     def setup(self):
         self.total_area = 100.0
         self.imp_area = 75.0
@@ -530,34 +516,34 @@ class test_DrainageArea(object):
         self.annualFactor = 0.9
 
     def test_total_area(self):
-        nt.assert_true(hasattr(self.da, 'total_area'))
-        nt.assert_equal(self.total_area, self.da.total_area)
+        assert hasattr(self.da, 'total_area')
+        assert self.total_area == self.da.total_area
 
     def test_imp_area(self):
-        nt.assert_true(hasattr(self.da, 'imp_area'))
-        nt.assert_equal(self.imp_area, self.da.imp_area)
+        assert hasattr(self.da, 'imp_area')
+        assert self.imp_area == self.da.imp_area
 
     def test_bmp_area(self):
-        nt.assert_true(hasattr(self.da, 'bmp_area'))
-        nt.assert_equal(self.bmp_area, self.da.bmp_area)
+        assert hasattr(self.da, 'bmp_area')
+        assert self.bmp_area == self.da.bmp_area
 
     def test_simple_method_noConversion(self):
-        nt.assert_true(hasattr(self.da, 'simple_method'))
+        assert hasattr(self.da, 'simple_method')
         runoff = self.da.simple_method(1)
-        nptest.assert_almost_equal(self.known_storm_runoff, runoff, decimal=3)
-        nt.assert_greater(self.storm_volume, runoff)
+        assert abs(self.known_storm_runoff - runoff) < 0.001
+        assert self.storm_volume > runoff
 
     def test_simple_method_Conversion(self):
-        nt.assert_true(hasattr(self.da, 'simple_method'))
+        assert hasattr(self.da, 'simple_method')
         runoff = self.da.simple_method(1, volume_conversion=self.volume_conversion)
-        nptest.assert_almost_equal(self.known_storm_runoff * self.volume_conversion, runoff, decimal=3)
-        nt.assert_greater(self.storm_volume * self.volume_conversion, runoff)
+        assert abs(self.known_storm_runoff * self.volume_conversion - runoff) < 0.001
+        assert self.storm_volume * self.volume_conversion > runoff
 
     def test_simple_method_annualFactor(self):
-        nt.assert_true(hasattr(self.da, 'simple_method'))
+        assert hasattr(self.da, 'simple_method')
         runoff = self.da.simple_method(1, annualFactor=self.annualFactor)
-        nptest.assert_almost_equal(self.known_annual_runoff, runoff, decimal=3)
-        nt.assert_greater(self.storm_volume, runoff)
+        assert abs(self.known_annual_runoff - runoff) < 0.001
+        assert self.storm_volume > runoff
 
     def teardown(self):
-        plt.close('all')
+        pyplot.close('all')

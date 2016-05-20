@@ -1,21 +1,20 @@
 import sys
 from textwrap import dedent
 
-import nose.tools as ntools
-import numpy
-import numpy.testing as npt
-from numpy.testing import dec
+import pytest
+import numpy.testing as nptest
 import pandas.util.testing as pdtest
-from wqio import testing
 
+import numpy
 import pandas
+from six import StringIO
 
+from wqio import testing
 from wqio.algo import ros
-from statsmodels.compat.python import StringIO
 
 
-@ntools.nottest
-def load_basic_data():
+@pytest.fixture
+def basic_data():
     df = (
         testing
             .getTestROSData()
@@ -25,8 +24,8 @@ def load_basic_data():
     return df
 
 
-@ntools.nottest
-def load_intermediate_data():
+@pytest.fixture
+def intermediate_data():
     df = pandas.DataFrame([
         {'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'rank': 1},
         {'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'rank': 2},
@@ -68,8 +67,8 @@ def load_intermediate_data():
     return df
 
 
-@ntools.nottest
-def load_advanced_data():
+@pytest.fixture
+def advanced_data():
     df = pandas.DataFrame([
         {'Zprelim': -1.4456202174142005, 'censored': True, 'conc': 5.0,
         'det_limit_index': 1, 'plot_pos': 0.07414187643020594, 'rank': 1},
@@ -146,8 +145,8 @@ def load_advanced_data():
     return df
 
 
-@ntools.nottest
-def load_basic_cohn():
+@pytest.fixture
+def basic_cohn():
     cohn = pandas.DataFrame([
         {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
          'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
@@ -167,94 +166,90 @@ def load_basic_cohn():
     return cohn
 
 
-class Test__ros_sort(object):
-    def setup(self):
-        self.df = load_basic_data()
-
-        self.expected_baseline = pandas.DataFrame([
-            {'censored': True,  'conc': 5.0},   {'censored': True,  'conc': 5.0},
-            {'censored': True,  'conc': 5.5},   {'censored': True,  'conc': 5.75},
-            {'censored': True,  'conc': 9.5},   {'censored': True,  'conc': 9.5},
-            {'censored': True,  'conc': 11.0},  {'censored': False, 'conc': 2.0},
-            {'censored': False, 'conc': 4.2},   {'censored': False, 'conc': 4.62},
-            {'censored': False, 'conc': 5.57},  {'censored': False, 'conc': 5.66},
-            {'censored': False, 'conc': 5.86},  {'censored': False, 'conc': 6.65},
-            {'censored': False, 'conc': 6.78},  {'censored': False, 'conc': 6.79},
-            {'censored': False, 'conc': 7.5},   {'censored': False, 'conc': 7.5},
-            {'censored': False, 'conc': 7.5},   {'censored': False, 'conc': 8.63},
-            {'censored': False, 'conc': 8.71},  {'censored': False, 'conc': 8.99},
-            {'censored': False, 'conc': 9.85},  {'censored': False, 'conc': 10.82},
-            {'censored': False, 'conc': 11.25}, {'censored': False, 'conc': 11.25},
-            {'censored': False, 'conc': 12.2},  {'censored': False, 'conc': 14.92},
-            {'censored': False, 'conc': 16.77}, {'censored': False, 'conc': 17.81},
-            {'censored': False, 'conc': 19.16}, {'censored': False, 'conc': 19.19},
-            {'censored': False, 'conc': 19.64}, {'censored': False, 'conc': 20.18},
-            {'censored': False, 'conc': 22.97},
-        ])[['conc', 'censored']]
-
-        self.expected_with_warning = self.expected_baseline.iloc[:-1]
-
-    def test_baseline(self):
-        result = ros._ros_sort(self.df, 'conc', 'censored')
-        pdtest.assert_frame_equal(result, self.expected_baseline)
-
-    def test_censored_greater_than_max(self):
-        df = self.df.copy()
-        max_row = df['conc'].argmax()
-        df.loc[max_row, 'censored'] = True
-        result = ros._ros_sort(df, 'conc', 'censored')
-        pdtest.assert_frame_equal(result, self.expected_with_warning)
+@pytest.fixture
+def expected_sorted():
+    expected_sorted = pandas.DataFrame([
+        {'censored': True,  'conc': 5.0},   {'censored': True,  'conc': 5.0},
+        {'censored': True,  'conc': 5.5},   {'censored': True,  'conc': 5.75},
+        {'censored': True,  'conc': 9.5},   {'censored': True,  'conc': 9.5},
+        {'censored': True,  'conc': 11.0},  {'censored': False, 'conc': 2.0},
+        {'censored': False, 'conc': 4.2},   {'censored': False, 'conc': 4.62},
+        {'censored': False, 'conc': 5.57},  {'censored': False, 'conc': 5.66},
+        {'censored': False, 'conc': 5.86},  {'censored': False, 'conc': 6.65},
+        {'censored': False, 'conc': 6.78},  {'censored': False, 'conc': 6.79},
+        {'censored': False, 'conc': 7.5},   {'censored': False, 'conc': 7.5},
+        {'censored': False, 'conc': 7.5},   {'censored': False, 'conc': 8.63},
+        {'censored': False, 'conc': 8.71},  {'censored': False, 'conc': 8.99},
+        {'censored': False, 'conc': 9.85},  {'censored': False, 'conc': 10.82},
+        {'censored': False, 'conc': 11.25}, {'censored': False, 'conc': 11.25},
+        {'censored': False, 'conc': 12.2},  {'censored': False, 'conc': 14.92},
+        {'censored': False, 'conc': 16.77}, {'censored': False, 'conc': 17.81},
+        {'censored': False, 'conc': 19.16}, {'censored': False, 'conc': 19.19},
+        {'censored': False, 'conc': 19.64}, {'censored': False, 'conc': 20.18},
+        {'censored': False, 'conc': 22.97},
+    ])[['conc', 'censored']]
+    return expected_sorted
 
 
-class Test_cohn_numbers(object):
-    def setup(self):
-        self.df = load_basic_data()
-        self.final_cols = ['lower_dl', 'upper_dl', 'nuncen_above', 'nobs_below',
-                           'ncen_equal', 'prob_exceedance']
-
-        self.expected_baseline = pandas.DataFrame([
-            {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
-             'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
-            {'lower_dl': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
-             'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.5},
-            {'lower_dl': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.75},
-            {'lower_dl': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
-             'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper_dl': 9.5},
-            {'lower_dl': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
-             'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper_dl': 11.0},
-            {'lower_dl': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
-             'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper_dl': numpy.inf},
-            {'lower_dl': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
-             'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper_dl': numpy.nan}
-        ])[self.final_cols]
-
-
-    def test_baseline(self):
-        result = ros.cohn_numbers(self.df, result='conc', censorship='censored')
-        pdtest.assert_frame_equal(result, self.expected_baseline)
-
-    def test_no_NDs(self):
-        result = ros.cohn_numbers(self.df.assign(qual=False), result='conc', censorship='qual')
-        ntools.assert_tuple_equal(result.shape, (0, 6))
+@pytest.fixture
+def expected_cohn():
+    final_cols = ['lower_dl', 'upper_dl', 'nuncen_above', 'nobs_below',
+                 'ncen_equal', 'prob_exceedance']
+    expected_cohn = pandas.DataFrame([
+        {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
+         'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
+        {'lower_dl': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
+         'nuncen_above': 0.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.5},
+        {'lower_dl': 5.5, 'ncen_equal': 1.0, 'nobs_below': 6.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.77757437070938218, 'upper_dl': 5.75},
+        {'lower_dl': 5.75, 'ncen_equal': 1.0, 'nobs_below': 9.0,
+         'nuncen_above': 10.0, 'prob_exceedance': 0.7034324942791762, 'upper_dl': 9.5},
+        {'lower_dl': 9.5, 'ncen_equal': 2.0, 'nobs_below': 21.0,
+         'nuncen_above': 2.0, 'prob_exceedance': 0.37391304347826088, 'upper_dl': 11.0},
+        {'lower_dl': 11.0, 'ncen_equal': 1.0, 'nobs_below': 24.0,
+         'nuncen_above': 11.0, 'prob_exceedance': 0.31428571428571428, 'upper_dl': numpy.inf},
+        {'lower_dl': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
+         'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper_dl': numpy.nan}
+    ])[final_cols]
+    return expected_cohn
 
 
-class Test__detection_limit_index(object):
-    def setup(self):
-        self.cohn = load_basic_cohn()
-        self.empty_cohn = pandas.DataFrame(numpy.empty((0, 7)))
+def test__ros_sort_baseline(basic_data, expected_sorted):
+    result = ros._ros_sort(basic_data, 'conc', 'censored')
+    pdtest.assert_frame_equal(result, expected_sorted)
 
-    def test_empty(self):
-        ntools.assert_equal(ros._detection_limit_index(None, self.empty_cohn), 0)
 
-    def test_populated(self):
-         ntools.assert_equal(ros._detection_limit_index(3.5, self.cohn), 0)
-         ntools.assert_equal(ros._detection_limit_index(6.0, self.cohn), 3)
-         ntools.assert_equal(ros._detection_limit_index(12.0, self.cohn), 5)
+def test__ros_sort_warning(basic_data, expected_sorted):
+    df = basic_data.copy()
+    max_row = df['conc'].argmax()
+    df.loc[max_row, 'censored'] = True
+    result = ros._ros_sort(df, 'conc', 'censored')
+    pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
 
-    @ntools.raises(IndexError)
-    def test_out_of_bounds(self):
-        ros._detection_limit_index(0, self.cohn)
+
+def test_cohn_numbers_baseline(basic_data, expected_cohn):
+    result = ros.cohn_numbers(basic_data, result='conc', censorship='censored')
+    pdtest.assert_frame_equal(result, expected_cohn)
+
+
+def test_cohn_numbers_no_NDs(basic_data):
+    result = ros.cohn_numbers(basic_data.assign(qual=False), result='conc', censorship='qual')
+    assert result.shape == (0, 6)
+
+
+def test__detection_limit_index_empty():
+    empty_cohn = pandas.DataFrame(numpy.empty((0, 7)))
+    assert ros._detection_limit_index(None, empty_cohn) == 0
+
+
+@pytest.mark.parametrize(('value', 'expected'), [(3.5, 0), (6.0, 3), (12.0, 5)])
+def test__detection_limit_index_populated(value, expected, basic_cohn):
+    result = ros._detection_limit_index(value, basic_cohn)
+    assert result == expected
+
+def test__detection_limit_index_out_of_bounds(basic_cohn):
+    with pytest.raises(IndexError):
+        ros._detection_limit_index(0, basic_cohn)
 
 
 def test__ros_group_rank():
@@ -269,42 +264,25 @@ def test__ros_group_rank():
     pdtest.assert_series_equal(result, expected)
 
 
-class Test__ros_plot_pos(object):
-    def setup(self):
-        self.cohn = load_basic_cohn()
-
-    def test_uncensored_1(self):
-        row = {'censored': False, 'det_limit_index': 2, 'rank': 1}
-        result = ros._ros_plot_pos(row, 'censored', self.cohn)
-        ntools.assert_equal(result, 0.24713958810068648)
-
-    def test_uncensored_2(self):
-        row = {'censored': False, 'det_limit_index': 2, 'rank': 12}
-        result = ros._ros_plot_pos(row, 'censored', self.cohn)
-        ntools.assert_equal(result, 0.51899313501144173)
-
-    def test_censored_1(self):
-        row = {'censored': True, 'det_limit_index': 5, 'rank': 4}
-        result = ros._ros_plot_pos(row, 'censored', self.cohn)
-        ntools.assert_equal(result, 1.3714285714285714)
-
-    def test_censored_2(self):
-        row = {'censored': True, 'det_limit_index': 4, 'rank': 2}
-        result = ros._ros_plot_pos(row, 'censored', self.cohn)
-        ntools.assert_equal(result, 0.41739130434782606)
+@pytest.mark.parametrize(('row', 'expected'), [
+    ({'censored': False, 'det_limit_index': 2, 'rank': 1},  0.24713958810068648),
+    ({'censored': False, 'det_limit_index': 2, 'rank': 12}, 0.51899313501144173),
+    ({'censored': True,  'det_limit_index': 5, 'rank': 4},  1.3714285714285714),
+    ({'censored': True,  'det_limit_index': 4, 'rank': 2},  0.41739130434782606),
+])
+def test__ros_plot_pos(row, expected, basic_cohn):
+    result = ros._ros_plot_pos(row, 'censored', basic_cohn)
+    assert abs(result - expected)/expected < 0.00001
 
 
 def test__norm_plot_pos():
     result = ros._norm_plot_pos([1, 2, 3, 4])
     expected = numpy.array([ 0.159104,  0.385452,  0.614548,  0.840896])
-    npt.assert_array_almost_equal(result, expected)
+    nptest.assert_array_almost_equal(result, expected)
 
 
-def test_plotting_positions():
-    df = load_intermediate_data()
-    cohn = load_basic_cohn()
-
-    results = ros.plotting_positions(df, 'censored', cohn)
+def test_plotting_positions(intermediate_data, basic_cohn):
+    results = ros.plotting_positions(intermediate_data, 'censored', basic_cohn)
     expected = numpy.array([
         0.07414188,  0.11121281,  0.14828375,  0.14828375,  0.20869565,
         0.34285714,  0.4173913 ,  0.05560641,  0.11121281,  0.16681922,
@@ -314,10 +292,10 @@ def test_plotting_positions():
         0.73809524,  0.76428571,  0.79047619,  0.81666667,  0.84285714,
         0.86904762,  0.8952381 ,  0.92142857,  0.94761905,  0.97380952
     ])
-    npt.assert_array_almost_equal(results, expected)
+    nptest.assert_array_almost_equal(results, expected)
 
 
-def test__ros_estimate():
+def test__ros_estimate(advanced_data):
     expected = numpy.array([
          3.11279729,   3.60634338,   4.04602788,   4.04602788,
          4.71008116,   6.14010906,   6.97841457,   2.        ,
@@ -329,13 +307,13 @@ def test__ros_estimate():
         16.77      ,  17.81      ,  19.16      ,  19.19      ,
         19.64      ,  20.18      ,  22.97
     ])
-    df = load_advanced_data().pipe(ros._ros_estimate, 'conc', 'censored',
+    df = advanced_data.pipe(ros._ros_estimate, 'conc', 'censored',
                                    numpy.log, numpy.exp)
     result = df['final'].values
-    npt.assert_array_almost_equal(result, expected)
+    nptest.assert_array_almost_equal(result, expected)
 
 
-def test__do_ros():
+def test__do_ros(basic_data):
     expected = numpy.array([
          3.11279729,   3.60634338,   4.04602788,   4.04602788,
          4.71008116,   6.14010906,   6.97841457,   2.        ,
@@ -348,16 +326,16 @@ def test__do_ros():
         19.64      ,  20.18      ,  22.97
     ])
 
-    df = load_basic_data().pipe(ros._do_ros, 'conc', 'censored',
+    df = basic_data.pipe(ros._do_ros, 'conc', 'censored',
                                 numpy.log, numpy.exp)
     result = df['final'].values
-    npt.assert_array_almost_equal(result, expected)
+    nptest.assert_array_almost_equal(result, expected)
 
 
 class CheckROSMixin(object):
     def test_ros_df(self):
         result = ros.ROS(self.rescol, self.cencol, df=self.df)
-        npt.assert_array_almost_equal(
+        nptest.assert_array_almost_equal(
             sorted(result),
             sorted(self.expected_final),
             decimal=self.decimal
@@ -365,7 +343,7 @@ class CheckROSMixin(object):
 
     def test_ros_arrays(self):
         result = ros.ROS(self.df[self.rescol], self.df[self.cencol], df=None)
-        npt.assert_array_almost_equal(
+        nptest.assert_array_almost_equal(
             sorted(result),
             sorted(self.expected_final),
             decimal=self.decimal

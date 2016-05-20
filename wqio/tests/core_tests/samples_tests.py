@@ -1,120 +1,101 @@
-import os
-import sys
-import datetime
-from pkg_resources import resource_filename
-
-import numpy as np
 import pandas
 
-import nose.tools as nt
-import numpy.testing as nptest
-import pandas.util.testing as pdtest
-
+import pytest
 from wqio import testing
-from wqio.testing.testutils import assert_timestamp_equal
-usetex = testing.compare_versions(utility='latex')
 
 import matplotlib
-matplotlib.rcParams['text.usetex'] = False
-from matplotlib.testing.decorators import image_comparison, cleanup
-import matplotlib.pyplot as plt
-import seaborn
+matplotlib.use('agg')
+from matplotlib import pyplot
 
 from wqio.core import samples
-from wqio import utils
 
 
-@nt.nottest
-def makePath(filename):
-    path = resource_filename("wqio.data", filename)
-    return path
+BASELINE_IMAGES = '../_baseline_images/core_tests/samples_tests'
 
 
 class base_wqsampleMixin(object):
-    @nt.nottest
     def basic_setup(self):
         self.known_wqdata_type = pandas.DataFrame
         self.known_starttime_type = pandas.Timestamp
         self.known_endtime_type = pandas.Timestamp
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
-        datafile = makePath('test_wqsample_data.csv')
+        datafile = testing.test_data_path('test_wqsample_data.csv')
         self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
 
-    @nt.nottest
     def basic_teardown(self):
-        plt.close('all')
+        pyplot.close('all')
 
     def test_wqdata(self):
-        nt.assert_true(hasattr(self.wqs, 'wqdata'))
-        nt.assert_true(isinstance(self.wqs.wqdata, self.known_wqdata_type))
+        assert hasattr(self.wqs, 'wqdata')
+        assert isinstance(self.wqs.wqdata, self.known_wqdata_type)
 
     def test_starttime(self):
-        nt.assert_true(hasattr(self.wqs, 'starttime'))
-        nt.assert_true(isinstance(self.wqs.starttime, self.known_starttime_type))
+        assert hasattr(self.wqs, 'starttime')
+        assert isinstance(self.wqs.starttime, self.known_starttime_type)
 
     def test_endtime(self):
-        nt.assert_true(hasattr(self.wqs, 'endtime'))
-        nt.assert_true(isinstance(self.wqs.endtime, self.known_endtime_type))
+        assert hasattr(self.wqs, 'endtime')
+        assert isinstance(self.wqs.endtime, self.known_endtime_type)
 
     def test_season(self):
-        nt.assert_true(hasattr(self.wqs, 'season'))
-        nt.assert_equal(self.wqs.season, self.known_season)
+        assert hasattr(self.wqs, 'season')
+        assert self.wqs.season == self.known_season
 
     def test_season_setter(self):
         self.wqs.season = 'spring'
-        nt.assert_equal(self.wqs.season, 'spring')
+        assert self.wqs.season == 'spring'
 
     def test_samplefreq(self):
-        nt.assert_true(hasattr(self.wqs, 'samplefreq'))
-        nt.assert_equal(self.wqs.samplefreq, self.known_samplefreq)
+        assert hasattr(self.wqs, 'samplefreq')
+        assert self.wqs.samplefreq == self.known_samplefreq
 
     def test_sample_ts_form(self):
-        nt.assert_true(hasattr(self.wqs, 'sample_ts'))
-        nt.assert_true(isinstance(self.wqs.sample_ts, self.known_sample_ts_type))
+        assert hasattr(self.wqs, 'sample_ts')
+        assert isinstance(self.wqs.sample_ts, self.known_sample_ts_type)
 
     def test_sample_ts_start(self):
-        nt.assert_equal(self.wqs.sample_ts[0], pandas.Timestamp(self.known_starttime))
+        assert self.wqs.sample_ts[0] == pandas.Timestamp(self.known_starttime)
 
     def test_sample_ts_end(self):
-        nt.assert_equal(self.wqs.sample_ts[-1], pandas.Timestamp(self.known_endtime))
+        assert self.wqs.sample_ts[-1] == pandas.Timestamp(self.known_endtime)
 
     def test_sample_ts_freq(self):
-        nt.assert_equal(self.wqs.sample_ts.freq, self.known_ts_samplefreq)
+        assert self.wqs.sample_ts.freq == self.known_ts_samplefreq
 
     def test_sample_ts_len(self):
-        nt.assert_equal(len(self.wqs.sample_ts), self.known_sample_ts_len)
+        assert len(self.wqs.sample_ts) == self.known_sample_ts_len
 
     def test_label(self):
-        nt.assert_true(hasattr(self.wqs, 'label'))
-        nt.assert_equal(self.wqs.label, self.known_label)
+        assert hasattr(self.wqs, 'label')
+        assert self.wqs.label == self.known_label
 
     def test_marker(self):
-        nt.assert_true(hasattr(self.wqs, 'marker'))
-        nt.assert_equal(self.wqs.marker, self.known_marker)
+        assert hasattr(self.wqs, 'marker')
+        assert self.wqs.marker == self.known_marker
 
     def test_linestyle(self):
-        nt.assert_true(hasattr(self.wqs, 'linestyle'))
-        nt.assert_equal(self.wqs.linestyle, self.known_linestyle)
+        assert hasattr(self.wqs, 'linestyle')
+        assert self.wqs.linestyle == self.known_linestyle
 
     def test_yfactor(self):
-        nt.assert_true(hasattr(self.wqs, 'yfactor'))
-        nt.assert_equal(self.wqs.yfactor, self.known_yfactor)
+        assert hasattr(self.wqs, 'yfactor')
+        assert self.wqs.yfactor == self.known_yfactor
 
 
 class base_wqsample_NoStorm(base_wqsampleMixin):
     def test_storm(self):
-        nt.assert_true(hasattr(self.wqs, 'storm'))
-        nt.assert_true(self.wqs.storm is None)
+        assert hasattr(self.wqs, 'storm')
+        assert self.wqs.storm is None
 
 
 class base_wqsample_WithStorm(base_wqsampleMixin):
     def test_storm(self):
-        nt.assert_true(hasattr(self.wqs, 'storm'))
-        nt.assert_true(isinstance(self.wqs.storm, samples.Storm))
+        assert hasattr(self.wqs, 'storm')
+        assert isinstance(self.wqs.storm, samples.Storm)
 
 
-class test_GrabSample_NoStorm(base_wqsample_NoStorm):
+class Test_GrabSample_NoStorm(base_wqsample_NoStorm):
     def setup(self):
         self.basic_setup()
         self.test_name = 'GrabNoStorm'
@@ -135,7 +116,7 @@ class test_GrabSample_NoStorm(base_wqsample_NoStorm):
         self.basic_teardown()
 
 
-class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
+class Test_CompositeSample_NoStorm(base_wqsample_NoStorm):
     def setup(self):
         self.basic_setup()
         self.test_name = 'CompositeNoStorm'
@@ -155,10 +136,9 @@ class test_CompositeSample_NoStorm(base_wqsample_NoStorm):
 
     def teardown(self):
         self.basic_teardown()
-        pass
 
 
-class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
+class Test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
     def setup(self):
         self.basic_setup()
         self.test_name = 'CompositeNoStormnoFreq'
@@ -180,9 +160,8 @@ class test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
         self.basic_teardown()
 
 
-@nt.nottest
 def setup_sample(sampletype, with_storm=False):
-    datafile = makePath('test_wqsample_data.csv')
+    datafile = testing.test_data_path('test_wqsample_data.csv')
     rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
     if sampletype.lower() =='grab':
         st = samples.GrabSample
@@ -208,61 +187,73 @@ def setup_sample(sampletype, with_storm=False):
     return wqs, xlims
 
 
-@image_comparison(
-    baseline_images=['test_Grab_without_storm', 'test_Grab_without_storm_rug'],
-    extensions=['png']
-)
-def test_plot_grabsample_no_storm_not_focus():
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_grabsample_noStorm_notFocus():
     wqs, xlims = setup_sample('grab', with_storm=False)
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False)
+    return fig
 
-    fig, ax = plt.subplots()
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_grabsample_noStorm_notFocus_asRug():
+    wqs, xlims = setup_sample('grab', with_storm=False)
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False, asrug=True)
+    return fig
 
 
-@image_comparison(
-    baseline_images=['test_Grab_without_storm_focus', 'test_Grab_without_storm_focus_rug'],
-    extensions=['png']
-)
-def test_plot_grabsample_no_storm_focus():
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_grabsample_noStorm_asFocus():
     wqs, xlims = setup_sample('grab', with_storm=False)
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True)
+    return fig
 
-    fig, ax = plt.subplots()
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_grabsample_noStorm_Focus_asRug():
+    wqs, xlims = setup_sample('grab', with_storm=False)
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True, asrug=True)
+    return fig
 
 
-@image_comparison(
-    baseline_images=['test_Comp_without_storm', 'test_Comp_without_storm_rug'],
-    extensions=['png']
-)
-def test_plot_compsample_no_storm_not_focus():
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_compsample_noStorm_notFocus():
     wqs, xlims = setup_sample('composite', with_storm=False)
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False)
+    return fig
 
-    fig, ax = plt.subplots()
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_compsample_noStorm_notFocus_asRug():
+    wqs, xlims = setup_sample('composite', with_storm=False)
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=False, asrug=True)
+    return fig
 
 
-@image_comparison(
-    baseline_images=['test_Comp_without_storm_focus', 'test_Comp_without_storm_focus_rug'],
-    extensions=['png']
-)
-def test_plot_compsample_no_storm_focus():
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_compsample_noStorm_Focus():
     wqs, xlims = setup_sample('composite', with_storm=False)
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True)
+    return fig
 
-    fig, ax = plt.subplots()
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_plot_compsample_noStorm_Focus_asRug():
+    wqs, xlims = setup_sample('composite', with_storm=False)
+    fig, ax = pyplot.subplots()
     ax.set_xlim(xlims)
     wqs.plot_ts(ax, isFocus=True, asrug=True)
+    return fig

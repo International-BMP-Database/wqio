@@ -3,30 +3,29 @@ import os
 import subprocess
 from six import StringIO
 
-import numpy as np
+import numpy
 import pandas
-
 import matplotlib
-matplotlib.rcParams['text.usetex'] = False
+matplotlib.use('agg')
 import seaborn.apionly as seaborn
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot
 import matplotlib.ticker as mticker
-from matplotlib.testing.decorators import image_comparison, cleanup
-import scipy.stats as stats
 
-import nose.tools as nt
+import pytest
 import numpy.testing as nptest
 from wqio import testing
 
 from wqio.utils import figutils
-from wqio.algo import robustros
 
 
-@nt.nottest
-def setup_plot_data():
-    plt.rcdefaults()
-    data = np.array([
+BASELINE_IMAGES = '../_baseline_images/utils_tests/figutils_tests'
+
+
+@pytest.fixture
+def plot_data():
+    pyplot.rcdefaults()
+    data = numpy.array([
          3.113,   3.606,   4.046,   4.046,   4.71 ,   6.14 ,   6.978,
          2.   ,   4.2  ,   4.62 ,   5.57 ,   5.66 ,   5.86 ,   6.65 ,
          6.78 ,   6.79 ,   7.5  ,   7.5  ,   7.5  ,   8.63 ,   8.71 ,
@@ -36,157 +35,165 @@ def setup_plot_data():
     return data
 
 
-@cleanup
-class test__check_ax(object):
-    @nt.raises(ValueError)
+class Test__check_ax(object):
     def test_bad_value(self):
-        figutils._check_ax('junk')
+        with pytest.raises(ValueError):
+            figutils._check_ax('junk')
 
     def test_with_ax(self):
-        fig, ax = plt.subplots()
+        fig, ax = pyplot.subplots()
         fig1, ax1 = figutils._check_ax(ax)
-        nt.assert_true(isinstance(ax1, plt.Axes))
-        nt.assert_true(isinstance(fig1, plt.Figure))
-        nt.assert_true(ax1 is ax)
-        nt.assert_true(fig1 is fig)
+        assert isinstance(ax1, pyplot.Axes)
+        assert isinstance(fig1, pyplot.Figure)
+        assert ax1 is ax
+        assert fig1 is fig
 
     def test_with_None(self):
         fig1, ax1 = figutils._check_ax(None)
-        nt.assert_true(isinstance(ax1, plt.Axes))
-        nt.assert_true(isinstance(fig1, plt.Figure))
+        assert isinstance(ax1, pyplot.Axes)
+        assert isinstance(fig1, pyplot.Figure)
 
 
-@image_comparison(baseline_images=['test_rotateTickLabels_xaxis'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_rotateTickLabels_xaxis():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xticks([1, 2, 3])
     ax.set_xticklabels(['AAA', 'BBB', 'CCC'])
     figutils.rotateTickLabels(ax, 60, 'x')
+    return fig
 
 
-@image_comparison(baseline_images=['test_rotateTickLabels_yaxis'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_rotateTickLabels_yaxis():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_yticks([1, 2, 3])
     ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
     figutils.rotateTickLabels(ax, -30, 'y')
+    return fig
 
 
-@image_comparison(baseline_images=['test_rotateTickLabels_both'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_rotateTickLabels_both():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xticks([1, 2, 3])
     ax.set_xticklabels(['XXX', 'YYY', 'ZZZ'])
 
     ax.set_yticks([1, 2, 3])
     ax.set_yticklabels(['AAA', 'BBB', 'CCC'])
     figutils.rotateTickLabels(ax, 45, 'both')
+    return fig
 
 
-@image_comparison(baseline_images=['test_setProblimits_x_ax_LT50'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_setProblimits_x_ax_LT50():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_xscale('prob')
     figutils.setProbLimits(ax, 37, which='x')
+    return fig
 
 
-@image_comparison(baseline_images=['test_setProblimits_y_ax_LT50'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_setProblimits_y_ax_LT50():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
     figutils.setProbLimits(ax, 37, which='y')
+    return fig
 
 
-@image_comparison(baseline_images=['test_setProblimits_y_ax_GT50'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_setProblimits_y_ax_GT50():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
     figutils.setProbLimits(ax, 98, which='y')
+    return fig
 
 
-@image_comparison(baseline_images=['test_setProblimits_y_ax_GT100'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_setProblimits_y_ax_GT100():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
     figutils.setProbLimits(ax, 457, which='y')
+    return fig
 
 
-@image_comparison(baseline_images=['test_gridlines_basic'], extensions=['png'])
-def test_gridlines_basic():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    ax.plot(data)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_gridlines_basic(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
     figutils.gridlines(ax, 'xlabel', 'ylabel')
+    return fig
 
 
-@image_comparison(baseline_images=['test_gridlines_ylog'], extensions=['png'])
-def test_gridlines_ylog():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    ax.plot(data)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_gridlines_ylog(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
     figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log')
+    return fig
 
 
-@image_comparison(baseline_images=['test_gridlines_ylog_noyminor'], extensions=['png'])
-def test_gridlines_ylog_noyminor():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    ax.plot(data)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_gridlines_ylog_noyminor(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
     figutils.gridlines(ax, 'xlabel', 'ylabel', yscale='log', yminor=False)
+    return fig
 
 
-@nt.nottest
-def setup_jointplot():
-    plt.rcdefaults()
-    np.random.seed(0)
+@pytest.fixture
+def jp_data():
+    pyplot.rcdefaults()
+    numpy.random.seed(0)
     N = 37
     df = pandas.DataFrame({
-        'A': np.random.normal(size=N),
-        'B': np.random.lognormal(mean=0.25, sigma=1.25, size=N),
-        'C': np.random.lognormal(mean=1.25, sigma=0.75, size=N)
+        'A': numpy.random.normal(size=N),
+        'B': numpy.random.lognormal(mean=0.25, sigma=1.25, size=N),
+        'C': numpy.random.lognormal(mean=1.25, sigma=0.75, size=N)
     })
 
     return df
 
 
-@image_comparison(
-    baseline_images=['test_jointplot_defaultlabels', 'test_jointplot_xlabeled',
-                     'test_jointplot_ylabeled', 'test_jointplot_bothlabeled'],
-    extensions=['png']
-)
-def test_jointplot_basic():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='b')
-    fig1 = jg1.fig
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_defaultlabels(jp_data):
+    jg1 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='b')
+    return  jg1.fig
 
-    jg2 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='g', xlabel='Quantity B')
-    fig2 = jg2.fig
 
-    jg3 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='r', ylabel='Quantity C')
-    fig3 = jg3.fig
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_xlabeled(jp_data):
+    jg2 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g', xlabel='Quantity B')
+    return  jg2.fig
 
-    jg4 = figutils.jointplot(x='B', y='C', data=df, one2one=False, color='k',
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_ylabeled(jp_data):
+    jg3 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r', ylabel='Quantity C')
+    return  jg3.fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_bothlabeled(jp_data):
+    jg4 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='k',
                              xlabel='Quantity B', ylabel='Quantity C')
-    fig4 = jg4.fig
+    return  jg4.fig
 
 
-@image_comparison(baseline_images=['test_jointplot_zerominFalse'], extensions=['png'])
-def test_jointplot_zerominFalse():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='A', y='C', data=df, zeromin=False, one2one=False)
-    fig1 = jg1.fig
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_zerominFalse(jp_data):
+    jg1 = figutils.jointplot(x='A', y='C', data=jp_data, zeromin=False, one2one=False)
+    return jg1.fig
 
 
-@image_comparison(baseline_images=['test_jointplot_one2one'], extensions=['png'])
-def test_jointplot_one2one():
-    df = setup_jointplot()
-    jg1 = figutils.jointplot(x='B', y='C', data=df, one2one=True)
-    fig1 = jg1.fig
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_jointplot_one2one(jp_data):
+    jg1 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=True)
+    return jg1.fig
 
 
-@nt.raises(NotImplementedError)
 def test_scatterHistogram():
-    figutils.scatterHistogram()
+    with pytest.raises(NotImplementedError):
+        figutils.scatterHistogram()
 
 
 class base_whiskers_and_fliersMixin(object):
@@ -194,7 +201,7 @@ class base_whiskers_and_fliersMixin(object):
         pass
 
     def setup(self):
-        self.base_setup()
+        self.basic_setup()
         self.decimal = 3
         self.data = [
             2.20e-01, 2.70e-01, 3.08e-01, 3.20e-01, 4.10e-01, 4.44e-01,
@@ -280,8 +287,8 @@ class base_whiskers_and_fliersMixin(object):
             6.94e+00, 7.38e+00, 7.56e+00, 8.06e+00, 1.38e+01, 1.51e+01,
             1.82e+01
         ]
-        self.q1 = np.percentile(self.data, 25)
-        self.q3 = np.percentile(self.data, 75)
+        self.q1 = numpy.percentile(self.data, 25)
+        self.q3 = numpy.percentile(self.data, 75)
 
 
         self.bs = figutils.whiskers_and_fliers(
@@ -313,12 +320,11 @@ class base_whiskers_and_fliersMixin(object):
         )
 
 
-class test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
-    @nt.nottest
-    def base_setup(self):
+class Test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
+    def basic_setup(self):
         self.known_bs = {
             'whishi': 4.7300000190734863,
-            'fliers': np.array([
+            'fliers': numpy.array([
                 4.730,   5.130,   5.210,   5.400,
                 5.980,   6.120,   6.940,   7.380,
                 7.560,   8.060,  13.800,  15.100,
@@ -330,154 +336,149 @@ class test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
         self.transformout = lambda x: x
 
 
-class test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):
-    @nt.nottest
-    def base_setup(self):
+class Test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):
+    def basic_setup(self):
         self.known_bs = {
             'whishi': 8.0606803894042987,
-            'fliers': np.array([
+            'fliers': numpy.array([
                 2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
                 1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
                 1.380e+01, 1.510e+01, 1.820e+01
             ]),
             'whislo': 0.27031713639148325
         }
-        self.transformin = lambda x: np.log(x)
-        self.transformout = lambda x: np.exp(x)
+        self.transformin = lambda x: numpy.log(x)
+        self.transformout = lambda x: numpy.exp(x)
 
 
-class test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
-    @nt.nottest
-    def base_setup(self):
+class Test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
+    def basic_setup(self):
         self.known_bs = {
             'whishi': 0.3741651859057793,
-            'fliers': np.array([
+            'fliers': numpy.array([
                 2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
                 1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
                 1.380e+01, 1.510e+01, 1.820e+01
             ]),
             'whislo':  0.27000000000000002
         }
-        self.transformin = lambda x: np.log10(x)
+        self.transformin = lambda x: numpy.log10(x)
         self.transformout = lambda x: 10**x
 
 
-@cleanup
 def test__boxplot_legend():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     figutils.boxplot_legend(ax, notch=True)
+    return fig
 
 
-@image_comparison(baseline_images=['test_boxplot_basic'], extensions=['png'])
-def test_boxplot_basic():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    figutils.boxplot(ax, data, 1)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_boxplot_basic(plot_data):
+    fig, ax = pyplot.subplots()
+    figutils.boxplot(ax, plot_data, 1)
+    return fig
 
 
-@image_comparison(baseline_images=['test_boxplot_manual_median'], extensions=['png'])
-def test_boxplot_manual_median():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_boxplot_manual_median(plot_data):
+    fig, ax = pyplot.subplots()
+    figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25])
+    return fig
 
 
-@image_comparison(baseline_images=['test_boxplot_with_mean'], extensions=['png'])
-def test_boxplot_with_mean():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25],
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_boxplot_with_mean(plot_data):
+    fig, ax = pyplot.subplots()
+    figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
                      mean=7.25, meanmarker='^', meancolor='red')
+    return fig
 
 
-@image_comparison(baseline_images=['test_boxplot_formatted'], extensions=['png'])
-def test_boxplot_formatted():
-    data = setup_plot_data()
-    fig, ax = plt.subplots()
-    bp = figutils.boxplot(ax, data, 1, median=7.75, CIs=[7.5, 8.25],
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_boxplot_formatted(plot_data):
+    fig, ax = pyplot.subplots()
+    bp = figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
                           mean=7.25, meanmarker='^', meancolor='red')
     figutils.formatBoxplot(bp)
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_prob'], extensions=['png'])
-def test_probplot_prob():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
-    fig = figutils.probplot(data, ax=ax, xlabel='Test xlabel')
-    nt.assert_true(isinstance(fig, plt.Figure))
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_prob(plot_data):
+    fig, ax = pyplot.subplots()
+    fig = figutils.probplot(plot_data, ax=ax, xlabel='Test xlabel')
+    assert isinstance(fig, pyplot.Figure)
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_qq'], extensions=['png'])
-def test_probplot_qq():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
-    fig = figutils.probplot(data, ax=ax, axtype='qq', ylabel='Test label',
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_qq(plot_data):
+    fig, ax = pyplot.subplots()
+    fig = figutils.probplot(plot_data, ax=ax, axtype='qq', ylabel='Test label',
                             scatter_kws=dict(color='r'))
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_pp'], extensions=['png'])
-def test_probplot_pp():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_pp(plot_data):
+    fig, ax = pyplot.subplots()
     scatter_kws = dict(color='b', linestyle='--', markeredgecolor='g', markerfacecolor='none')
-    fig = figutils.probplot(data, ax=ax, axtype='pp', yscale='linear',
+    fig = figutils.probplot(plot_data, ax=ax, axtype='pp', yscale='linear',
                             xlabel='test x', ylabel='test y', scatter_kws=scatter_kws)
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_prob_bestfit'], extensions=['png'])
-def test_probplot_prob_bestfit():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
-    fig = figutils.probplot(data, ax=ax, xlabel='Test xlabel',
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_prob_bestfit(plot_data):
+    fig, ax = pyplot.subplots()
+    fig = figutils.probplot(plot_data, ax=ax, xlabel='Test xlabel',
                             bestfit=True)
-    nt.assert_true(isinstance(fig, plt.Figure))
+    assert isinstance(fig, pyplot.Figure)
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_qq_bestfit'], extensions=['png'])
-def test_probplot_qq_bestfit():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
-    fig = figutils.probplot(data, ax=ax, axtype='qq',
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_qq_bestfit(plot_data):
+    fig, ax = pyplot.subplots()
+    fig = figutils.probplot(plot_data, ax=ax, axtype='qq',
                             bestfit=True, ylabel='Test label')
+    return fig
 
 
-@image_comparison(baseline_images=['test_probplot_pp_bestfit'], extensions=['png'])
-def test_probplot_pp_bestfit():
-    fig, ax = plt.subplots()
-    data = setup_plot_data()
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_probplot_pp_bestfit(plot_data):
+    fig, ax = pyplot.subplots()
     scatter_kws = {'marker': 's', 'color': 'red'}
     line_kws = {'linestyle': '--', 'linewidth': 3}
-    fig = figutils.probplot(data, ax=ax, axtype='pp', yscale='linear',
+    fig = figutils.probplot(plot_data, ax=ax, axtype='pp', yscale='linear',
                             xlabel='test x', bestfit=True, ylabel='test y',
                             scatter_kws=scatter_kws, line_kws=line_kws)
+    return fig
 
 
-@image_comparison(baseline_images=['test_logLabelFormatter'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_logLabelFormatter():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.plot([1, 5], [0.0005, 5e6])
     ax.set_yscale('log')
     ax.set_ylim([0.0001, 1e7])
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.logLabelFormatter))
+    return fig
 
 
-@image_comparison(baseline_images=['test_logLabelFormatter_alt'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_logLabelFormatter_alt():
-    fig, ax = plt.subplots()
+    fig, ax = pyplot.subplots()
     ax.plot([1, 5], [0.0005, 5e6])
     ax.set_yscale('log')
     ax.set_ylim([0.0001, 1e7])
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(figutils.alt_logLabelFormatter))
+    return fig
 
 
-@image_comparison(
-    baseline_images=[
-        'test_easy_logfmt',
-        'test_easy_logfmt_alt'
-    ], extensions=['png']
-)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_log_formatter():
-    fig, (ax1, ax2) = plt.subplots(ncols=2)
+    fig, (ax1, ax2) = pyplot.subplots(ncols=2)
     ax1.set_yscale('log')
     ax1.set_ylim((1e-4, 1e5))
     ax1.yaxis.set_major_formatter(figutils.log_formatter(threshold=4))
@@ -485,51 +486,52 @@ def test_log_formatter():
     ax2.set_yscale('log')
     ax2.set_ylim((1e-7, 1e5))
     ax2.yaxis.set_major_formatter(figutils.log_formatter(threshold=4, use_1x=False))
+    return fig
 
 
-@image_comparison(baseline_images=['test_connect_spines'], extensions=['png'], remove_text=True)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test__connect_spines():
-    fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2)
+    fig, ((ax1, ax2), (ax3, ax4)) = pyplot.subplots(ncols=2, nrows=2)
     figutils._connect_spines(ax1, ax2, 0.5, 0.75)
     figutils._connect_spines(ax3, ax4, 0.9, 0.1, linewidth=2, color='r' , linestyle='dashed')
+    return fig
 
 
-@image_comparison(baseline_images=['test_parallel_coordinates'], extensions=['png'])
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_parallel_coordinates():
     df = seaborn.load_dataset('iris')
     fig = figutils.parallel_coordinates(df, hue='species')
+    return fig
 
 
-@nt.nottest
+@pytest.fixture
 def cat_hist_data():
-    np.random.seed(0)
+    numpy.random.seed(0)
     N = 100
     years = [2011, 2012, 2013, 2014]
     df = pandas.DataFrame({
-        'depth': np.random.uniform(low=0.2, high=39, size=N),
-        'year': np.random.choice(years, size=N),
-        'has_outflow': np.random.choice([False, True], size=N)
+        'depth': numpy.random.uniform(low=0.2, high=39, size=N),
+        'year': numpy.random.choice(years, size=N),
+        'has_outflow': numpy.random.choice([False, True], size=N)
     })
     return df
 
 
-@image_comparison(baseline_images=['storm_hist_simple'], extensions=['png'])
-def test_categorical_histogram_simple():
-    df = cat_hist_data()
-    bins = np.arange(5, 35, 5)
-    fig1 = figutils.categorical_histogram(df, 'depth', bins)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_categorical_histogram_simple(cat_hist_data):
+    bins = numpy.arange(5, 35, 5)
+    fig = figutils.categorical_histogram(cat_hist_data, 'depth', bins)
+    return fig
 
 
-@image_comparison(baseline_images=['storm_hist_complex'], extensions=['png'])
-def test_categorical_histogram_complex():
-    df = cat_hist_data()
-    bins = np.arange(5, 35, 5)
-    fg = figutils.categorical_histogram(df, 'depth', bins, hue='year', row='has_outflow')
-    fg.fig.tight_layout()
-    fig = fg.fig
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+def test_categorical_histogram_complex(cat_hist_data):
+    bins = numpy.arange(5, 35, 5)
+    fig = figutils.categorical_histogram(cat_hist_data, 'depth', bins, hue='year', row='has_outflow')
+    return fig
 
 
-class test_shiftedColorMap:
+class Test_shiftedColorMap:
     def setup(self):
         self.orig_cmap = matplotlib.cm.coolwarm
         self.start = 0.0
@@ -544,71 +546,71 @@ class test_shiftedColorMap:
         pass
 
     def teardown(self):
-        plt.close('all')
+        pyplot.close('all')
 
-    @nt.raises(ValueError)
     def test_bad_start_low(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=-0.1,
-            midpoint=self.midpoint,
-            stop=self.stop
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=-0.1,
+                midpoint=self.midpoint,
+                stop=self.stop
+            )
 
-    @nt.raises(ValueError)
     def test_bad_start_high(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=self.midpoint+0.01,
-            midpoint=self.midpoint,
-            stop=self.stop
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=self.midpoint+0.01,
+                midpoint=self.midpoint,
+                stop=self.stop
+            )
 
-    @nt.raises(ValueError)
     def test_bad_midpoint_low(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=self.start,
-            midpoint=self.start,
-            stop=self.stop
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=self.start,
+                midpoint=self.start,
+                stop=self.stop
+            )
 
-    @nt.raises(ValueError)
     def test_bad_midpoint_high(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=self.start,
-            midpoint=self.stop,
-            stop=self.stop
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=self.start,
+                midpoint=self.stop,
+                stop=self.stop
+            )
 
-    @nt.raises(ValueError)
     def test_bad_stop_low(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=self.start,
-            midpoint=self.midpoint,
-            stop=self.midpoint-0.01
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=self.start,
+                midpoint=self.midpoint,
+                stop=self.midpoint-0.01
+            )
 
-    @nt.raises(ValueError)
     def test_bad_stop_high(self):
-        figutils.shiftedColorMap(
-            self.orig_cmap,
-            start=self.start,
-            midpoint=self.midpoint,
-            stop=1.1
-        )
+        with pytest.raises(ValueError):
+            figutils.shiftedColorMap(
+                self.orig_cmap,
+                start=self.start,
+                midpoint=self.midpoint,
+                stop=1.1
+            )
 
     def test_start(self):
-        nt.assert_tuple_equal(self.orig_cmap(self.start), self.shifted_cmap(0.0))
+        assert self.orig_cmap(self.start) == self.shifted_cmap(0.0)
 
     def test_midpoint(self):
         nptest.assert_array_almost_equal(
-            np.array(self.orig_cmap(0.5)),
-            np.array(self.shifted_cmap(self.midpoint)),
+            numpy.array(self.orig_cmap(0.5)),
+            numpy.array(self.shifted_cmap(self.midpoint)),
             decimal=2
         )
 
     def test_stop(self):
-        nt.assert_tuple_equal(self.orig_cmap(self.stop), self.shifted_cmap(1.0))
+        assert self.orig_cmap(self.stop) == self.shifted_cmap(1.0)

@@ -15,6 +15,3 @@ from . hydro import (
     Storm,
     DrainageArea,
 )
-
-from ..testing import NoseWrapper
-test = NoseWrapper().test

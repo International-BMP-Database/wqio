@@ -2,21 +2,19 @@ import os
 import sys
 import glob
 from textwrap import dedent
-from pkg_resources import resource_filename
 
-from six import StringIO
 import pandas
 
-import nose.tools as nt
+import pytest
 import numpy.testing as nptest
+from wqio import testing
 
 from wqio.utils import reportutils, numutils
-from wqio import testing
 
 
 def test__sig_figs_helper():
     x = 1.2
-    nt.assert_equal(reportutils._sig_figs(x), numutils.sigFigs(x, 3, tex=True))
+    assert reportutils._sig_figs(x) == numutils.sigFigs(x, 3, tex=True)
 
 
 def test_sanitizeTex():
@@ -27,15 +25,10 @@ def test_sanitizeTex():
     $x_{4}^{2} \times \% \si[per-mode=symbol]{\micro\gram\per\liter}$  \tabularnewline
     """
 
-    nt.assert_equal(reportutils.sanitizeTex(inputstring), desiredstring)
+    assert reportutils.sanitizeTex(inputstring) == desiredstring
 
 
-class tests_with_paths(object):
-    @nt.nottest
-    def makePath(self, filename):
-        path = resource_filename("wqio.data", filename)
-        return path
-
+class Tests_with_paths(object):
     def setup(self):
         if os.path.split(os.getcwd())[-1] == 'src':
             self.prefix = os.path.join('.', 'utils', 'tests')
@@ -43,22 +36,22 @@ class tests_with_paths(object):
             self.prefix = os.path.join('..', 'utils', 'tests')
 
         self.tablestring = "Date,A,B,C,D\nX,1,2,3,4\nY,5,6,7,8\nZ,9,0,1,2"
-        self.testcsvpath = self.makePath('testtable.csv')
+        self.testcsvpath = testing.test_data_path('testtable.csv')
         with open(self.testcsvpath, 'w') as testfile:
             testfile.write(self.tablestring)
 
-    @nptest.dec.skipif(True)
+    @pytest.mark.skipif(True, reason="WIP")
     def test_makeBoxplotLegend(self):
-        reportutils.makeBoxplotLegend(self.makePath('bplegendtest'))
+        reportutils.makeBoxplotLegend(testing.test_data_path('bplegendtest'))
 
     def test_constructPath(self):
         testpath = reportutils.constructPath('test1 2', 'pdf', 'cvc', 'output')
         expectedpath = os.path.join('cvc', 'output', 'img', 'test12.pdf')
-        nt.assert_equal(testpath, expectedpath)
+        assert testpath == expectedpath
 
     def test_makeTablesFromCSVStrings(self):
         reportutils.makeTablesFromCSVStrings(self.tablestring,
-                    texpath=self.makePath('testtable.tex'),
+                    texpath=testing.test_data_path('testtable.tex'),
                     csvpath=self.testcsvpath)
 
     def test_addStatsToOutputSummary(self):
@@ -66,25 +59,24 @@ class tests_with_paths(object):
         summary = reportutils.addStatsToOutputSummary(self.testcsvpath)
         known_index = ['X', 'Y', 'Z', 'count', 'mean', 'std',
                        'min', '25%', '50%', '75%', 'max']
-        nt.assert_list_equal(summary.index.tolist(), known_index)
-        nt.assert_list_equal(inputcols[1:], summary.columns.tolist())
+        assert summary.index.tolist() == known_index
+        assert inputcols[1:] == summary.columns.tolist()
 
     def test_csvToTex(self):
         testfile = 'testtable_toTex.tex'
-        reportutils.csvToTex(self.testcsvpath, self.makePath(testfile))
+        reportutils.csvToTex(self.testcsvpath, testing.test_data_path(testfile))
 
         if sys.platform == 'win32':
             knownfile = 'testtable_toTex_KnownWin.tex'
         else:
             knownfile = 'testtable_toTex_KnownUnix.tex'
 
-        with open(self.makePath(testfile), 'r') as test, \
-             open(self.makePath(knownfile), 'r') as known:
-             nt.assert_equal(test.read(), known.read())
+        with open(testing.test_data_path(testfile), 'r') as test, \
+             open(testing.test_data_path(knownfile), 'r') as known:
+            assert test.read() == known.read()
 
     def test_csvToXlsx(self):
-        reportutils.csvToXlsx(self.testcsvpath,
-                        self.makePath('testtable_toXL.xlsx'))
+        reportutils.csvToXlsx(self.testcsvpath, testing.test_data_path('testtable_toXL.xlsx'))
 
     def test_addExternalValueToOutputSummary(self):
         compardict = {'test1': 10, 'test2': 11}
@@ -98,8 +90,7 @@ class tests_with_paths(object):
         with open(self.testcsvpath, 'r') as outfile:
             test = outfile.read()
 
-        nt.assert_equal(test, known)
-
+        assert test == known
 
 
 def test_makeTexTable_normal():
@@ -115,7 +106,7 @@ def test_makeTexTable_normal():
     """)
 
     test = reportutils.makeTexTable('fake.tex', 'test caption')
-    nt.assert_equal(known, test)
+    assert known == test
 
 
 def test_makeTexTable_allOptions():
@@ -131,10 +122,10 @@ def test_makeTexTable_allOptions():
     """)
     test = reportutils.makeTexTable('fake.tex', 'test caption', sideways=True,
            footnotetext='test footnote', clearpage=True, pos='bt')
-    nt.assert_equal(known, test)
+    assert known == test
 
 
-class test_makeLongLandscapeTexTable(object):
+class Test_makeLongLandscapeTexTable(object):
     def setup(self):
         self.maxDiff = None
         dfdict = {
@@ -234,11 +225,11 @@ class test_makeLongLandscapeTexTable(object):
 
     def test_makeLongLandscapeTexTable_noFootnote(self):
         test = reportutils.makeLongLandscapeTexTable(self.df, 'test caption', 'label')
-        nt.assert_equal(self.known_nofootnote, test)
+        assert self.known_nofootnote == test
 
     def test_makeLongLandscapeTexTable_Footnote(self):
         test = reportutils.makeLongLandscapeTexTable(self.df, 'test caption', 'label', 'test note')
-        nt.assert_equal(self.known_withfootnote, test)
+        assert self.known_withfootnote == test
 
 
 def test_makeTexFigure():
@@ -251,16 +242,16 @@ def test_makeTexFigure():
     \clearpage
     """)
     test = reportutils.makeTexFigure('fake.pdf', 'test caption')
-    nt.assert_equal(known, test)
+    assert known == test
 
 
 def test_processFilename():
     startname = 'This-is a, very+ &dumb$_{test/name}'
     endname = 'This-isaverydumbtestname'
-    nt.assert_equal(endname, reportutils.processFilename(startname))
+    assert endname == reportutils.processFilename(startname)
 
 
-class test_LaTeXDirectory(object):
+class Test_LaTeXDirectory(object):
     def setup(self):
         self.origdir = os.getcwd()
         self.deepdir = os.path.join(os.getcwd(), 'test1', 'test2', 'test3')
@@ -328,20 +319,20 @@ class test_LaTeXDirectory(object):
         os.removedirs(self.deepdir)
 
     def test_dir(self):
-        nt.assert_equal(os.getcwd(), self.origdir)
+        assert os.getcwd() == self.origdir
         with reportutils.LaTeXDirectory(self.deepdir):
-            nt.assert_equal(os.getcwd(), self.deepdir)
+            assert os.getcwd() == self.deepdir
 
-        nt.assert_equal(os.getcwd(), self.origdir)
+        assert os.getcwd() == self.origdir
 
     def test_file(self):
-        nt.assert_equal(os.getcwd(), self.origdir)
+        assert os.getcwd() == self.origdir
         with reportutils.LaTeXDirectory(self.deepfile):
-            nt.assert_equal(os.getcwd(), self.deepdir)
+            assert os.getcwd() == self.deepdir
 
-        nt.assert_equal(os.getcwd(), self.origdir)
+        assert os.getcwd() == self.origdir
 
-    @nptest.dec.skipif(testing.checkdep_tex() is None)
+    @pytest.mark.skipif(testing.checkdep_tex() is None, reason='No LaTeX')
     def test_compile_smoke(self):
         with reportutils.LaTeXDirectory(self.deepfile) as latex:
             latex.compile(self.deepfile)

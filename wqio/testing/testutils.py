@@ -4,16 +4,11 @@ import sys
 import subprocess
 import re
 import os
-from pkg_resources import resource_string
-
 from functools import wraps
-import nose.tools as nt
-from nose.plugins.attrib import attr
-from nose.plugins.skip import SkipTest
+from pkg_resources import resource_filename
 
 import numpy
 import numpy.testing as nptest
-from numpy.testing.noseclasses import NumpyTestProgram
 import pandas
 
 from six import StringIO
@@ -26,6 +21,11 @@ def seed(func):
         numpy.random.seed(0)
         return func(*args, **kwargs)
     return wrapper
+
+
+def test_data_path(filename):
+    path = resource_filename("wqio.data", filename)
+    return path
 
 
 def getTestROSData():
@@ -47,26 +47,6 @@ def getTestROSData():
     )
 
     return pandas.read_csv(raw_csv)
-
-
-def assert_timestamp_equal(x, y):
-    nptest.assert_equal(x.strftime('%x %X'), y.strftime('%x %X'))
-
-
-def fail(message): # pragma: no cover
-    raise AssertionError(message)
-
-
-def wip(f):  # pragma: no cover
-    @wraps(f)
-    def run_test(*args, **kwargs):
-        try:
-            f(*args, **kwargs)
-        except Exception as e:
-            raise SkipTest("WIP test failed: " + str(e))
-        fail("test passed but marked as work in progress")
-
-    return attr('wip')(run_test)
 
 
 def compare_versions(utility='latex'):  # pragma: no cover
@@ -98,11 +78,11 @@ def _show_package_info(package, name):  # pragma: no cover
 
 
 def _show_system_info():  # pragma: no cover
-    import nose
+    import pytest
 
     pyversion = sys.version.replace('\n','')
     print("Python version %s" % pyversion)
-    print("nose version %d.%d.%d" % nose.__versioninfo__)
+    print("pytest version %d.%d.%d" % pytest.__versioninfo__)
 
     import numpy
     _show_package_info(numpy, 'numpy')
@@ -120,76 +100,14 @@ def _show_system_info():  # pragma: no cover
     _show_package_info(pandas, 'pandas')
 
 
-class NoseWrapper(nptest.Tester):  # pragma: no cover
-    '''
-    This is simply a monkey patch for numpy.testing.Tester.
-
-    It allows extra_argv to be changed from its default None to ['--exe'] so
-    that the tests can be run the same across platforms.  It also takes kwargs
-    that are passed to numpy.errstate to suppress floating point warnings.
-    '''
-
-
-    def test(self, label='fast', verbose=1, with_id=True, exe=True,
-             doctests=False, coverage=False, packageinfo=True, extra_argv=[],
-             **kwargs):
-        '''
-        Run tests for module using nose
-
-        %(test_header)s
-        doctests : boolean
-            If True, run doctests in module, default False
-        coverage : boolean
-            If True, report coverage of NumPy code, default False
-            (Requires the coverage module:
-             http://nedbatchelder.com/code/modules/coverage.html)
-        kwargs
-            Passed to numpy.errstate.  See its documentation for details.
-        '''
-        if with_id:
-            extra_argv.extend(['--with-id'])
-
-        if exe:
-            extra_argv.extend(['--exe'])
-
-        # cap verbosity at 3 because nose becomes *very* verbose beyond that
-        verbose = min(verbose, 3)
-        nptest.utils.verbose = verbose
-
-        if packageinfo:
-            _show_system_info()
-
-        if doctests:
-            print("\nRunning unit tests and doctests for %s" % self.package_name)
-        else:
-            print("\nRunning unit tests for %s" % self.package_name)
-
-        # reset doctest state on every run
-        import doctest
-        doctest.master = None
-
-        argv, plugins = self.prepare_test_args(label, verbose, extra_argv,
-                                               doctests, coverage)
-
-        # with catch_warnings():
-        with numpy.errstate(**kwargs):
-            simplefilter('ignore', category=DeprecationWarning)
-            t = NumpyTestProgram(argv=argv, exit=False, plugins=plugins)
-        return t.result
-
-
-if sys.version_info[0] >= 3:
-    def ascii(s): return bytes(s, 'ascii')
-
-    def byte2str(b): return b.decode('ascii')
-
-else:  # pragma: no cover
-    ascii = str
-
-    def byte2str(b): return b
-
-
 def checkdep_tex():  # pragma: no cover
+    if sys.version_info[0] >= 3:
+        def byte2str(b): return b.decode('ascii')
+
+    else:  # pragma: no cover
+
+        def byte2str(b): return b
+
     try:
         s = subprocess.Popen(['tex','-version'], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
