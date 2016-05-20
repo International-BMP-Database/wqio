@@ -1,6 +1,7 @@
-import warnings
+import sys
 import matplotlib
-import nose
-
 matplotlib.use('agg')
-nose.main()
+
+import wqio
+status = wqio.test(*sys.argv[1:])
+sys.exit(status)

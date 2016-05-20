@@ -2,42 +2,33 @@ language: python
 
 matrix:
   include:
-    - python: 2.7
-      env:
-        - COVERAGE=false
     - python: 3.4
       env:
         - COVERAGE=false
+        - ARGS="--mpl --cov --verbose"
     - python: 3.5
       env:
         - COVERAGE=true
+        - ARGS="--mpl --cov --verbose"
 
 before_install:
-
-  # Here we just install Miniconda, which you shouldn't have to change.
-
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda update --yes conda
-  - cp wqio/data/matplotlibrc .
 
 install:
-
-  # We just set up a conda environment with the right Python version. This
-  # should not need changing.
-
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl nose mock scipy
-  - conda install --yes mpl-probscale --channel=phobson
-  - conda install --yes coverage docopt requests pyyaml
+  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy=0.17.0
+  - conda install --yes coverage docopt requests pyyaml pytest pytest-cov mock
+  - conda install --yes mpl-probscale pytest-mpl --channel=conda-forge
   - pip install coveralls
   - pip install .
 
 script:
-  - python check_wqio.py --verbose --with-coverage --cover-package=wqio
+  - python check_wqio.py ${ARGS}
 
 after_success:
   - if [ ${COVERAGE} = true ]; then coveralls; fi

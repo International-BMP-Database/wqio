@@ -66,6 +66,7 @@ src/*/tests/*.png
 src/*/tests/*.csv
 src/*/tests/*.tex
 src/*/tests/*.xlsx
+.cache
 .noseids
 .coverage
 wqio.egg-info

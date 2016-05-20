@@ -6,15 +6,6 @@ import os
 from setuptools import setup, find_packages
 
 
-def getDataFiles(submodule, folder):
-    datadir = os.path.join('wqio', submodule, folder)
-    files = [d for d in map(
-        lambda x: os.path.join(datadir, x),
-        os.listdir(datadir)
-    )]
-    return files
-
-
 DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
 NAME = "wqio"
@@ -32,17 +23,16 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Intended Audience :: Science/Research",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
 ]
 INSTALL_REQUIRES = ['seaborn', 'probscale']
 PACKAGE_DATA = {
     'wqio.data': [ '*.csv', '*.tex', 'matplotlibrc', ],
-    'wqio.tests.core_tests.baseline_images.core_tests.features_tests': ['*png'],
-    'wqio.tests.core_tests.baseline_images.core_tests.hydro_tests': ['*png'],
-    'wqio.tests.core_tests.baseline_images.core_tests.samples_tests': ['*png'],
-    'wqio.tests.utils_tests.baseline_images.utils_tests.figutils_tests': ['*png'],
+    'wqio.tests._baseline_images.core_tests.features_tests': ['*png'],
+    'wqio.tests._baseline_images.core_tests.hydro_tests': ['*png'],
+    'wqio.tests._baseline_images.core_tests.samples_tests': ['*png'],
+    'wqio.tests._baseline_images.utils_tests.figutils_tests': ['*png'],
 }
 
 setup(
