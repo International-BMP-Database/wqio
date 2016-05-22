@@ -55,15 +55,17 @@ def cohn_numbers(df, result, censorship):
 
     The Cohn Numbers are:
 
-        - A_j = the number of uncensored obs above the jth threshold.
-        - B_j = the number of observations (cen & uncen) below the
-          jth threshold.
-        - C_j = the number of censored observations at the jth
+        - :math:`A_j =` the number of uncensored obs above the jth
           threshold.
-        - PE_j = the probability of exceeding the jth threshold
-        - detection_limit = unique detection limits in the dataset.
-        - lower_dl -> the unique, sorted detection limits
-        - upper_dl -> lower_dl shifted down 1 step
+        - :math:`B_j =` the number of observations (cen & uncen) below
+          the jth threshold.
+        - :math:`C_j =` the number of censored observations at the jth
+          threshold.
+        - :math:`\mathrm{PE}_j =` the probability of exceeding the jth
+          threshold
+        - :math:`\mathrm{DL}_j =` the unique, sorted detection limits
+        - :math:`\mathrm{DL}_{j+1} = \mathrm{DL}_j` shifted down a
+          single index (row)
 
     Parameters
     ----------
