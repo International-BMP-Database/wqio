@@ -327,7 +327,7 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_mean = 9.59372041292
         self.known_mean_conf_interval = [7.75516047, 11.45197482]
         self.known_median = 7.73851689962
-        self.known_median_conf_interval = [4.71, 8.71]
+        self.known_median_conf_interval = [ 5.57,  8.63]
         self.known_min = 2.0
         self.known_pctl10 = 4.04355908285
         self.known_pctl25 = 5.615

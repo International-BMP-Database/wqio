@@ -500,27 +500,27 @@ class Location(object):
     @cache_readonly
     def _median_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.median, NIter=self.bsIter).BCA()
+            return algo.bootstrap.BCA(self.data, np.median, niter=self.bsIter)
 
     @cache_readonly
     def _mean_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.mean, NIter=self.bsIter).BCA()
+            return algo.bootstrap.BCA(self.data, np.mean, niter=self.bsIter)
 
     @cache_readonly
     def _std_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.std, NIter=self.bsIter).BCA()
+            return algo.bootstrap.BCA(self.data, np.std, niter=self.bsIter)
 
     @cache_readonly
     def _logmean_boostrap(self):
         if self.all_positive and self.hasData:
-            return algo.bootstrap.Stat(np.log(self.data), np.mean, NIter=self.bsIter).BCA()
+            return algo.bootstrap.BCA(np.log(self.data), np.mean, niter=self.bsIter)
 
     @cache_readonly
     def _logstd_boostrap(self):
         if self.all_positive and self.hasData:
-            return algo.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
+            return algo.bootstrap.BCA(np.log(self.data), np.std, niter=self.bsIter)
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
@@ -1885,8 +1885,7 @@ class DataCollection(object):
 
     def _generic_stat(self, statfxn, bootstrap=True, statname=None):
         def CIs(x):
-            bs = algo.bootstrap.Stat(x[self.rescol].values, statfxn=statfxn)
-            stat, (lci, uci) = bs.BCA()
+            stat, (lci, uci) = algo.bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
             statnames = ['lower', 'stat', 'upper']
             return pandas.Series([lci, stat, uci], index=statnames)
 
