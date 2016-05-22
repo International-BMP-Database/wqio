@@ -434,13 +434,13 @@ class Test_Dataset(object):
         self.ds = Dataset(self.influent, self.effluent)
 
         self.known_dumpFile = None
-        self.known_kendall_stats = (1.000000e+00,   2.916727e-17)
+        self.known_kendall_stats = (1.00, 2.916727e-17)
         self.known_kendall_tau = self.known_kendall_stats[0]
         self.known_kendall_p = self.known_kendall_stats[1]
 
-        self.known_mannwhitney_stats = (9.270000e+02,   2.251523e-04)
+        self.known_mannwhitney_stats = (927.0, 2.251523e-04)
         self.known_mannwhitney_u = self.known_mannwhitney_stats[0]
-        self.known_mannwhitney_p = self.known_mannwhitney_stats[1] * 2
+        self.known_mannwhitney_p = self.known_mannwhitney_stats[1]
 
         self.known_spearman_stats = (1.0, 0.0)
         self.known_spearman_rho = self.known_spearman_stats[0]

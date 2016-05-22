@@ -1040,7 +1040,7 @@ class Dataset(object):
 
         '''
         if self._mannwhitney_stats is not None:
-            return self._mannwhitney_stats[1] * 2.0
+            return self._mannwhitney_stats[1]
 
     @cache_readonly
     def kendall_tau(self):
@@ -1146,8 +1146,8 @@ class Dataset(object):
     @cache_readonly
     def _mannwhitney_stats(self):
         if self._non_paired_stats:
-            return stats.mannwhitneyu(self.influent.data,
-                                      self.effluent.data)
+            return stats.mannwhitneyu(self.influent.data, self.effluent.data,
+                                      alternative='two-sided')
 
     @cache_readonly
     def _kendall_stats(self):
