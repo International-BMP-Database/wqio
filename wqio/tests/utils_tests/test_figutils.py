@@ -18,7 +18,7 @@ import numpy.testing as nptest
 from wqio.utils import figutils
 
 
-BASELINE_IMAGES = '../_baseline_images/utils_tests/figutils_tests'
+BASELINE_IMAGES = '../_baseline_images/figutils_tests'
 
 
 @pytest.fixture
@@ -523,7 +523,6 @@ def test_categorical_histogram_simple(cat_hist_data):
     return fig
 
 
-@pytest.mark.skipif('linux' in sys.platform.lower(), reason="incompatible dimensions")
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_categorical_histogram_complex(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
