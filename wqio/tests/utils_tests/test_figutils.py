@@ -299,22 +299,22 @@ class base_whiskers_and_fliersMixin(object):
 
     def test_hi_whiskers(self):
         nptest.assert_almost_equal(
-            self.known_bs['whishi'],
             self.bs['whishi'],
+            self.known_bs['whishi'],
             decimal=self.decimal
         )
 
-    def test_hi_whiskers(self):
+    def test_lo_whiskers(self):
         nptest.assert_almost_equal(
-            self.known_bs['whislo'],
             self.bs['whislo'],
+            self.known_bs['whislo'],
             decimal=self.decimal
         )
 
     def test_fliers(self):
         nptest.assert_array_almost_equal(
-            self.known_bs['fliers'],
             self.bs['fliers'],
+            self.known_bs['fliers'],
             decimal=self.decimal
         )
 
@@ -322,7 +322,7 @@ class base_whiskers_and_fliersMixin(object):
 class Test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
     def basic_setup(self):
         self.known_bs = {
-            'whishi': 4.7300000190734863,
+            'whishi': 4.62,
             'fliers': numpy.array([
                 4.730,   5.130,   5.210,   5.400,
                 5.980,   6.120,   6.940,   7.380,
@@ -338,13 +338,13 @@ class Test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
 class Test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):
     def basic_setup(self):
         self.known_bs = {
-            'whishi': 8.0606803894042987,
+            'whishi': 8.060,
             'fliers': numpy.array([
                 2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
                 1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
                 1.380e+01, 1.510e+01, 1.820e+01
             ]),
-            'whislo': 0.27031713639148325
+            'whislo': 0.2700
         }
         self.transformin = lambda x: numpy.log(x)
         self.transformout = lambda x: numpy.exp(x)
@@ -353,13 +353,13 @@ class Test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):
 class Test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
     def basic_setup(self):
         self.known_bs = {
-            'whishi': 0.3741651859057793,
+            'whishi': 8.060,
             'fliers': numpy.array([
                 2.200e-01, 1.000e-03, 4.900e-02, 5.600e-02, 1.400e-01,
                 1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
                 1.380e+01, 1.510e+01, 1.820e+01
             ]),
-            'whislo':  0.27000000000000002
+            'whislo':  0.2700
         }
         self.transformin = lambda x: numpy.log10(x)
         self.transformout = lambda x: 10**x
