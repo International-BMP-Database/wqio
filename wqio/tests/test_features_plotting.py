@@ -1,5 +1,5 @@
 import pytest
-from wqio import testing
+from wqio.tests import testutils
 
 import numpy
 import matplotlib
@@ -7,7 +7,7 @@ matplotlib.use('agg')
 from matplotlib import pyplot
 import seaborn.apionly as seaborn
 
-from wqio.core.features import (
+from wqio.features import (
     Parameter,
     Location,
     Dataset,
@@ -15,12 +15,12 @@ from wqio.core.features import (
 )
 
 
-BASELINE_IMAGES = '../_baseline_images/core_tests/features_tests'
+BASELINE_IMAGES = '_baseline_images/features_tests'
 
 
-@testing.seed
+@testutils.seed
 def setup_location(station_type):
-    data = testing.getTestROSData()
+    data = testutils.getTestROSData()
     loc = Location(data, station_type=station_type, bsIter=10000,
                    rescol='res', qualcol='qual', useROS=True)
     pyplot.rcdefaults()
@@ -333,12 +333,12 @@ def test_loc_vertical_scatter_markersize(inflow_loc_red, inflow_xlims):
     return fig
 
 
-@testing.seed
+@testutils.seed
 def setup_dataset(extra_NDs=False):
-    in_data = testing.getTestROSData()
+    in_data = testutils.getTestROSData()
     in_data['res'] += 3
 
-    out_data = testing.getTestROSData()
+    out_data = testutils.getTestROSData()
     out_data['res'] -= 1.5
 
     if extra_NDs:

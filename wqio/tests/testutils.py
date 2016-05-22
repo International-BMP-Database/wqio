@@ -24,7 +24,7 @@ def seed(func):
 
 
 def test_data_path(filename):
-    path = resource_filename("wqio.data", filename)
+    path = resource_filename("wqio.tests._data", filename)
     return path
 
 

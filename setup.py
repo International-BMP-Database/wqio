@@ -28,10 +28,10 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = ['seaborn', 'probscale']
 PACKAGE_DATA = {
-    'wqio.data': [ '*.csv', '*.tex', 'matplotlibrc', ],
-    'wqio.tests._baseline_images.core_tests.features_tests': ['*png'],
-    'wqio.tests._baseline_images.core_tests.hydro_tests': ['*png'],
-    'wqio.tests._baseline_images.core_tests.samples_tests': ['*png'],
+    'wqio.tests,_data': [ '*.csv', '*.tex', 'matplotlibrc', ],
+    'wqio.tests._baseline_images.features_tests': ['*png'],
+    'wqio.tests._baseline_images.hydro_tests': ['*png'],
+    'wqio.tests._baseline_images.samples_tests': ['*png'],
     'wqio.tests._baseline_images.utils_tests.figutils_tests': ['*png'],
 }
 

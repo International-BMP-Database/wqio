@@ -10,7 +10,7 @@ import numpy
 import pandas
 
 from wqio.utils import misc
-from wqio import testing
+from wqio.tests import testutils
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def test_addColumnLevel(basic_data):
         misc.addColumnLevel(newdata, 'test2', 'testlevel2')
 
 
-@testing.seed
+@testutils.seed
 def test_getUniqueDataframeIndexVal():
     dates = range(5)
     params = list('ABCDE')

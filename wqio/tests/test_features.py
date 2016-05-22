@@ -1,12 +1,12 @@
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
-from wqio import testing
+from wqio.tests import testutils
 
 import numpy
 import pandas
 
-from wqio.core.features import (
+from wqio.features import (
     Parameter,
     Location,
     Dataset,
@@ -64,7 +64,7 @@ class _base_LocationMixin(object):
         # basic test data
         self.tolerance = 0.05
         self.known_bsIter = 1500
-        self.data = testing.getTestROSData()
+        self.data = testutils.getTestROSData()
 
         # Location stuff
         self.known_station_name = 'Influent'
@@ -327,7 +327,7 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_mean = 9.59372041292
         self.known_mean_conf_interval = [7.75516047, 11.45197482]
         self.known_median = 7.73851689962
-        self.known_median_conf_interval = [4.71, 8.71]
+        self.known_median_conf_interval = [ 5.57,  8.63]
         self.known_min = 2.0
         self.known_pctl10 = 4.04355908285
         self.known_pctl25 = 5.615
@@ -419,10 +419,10 @@ class Test_Dataset(object):
         self.tolerance = 0.05
         self.known_bsIter = 750
 
-        in_data = testing.getTestROSData()
+        in_data = testutils.getTestROSData()
         in_data['res'] += 3
 
-        out_data = testing.getTestROSData()
+        out_data = testutils.getTestROSData()
         out_data['res'] -= 1.5
 
         self.influent = Location(in_data, station_type='inflow', bsIter=self.known_bsIter,
@@ -605,7 +605,7 @@ class Test_Dataset(object):
         self.ds.__repr__
 
 
-@testing.seed
+@testutils.seed
 def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     dl_map = {
         'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
@@ -695,7 +695,7 @@ class _base_DataCollecionMixin(object):
         knowncols = self.known_columns + [self.known_roscol]
         assert sorted(tidycols) == sorted(knowncols)
 
-    @testing.seed
+    @testutils.seed
     def test_means(self):
         pdtest.assert_frame_equal(
             numpy.round(self.dc.means, 3),
@@ -703,7 +703,7 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
-    @testing.seed
+    @testutils.seed
     def test_medians(self):
         pdtest.assert_frame_equal(
             numpy.round(self.dc.medians, 3),
@@ -711,10 +711,10 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
-    @testing.seed
+    @testutils.seed
     def test__generic_stat(self):
         pdtest.assert_frame_equal(
-            numpy.round(self.dc._generic_stat(numpy.min, bootstrap=False), 3),
+            numpy.round(self.dc._generic_stat(numpy.min, use_bootstrap=False), 3),
             self.known_genericstat,
             check_names=False
         )

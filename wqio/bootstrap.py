@@ -7,7 +7,7 @@ import scipy.stats.distributions as dist
 import scipy.optimize as opt
 
 
-__all__ = ['Stat', 'BCA', 'percentile']
+__all__ = ['BCA', 'percentile']
 
 
 def _acceleration(data):
@@ -181,45 +181,3 @@ def percentile(data, statfxn, niter, alpha=0.05):
 
     return statfxn(data), CI
 
-
-class Stat(object):
-    """ Class for using bootstrap techniques to estimate a statistic
-    and its confidence intervals.
-
-    Parameters
-    ----------
-    inputdata : array-like
-        The data that we're describing.
-    statfxn : callable, optional (default = numpy.median)
-        Function that takes `inputdata` as the sole argument and return
-        a single float value.
-    alpha : float, optional (default = 0.05)
-        The uncertainty level e.g., for 95% confidence intervals,
-        `alpha = 0.05`.
-    NIter : int, optional (default = 5000)
-        The number of interation to use in the bootstrapping routine.
-    use_prelim : bool, optional (default = True)
-        When True, the statistic returned is computed from the original
-        dataset. When False, the statistic is computed as the arithmetic
-        mean of the bootstrapped array.
-
-    """
-
-    def __init__(self, inputdata, statfxn=np.median, alpha=0.05,
-                 NIter=5000):
-        self.data = np.array(inputdata, dtype=np.float64)
-        self.statfxn = statfxn
-        self.alpha = alpha
-        self.NIter = NIter
-
-    @property
-    def final_result(self):
-        return self.statfxn(self.data)
-
-    def BCA(self):
-        """ BCA method of aquiring confidence intervals. """
-        return BCA(self.data, self.statfxn, self.NIter, self.alpha)
-
-    def percentile(self):
-        """ Percentile method of aquiring confidence intervals. """
-        return percentile(self.data, self.statfxn, self.NIter, self.alpha)

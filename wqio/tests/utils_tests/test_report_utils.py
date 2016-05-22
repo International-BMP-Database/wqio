@@ -7,7 +7,7 @@ import pandas
 
 import pytest
 import numpy.testing as nptest
-from wqio import testing
+from wqio.tests import testutils
 
 from wqio.utils import reportutils, numutils
 
@@ -36,13 +36,13 @@ class Tests_with_paths(object):
             self.prefix = os.path.join('..', 'utils', 'tests')
 
         self.tablestring = "Date,A,B,C,D\nX,1,2,3,4\nY,5,6,7,8\nZ,9,0,1,2"
-        self.testcsvpath = testing.test_data_path('testtable.csv')
+        self.testcsvpath = testutils.test_data_path('testtable.csv')
         with open(self.testcsvpath, 'w') as testfile:
             testfile.write(self.tablestring)
 
     @pytest.mark.skipif(True, reason="WIP")
     def test_makeBoxplotLegend(self):
-        reportutils.makeBoxplotLegend(testing.test_data_path('bplegendtest'))
+        reportutils.makeBoxplotLegend(testutils.test_data_path('bplegendtest'))
 
     def test_constructPath(self):
         testpath = reportutils.constructPath('test1 2', 'pdf', 'cvc', 'output')
@@ -51,7 +51,7 @@ class Tests_with_paths(object):
 
     def test_makeTablesFromCSVStrings(self):
         reportutils.makeTablesFromCSVStrings(self.tablestring,
-                    texpath=testing.test_data_path('testtable.tex'),
+                    texpath=testutils.test_data_path('testtable.tex'),
                     csvpath=self.testcsvpath)
 
     def test_addStatsToOutputSummary(self):
@@ -64,19 +64,19 @@ class Tests_with_paths(object):
 
     def test_csvToTex(self):
         testfile = 'testtable_toTex.tex'
-        reportutils.csvToTex(self.testcsvpath, testing.test_data_path(testfile))
+        reportutils.csvToTex(self.testcsvpath, testutils.test_data_path(testfile))
 
         if sys.platform == 'win32':
             knownfile = 'testtable_toTex_KnownWin.tex'
         else:
             knownfile = 'testtable_toTex_KnownUnix.tex'
 
-        with open(testing.test_data_path(testfile), 'r') as test, \
-             open(testing.test_data_path(knownfile), 'r') as known:
+        with open(testutils.test_data_path(testfile), 'r') as test, \
+             open(testutils.test_data_path(knownfile), 'r') as known:
             assert test.read() == known.read()
 
     def test_csvToXlsx(self):
-        reportutils.csvToXlsx(self.testcsvpath, testing.test_data_path('testtable_toXL.xlsx'))
+        reportutils.csvToXlsx(self.testcsvpath, testutils.test_data_path('testtable_toXL.xlsx'))
 
     def test_addExternalValueToOutputSummary(self):
         compardict = {'test1': 10, 'test2': 11}
@@ -332,7 +332,7 @@ class Test_LaTeXDirectory(object):
 
         assert os.getcwd() == self.origdir
 
-    @pytest.mark.skipif(testing.checkdep_tex() is None, reason='No LaTeX')
+    @pytest.mark.skipif(testutils.checkdep_tex() is None, reason='No LaTeX')
     def test_compile_smoke(self):
         with reportutils.LaTeXDirectory(self.deepfile) as latex:
             latex.compile(self.deepfile)

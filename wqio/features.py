@@ -10,7 +10,8 @@ from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn.apionly as seaborn
 
 from wqio import utils
-from wqio import algo
+from wqio import bootstrap
+from wqio.ros import ROS
 
 
 # meta data mappings based on station
@@ -266,7 +267,7 @@ class Location(object):
                 df = self.raw_data.copy()
                 df[self.cencol] = df[self.qualcol].isin(self.ndvals)
                 if self.useROS:
-                    ros = algo.ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
+                    ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
                     self._dataframe = ros[['final', self.cencol]]
                 else:
                     self._dataframe = df[[self.rescol, self.cencol]]
@@ -500,27 +501,27 @@ class Location(object):
     @cache_readonly
     def _median_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.median, NIter=self.bsIter).BCA()
+            return bootstrap.BCA(self.data, np.median, niter=self.bsIter)
 
     @cache_readonly
     def _mean_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.mean, NIter=self.bsIter).BCA()
+            return bootstrap.BCA(self.data, np.mean, niter=self.bsIter)
 
     @cache_readonly
     def _std_boostrap(self):
         if self.hasData:
-            return algo.bootstrap.Stat(self.data, np.std, NIter=self.bsIter).BCA()
+            return bootstrap.BCA(self.data, np.std, niter=self.bsIter)
 
     @cache_readonly
     def _logmean_boostrap(self):
         if self.all_positive and self.hasData:
-            return algo.bootstrap.Stat(np.log(self.data), np.mean, NIter=self.bsIter).BCA()
+            return bootstrap.BCA(np.log(self.data), np.mean, niter=self.bsIter)
 
     @cache_readonly
     def _logstd_boostrap(self):
         if self.all_positive and self.hasData:
-            return algo.bootstrap.Stat(np.log(self.data), np.std, NIter=self.bsIter).BCA()
+            return bootstrap.BCA(np.log(self.data), np.std, niter=self.bsIter)
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
@@ -1771,7 +1772,7 @@ class DataCollection(object):
     def tidy(self):
         if self.useROS:
             def fxn(g):
-                rosdf = algo.ROS(df=g, result=self._raw_rescol,
+                rosdf = ROS(df=g, result=self._raw_rescol,
                                       censorship=self.cencol, as_array=False)
                 rosdf = rosdf.rename(columns={'final': self.roscol})
                 return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
@@ -1857,7 +1858,7 @@ class DataCollection(object):
     def percentiles(self, percentile):
         return self._generic_stat(lambda x: np.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
-                                  bootstrap=False)
+                                  use_bootstrap=False)
 
     @cache_readonly
     def logmean(self):
@@ -1881,16 +1882,15 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self._generic_stat(lambda x: x.count(), bootstrap=False, statname='Count')
+        return self._generic_stat(lambda x: x.count(), use_bootstrap=False, statname='Count')
 
-    def _generic_stat(self, statfxn, bootstrap=True, statname=None):
+    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None):
         def CIs(x):
-            bs = algo.bootstrap.Stat(x[self.rescol].values, statfxn=statfxn)
-            stat, (lci, uci) = bs.BCA()
+            stat, (lci, uci) = bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
             statnames = ['lower', 'stat', 'upper']
             return pandas.Series([lci, stat, uci], index=statnames)
 
-        if bootstrap:
+        if use_bootstrap:
             stat = (
                 self.tidy
                     .groupby(by=self.groupcols)

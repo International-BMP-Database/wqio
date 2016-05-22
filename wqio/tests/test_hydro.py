@@ -1,7 +1,6 @@
 import os
 import sys
 import datetime
-from pkg_resources import resource_filename
 
 import numpy
 import pandas
@@ -9,16 +8,16 @@ import pandas
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
-from wqio import testing
+from wqio.tests import testutils
 
 import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot
 
-from wqio.core import hydro
+from wqio import hydro
 
 
-BASELINE_IMAGES = '../_baseline_images/core_tests/hydro_tests'
+BASELINE_IMAGES = '_baseline_images/hydro_tests'
 
 
 class fakeStormSublcass(hydro.Storm):
@@ -94,7 +93,7 @@ class base_HydroRecordMixin(object):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
 def test_HydroRecord_histogram():
-    stormfile = testing.test_data_path('teststorm_simple.csv')
+    stormfile = testutils.test_data_path('teststorm_simple.csv')
     orig_record = pandas.read_csv(
         stormfile, index_col='date', parse_dates=True
     ).resample('5T').asfreq().fillna(0)
@@ -118,7 +117,7 @@ class Test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = testing.test_data_path('teststorm_simple.csv')
+        self.storm_file = testutils.test_data_path('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.known_stats_subset = pandas.DataFrame({
@@ -210,7 +209,7 @@ class Test_HydroRecord_Singular(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 07:00')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 07:05')
-        self.storm_file = testing.test_data_path('teststorm_singular.csv')
+        self.storm_file = testutils.test_data_path('teststorm_singular.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -231,7 +230,7 @@ class Test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = testing.test_data_path('teststorm_firstobs.csv')
+        self.storm_file = testutils.test_data_path('teststorm_firstobs.csv')
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
@@ -252,7 +251,7 @@ class TestHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_storm1_end = pandas.Timestamp('2013-05-19 01:45:00')
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
-        self.storm_file = testing.test_data_path('teststorm_simple.csv')
+        self.storm_file = testutils.test_data_path('teststorm_simple.csv')
 
         self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
@@ -283,7 +282,7 @@ class TestHydroRecord_diffStormClass(base_HydroRecordMixin):
 class Test_Storm(object):
     def setup(self):
         # path stuff
-        self.storm_file = testing.test_data_path('teststorm_simple.csv')
+        self.storm_file = testutils.test_data_path('teststorm_simple.csv')
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
@@ -470,7 +469,7 @@ class Test_Storm(object):
 
 def setup_storm():
     pyplot.rcdefaults()
-    storm_file = testing.test_data_path('teststorm_simple.csv')
+    storm_file = testutils.test_data_path('teststorm_simple.csv')
     orig_record = (
         pandas.read_csv(storm_file, index_col='date', parse_dates=True )
             .resample('5T').asfreq()
