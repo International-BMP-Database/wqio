@@ -1,16 +1,16 @@
 from functools import partial
 from textwrap import dedent
+from io import StringIO
 
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
 
-from six import StringIO
 import numpy
 import pandas
 
 from wqio.utils import misc
-from wqio.tests import testutils
+from wqio.tests import helpers
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def test_addColumnLevel(basic_data):
         misc.addColumnLevel(newdata, 'test2', 'testlevel2')
 
 
-@testutils.seed
+@helpers.seed
 def test_getUniqueDataframeIndexVal():
     dates = range(5)
     params = list('ABCDE')

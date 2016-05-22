@@ -5,7 +5,6 @@ branch = True
 include = wqio/*.py
 omit =
     wqio/tests/*
-    wqio/testutils/*
 
 [report]
 include = wqio/*.py

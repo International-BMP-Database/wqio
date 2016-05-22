@@ -1,7 +1,7 @@
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
-from wqio.tests import testutils
+from wqio.tests import helpers
 
 import numpy
 import pandas
@@ -64,7 +64,7 @@ class _base_LocationMixin(object):
         # basic test data
         self.tolerance = 0.05
         self.known_bsIter = 1500
-        self.data = testutils.getTestROSData()
+        self.data = helpers.getTestROSData()
 
         # Location stuff
         self.known_station_name = 'Influent'
@@ -419,10 +419,10 @@ class Test_Dataset(object):
         self.tolerance = 0.05
         self.known_bsIter = 750
 
-        in_data = testutils.getTestROSData()
+        in_data = helpers.getTestROSData()
         in_data['res'] += 3
 
-        out_data = testutils.getTestROSData()
+        out_data = helpers.getTestROSData()
         out_data['res'] -= 1.5
 
         self.influent = Location(in_data, station_type='inflow', bsIter=self.known_bsIter,
@@ -605,7 +605,7 @@ class Test_Dataset(object):
         self.ds.__repr__
 
 
-@testutils.seed
+@helpers.seed
 def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     dl_map = {
         'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
@@ -695,7 +695,7 @@ class _base_DataCollecionMixin(object):
         knowncols = self.known_columns + [self.known_roscol]
         assert sorted(tidycols) == sorted(knowncols)
 
-    @testutils.seed
+    @helpers.seed
     def test_means(self):
         pdtest.assert_frame_equal(
             numpy.round(self.dc.means, 3),
@@ -703,7 +703,7 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
-    @testutils.seed
+    @helpers.seed
     def test_medians(self):
         pdtest.assert_frame_equal(
             numpy.round(self.dc.medians, 3),
@@ -711,7 +711,7 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
-    @testutils.seed
+    @helpers.seed
     def test__generic_stat(self):
         pdtest.assert_frame_equal(
             numpy.round(self.dc._generic_stat(numpy.min, use_bootstrap=False), 3),
