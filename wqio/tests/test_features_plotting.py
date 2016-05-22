@@ -1,5 +1,5 @@
 import pytest
-from wqio.tests import testutils
+from wqio.tests import helpers
 
 import numpy
 import matplotlib
@@ -18,9 +18,9 @@ from wqio.features import (
 BASELINE_IMAGES = '_baseline_images/features_tests'
 
 
-@testutils.seed
+@helpers.seed
 def setup_location(station_type):
-    data = testutils.getTestROSData()
+    data = helpers.getTestROSData()
     loc = Location(data, station_type=station_type, bsIter=10000,
                    rescol='res', qualcol='qual', useROS=True)
     pyplot.rcdefaults()
@@ -333,12 +333,12 @@ def test_loc_vertical_scatter_markersize(inflow_loc_red, inflow_xlims):
     return fig
 
 
-@testutils.seed
+@helpers.seed
 def setup_dataset(extra_NDs=False):
-    in_data = testutils.getTestROSData()
+    in_data = helpers.getTestROSData()
     in_data['res'] += 3
 
-    out_data = testutils.getTestROSData()
+    out_data = helpers.getTestROSData()
     out_data['res'] -= 1.5
 
     if extra_NDs:

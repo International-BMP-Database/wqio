@@ -1,17 +1,16 @@
-from warnings import simplefilter
 import distutils
 import sys
 import subprocess
 import re
 import os
+from warnings import simplefilter
 from functools import wraps
 from pkg_resources import resource_filename
+from io import StringIO
 
 import numpy
 import numpy.testing as nptest
 import pandas
-
-from six import StringIO
 
 
 def seed(func):

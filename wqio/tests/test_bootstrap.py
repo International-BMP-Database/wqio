@@ -1,15 +1,15 @@
 import pytest
 import numpy.testing as nptest
+from wqio.tests import helpers
 
 import numpy
 
-from wqio.tests import testutils
 from wqio import bootstrap
 
 
 @pytest.fixture
 def testdata():
-    return testutils.getTestROSData()['res'].values
+    return helpers.getTestROSData()['res'].values
 
 
 def test__acceleration(testdata):
@@ -24,7 +24,7 @@ def test__make_boot_index():
     assert result.max() == 4
 
 
-@testutils.seed
+@helpers.seed
 @pytest.mark.parametrize(('bootstrapper', 'known_ci'), [
     (bootstrap.BCA, numpy.array([8.686, 11.661])),
     (bootstrap.percentile, numpy.array([8.670, 11.647]))

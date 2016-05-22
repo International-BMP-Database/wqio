@@ -1,14 +1,14 @@
 from collections import namedtuple
-
-from six import StringIO
-import numpy
-from scipy import stats
-import pandas
-import statsmodels.api as sm
+from io import StringIO
 
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
+
+import numpy
+from scipy import stats
+import pandas
+import statsmodels.api as sm
 
 from wqio.utils import numutils
 

@@ -6,7 +6,7 @@ from six import StringIO
 import numpy as np
 import pandas
 
-from wqio.tests import testutils
+from wqio.tests import helpers
 from . import numutils
 from . import figutils
 
@@ -469,7 +469,7 @@ class LaTeXDirectory(object):
 
         """
 
-        if testutils.checkdep_tex() is not None:
+        if helpers.checkdep_tex() is not None:
             # use ``pdflatex`` to compile the document
             tex = subprocess.call(['pdflatex', texdoc, '--quiet'],
                                   stdout=subprocess.PIPE,
