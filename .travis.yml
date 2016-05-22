@@ -21,7 +21,7 @@ before_install:
 install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy=0.17.0
+  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy
   - conda install --yes coverage docopt requests pyyaml pytest pytest-cov mock
   - conda install --yes mpl-probscale pytest-mpl --channel=conda-forge
   - pip install coveralls
