@@ -1,42 +1,60 @@
-# wqio - Water Quality, Inflow/Outflow
-[![Build Status](https://travis-ci.org/Geosyntec/wqio.svg?branch=master)](https://travis-ci.org/Geosyntec/wqio)
-[![Coverage Status](https://coveralls.io/repos/Geosyntec/wqio/badge.svg?branch=master)](https://coveralls.io/r/Geosyntec/wqio?branch=master)
-[![Binstar Badge](https://binstar.org/phobson/wqio/badges/version.svg)](https://binstar.org/phobson/wqio)
-[![Binstar Badge](https://binstar.org/phobson/wqio/badges/license.svg)](https://binstar.org/phobson/wqio)
+wqio - Water Quality, Inflow/Outflow
+------------------------------------
+.. image:: https://travis-ci.org/Geosyntec/wqio.svg?branch=master
+    :target: https://travis-ci.org/Geosyntec/wqio
 
+.. image:: https://coveralls.io/repos/github/Geosyntec/wqio/badge.svg?branch=master
+    :target: https://coveralls.io/github/Geosyntec/wqio?branch=master
 
-## Installation
+.. image:: https://anaconda.org/phobson/wqio/badges/version.svg
+    :target: https://anaconda.org/phobson/wqio
 
-### Stable
-Through conda:
+.. image:: https://anaconda.org/phobson/wqio/badges/license.svg
+    :target: https://anaconda.org/phobson/wqio
+
+Installation
+============
+
+Stable
+~~~~~~
+
+Through conda::
 
     $ conda install wqio --channel=phobson
 
-Through pip (usually out of date)
+Through pip (usually out of date)::
 
     $ pip install wqio
 
-### Development
+Development
+~~~~~~~~~~~
 
-From source:
+From source::
 
     $ git clone git@github.com:Geosyntec/wqio.git
     $ cd wqio
     $ pip install -e .
 
-## Running tests
+Running tests
+=============
 
-### Install pytest and plugins
+Install pytest and plugins
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+::
     $ conda install pytest pytest-cov
     $ conda install pytest-mpl --channel=conda-forge
 
-### Run the tests with the test runner:
+Run the tests with the test runner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+::
     $ python check_wqio.py --mpl --cov
 
-### Run the tests from within python
+Run the tests from within python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+::
     $ python
     >>> import wqio
     >>> wqio.test('--mpl', '--cov')
