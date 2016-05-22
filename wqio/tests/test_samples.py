@@ -1,7 +1,7 @@
 import pandas
 
 import pytest
-from wqio import testing
+from wqio.tests import testutils
 
 import matplotlib
 matplotlib.use('agg')
@@ -20,7 +20,7 @@ class base_wqsampleMixin(object):
         self.known_endtime_type = pandas.Timestamp
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
-        datafile = testing.test_data_path('test_wqsample_data.csv')
+        datafile = testutils.test_data_path('test_wqsample_data.csv')
         self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
 
     def basic_teardown(self):
@@ -161,7 +161,7 @@ class Test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
 
 
 def setup_sample(sampletype, with_storm=False):
-    datafile = testing.test_data_path('test_wqsample_data.csv')
+    datafile = testutils.test_data_path('test_wqsample_data.csv')
     rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
     if sampletype.lower() =='grab':
         st = samples.GrabSample

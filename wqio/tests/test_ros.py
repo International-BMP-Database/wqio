@@ -4,19 +4,19 @@ from textwrap import dedent
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
+from wqio.tests import testutils
 
 import numpy
 import pandas
 from six import StringIO
 
-from wqio import testing
 from wqio import ros
 
 
 @pytest.fixture
 def basic_data():
     df = (
-        testing
+        testutils
             .getTestROSData()
             .assign(conc=lambda df: df['res'])
             .assign(censored=lambda df: df['qual'] == 'ND')

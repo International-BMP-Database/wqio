@@ -14,7 +14,6 @@ import matplotlib.ticker as mticker
 
 import pytest
 import numpy.testing as nptest
-from wqio import testing
 
 from wqio.utils import figutils
 
