@@ -341,19 +341,6 @@ class Location(object):
 
     @cache_readonly
     @np.deprecate
-    def ros(self):
-        if self.hasData:
-            data = self.filtered_data.assign(cen=self.filtered_data[self.qualcol].isin(self.ndvals))
-            mr = algo.robustros.RobustROSEstimator(
-                data=data,
-                result=self.rescol,
-                censorship=self.cencol,
-                lazy=True
-            )
-            return mr
-
-    @cache_readonly
-    @np.deprecate
     def pnorm(self):
         if self.hasData:
             return stats.shapiro(self.data)[1]
