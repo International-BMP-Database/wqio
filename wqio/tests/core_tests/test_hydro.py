@@ -15,7 +15,7 @@ import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot
 
-from wqio.core import hydro
+from wqio import hydro
 
 
 BASELINE_IMAGES = '../_baseline_images/core_tests/hydro_tests'

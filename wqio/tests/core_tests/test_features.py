@@ -6,7 +6,7 @@ from wqio import testing
 import numpy
 import pandas
 
-from wqio.core.features import (
+from wqio.features import (
     Parameter,
     Location,
     Dataset,
@@ -714,7 +714,7 @@ class _base_DataCollecionMixin(object):
     @testing.seed
     def test__generic_stat(self):
         pdtest.assert_frame_equal(
-            numpy.round(self.dc._generic_stat(numpy.min, bootstrap=False), 3),
+            numpy.round(self.dc._generic_stat(numpy.min, use_bootstrap=False), 3),
             self.known_genericstat,
             check_names=False
         )

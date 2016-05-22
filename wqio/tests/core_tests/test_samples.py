@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot
 
-from wqio.core import samples
+from wqio import samples
 
 
 BASELINE_IMAGES = '../_baseline_images/core_tests/samples_tests'

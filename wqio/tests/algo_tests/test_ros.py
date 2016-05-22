@@ -10,7 +10,7 @@ import pandas
 from six import StringIO
 
 from wqio import testing
-from wqio.algo import ros
+from wqio import ros
 
 
 @pytest.fixture

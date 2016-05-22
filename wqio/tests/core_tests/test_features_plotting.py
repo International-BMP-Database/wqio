@@ -7,7 +7,7 @@ matplotlib.use('agg')
 from matplotlib import pyplot
 import seaborn.apionly as seaborn
 
-from wqio.core.features import (
+from wqio.features import (
     Parameter,
     Location,
     Dataset,

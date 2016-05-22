@@ -4,7 +4,7 @@ import numpy.testing as nptest
 import numpy
 
 from wqio import testing
-from wqio.algo import bootstrap
+from wqio import bootstrap
 
 
 @pytest.fixture
