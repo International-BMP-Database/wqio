@@ -18,7 +18,7 @@ from matplotlib import pyplot
 from wqio import hydro
 
 
-BASELINE_IMAGES = '../_baseline_images/core_tests/hydro_tests'
+BASELINE_IMAGES = '_baseline_images/hydro_tests'
 
 
 class fakeStormSublcass(hydro.Storm):

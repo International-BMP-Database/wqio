@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from wqio import samples
 
 
-BASELINE_IMAGES = '../_baseline_images/core_tests/samples_tests'
+BASELINE_IMAGES = '_baseline_images/samples_tests'
 
 
 class base_wqsampleMixin(object):

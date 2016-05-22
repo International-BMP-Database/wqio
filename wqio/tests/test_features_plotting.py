@@ -15,7 +15,7 @@ from wqio.features import (
 )
 
 
-BASELINE_IMAGES = '../_baseline_images/core_tests/features_tests'
+BASELINE_IMAGES = '_baseline_images/features_tests'
 
 
 @testing.seed
