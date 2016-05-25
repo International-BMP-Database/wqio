@@ -5,11 +5,9 @@ matrix:
     - python: 3.4
       env:
         - COVERAGE=false
-        - ARGS="--mpl --cov --verbose"
     - python: 3.5
       env:
         - COVERAGE=true
-        - ARGS="--mpl --cov --verbose"
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -28,7 +26,12 @@ install:
   - pip install .
 
 script:
-  - python check_wqio.py ${ARGS}
+  - python check_wqio.py --mpl --versbose
 
 after_success:
-  - if [ ${COVERAGE} = true ]; then coveralls; fi
+  - if [ ${COVERAGE} = true ]; then
+      coverage run --source wqio check_wqio.py;
+      coverage report -m;
+      coveralls;
+    fi
+
