@@ -142,7 +142,7 @@ class base_HydroRecordMixin(object):
         assert self.known_storm_stats_columns == self.hr.storm_stats.columns.tolist()
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_HydroRecord_histogram():
     stormfile = helpers.test_data_path('teststorm_simple.csv')
     orig_record = pandas.read_csv(
@@ -535,7 +535,7 @@ def setup_storm():
     return hr.storms[2]
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_storm_summary():
     storm = setup_storm()
     def doplot(storm):

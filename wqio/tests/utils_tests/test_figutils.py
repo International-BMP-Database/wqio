@@ -52,7 +52,7 @@ class Test__check_ax(object):
         assert isinstance(fig1, pyplot.Figure)
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_rotateTickLabels_xaxis():
     fig, ax = pyplot.subplots()
     ax.set_xticks([1, 2, 3])
@@ -61,7 +61,7 @@ def test_rotateTickLabels_xaxis():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_rotateTickLabels_yaxis():
     fig, ax = pyplot.subplots()
     ax.set_yticks([1, 2, 3])
@@ -70,7 +70,7 @@ def test_rotateTickLabels_yaxis():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_rotateTickLabels_both():
     fig, ax = pyplot.subplots()
     ax.set_xticks([1, 2, 3])
@@ -82,7 +82,7 @@ def test_rotateTickLabels_both():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_setProblimits_x_ax_LT50():
     fig, ax = pyplot.subplots()
     ax.set_xscale('prob')
@@ -90,7 +90,7 @@ def test_setProblimits_x_ax_LT50():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_setProblimits_y_ax_LT50():
     fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
@@ -98,7 +98,7 @@ def test_setProblimits_y_ax_LT50():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_setProblimits_y_ax_GT50():
     fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
@@ -106,7 +106,7 @@ def test_setProblimits_y_ax_GT50():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_setProblimits_y_ax_GT100():
     fig, ax = pyplot.subplots()
     ax.set_yscale('prob')
@@ -114,7 +114,7 @@ def test_setProblimits_y_ax_GT100():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_gridlines_basic(plot_data):
     fig, ax = pyplot.subplots()
     ax.plot(plot_data)
@@ -122,7 +122,7 @@ def test_gridlines_basic(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_gridlines_ylog(plot_data):
     fig, ax = pyplot.subplots()
     ax.plot(plot_data)
@@ -130,7 +130,7 @@ def test_gridlines_ylog(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_gridlines_ylog_noyminor(plot_data):
     fig, ax = pyplot.subplots()
     ax.plot(plot_data)
@@ -152,38 +152,38 @@ def jp_data():
     return df
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_defaultlabels(jp_data):
     jg1 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='b')
     return  jg1.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_xlabeled(jp_data):
     jg2 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g', xlabel='Quantity B')
     return  jg2.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_ylabeled(jp_data):
     jg3 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r', ylabel='Quantity C')
     return  jg3.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_bothlabeled(jp_data):
     jg4 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=False, color='k',
                              xlabel='Quantity B', ylabel='Quantity C')
     return  jg4.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_zerominFalse(jp_data):
     jg1 = figutils.jointplot(x='A', y='C', data=jp_data, zeromin=False, one2one=False)
     return jg1.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_one2one(jp_data):
     jg1 = figutils.jointplot(x='B', y='C', data=jp_data, one2one=True)
     return jg1.fig
@@ -370,21 +370,21 @@ def test__boxplot_legend():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_basic(plot_data):
     fig, ax = pyplot.subplots()
     figutils.boxplot(ax, plot_data, 1)
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_manual_median(plot_data):
     fig, ax = pyplot.subplots()
     figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25])
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_with_mean(plot_data):
     fig, ax = pyplot.subplots()
     figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
@@ -392,7 +392,7 @@ def test_boxplot_with_mean(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_formatted(plot_data):
     fig, ax = pyplot.subplots()
     bp = figutils.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
@@ -401,7 +401,7 @@ def test_boxplot_formatted(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_prob(plot_data):
     fig, ax = pyplot.subplots()
     fig = figutils.probplot(plot_data, ax=ax, xlabel='Test xlabel')
@@ -409,7 +409,7 @@ def test_probplot_prob(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_qq(plot_data):
     fig, ax = pyplot.subplots()
     fig = figutils.probplot(plot_data, ax=ax, axtype='qq', ylabel='Test label',
@@ -417,7 +417,7 @@ def test_probplot_qq(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_pp(plot_data):
     fig, ax = pyplot.subplots()
     scatter_kws = dict(color='b', linestyle='--', markeredgecolor='g', markerfacecolor='none')
@@ -426,7 +426,7 @@ def test_probplot_pp(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_prob_bestfit(plot_data):
     fig, ax = pyplot.subplots()
     fig = figutils.probplot(plot_data, ax=ax, xlabel='Test xlabel',
@@ -435,7 +435,7 @@ def test_probplot_prob_bestfit(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_qq_bestfit(plot_data):
     fig, ax = pyplot.subplots()
     fig = figutils.probplot(plot_data, ax=ax, axtype='qq',
@@ -443,7 +443,7 @@ def test_probplot_qq_bestfit(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_probplot_pp_bestfit(plot_data):
     fig, ax = pyplot.subplots()
     scatter_kws = {'marker': 's', 'color': 'red'}
@@ -454,7 +454,7 @@ def test_probplot_pp_bestfit(plot_data):
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_logLabelFormatter():
     fig, ax = pyplot.subplots()
     ax.plot([1, 5], [0.0005, 5e6])
@@ -464,7 +464,7 @@ def test_logLabelFormatter():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_logLabelFormatter_alt():
     fig, ax = pyplot.subplots()
     ax.plot([1, 5], [0.0005, 5e6])
@@ -474,7 +474,7 @@ def test_logLabelFormatter_alt():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_log_formatter():
     fig, (ax1, ax2) = pyplot.subplots(ncols=2)
     ax1.set_yscale('log')
@@ -487,7 +487,7 @@ def test_log_formatter():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test__connect_spines():
     fig, ((ax1, ax2), (ax3, ax4)) = pyplot.subplots(ncols=2, nrows=2)
     figutils._connect_spines(ax1, ax2, 0.5, 0.75)
@@ -495,7 +495,7 @@ def test__connect_spines():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_parallel_coordinates():
     df = seaborn.load_dataset('iris')
     fig = figutils.parallel_coordinates(df, hue='species')
@@ -515,14 +515,14 @@ def cat_hist_data():
     return df
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_categorical_histogram_simple(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
     fig = figutils.categorical_histogram(cat_hist_data, 'depth', bins)
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_categorical_histogram_complex(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
     fig = figutils.categorical_histogram(cat_hist_data, 'depth', bins, hue='year', row='has_outflow')
