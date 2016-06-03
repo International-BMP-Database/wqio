@@ -18,6 +18,94 @@ SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
 SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
 
 
+def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowcol=None,
+                       stormcol='storm', debug=False):
+    """
+    Parses the hydrologic data into distinct storms.
+
+    In this context, a storm is defined as starting whenever the
+    hydrologic records shows non-zero precipitation or [in|out]flow
+    from the BMP after a minimum inter-event dry period duration
+    specified in the the function call.
+
+    Parameters
+    ----------
+    debug : bool (default = False)
+        If True, diagnostic columns will not be dropped prior to
+        returning the dataframe of parsed_storms.
+
+    Writes
+    ------
+    None
+
+    Returns
+    -------
+    parsed_storms : pandas.DataFrame
+        Copy of the origin `hydrodata` DataFrame, but resmapled to a
+        fixed frequency, columns possibly renamed, and a `storm` column
+        added to denote the storm to which each record belongs. Records
+        where `storm` == 0 are not a part of any storm.
+
+    """
+
+    data = data.copy()
+
+    # pull out the rain and flow data
+    if precipcol is None:
+        precipcol = 'precip'
+        data.loc[:, precipcol] = np.nan
+
+    if inflowcol is None:
+        inflowcol = 'inflow'
+        data.loc[:, inflowcol] = np.nan
+
+    if outflowcol is None:
+        outflowcol = 'outflow'
+        data.loc[:, outflowcol] = np.nan
+
+    ie_periods = MIN_PER_HOUR / data.index.freq.n * ie_hours
+
+    # bool column where True means there's rain or flow of some kind
+    data = (
+        data.select(lambda c: c in [inflowcol, outflowcol, precipcol], axis='columns')
+            .assign(_wet=lambda df: np.any(df > 0, axis=1))
+            .assign(_windiff=lambda df:
+                df['_wet'].rolling(int(ie_periods), min_periods=1)
+                    .apply(lambda w: w.any())
+                    .diff())
+            .assign(_event_start=False, _event_end=False)
+    )
+    # copy the bool column into its own df and add a bunch
+    # shifted columns so each row looks backwards and forwards
+    # copy the bool column into its own df and add a bunch
+    # shifted columns so each row looks backwards and forwards
+    firstrow = data.iloc[0]
+    if firstrow['_wet']:
+        data.loc[firstrow.name, '_windiff'] = 1
+
+    starts = data['_windiff'] == 1
+    stops = data['_windiff'].shift(-1 * ie_periods) == -1
+
+    # periods between storms are where the cumulative number
+    # of storms that have ended are equal to the cumulative
+    # number of storms that have started.
+    # Stack Overflow: http://tinyurl.com/lsjkr9x
+
+    data = (
+        data.assign(_event_start=np.where(starts, True, False))
+            .assign(_event_end=np.where(stops, True, False))
+            .assign(storm=lambda df: df['_event_start'].cumsum())
+            .assign(storm=lambda df: np.where(df['storm'] == df['_event_end'].shift(2).cumsum(), 0, df['storm']))
+    )
+
+
+    if not debug:
+        cols_to_drop = ['_wet', '_windiff', '_event_end', '_event_start']
+        data = data.drop(cols_to_drop, axis=1)
+
+    return data
+
+
 class Storm(object):
     """ Object representing a storm event
 
@@ -725,95 +813,14 @@ class HydroRecord(object):
         return self._storm_stats.sort_values(by=['Storm Number']).reset_index(drop=True)
 
     def _define_storms(self, debug=False):
-        """ Parses the hydrologic data into distinct storms. In this
-        context, a storm is defined as starting whenever the hydrologic
-        records shows non-zero precipitation or [in|out]flow from the
-        BMP after a minimum inter-event dry period duration specified
-        in the the function call.
 
-        Parameters
-        ----------
-        debug : bool (default = False)
-            If True, diagnostic columns will not be dropped prior to
-            returning the dataframe of parsed_storms.
-
-        Writes
-        ------
-        None
-
-        Returns
-        -------
-        parsed_storms : pandas.DataFrame
-            Copy of the origin `hydrodata` DataFrame, but resmapled to
-            a fixed frequency, columns possibly renamed, and a `storm`
-            column added to denote the storm to which each record
-            belongs. Records where `storm` == 0 are not a part of any
-            storm.
-
-        """
-
-        data = self._raw_data.copy()
-
-        # pull out the rain and flow data
-        if self.precipcol is None:
-            precipcol = 'precip'
-            data.loc[:, precipcol] = np.nan
-        else:
-            precipcol = self.precipcol
-
-        if self.inflowcol is None:
-            inflowcol = 'inflow'
-            data.loc[:, inflowcol] = np.nan
-        else:
-            inflowcol = self.inflowcol
-
-        if self.outflowcol is None:
-            outflowcol = 'outflow'
-            data.loc[:, outflowcol] = np.nan
-        else:
-            outflowcol = self.outflowcol
-
-        # bool column where True means there's rain or flow of some kind
-        water_columns = [precipcol, inflowcol, outflowcol]
-        data = (
-            data.assign(wet=np.any(data[water_columns] > 0, axis=1))
-                .assign(windiff=lambda df:
-                    df['wet'].rolling(int(self.intereventPeriods), min_periods=1)
-                        .apply(lambda w: w.any())
-                        .diff())
-                .assign(event_start=False, event_end=False)
-
-        )
-        # # copy the bool column into its own df and add a bunch
-        # # shifted columns so each row looks backwards and forwards
-        firstrow = data.iloc[0]
-        if firstrow['wet']:
-            data.loc[firstrow.name, 'windiff'] = 1
-
-        starts = data['windiff'] == 1
-        data.loc[starts, 'event_start'] = True
-
-        stops = data['windiff'].shift(-1 * self.intereventPeriods) == -1
-        data.loc[stops, 'event_end'] = True
-
-        # initialize the new column as zeros
-        data.loc[:, self.stormcol] = 0
-
-        # each time a storm starts, incriment the storm number + 1
-        data.loc[:, self.stormcol] = data['event_start'].cumsum()
-
-        # periods between storms are where the cumulative number
-        # of storms that have ended are equal to the cumulative
-        # number of storms that have started.
-        # Stack Overflow: http://tinyurl.com/lsjkr9x
-        nostorm = data[self.stormcol] == data['event_end'].shift(2).cumsum()
-        data.loc[nostorm, self.stormcol] = 0
-
-        if not debug:
-            cols_to_drop = ['wet', 'windiff', 'event_end', 'event_start']
-            data = data.drop(cols_to_drop, axis=1)
-
-        return data
+        parsed = parse_storm_events(self._raw_data, self.intereventHours,
+                                    precipcol=self.precipcol,
+                                    inflowcol=self.inflowcol,
+                                    outflowcol=self.outflowcol,
+                                    stormcol='storm',
+                                    debug=debug)
+        return parsed
 
     def getStormFromTimestamp(self, timestamp, lookback_hours=0, smallstorms=False):
         """ Get the storm associdated with a give (sample) date

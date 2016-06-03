@@ -23,6 +23,58 @@ class fakeStormSublcass(hydro.Storm):
     is_subclassed = True
 
 
+def setup_storms(filename):
+    storm_file = helpers.test_data_path(filename)
+    orig_record = pandas.read_csv(
+        storm_file, index_col='date', parse_dates=True
+    ).resample('5T').asfreq().fillna(0)
+
+    parsed = hydro.parse_storm_events(orig_record, 3, precipcol='rain', inflowcol='influent', debug=True)
+    return parsed
+
+
+@pytest.fixture
+def storms_simple():
+    return setup_storms('teststorm_simple.csv')
+
+
+@pytest.fixture
+def storms_firstobs():
+    return setup_storms('teststorm_firstobs.csv')
+
+
+@pytest.fixture
+def storms_singular():
+    return setup_storms('teststorm_singular.csv')
+
+
+@pytest.mark.parametrize('parsed', [
+    storms_simple(), storms_firstobs(), storms_singular(),
+])
+def test_number_of_storms(parsed):
+    last_storm = parsed['storm'].max()
+    assert last_storm == 5
+
+
+@pytest.mark.parametrize(('parsed', 'sn', 'idx', 'known'), [
+    (storms_simple(), 1, 0, '2013-05-18 13:40:00'),
+    (storms_simple(), 2, 0, '2013-05-19 06:10'),
+    (storms_simple(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_simple(), 2, -1, '2013-05-19 11:35'),
+    (storms_singular(), 1, 0, '2013-05-18 13:40:00'),
+    (storms_singular(), 2, 0, '2013-05-19 07:00'),
+    (storms_singular(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_singular(), 2, -1, '2013-05-19 07:05'),
+    (storms_firstobs(), 1, 0, '2013-05-18 12:05'),
+    (storms_firstobs(), 2, 0, '2013-05-19 06:10'),
+    (storms_firstobs(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_firstobs(), 2, -1, '2013-05-19 11:35'),
+])
+def test_storm_start_end(parsed, sn, idx, known):
+    storm = parsed[parsed['storm'] == sn]
+    assert storm.index[idx] == pandas.Timestamp(known)
+
+
 class base_HydroRecordMixin(object):
     known_storm_stats_columns = [
         'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
@@ -118,7 +170,7 @@ class Test_HydroRecord_Simple(base_HydroRecordMixin):
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
         self.storm_file = helpers.test_data_path('teststorm_simple.csv')
 
-        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'outflow', 'storm']
         self.known_stats_subset = pandas.DataFrame({
             'Storm Number': [1, 5],
             'Antecedent Days': [numpy.nan, 0.708333],
@@ -176,7 +228,6 @@ class Test_HydroRecord_Simple(base_HydroRecordMixin):
         assert sn == self.known_storm
         assert isinstance(storm, hydro.Storm)
 
-
     def test_getStormFromTimestame_big(self):
         sn, storm = self.hr.getStormFromTimestamp(self.known_storm1_start)
         assert sn == 1
@@ -209,7 +260,7 @@ class Test_HydroRecord_Singular(base_HydroRecordMixin):
         self.known_storm2_start = pandas.Timestamp('2013-05-19 07:00')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 07:05')
         self.storm_file = helpers.test_data_path('teststorm_singular.csv')
-        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
@@ -230,7 +281,7 @@ class Test_HydroRecord_FirstObservation(base_HydroRecordMixin):
         self.known_storm2_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
         self.storm_file = helpers.test_data_path('teststorm_firstobs.csv')
-        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
@@ -252,7 +303,7 @@ class TestHydroRecord_diffStormClass(base_HydroRecordMixin):
         self.known_storm2_end = pandas.Timestamp('2013-05-19 11:35')
         self.storm_file = helpers.test_data_path('teststorm_simple.csv')
 
-        self.known_std_columns = ['rain', 'influent', 'effluent', 'outflow', 'storm']
+        self.known_std_columns = ['rain', 'influent', 'outflow', 'storm']
         self.orig_record = pandas.read_csv(
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
