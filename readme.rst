@@ -6,8 +6,9 @@ wqio - Water Quality, Inflow/Outflow
 .. image:: https://travis-ci.org/Geosyntec/wqio.svg?branch=master
     :target: https://travis-ci.org/Geosyntec/wqio
 
-.. image:: https://coveralls.io/repos/github/Geosyntec/wqio/badge.svg?branch=master
-    :target: https://coveralls.io/github/Geosyntec/wqio?branch=master
+
+.. image:: https://codecov.io/github/Geosyntec/wqio/coverage.svg?precision=1
+    :target: https://codecov.io/gh/Geosyntec/wqio
 
 .. image:: https://anaconda.org/phobson/wqio/badges/version.svg
     :target: https://anaconda.org/phobson/wqio

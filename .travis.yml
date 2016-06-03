@@ -22,7 +22,7 @@ install:
   - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy
   - conda install --yes coverage docopt requests pyyaml pytest pytest-cov mock
   - conda install --yes mpl-probscale pytest-mpl --channel=conda-forge
-  - pip install coveralls
+  - pip install codecov
   - pip install .
 
 script:
@@ -32,6 +32,6 @@ after_success:
   - if [ ${COVERAGE} = true ]; then
       coverage run --source wqio check_wqio.py;
       coverage report -m;
-      coveralls;
+      codecov;
     fi
 
