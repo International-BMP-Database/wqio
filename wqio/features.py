@@ -336,7 +336,7 @@ class Location(object):
 
     @cache_readonly
     def NUnique(self):
-        return pandas.unique(self.data).shape[0]
+        return pandas.unique(self.raw_data[self.rescol]).shape[0]
 
     @cache_readonly
     def fractionND(self):
