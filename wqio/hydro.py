@@ -10,6 +10,7 @@ import seaborn.apionly as seaborn
 import pandas
 
 from wqio import utils
+from wqio import viz
 
 SEC_PER_MINUTE = 60.
 MIN_PER_HOUR = 60.
@@ -892,12 +893,12 @@ class HydroRecord(object):
 
         See also
         --------
-        utils.figutils.categorical_histogram
+        viz.categorical_histogram
         seaborn.factorplot
 
         """
 
-        fg = utils.figutils.categorical_histogram(
+        fg = viz.categorical_histogram(
             self.storm_stats, valuecol, bins, **factoropts
         )
         fg.fig.tight_layout()
