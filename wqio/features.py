@@ -8,11 +8,13 @@ import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn.apionly as seaborn
+import probscale
 
 from wqio import utils
 from wqio import bootstrap
 from wqio.ros import ROS
-
+from wqio import validate
+from wqio import viz
 
 # meta data mappings based on station
 station_names = {
@@ -535,14 +537,14 @@ class Location(object):
         }
 
         if log:
-            wnf = utils.figutils.whiskers_and_fliers(
+            wnf = viz.whiskers_and_fliers(
                 np.log(self.data),
                 np.log(self.pctl25),
                 np.log(self.pctl75),
                 transformout=np.exp
             )
         else:
-            wnf = utils.figutils.whiskers_and_fliers(
+            wnf = viz.whiskers_and_fliers(
                 self.data,
                 self.pctl25,
                 self.pctl75,
@@ -599,7 +601,7 @@ class Location(object):
 
         """
 
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
         meankwargs = dict(
             marker=self.plot_marker, markersize=5,
@@ -616,16 +618,15 @@ class Location(object):
                         manage_xticks=False, patch_artist=patch_artist,
                         meanprops=meankwargs)
 
-            utils.figutils.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
+            viz.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
                                          patch_artist=patch_artist)
         else:
             self.verticalScatter(ax=ax, pos=pos, jitter=width*0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
 
         ax.set_yscale(yscale)
-        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
-            ax.yaxis.set_major_formatter(label_format)
+            ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
         utils.figutils.gridlines(ax, yminor=True)
 
         if ylabel:
@@ -686,22 +687,18 @@ class Location(object):
 
         """
 
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
         scatter_kws = plotopts.copy()
         scatter_kws['color'] = plotopts.get('color', self.color)
         scatter_kws['label'] = plotopts.get('label', self.name)
         scatter_kws['marker'] = plotopts.get('marker', self.plot_marker)
         scatter_kws['linestyle'] = plotopts.get('linestyle', 'none')
-        fig = utils.figutils.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
+        fig = viz.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
                                       bestfit=bestfit, scatter_kws=scatter_kws)
 
         if yscale == 'log':
             pass
-            # label_format = mticker.FuncFormatter(
-            #     utils.figutils.alt_logLabelFormatter
-            # )
-            # ax.yaxis.set_major_formatter(label_format)
 
         if managegrid:
             utils.figutils.gridlines(ax, yminor=True)
@@ -710,7 +707,7 @@ class Location(object):
             ax.set_yticklabels([])
 
         if rotateticklabels:
-            utils.figutils.rotateTickLabels(ax, 45, 'x', ha='right')
+            viz.rotateTickLabels(ax, 45, 'x', ha='right')
 
         if setxlimits and axtype == 'prob':
             utils.figutils.setProbLimits(ax, self.N, 'x')
@@ -822,7 +819,7 @@ class Location(object):
 
         """
 
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
 
         if jitter == 0:
@@ -1282,7 +1279,7 @@ class Dataset(object):
 
         """
 
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
             if loc.include:
@@ -1291,9 +1288,8 @@ class Dataset(object):
                             patch_artist=patch_artist, minpoints=minpoints)
 
         ax.set_yscale(yscale)
-        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if yscale == 'log':
-            ax.yaxis.set_major_formatter(label_format)
+            ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
         utils.figutils.gridlines(ax, yminor=True)
 
         if ylabel:
@@ -1361,7 +1357,7 @@ class Dataset(object):
 
         """
 
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
         for loc in [self.influent, self.effluent]:
             if loc.include:
@@ -1382,7 +1378,7 @@ class Dataset(object):
             ax.set_ylabel(ylabel)
 
         if rotateticklabels:
-            utils.figutils.rotateTickLabels(ax, 45, 'x')
+            viz.rotateTickLabels(ax, 45, 'x')
 
         if setxlimits and axtype == 'prob':
             N = np.max([self.influent.N, self.effluent.N])
@@ -1529,7 +1525,7 @@ class Dataset(object):
         """
 
         # set up the figure/axes
-        fig, ax = utils.figutils._check_ax(ax)
+        fig, ax = validate.axes(ax)
 
         # set the scales
         ax.set_xscale(xscale)
@@ -1564,7 +1560,6 @@ class Dataset(object):
                            label='Both not detected',  markerfacecolor='none',
                            markeredgecolor='black', **markerkwargs)
 
-        label_format = mticker.FuncFormatter(utils.figutils.alt_logLabelFormatter)
         if xscale != 'log':
             ax.set_xlim(left=0)
 
