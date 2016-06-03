@@ -2,29 +2,7 @@ import warnings
 
 import pandas
 
-
-def santizeTimestamp(datelike):
-    """ Converts datetime-like objects to pandas.Timestamp
-
-    Parameters
-    ----------
-    datelike : datetime.datetime, string, or Timestamp
-        The value to be coerced into the pandas.Timestamp.
-
-    Returns
-    -------
-    timestamp : pandas.Timestamp
-        Coerced value.
-
-    """
-
-    try:
-        timestamp = pandas.Timestamp(datelike)
-    except:
-        msg = '{} could not be coerced into a pandas.Timestamp'.format(datelike)
-        raise ValueError(msg)
-
-    return timestamp
+from wqio import validate
 
 
 def getSeason(date):
@@ -48,7 +26,7 @@ def getSeason(date):
 
     """
 
-    date = santizeTimestamp(date)
+    date = validate.timestamp(date)
     if (date.month == 12 and date.day >= 22) or \
             (date.month in [1, 2]) or \
             (date.month == 3 and date.day < 22):
