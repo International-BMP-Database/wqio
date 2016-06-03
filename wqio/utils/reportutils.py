@@ -1,9 +1,9 @@
 from textwrap import dedent
 import os
 import subprocess
+from io import StringIO
 
-from six import StringIO
-import numpy as np
+import numpy
 import pandas
 
 from wqio.tests import helpers
@@ -489,7 +489,7 @@ class LaTeXDirectory(object):
         return tex
 
 
-@np.deprecate
+@numpy.deprecate
 def constructPath(name, ext, *args):
     '''
     Builds a path from a filename, extension, and directories.
@@ -510,7 +510,7 @@ def constructPath(name, ext, *args):
     return filepath
 
 
-@np.deprecate
+@numpy.deprecate
 def makeTablesFromCSVStrings(tablestring, texpath=None, csvpath=None):
     """ Takes a string already in CSV format and writes it to a CSV
     and LaTeX files.
@@ -541,7 +541,7 @@ def makeTablesFromCSVStrings(tablestring, texpath=None, csvpath=None):
         with open(texpath, 'w') as tex:
             tex.write(df.to_latex(index=False).replace("Unnamed: 1", ""))
 
-@np.deprecate
+@numpy.deprecate
 def addStatsToOutputSummary(csvpath, index_cols=['Date'], na_values='--'):
     """ Reads a CSV file and appends its stats to the bottom.
 
@@ -581,7 +581,7 @@ def addStatsToOutputSummary(csvpath, index_cols=['Date'], na_values='--'):
     summary[orig_cols].to_csv(csvpath, na_rep='--')
     return summary
 
-@np.deprecate
+@numpy.deprecate
 def addExternalValueToOutputSummary(csvpath, comparedict, comparecol,
                                     index_cols=['Date'], na_values='--'):
     # read in the data, pretending that the dates are strings

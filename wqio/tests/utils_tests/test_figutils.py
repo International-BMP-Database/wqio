@@ -1,18 +1,9 @@
-import sys
-import os
-import subprocess
-from io import StringIO
-
 import pytest
 import numpy.testing as nptest
 
 import numpy
-import pandas
 import matplotlib
-matplotlib.use('agg')
-import seaborn.apionly as seaborn
 from matplotlib import pyplot
-import matplotlib.ticker as mticker
 
 from wqio.utils import figutils
 

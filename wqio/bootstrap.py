@@ -1,10 +1,7 @@
-from __future__ import division
 import warnings
 
-import numpy as np
+import numpy
 import scipy.stats as stats
-import scipy.stats.distributions as dist
-import scipy.optimize as opt
 
 
 __all__ = ['BCA', 'percentile']
@@ -25,11 +22,11 @@ def _acceleration(data):
 
     """
 
-    data = np.asarray(data)
+    data = numpy.asarray(data)
 
     # intermediate values
-    SSD = np.sum((data.mean() - data)**3)
-    SCD = np.sum((data.mean() - data)**2)
+    SSD = numpy.sum((data.mean() - data)**3)
+    SCD = numpy.sum((data.mean() - data)**2)
 
     # dodge the ZeroDivision error
     if SCD == 0:
@@ -57,7 +54,7 @@ def _make_boot_index(elements, niter):
         sample a dataset ``niter`` times.
 
     """
-    return np.random.randint(low=0, high=elements, size=(niter, elements))
+    return numpy.random.randint(low=0, high=elements, size=(niter, elements))
 
 
 def BCA(data, statfxn, niter=5000, alpha=0.05):
@@ -104,7 +101,7 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
     boot_result = boot_stats.mean()
 
     # number of results below the premlinary estimate
-    NumBelow = np.sum(boot_stats < primary_result)
+    NumBelow = numpy.sum(boot_stats < primary_result)
     if NumBelow == 0:
         NumBelow = 0.00001
 
@@ -117,12 +114,12 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
 
     # z-stats on the % of `NumBelow` and the confidence limits
     else:
-        z0 = dist.norm.ppf(NumBelow / niter)
-        z = dist.norm.ppf([0.5 * alpha, 1 - (0.5 * alpha)])
+        z0 = stats.norm.ppf(NumBelow / niter)
+        z = stats.norm.ppf([0.5 * alpha, 1 - (0.5 * alpha)])
 
         # refine the confidence limits (alphas)
         zTotal = (z0 + (z0 + z) / (1 - a_hat*(z0 + z)))
-        new_alpha = dist.norm.cdf(zTotal) * 100.0
+        new_alpha = stats.norm.cdf(zTotal) * 100.0
 
         # confidence intervals from the new alphas
         CI = stats.scoreatpercentile(boot_stats, new_alpha)
@@ -177,7 +174,7 @@ def percentile(data, statfxn, niter, alpha=0.05):
     boot_stats = statfxn(data[index], axis=-1)
 
     # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
-    CI = np.percentile(boot_stats, [alpha*50, 100-(alpha*50)], axis=0)
+    CI = numpy.percentile(boot_stats, [alpha*50, 100-(alpha*50)], axis=0)
 
     return statfxn(data), CI
 

@@ -3,9 +3,8 @@ from functools import partial
 
 import numpy
 import matplotlib
-from matplotlib import pyplot as pyplot
-from matplotlib import ticker as ticker
-from matplotlib import gridspec as gridspec
+from matplotlib import pyplot
+from matplotlib import ticker
 import scipy.stats as stats
 import seaborn.apionly as seaborn
 import probscale

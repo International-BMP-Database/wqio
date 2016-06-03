@@ -3,7 +3,6 @@ from textwrap import dedent
 from io import StringIO
 
 import pytest
-import numpy.testing as nptest
 import pandas.util.testing as pdtest
 
 import numpy

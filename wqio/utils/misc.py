@@ -1,15 +1,10 @@
-from __future__ import print_function, division
+from io import StringIO
 
-import sys
-
-from six import StringIO
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy
 import pandas
-from scipy import stats
-import statsmodels.api as sm
 
 
+@numpy.deprecate(new_name='addColumnLevel')
 def addSecondColumnLevel(levelval, levelname, df):
     """ Add a second level to the column-index if a dataframe.
 
@@ -40,22 +35,7 @@ def addSecondColumnLevel(levelval, levelname, df):
 
     """
 
-    if isinstance(df.columns, pandas.MultiIndex):
-        raise ValueError('Dataframe already has MultiIndex on columns')
-
-    origlevel = 'quantity'
-    if df.columns.names[0] is not None:
-        origlevel = df.columns.names[0]
-
-    # define the index
-    colarray = [[levelval]*len(df.columns), df.columns]
-    colindex = pandas.MultiIndex.from_arrays(colarray)
-
-    # copy the dataframe and redefine the columns
-    newdf = df.copy()
-    newdf.columns = colindex
-    newdf.columns.names = [levelname, origlevel]
-    return newdf
+    return addColumnLevel(df, levelval, levelname)
 
 
 def addColumnLevel(df, levelvalue, levelname):
@@ -65,7 +45,7 @@ def addColumnLevel(df, levelvalue, levelname):
     ----------
     df : pandas.DataFrame
         The original dataframe to be modified.
-    levelval : int or string
+    levelvalue : int or string
         Constant value to be assigned to the second level.
     levelname : string
         The name of the second level.
@@ -87,7 +67,23 @@ def addColumnLevel(df, levelvalue, levelname):
                names=['loc', 'quantity'])
 
     """
-    return addSecondColumnLevel(levelvalue, levelname, df)
+    if isinstance(df.columns, pandas.MultiIndex):
+        raise ValueError('Dataframe already has MultiIndex on columns')
+
+    origlevel = 'quantity'
+    if df.columns.names[0] is not None:
+        origlevel = df.columns.names[0]
+
+    # define the index
+    colarray = [[levelvalue]*len(df.columns), df.columns]
+    colindex = pandas.MultiIndex.from_arrays(colarray)
+
+    # copy the dataframe and redefine the columns
+    newdf = df.copy()
+    newdf.columns = colindex
+    newdf.columns.names = [levelname, origlevel]
+
+    return newdf
 
 
 def getUniqueDataframeIndexVal(df, indexlevel):
@@ -110,7 +106,7 @@ def getUniqueDataframeIndexVal(df, indexlevel):
 
     """
 
-    index = np.unique(df.index.get_level_values(indexlevel).tolist())
+    index = numpy.unique(df.index.get_level_values(indexlevel).tolist())
     if index.shape != (1,):
         raise ValueError('index level "%s" is not unique!' % indexlevel)
 
@@ -272,8 +268,8 @@ def _classifier(value, bins, units=None):
 
     units = units or ''
 
-    if np.isnan(value):
-        return np.nan
+    if numpy.isnan(value):
+        return numpy.nan
 
     # below the lower edge
     elif value <= min(bins):
@@ -320,7 +316,7 @@ def _unique_categories(classifier, bins):
     ['<5', '5 - 10', '10 - 15', '>15']
 
     """
-    bins = np.asarray(bins)
+    bins = numpy.asarray(bins)
     midpoints = 0.5 * (bins[:-1] + bins[1:])
     all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
     return [classifier(value) for value in all_bins]

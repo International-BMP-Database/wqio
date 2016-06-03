@@ -1,36 +1,11 @@
 import sys
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot
 import seaborn.apionly as seaborn
 import pandas
 
 from wqio import utils
 
-
-_basic_doc = """ {} water quality sample
-
-Container to hold water quality results from many different pollutants
-collected at a single point in time.
-
-Parameters
-----------
-dataframe : pandas.DataFrame
-    The water quality data.
-starttime : datetime-like
-    The date and time at which the sample collection started.
-samplefreq : string, optional
-    A valid pandas timeoffset string specifying the frequency with which
-    sample aliquots are collected.
-endtime : datetime-like, optional
-    The date and time at which sample collection ended.
-storm : wqio.Storm object, optional
-    A Storm object (or a subclass or Storm) that triggered sample
-    collection.
-rescol, qualcol, dlcol, unitscol : string, optional
-    Strings that define the column labels for the results, qualifiers,
-    detection limits, and units if measure, respectively.
-
-"""
 
 class _basic_wq_sample(object):
     def __init__(self, dataframe, starttime, samplefreq=None,
@@ -128,7 +103,7 @@ class _basic_wq_sample(object):
 
         if asrug:
             seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha, mew=0.75)
-            line = plt.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
+            line = pyplot.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
                               color='black', alpha=alpha, linestyle='none')
 
         else:
@@ -136,7 +111,7 @@ class _basic_wq_sample(object):
                             linestyle=self.linestyle, color='Black',
                             zorder=10, label='_nolegend', alpha=alpha,
                             mew=0.75)
-            line = plt.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
+            line = pyplot.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
                               color='black', alpha=alpha, linestyle='none')
 
         return line
@@ -213,7 +188,33 @@ class GrabSample(_basic_wq_sample):
                 )
         return self._sample_ts
 
-if sys.version_info.major >= 3:
-    _basic_wq_sample.__doc__  = _basic_doc.format("Basic")
-    CompositeSample.__doc__ = _basic_doc.format("Composite")
-    GrabSample.__doc__ = _basic_doc.format("Grab")
+
+_basic_doc = """ {} water quality sample
+
+Container to hold water quality results from many different pollutants
+collected at a single point in time.
+
+Parameters
+----------
+dataframe : pandas.DataFrame
+    The water quality data.
+starttime : datetime-like
+    The date and time at which the sample collection started.
+samplefreq : string, optional
+    A valid pandas timeoffset string specifying the frequency with which
+    sample aliquots are collected.
+endtime : datetime-like, optional
+    The date and time at which sample collection ended.
+storm : wqio.Storm object, optional
+    A Storm object (or a subclass or Storm) that triggered sample
+    collection.
+rescol, qualcol, dlcol, unitscol : string, optional
+    Strings that define the column labels for the results, qualifiers,
+    detection limits, and units if measure, respectively.
+
+"""
+
+
+_basic_wq_sample.__doc__  = _basic_doc.format("Basic")
+CompositeSample.__doc__ = _basic_doc.format("Composite")
+GrabSample.__doc__ = _basic_doc.format("Grab")

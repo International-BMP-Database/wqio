@@ -2,8 +2,6 @@ import pytest
 from wqio.tests import helpers
 
 import numpy
-import matplotlib
-matplotlib.use('agg')
 from matplotlib import pyplot
 import seaborn.apionly as seaborn
 

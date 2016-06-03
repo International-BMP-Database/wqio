@@ -1,20 +1,17 @@
-from __future__ import division
-
-import numpy as np
+import numpy
 from scipy import stats
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
+from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn.apionly as seaborn
-import probscale
 
 from wqio import utils
 from wqio import bootstrap
 from wqio.ros import ROS
 from wqio import validate
 from wqio import viz
+
 
 # meta data mappings based on station
 station_names = {
@@ -250,7 +247,7 @@ class Location(object):
         self.rescol = rescol
         self.qualcol = qualcol
         self.cencol = cencol
-        if np.isscalar(ndval):
+        if numpy.isscalar(ndval):
             self.ndvals = [ndval]
         else:
             self.ndvals = ndval
@@ -276,7 +273,7 @@ class Location(object):
         return self._dataframe
 
     @property
-    @np.deprecate
+    @numpy.deprecate
     def full_data(self):
         return self.dataframe
 
@@ -343,16 +340,16 @@ class Location(object):
         return self.ND/self.N
 
     @cache_readonly
-    @np.deprecate
+    @numpy.deprecate
     def pnorm(self):
         if self.hasData:
             return stats.shapiro(self.data)[1]
 
     @cache_readonly
-    @np.deprecate
+    @numpy.deprecate
     def plognorm(self):
         if self.hasData:
-            return stats.shapiro(np.log(self.data))[1]
+            return stats.shapiro(numpy.log(self.data))[1]
 
     @cache_readonly
     def shapiro(self):
@@ -362,7 +359,7 @@ class Location(object):
     @cache_readonly
     def shapiro_log(self):
         if self.hasData:
-            return stats.shapiro(np.log(self.data))
+            return stats.shapiro(numpy.log(self.data))
 
     @cache_readonly
     def lilliefors(self):
@@ -372,7 +369,7 @@ class Location(object):
     @cache_readonly
     def lilliefors_log(self):
         if self.hasData:
-            return sm.stats.lillifors(np.log(self.data))
+            return sm.stats.lillifors(numpy.log(self.data))
 
     @cache_readonly
     def anderson(self):
@@ -382,7 +379,7 @@ class Location(object):
     @cache_readonly
     def anderson_log(self):
         if self.hasData:
-            return stats.anderson(np.log(self.data))
+            return stats.anderson(numpy.log(self.data))
 
     @cache_readonly
     def analysis_space(self):
@@ -465,12 +462,12 @@ class Location(object):
     @cache_readonly
     def std(self):
         if self.hasData:
-            return np.std(self.data)
+            return numpy.std(self.data)
 
     @cache_readonly
     def logmean(self):
         if self.all_positive and self.hasData:
-            return np.mean(np.log(self.data))
+            return numpy.mean(numpy.log(self.data))
 
     @cache_readonly
     def logmean_conf_interval(self):
@@ -480,22 +477,22 @@ class Location(object):
     @cache_readonly
     def logstd(self):
         if self.all_positive and self.hasData:
-            return np.std(np.log(self.data))
+            return numpy.std(numpy.log(self.data))
 
     @cache_readonly
     def geomean(self):
         if self.all_positive and self.hasData:
-            return np.exp(self.logmean)
+            return numpy.exp(self.logmean)
 
     @cache_readonly
     def geomean_conf_interval(self):
         if self.all_positive and self.hasData:
-            return np.exp(self.logmean_conf_interval)
+            return numpy.exp(self.logmean_conf_interval)
 
     @cache_readonly
     def geostd(self):
         if self.all_positive and self.hasData:
-            return np.exp(self.logstd)
+            return numpy.exp(self.logstd)
         else:
             return None
 
@@ -503,27 +500,27 @@ class Location(object):
     @cache_readonly
     def _median_boostrap(self):
         if self.hasData:
-            return bootstrap.BCA(self.data, np.median, niter=self.bsIter)
+            return bootstrap.BCA(self.data, numpy.median, niter=self.bsIter)
 
     @cache_readonly
     def _mean_boostrap(self):
         if self.hasData:
-            return bootstrap.BCA(self.data, np.mean, niter=self.bsIter)
+            return bootstrap.BCA(self.data, numpy.mean, niter=self.bsIter)
 
     @cache_readonly
     def _std_boostrap(self):
         if self.hasData:
-            return bootstrap.BCA(self.data, np.std, niter=self.bsIter)
+            return bootstrap.BCA(self.data, numpy.std, niter=self.bsIter)
 
     @cache_readonly
     def _logmean_boostrap(self):
         if self.all_positive and self.hasData:
-            return bootstrap.BCA(np.log(self.data), np.mean, niter=self.bsIter)
+            return bootstrap.BCA(numpy.log(self.data), numpy.mean, niter=self.bsIter)
 
     @cache_readonly
     def _logstd_boostrap(self):
         if self.all_positive and self.hasData:
-            return bootstrap.BCA(np.log(self.data), np.std, niter=self.bsIter)
+            return bootstrap.BCA(numpy.log(self.data), numpy.std, niter=self.bsIter)
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
@@ -538,10 +535,10 @@ class Location(object):
 
         if log:
             wnf = viz.whiskers_and_fliers(
-                np.log(self.data),
-                np.log(self.pctl25),
-                np.log(self.pctl75),
-                transformout=np.exp
+                numpy.log(self.data),
+                numpy.log(self.pctl25),
+                numpy.log(self.pctl75),
+                transformout=numpy.exp
             )
         else:
             wnf = viz.whiskers_and_fliers(
@@ -678,7 +675,7 @@ class Location(object):
             Specifies whether a best-fit line should be added to the
             plot.
         plotopts : keyword arguments
-            Additional options passed directly to `plt.plot` when
+            Additional options passed directly to `pyplot.plot` when
             drawing the data points.
 
         Returns
@@ -752,7 +749,7 @@ class Location(object):
             Toggles the use of patch artist instead of a line artists
             for the boxes
         plotopts : keyword arguments
-            Additional options passed directly to `plt.plot` when
+            Additional options passed directly to `pyplot.plot` when
             drawing the data points on the probability plots.
 
         Returns
@@ -762,10 +759,10 @@ class Location(object):
         """
 
         # setup the figure and axes
-        fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
-                         edgecolor='none')
-        ax1 = plt.subplot2grid((1, 4), (0, 0))
-        ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
+        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor='none',
+                            edgecolor='none')
+        ax1 = pyplot.subplot2grid((1, 4), (0, 0))
+        ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
@@ -827,7 +824,7 @@ class Location(object):
         else:
             low = pos - jitter * 0.5
             high = pos + jitter * 0.5
-            xvals = np.random.uniform(low=low, high=high, size=self.N)
+            xvals = numpy.random.uniform(low=low, high=high, size=self.N)
 
         if not ignoreROS and self.useROS:
             ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
@@ -1137,8 +1134,8 @@ class Dataset(object):
     @cache_readonly
     def _wilcoxon_stats(self):
         if self._paired_stats:
-            return stats.wilcoxon(np.log(self.paired_data.inflow.res),
-                                  np.log(self.paired_data.outflow.res))
+            return stats.wilcoxon(numpy.log(self.paired_data.inflow.res),
+                                  numpy.log(self.paired_data.outflow.res))
 
     @cache_readonly
     def _mannwhitney_stats(self):
@@ -1181,12 +1178,12 @@ class Dataset(object):
         # influent data
         infl = self.paired_data.inflow.res.values
         if log_infl:
-            infl = np.log(infl)
+            infl = numpy.log(infl)
 
         # effluent data
         effl = self.paired_data.outflow.res.values
         if log_effl:
-            effl = np.log(effl)
+            effl = numpy.log(effl)
 
         if self._paired_stats and \
         self.influent.fractionND <= 0.5 and \
@@ -1381,7 +1378,7 @@ class Dataset(object):
             viz.rotateTickLabels(ax, 45, 'x')
 
         if setxlimits and axtype == 'prob':
-            N = np.max([self.influent.N, self.effluent.N])
+            N = numpy.max([self.influent.N, self.effluent.N])
             utils.figutils.setProbLimits(ax, N, 'x')
 
         if managegrid:
@@ -1427,10 +1424,10 @@ class Dataset(object):
         """
 
         # setup the figure and axes
-        fig = plt.figure(figsize=(6.40, 3.00), facecolor='none',
-                         edgecolor='none')
-        ax1 = plt.subplot2grid((1, 4), (0, 0))
-        ax2 = plt.subplot2grid((1, 4), (0, 1), colspan=3)
+        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor='none',
+                            edgecolor='none')
+        ax1 = pyplot.subplot2grid((1, 4), (0, 0))
+        ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
@@ -1570,16 +1567,16 @@ class Dataset(object):
         if xscale == yscale and equal_scales:
             ax.set_aspect('equal')
             axis_limits = [
-                np.min([ax.get_xlim(), ax.get_ylim()]),
-                np.max([ax.get_xlim(), ax.get_ylim()])
+                numpy.min([ax.get_xlim(), ax.get_ylim()]),
+                numpy.max([ax.get_xlim(), ax.get_ylim()])
             ]
             ax.set_ylim(axis_limits)
             ax.set_xlim(axis_limits)
 
         elif yscale == 'linear' or xscale == 'linear':
             axis_limits = [
-                np.min([np.min(ax.get_xlim()), np.min(ax.get_ylim())]),
-                np.max([ax.get_xlim(), ax.get_ylim()])
+                numpy.min([numpy.min(ax.get_xlim()), numpy.min(ax.get_ylim())]),
+                numpy.max([ax.get_xlim(), ax.get_ylim()])
             ]
 
         # include the line of equality, if requested
@@ -1737,12 +1734,12 @@ class DataCollection(object):
         self.stationcol = stationcol
         self.paramcol = paramcol
         self.cencol = cencol
-        self.ndval = [ndval] if np.isscalar(ndval) else ndval
+        self.ndval = [ndval] if numpy.isscalar(ndval) else ndval
         self.bsIter = bsIter
 
         self.groupcols = [stationcol, paramcol]
         if othergroups is not None:
-            if np.isscalar(othergroups):
+            if numpy.isscalar(othergroups):
                 othergroups = [othergroups]
             self.groupcols.extend(othergroups)
 
@@ -1773,7 +1770,7 @@ class DataCollection(object):
                 return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
         else:
             def fxn(g):
-                g[self.roscol] = np.nan
+                g[self.roscol] = numpy.nan
                 return g
 
         keep_cols = self.columns + [self.roscol]
@@ -1840,38 +1837,38 @@ class DataCollection(object):
 
     @cache_readonly
     def medians(self):
-        return self._generic_stat(np.median, statname='median')
+        return self._generic_stat(numpy.median, statname='median')
 
     @cache_readonly
     def means(self):
-        return self._generic_stat(np.mean, statname='mean')
+        return self._generic_stat(numpy.mean, statname='mean')
 
     @cache_readonly
     def std_devs(self):
-        return self._generic_stat(np.std, statname='std. dev.')
+        return self._generic_stat(numpy.std, statname='std. dev.')
 
     def percentiles(self, percentile):
-        return self._generic_stat(lambda x: np.percentile(x, percentile),
+        return self._generic_stat(lambda x: numpy.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
                                   use_bootstrap=False)
 
     @cache_readonly
     def logmean(self):
-        return self._generic_stat(lambda x, axis=0: np.mean(np.log(x), axis=axis), statname='Log-mean')
+        return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
 
     @cache_readonly
     def logstd(self):
-        return self._generic_stat(lambda x, axis=0: np.std(np.log(x), axis=axis), statname='Log-std. dev.')
+        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis), statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
-        geomean = np.exp(self.logmean)
+        geomean = numpy.exp(self.logmean)
         geomean.columns.names = ['station', 'Geo-mean']
         return geomean
 
     @cache_readonly
     def geostd(self):
-        geostd = np.exp(self.logstd)
+        geostd = numpy.exp(self.logstd)
         geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
 
@@ -1956,7 +1953,7 @@ class DataCollection(object):
         df = self.tidy.copy()
         if log:
             plotcol = 'Log of {}'.format(self.rescol.replace('_', ' '))
-            df[plotcol] = np.log(df[self.rescol])
+            df[plotcol] = numpy.log(df[self.rescol])
         else:
             pltcol = self.rescol
 

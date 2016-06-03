@@ -1,6 +1,5 @@
-import numpy as np
+import numpy
 from scipy import stats
-import pandas
 import statsmodels.api as sm
 
 
@@ -40,7 +39,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     """
 
     # check on the number provided
-    if x is not None and not np.isinf(x) and not np.isnan(x):
+    if x is not None and not numpy.isinf(x) and not numpy.isnan(x):
 
         # check on the sigFigs
         if n < 1:
@@ -60,7 +59,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
         # logic to do all of the rounding
         elif x != 0.0:
-            order = np.floor(np.log10(np.abs(x)))
+            order = numpy.floor(numpy.log10(numpy.abs(x)))
 
             if -1.0 * expthresh <= order <= expthresh:
                 decimal_places = int(n - 1 - order)
@@ -325,7 +324,7 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
         'x', 'y', or 'both'. If using ``fitprobs``, variables should
         be expressed as a percentage, i.e.,
         Probablility transform = lambda x: ``dist``.ppf(x / 100.).
-        Log transform = lambda x: np.log(x).
+        Log transform = lambda x: numpy.log(x).
         Take care to not pass the same value to both ``fitlogs`` and
         ``figprobs`` as both transforms will be applied.
     dist : scipy.stats distribution or None, optional
@@ -351,22 +350,22 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
     _check_fit_arg(fitlogs, "fitlogs")
 
     if xhat is None:
-        xhat = np.array([np.min(x), np.max(x)])
+        xhat = numpy.array([numpy.min(x), numpy.max(x)])
 
     if dist is None:
         dist = stats.norm
 
     if fitprobs in ['x', 'both']:
         x = dist.ppf(x/100.)
-        xhat = dist.ppf(np.array(xhat)/100.)
+        xhat = dist.ppf(numpy.array(xhat)/100.)
 
     if fitprobs in ['y', 'both']:
         y  = dist.ppf(y/100.)
 
     if fitlogs in ['x', 'both']:
-        x = np.log(x)
+        x = numpy.log(x)
     if fitlogs in ['y', 'both']:
-        y = np.log(y)
+        y = numpy.log(y)
 
     x = sm.add_constant(x)
     model = model = sm.OLS(y, x)
@@ -409,16 +408,16 @@ def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
 
     """
 
-    x = np.array(xdata)
+    x = numpy.array(xdata)
     if ylog:
         if xlog:
-            yhat = np.exp(intercept) * x  ** slope
+            yhat = numpy.exp(intercept) * x  ** slope
         else:
-            yhat = np.exp(intercept) * np.exp(slope) ** x
+            yhat = numpy.exp(intercept) * numpy.exp(slope) ** x
 
     else:
         if xlog:
-            yhat = slope * np.log(x) + intercept
+            yhat = slope * numpy.log(x) + intercept
 
         else:
             yhat = slope * x + intercept
@@ -444,8 +443,8 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
 
     """
 
-    test1 = np.min(interval2) <= np.max(interval1) <= np.max(interval2)
-    test2 =  np.min(interval2) <= np.min(interval1) <= np.max(interval2)
+    test1 = numpy.min(interval2) <= numpy.max(interval1) <= numpy.max(interval2)
+    test2 =  numpy.min(interval2) <= numpy.min(interval1) <= numpy.max(interval2)
 
     # TODO: try test1 or test2 or (not oneway and test3)
 
