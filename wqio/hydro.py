@@ -11,6 +11,7 @@ import pandas
 
 from wqio import utils
 from wqio import viz
+from wqio import validate
 
 SEC_PER_MINUTE = 60.
 MIN_PER_HOUR = 60.
@@ -847,7 +848,7 @@ class HydroRecord(object):
         """
 
         # santize date input
-        timestamp = utils.santizeTimestamp(timestamp)
+        timestamp = validate.timestamp(timestamp)
 
         # check lookback hours
         if lookback_hours < 0:
