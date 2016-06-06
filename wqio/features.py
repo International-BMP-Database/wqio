@@ -642,8 +642,7 @@ class Location(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
                  ylabel=None, clearYLabels=False, managegrid=True,
-                 rotateticklabels=True, setxlimits=True, bestfit=False,
-                 **plotopts):
+                 rotateticklabels=True, bestfit=False, **plotopts):
         """ Draws a probability plot on a matplotlib figure
 
         Parameters
@@ -668,9 +667,6 @@ class Location(object):
         rotateticklabels : bool, optional (default is True)
             If True, the tick labels of the probability axes will be
             rotated.
-        setxlimits : bool, optional (default is True)
-            If True and `axtype` == 'prob', tehe axis limits will be
-            automatically set based on the number of points in the plot.
         bestfit : bool, optional (default is False)
             Specifies whether a best-fit line should be added to the
             plot.
@@ -705,9 +701,6 @@ class Location(object):
 
         if rotateticklabels:
             viz.rotateTickLabels(ax, 45, 'x', ha='right')
-
-        if setxlimits and axtype == 'prob':
-            utils.figutils.setProbLimits(ax, self.N, 'x')
 
         if bestfit:
             utils.fit_line()
@@ -1316,7 +1309,7 @@ class Dataset(object):
 
     def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
                  clearYLabels=False, rotateticklabels=True,
-                 setxlimits=True, managegrid=True, bestfit=False):
+                 managegrid=True, bestfit=False):
         """ Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1339,9 +1332,6 @@ class Dataset(object):
         rotateticklabels : bool, optional (default is True)
             If True, the tick labels of the probability axes will be
             rotated.
-        setxlimits : bool, optional (default is True)
-            If True and `axtype` == 'prob', tehe axis limits will be
-            automatically set based on the number of points in the plot.
         managegrid : bool, optional (default is True)
             If True, typical gridlines will be added to the Axes.
         bestfit : bool, optional (default is False)
@@ -1376,10 +1366,6 @@ class Dataset(object):
 
         if rotateticklabels:
             viz.rotateTickLabels(ax, 45, 'x')
-
-        if setxlimits and axtype == 'prob':
-            N = numpy.max([self.influent.N, self.effluent.N])
-            utils.figutils.setProbLimits(ax, N, 'x')
 
         if managegrid:
             utils.figutils.gridlines(ax, yminor=True)
@@ -1435,7 +1421,7 @@ class Dataset(object):
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True,
-                      rotateticklabels=True, setxlimits=True)
+                      rotateticklabels=True)
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()

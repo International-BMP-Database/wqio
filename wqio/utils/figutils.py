@@ -3,32 +3,6 @@ import matplotlib
 from matplotlib import pyplot
 
 
-def setProbLimits(ax, N, which):
-    """ Sets the limits of a probabilty axis based the number of point.
-
-    Parameters
-    ----------
-    ax : matplotlib Axes
-        The Axes object that will be modified.
-    N : int
-        Maximum number of points for the series plotted on the Axes.
-    which : string
-        The axis whose ticklabels will be rotated. Valid values are 'x',
-        'y', or 'both'.
-
-    Returns
-    -------
-    None
-
-    """
-
-    minval = 10 ** (-1 *numpy.ceil(numpy.log10(N) - 2))
-    if which in ['x', 'both']:
-        ax.set_xlim(left=minval, right=100-minval)
-    elif which in ['y', 'both']:
-        ax.set_ylim(bottom=minval, top=100-minval)
-
-
 def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
               xminor=True, yminor=True):
     """ Standard formatting for gridlines on a matplotlib Axes

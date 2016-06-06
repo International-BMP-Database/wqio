@@ -354,56 +354,12 @@ def probplot(data, ax=None, axtype='prob', yscale='log',
     result : dictionary of linear fit results.
 
     """
-
-    scatter_kws = {} if scatter_kws is None else scatter_kws
-    line_kws = {} if line_kws is None else line_kws
-
-    fig, ax = validate.axes(ax)
-    if axtype not in ['pp', 'qq', 'prob']:
-        raise ValueError("invalid axtype: {}".format(axtype))
-
-    qntls, ranked = stats.probplot(data, fit=False)
-    if axtype == 'qq':
-        xvalues = qntls
-    else:
-        xvalues = stats.norm.cdf(qntls) * 100
-
-    # plot the final ROS data versus the Z-scores
-    linestyle = scatter_kws.pop('linestyle', 'none')
-    marker = scatter_kws.pop('marker', 'o')
-    ax.plot(xvalues, ranked, linestyle=linestyle, marker=marker, **scatter_kws)
-
-    ax.set_yscale(yscale)
-    if yscale == 'log':
-        fitlogs = 'y'
-    else:
-        fitlogs = None
-
-    if axtype == 'prob':
-        fitprobs = 'x'
-        ax.set_xscale('prob')
-    else:
-        fitprobs = None
-        #left, right = ax.get_xlim()
-        #ax.set_xlim(left=left*0.96, right=right*1.04)
-
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-
-    if bestfit:
-        xhat, yhat, modelres = numutils.fit_line(xvalues, ranked, fitprobs=fitprobs,
-                                                 fitlogs=fitlogs)
-        ax.plot(xhat, yhat, **line_kws)
-    else:
-        xhat, yhat, modelres = (None, None, None)
-
-    if return_results:
-        return fig, dict(q=qntls, x=xvalues, y=ranked, xhat=xhat, yhat=yhat, res=modelres)
-    else:
-        return fig
+    output = probscale.viz.probplot(
+        data, ax=ax, plottype=axtype, probax='x',
+        datalabel=ylabel, problabel=xlabel, datascale=yscale,
+        scatter_kws=scatter_kws, line_kws=line_kws,
+        bestfit=bestfit, return_best_fit_results=return_results)
+    return output
 
 
 def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **line_kwds):

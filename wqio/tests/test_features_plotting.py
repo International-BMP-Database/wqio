@@ -194,12 +194,6 @@ def test_loc_probplot_no_rotate_xticklabels(inflow_loc_green):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_probplot_no_set_xlims(inflow_loc_green):
-    fig11 = inflow_loc_green.probplot(setxlimits=False)
-    return fig11
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_probplot_plotopts1(inflow_loc_green):
     fig12 = inflow_loc_green.probplot(markersize=10, linestyle='--', color='blue', markerfacecolor='none', markeredgecolor='green')
     return fig12
@@ -509,12 +503,6 @@ def test_ds_probplot_no_managegrid(ds_basic):
 def test_ds_probplot_no_rotate_xticklabels(ds_basic):
     fig10 = ds_basic.probplot(rotateticklabels=False)
     return fig10
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_probplot_no_set_xlims(ds_basic):
-    fig11 = ds_basic.probplot(setxlimits=False)
-    return fig11
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)

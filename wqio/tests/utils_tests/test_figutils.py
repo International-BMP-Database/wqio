@@ -25,38 +25,6 @@ def plot_data():
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_x_ax_LT50():
-    fig, ax = pyplot.subplots()
-    ax.set_xscale('prob')
-    figutils.setProbLimits(ax, 37, which='x')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_LT50():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 37, which='y')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_GT50():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 98, which='y')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_GT100():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 457, which='y')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_gridlines_basic(plot_data):
     fig, ax = pyplot.subplots()
     ax.plot(plot_data)
