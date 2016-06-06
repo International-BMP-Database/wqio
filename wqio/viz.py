@@ -193,92 +193,38 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     return wnf
 
 
-def formatBoxplot(bp, color='b', marker='o', markersize=4, linestyle='-',
-                  showcaps=False, patch_artist=False):
-    """ Easily format a boxplots for stylistic consistency
+def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
+            color='b', marker='o', patch_artist=True, showmean=False):
 
-    Parameters
-    -----------
-    bp : dictionary of matplotlib artists
-        Graphical elements of the boxplot as returned by `pyplot.boxplot`
-        or `figutils.boxplot`.
-    color : string or RGB tuple
-        Any valid matplotlib color string or RGB-spec for the median
-        lines and outlier markers.
-    marker : string
-        Any valid matplotlib marker string for the outliers.
-    markersize : int
-        Size (in points) of the outlier marker.
-    linestyle : string
-        Any valid matplotlib linestyle string for the medians
-    showcaps : bool (default = False)
-        Toggles the drawing of caps (short horizontal lines) on the
-        whiskers.
-    patch_artist : bool (default = False)
-        Toggles the use of patch artist instead of a line artists for
-        the boxes.
 
-    Returns
-    -------
-    None
 
     """
-
-    if patch_artist:
-        # format the box itself
-        for box in bp['boxes']:
-            pyplot.setp(box, edgecolor='k', facecolor=color, linewidth=0.75, zorder=4, alpha=0.5)
-
-        # format the medians
-        for med in bp['medians']:
-            pyplot.setp(med, linewidth=1.00, color='k', linestyle=linestyle, zorder=5)
-
-    else:
-        # format the box itself
-        for box in bp['boxes']:
-            pyplot.setp(box, color='k', linewidth=0.75, zorder=4)
-
-        # format the medians
-        for med in bp['medians']:
-            pyplot.setp(med, linewidth=1.00, color=color, linestyle=linestyle, zorder=3)
-
-    # format the whiskers
-    for whi in bp['whiskers']:
-        pyplot.setp(whi, linestyle='-', color='k', linewidth=0.75, zorder=4)
-
-    # format the caps on top of the whiskers
-    for cap in bp['caps']:
-        pyplot.setp(cap, color='k', linewidth=0.75, zorder=4, alpha=int(showcaps))
-
-    # format the outliers
-    for fli in bp['fliers']:
-        pyplot.setp(fli, marker=marker, markersize=markersize, zorder=4,
-                 markerfacecolor='none', markeredgecolor=color, alpha=1)
-
-
-def boxplot(ax, data, position, median=None, CIs=None,
-            mean=None, meanmarker='o', meancolor='b'):
-    """ Draws a boxplot on an axes
+    Draws a boxplot on an axes
 
     Parameters
     ----------
-    ax : matplotlib Axes
+    boxplot_stats : list of dicts
+        List of matplotlib boxplot-compatible statistics to be plotted
+    ax : matplotlib Axes, optional
         The axis on which the boxplot will be drawn.
-    data : array-like
-        The data to be summarized.
-    position : int
+    position : int or list of int,
         Location on the x-axis where the boxplot will be drawn.
-    median : float, optional
-        Custom value for the median.
-    CIs : array-like, length = 2
-        Custom confidence intervals around the median for notched plots.
-    mean : float, optional
-        Custom value for the mean of the data (e.g., geomeans for
-        bacteria data).
-    meanmarker : string, optional (default = 'o')
-        matplotlib symbol used to plot the mean.
-    meancolor : string, optional (default = 'b')
-        matplotlib color used to plot the mean.
+    width : float, optional (default = 0.8)
+        Width of the boxplots.
+    notch : bool, optional (default = True)
+        Toggles notched boxplots where the notches show a confidence
+        interval around the mediand.
+    color : string, optional (default = 'b')
+        Matplotlib color used to plot the outliers, median or box, and
+        the optional mean.
+    marker : str, optional (default = 'o')
+        Matplotlib marker used for the the outliers and optional mean.
+    patch_artist : bool, optional (default = True)
+        Toggles drawing the boxes as a patch filled in with ``color``
+        and a black median or as a black where the median is drawn
+        in the ``color``.
+    showmean : bool, optional (default = False)
+        Toggles inclusion of the means in the boxplots.
 
     Returns
     -------
@@ -287,29 +233,81 @@ def boxplot(ax, data, position, median=None, CIs=None,
 
     """
 
-    if median is not None and numpy.isscalar(median):
-        median = [median]
+    fig, ax = validate.axes(ax)
 
-    if CIs is not None:
-        if not isinstance(CIs, numpy.ndarray):
-            CIs = numpy.array(CIs)
+    if numpy.isscalar(position):
+        position = [position]
 
-        if len(CIs.shape) == 1:
-            CIs = CIs.reshape(1,2)
+    meanprops = dict(
+        marker=marker,
+        markersize=6,
+        markerfacecolor=color,
+        markeredgecolor='Black'
+    )
 
-        CIs = CIs.tolist()
+    flierprops = dict(
+        marker=marker,
+        markersize=4,
+        zorder=4,
+        markerfacecolor='none',
+        markeredgecolor=color,
+        alpha=1,
+    )
 
-    # plot the data
-    bp = ax.boxplot(data, notch=1, positions=[position],
-                    widths=0.6, usermedians=median, conf_intervals=CIs)
+    whiskerprops = dict(
+        linestyle='-',
+        color='k',
+        linewidth=0.75,
+        zorder=4,
+    )
 
-    # plot the mean value as a big marker
-    if mean is not None:
-        # (geomean for bacteria data)
-        ax.plot(position, mean, marker=meanmarker, markersize=4,
-                  markerfacecolor=meancolor, markeredgecolor='k')
+    if patch_artist:
+        medianprops = dict(
+            linewidth=1.00,
+            color='k',
+            linestyle='-',
+            zorder=5,
+        )
+
+        boxprops = dict(
+            edgecolor='k',
+            facecolor=color,
+            linewidth=0.75,
+            zorder=4,
+            alpha=0.5,
+        )
+    else:
+        medianprops = dict(
+            linewidth=1.00,
+            color=color,
+            linestyle='-',
+            zorder=3,
+        )
+
+        boxprops = dict(
+            color='k',
+            linewidth=0.75,
+            zorder=4,
+        )
+
+    bp = ax.bxp(
+        boxplot_stats,
+        positions=position,
+        widths=width,
+        showmeans=showmean,
+        meanprops=meanprops,
+        flierprops=flierprops,
+        whiskerprops=whiskerprops,
+        medianprops=medianprops,
+        boxprops=boxprops,
+        shownotches=notch,
+        showcaps=False,
+        manage_xticks=False,
+        patch_artist=patch_artist,
+    )
 
     return bp
+
 
 
 def probplot(data, ax=None, axtype='prob', yscale='log',

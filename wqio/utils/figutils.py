@@ -3,6 +3,7 @@ import matplotlib
 from matplotlib import pyplot
 
 
+@numpy.deprecate
 def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
               xminor=True, yminor=True):
     """ Standard formatting for gridlines on a matplotlib Axes
@@ -51,6 +52,7 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
+@numpy.deprecate
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     """ Offset the "center" of a colormap.
 

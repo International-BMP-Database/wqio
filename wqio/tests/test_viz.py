@@ -14,7 +14,6 @@ BASELINE_IMAGES = '_baseline_images/viz_tests'
 
 @pytest.fixture
 def plot_data():
-    pyplot.rcdefaults()
     data = numpy.array([
          3.113,   3.606,   4.046,   4.046,   4.71 ,   6.14 ,   6.978,
          2.   ,   4.2  ,   4.62 ,   5.57 ,   5.66 ,   5.86 ,   6.65 ,
@@ -23,6 +22,23 @@ def plot_data():
         16.77 ,  17.81 ,  19.16 ,  19.19 ,  19.64 ,  20.18 ,  22.97
     ])
     return data
+
+
+@pytest.fixture
+def boxplot_data(plot_data):
+    bs = [{
+        'cihi': 10.82,
+        'cilo': 6.1399999999999997,
+        'fliers': numpy.array([ 22.97]),
+        'iqr': 6.1099999999999994,
+        'mean': 9.5888285714285733,
+        'med': 7.5,
+        'q1': 5.6150000000000002,
+        'q3': 11.725,
+        'whishi': 20.18,
+        'whislo': 2.0
+    }]
+    return bs
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
@@ -310,33 +326,19 @@ class Test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_boxplot_basic(plot_data):
+def test_boxplot_basic(boxplot_data):
     fig, ax = pyplot.subplots()
-    viz.boxplot(ax, plot_data, 1)
+    viz.boxplot(boxplot_data, ax=ax, notch=True, patch_artist=False)
+    ax.set_xlim((0, 2))
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_boxplot_manual_median(plot_data):
+def test_boxplot_with_mean(boxplot_data):
     fig, ax = pyplot.subplots()
-    viz.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25])
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_boxplot_with_mean(plot_data):
-    fig, ax = pyplot.subplots()
-    viz.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
-                     mean=7.25, meanmarker='^', meancolor='red')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_boxplot_formatted(plot_data):
-    fig, ax = pyplot.subplots()
-    bp = viz.boxplot(ax, plot_data, 1, median=7.75, CIs=[7.5, 8.25],
-                          mean=7.25, meanmarker='^', meancolor='red')
-    viz.formatBoxplot(bp)
+    viz.boxplot(boxplot_data, ax=ax, notch=True, patch_artist=True,
+                marker='^', color='red', showmean=True)
+    ax.set_xlim((0, 2))
     return fig
 
 

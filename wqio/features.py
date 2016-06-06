@@ -599,24 +599,23 @@ class Location(object):
         """
 
         fig, ax = validate.axes(ax)
-
-        meankwargs = dict(
-            marker=self.plot_marker, markersize=5,
-            markerfacecolor=self.color, markeredgecolor='Black'
-        )
-
         if self.N >= minpoints:
             bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
             if xlabel is not None:
                 bxpstats[0]['label'] = xlabel
 
-            bp = ax.bxp(bxpstats, positions=[pos], widths=width,
-                        showmeans=showmean, shownotches=notch, showcaps=False,
-                        manage_xticks=False, patch_artist=patch_artist,
-                        meanprops=meankwargs)
+            bp = viz.boxplot(
+                bxpstats,
+                ax=ax,
+                position=pos,
+                width=width,
+                color=self.color,
+                marker=self.plot_marker,
+                patch_artist=patch_artist,
+                showmean=showmean,
+                notch=notch,
+            )
 
-            viz.formatBoxplot(bp, color=self.color, marker=self.plot_marker,
-                                         patch_artist=patch_artist)
         else:
             self.verticalScatter(ax=ax, pos=pos, jitter=width*0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
@@ -810,7 +809,6 @@ class Location(object):
         """
 
         fig, ax = validate.axes(ax)
-
 
         if jitter == 0:
             xvals = [pos] * self.N
