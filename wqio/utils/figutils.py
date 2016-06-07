@@ -1,45 +1,9 @@
-import copy
-from functools import partial
-
-import numpy as np
+import numpy
 import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import matplotlib.gridspec as gridspec
-import scipy.stats as stats
-import seaborn.apionly as seaborn
-import probscale
-
-from . import misc
-from . import numutils
+from matplotlib import pyplot
 
 
-def setProbLimits(ax, N, which):
-    """ Sets the limits of a probabilty axis based the number of point.
-
-    Parameters
-    ----------
-    ax : matplotlib Axes
-        The Axes object that will be modified.
-    N : int
-        Maximum number of points for the series plotted on the Axes.
-    which : string
-        The axis whose ticklabels will be rotated. Valid values are 'x',
-        'y', or 'both'.
-
-    Returns
-    -------
-    None
-
-    """
-
-    minval = 10 ** (-1 *np.ceil(np.log10(N) - 2))
-    if which in ['x', 'both']:
-        ax.set_xlim(left=minval, right=100-minval)
-    elif which in ['y', 'both']:
-        ax.set_ylim(bottom=minval, top=100-minval)
-
-
+@numpy.deprecate
 def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
               xminor=True, yminor=True):
     """ Standard formatting for gridlines on a matplotlib Axes
@@ -88,6 +52,7 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
+@numpy.deprecate
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     """ Offset the "center" of a colormap.
 
@@ -137,12 +102,12 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     }
 
     # regular index to compute the colors
-    reg_index = np.linspace(start, stop, 256)
+    reg_index = numpy.linspace(start, stop, 256)
 
     # shifted index to match the data
-    shift_index = np.hstack([
-        np.linspace(0.0, midpoint, 128, endpoint=False),
-        np.linspace(midpoint, 1.0, 128, endpoint=True)
+    shift_index = numpy.hstack([
+        numpy.linspace(0.0, midpoint, 128, endpoint=False),
+        numpy.linspace(midpoint, 1.0, 128, endpoint=True)
     ])
 
     for ri, si in zip(reg_index, shift_index):
@@ -154,6 +119,6 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
         cdict['alpha'].append((si, a, a))
 
     newcmap = matplotlib.colors.LinearSegmentedColormap(name, cdict)
-    plt.register_cmap(cmap=newcmap)
+    pyplot.register_cmap(cmap=newcmap)
 
     return newcmap

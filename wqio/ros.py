@@ -1,11 +1,8 @@
-from __future__ import print_function, division
 import warnings
 
 import numpy
 from scipy import stats
 import pandas
-
-from wqio.utils import figutils
 
 
 def _ros_sort(df, result, censorship):

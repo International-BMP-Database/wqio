@@ -1,5 +1,5 @@
-import sys
 from textwrap import dedent
+from io import StringIO
 
 import pytest
 import numpy.testing as nptest
@@ -8,7 +8,6 @@ from wqio.tests import helpers
 
 import numpy
 import pandas
-from io import StringIO
 
 from wqio import ros
 

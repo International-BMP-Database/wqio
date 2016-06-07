@@ -1,7 +1,3 @@
-import os
-import sys
-import datetime
-
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
@@ -9,8 +5,6 @@ from wqio.tests import helpers
 
 import numpy
 import pandas
-import matplotlib
-matplotlib.use('agg')
 from matplotlib import pyplot
 
 from wqio import hydro

@@ -1,5 +1,6 @@
 import warnings
 
+import numpy
 import pandas
 
 from wqio import validate

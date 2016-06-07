@@ -1,18 +1,9 @@
-import sys
-import os
-import subprocess
-from io import StringIO
-
 import pytest
 import numpy.testing as nptest
 
 import numpy
-import pandas
 import matplotlib
-matplotlib.use('agg')
-import seaborn.apionly as seaborn
 from matplotlib import pyplot
-import matplotlib.ticker as mticker
 
 from wqio.utils import figutils
 
@@ -31,38 +22,6 @@ def plot_data():
         16.77 ,  17.81 ,  19.16 ,  19.19 ,  19.64 ,  20.18 ,  22.97
     ])
     return data
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_x_ax_LT50():
-    fig, ax = pyplot.subplots()
-    ax.set_xscale('prob')
-    figutils.setProbLimits(ax, 37, which='x')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_LT50():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 37, which='y')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_GT50():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 98, which='y')
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_setProblimits_y_ax_GT100():
-    fig, ax = pyplot.subplots()
-    ax.set_yscale('prob')
-    figutils.setProbLimits(ax, 457, which='y')
-    return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)

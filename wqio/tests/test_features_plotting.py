@@ -2,8 +2,6 @@ import pytest
 from wqio.tests import helpers
 
 import numpy
-import matplotlib
-matplotlib.use('agg')
 from matplotlib import pyplot
 import seaborn.apionly as seaborn
 
@@ -193,12 +191,6 @@ def test_loc_probplot_no_managegrid(inflow_loc_red):
 def test_loc_probplot_no_rotate_xticklabels(inflow_loc_green):
     fig10 = inflow_loc_green.probplot(rotateticklabels=False)
     return fig10
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_probplot_no_set_xlims(inflow_loc_green):
-    fig11 = inflow_loc_green.probplot(setxlimits=False)
-    return fig11
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
@@ -511,12 +503,6 @@ def test_ds_probplot_no_managegrid(ds_basic):
 def test_ds_probplot_no_rotate_xticklabels(ds_basic):
     fig10 = ds_basic.probplot(rotateticklabels=False)
     return fig10
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_probplot_no_set_xlims(ds_basic):
-    fig11 = ds_basic.probplot(setxlimits=False)
-    return fig11
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)

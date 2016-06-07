@@ -4,7 +4,6 @@ import glob
 from textwrap import dedent
 
 import pytest
-import numpy.testing as nptest
 from wqio.tests import helpers
 
 import pandas

@@ -1,11 +1,9 @@
 import warnings
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as mpatches
-import matplotlib.lines as mlines
+import numpy
+from matplotlib import pyplot
+from matplotlib import dates
+from matplotlib import gridspec
 import seaborn.apionly as seaborn
 import pandas
 
@@ -55,22 +53,22 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowco
     # pull out the rain and flow data
     if precipcol is None:
         precipcol = 'precip'
-        data.loc[:, precipcol] = np.nan
+        data.loc[:, precipcol] = numpy.nan
 
     if inflowcol is None:
         inflowcol = 'inflow'
-        data.loc[:, inflowcol] = np.nan
+        data.loc[:, inflowcol] = numpy.nan
 
     if outflowcol is None:
         outflowcol = 'outflow'
-        data.loc[:, outflowcol] = np.nan
+        data.loc[:, outflowcol] = numpy.nan
 
     ie_periods = MIN_PER_HOUR / data.index.freq.n * ie_hours
 
     # bool column where True means there's rain or flow of some kind
     data = (
         data.select(lambda c: c in [inflowcol, outflowcol, precipcol], axis='columns')
-            .assign(_wet=lambda df: np.any(df > 0, axis=1))
+            .assign(_wet=lambda df: numpy.any(df > 0, axis=1))
             .assign(_windiff=lambda df:
                 df['_wet'].rolling(int(ie_periods), min_periods=1)
                     .apply(lambda w: w.any())
@@ -94,10 +92,10 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowco
     # Stack Overflow: http://tinyurl.com/lsjkr9x
 
     data = (
-        data.assign(_event_start=np.where(starts, True, False))
-            .assign(_event_end=np.where(stops, True, False))
+        data.assign(_event_start=numpy.where(starts, True, False))
+            .assign(_event_end=numpy.where(stops, True, False))
             .assign(storm=lambda df: df['_event_start'].cumsum())
-            .assign(storm=lambda df: np.where(df['storm'] == df['_event_end'].shift(2).cumsum(), 0, df['storm']))
+            .assign(storm=lambda df: numpy.where(df['storm'] == df['_event_end'].shift(2).cumsum(), 0, df['storm']))
     )
 
 
@@ -161,7 +159,7 @@ class Storm(object):
             antecedent_timedelta = self.start - previous_end
             self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
         else:
-            self.antecedent_period_days = np.nan
+            self.antecedent_period_days = numpy.nan
 
         # quantities
         self._precip = None
@@ -243,7 +241,7 @@ class Storm(object):
             if self.precipcol is not None:
                 self._precip = self.data[self.data[self.precipcol] > 0][self.precipcol]
             else:
-                self._precip = np.array([])
+                self._precip = numpy.array([])
         return self._precip
 
     @property
@@ -252,7 +250,7 @@ class Storm(object):
             if self.inflowcol is not None:
                 self._inflow = self.data[self.data[self.inflowcol] > 0][self.inflowcol]
             else:
-                self._inflow = np.array([])
+                self._inflow = numpy.array([])
         return self._inflow
 
     @property
@@ -261,7 +259,7 @@ class Storm(object):
             if self.outflowcol is not None:
                 self._outflow = self.data[self.data[self.outflowcol] > 0][self.outflowcol]
             else:
-                self._outflow = np.array([])
+                self._outflow = numpy.array([])
         return self._outflow
 
     @property
@@ -484,15 +482,16 @@ class Storm(object):
     def _compute_centroid(self, column):
         # ordinal time index of storm
         time_idx = [
-            mdates.date2num(idx.to_datetime()) for idx in self.data.index.tolist()
+            dates.date2num(idx.to_datetime())
+            for idx in self.data.index.tolist()
         ]
 
-        centroid = np.sum(self.data[column] * time_idx) / np.sum(self.data[column])
+        centroid = numpy.sum(self.data[column] * time_idx) / numpy.sum(self.data[column])
 
-        if np.isnan(centroid):
+        if numpy.isnan(centroid):
             return None
         else:
-            return pandas.Timestamp(mdates.num2date(centroid)).tz_convert(None)
+            return pandas.Timestamp(dates.num2date(centroid)).tz_convert(None)
 
     def _plot_centroids(self, ax, yfactor=0.5):
 
@@ -503,14 +502,14 @@ class Storm(object):
         if self.centroid_precip is not None:
             ax.plot([self.centroid_precip], [y_val], color='DarkGreen', marker='o',
                     linestyle='none', zorder=20, markersize=6)
-            artists.append(mlines.Line2D([0], [0], marker='.', markersize=6,
+            artists.append(pyplot.Line2D([0], [0], marker='.', markersize=6,
                            linestyle='none', color='DarkGreen'))
             labels.append('Precip. centroid')
 
         if self.centroid_flow is not None:
             ax.plot([self.centroid_flow], [y_val], color='CornflowerBlue',
                     marker='s', linestyle='none', zorder=20, markersize=6)
-            artists.append(mlines.Line2D([0], [0], marker='s',
+            artists.append(pyplot.Line2D([0], [0], marker='s',
                            markersize=6, linestyle='none', color='CornflowerBlue'))
             labels.append('Effluent centroid')
 
@@ -555,10 +554,7 @@ class Storm(object):
         """
 
         # setup the figure
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.figure
+        fig, ax = validate.axes(ax)
 
         if label is None:
             label = quantity
@@ -576,7 +572,7 @@ class Storm(object):
                                            alpha=meta['alpha'], zorder=5)
 
         if artists is not None:
-            proxy = mpatches.Rectangle(
+            proxy = pyplot.Rectangle(
                 (0, 0), 1, 1, facecolor=meta['color'], linewidth=0, alpha=meta['alpha']
             )
             artists.append(proxy)
@@ -600,7 +596,7 @@ class Storm(object):
             filename : optional string (default = None)
                 Filename to which the figure will be saved.
 
-            **figwargs will be passed on to `plt.Figure`
+            **figwargs will be passed on to `pyplot.Figure`
 
         Writes:
             Figure of flow and precipitation for a storm
@@ -608,11 +604,11 @@ class Storm(object):
         Returns:
             None
         '''
-        fig = plt.figure(**figopts)
+        fig = pyplot.figure(**figopts)
         gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio],
                                hspace=0.12)
         rainax = fig.add_subplot(gs[0])
-        rainax.yaxis.set_major_locator(plt.MaxNLocator(5))
+        rainax.yaxis.set_major_locator(pyplot.MaxNLocator(5))
         flowax = fig.add_subplot(gs[1], sharex=rainax)
 
         # create the legend proxy artists
