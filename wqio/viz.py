@@ -9,9 +9,8 @@ import scipy.stats as stats
 import seaborn.apionly as seaborn
 import probscale
 
-from .utils import misc
-from .utils import numutils
-from . import validate
+from wqio import utils
+from wqio import validate
 
 
 def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
@@ -72,6 +71,54 @@ def log_formatter(use_1x=True, threshold=5):
 
     func = partial(_formatter, use_1x=use_1x, threshold=threshold)
     return ticker.FuncFormatter(func)
+
+
+def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
+              xminor=True, yminor=True):
+    """ Standard formatting for gridlines on a matplotlib Axes
+
+    Parameters
+    ----------
+    ax : matplotlib Axes
+        The Axes object that will be modified.
+    xlabel, ylabel : string, optional
+        The labels of the x- and y-axis.
+    xscale, yscale : string, optional
+        The scale of each axis. Can be 'linear', 'log', or 'prob'.
+    xminor, yminor : bool, optional
+        Toggles the grid on minor ticks. Has no effect if minor ticks
+        are not present.
+
+    Returns
+    -------
+    None
+
+    """
+
+    # set the scales
+    if xscale is not None:
+        ax.set_xscale(xscale)
+
+    if yscale is not None:
+        ax.set_yscale(yscale)
+
+    # set the labels
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    # major grids
+    ax.yaxis.grid(True, which='major', ls='-', alpha=0.35)
+    ax.xaxis.grid(True, which='major', ls='-', alpha=0.35)
+
+    # minor grids
+    if xminor:
+        ax.xaxis.grid(True, which='minor', ls='-', alpha=0.17)
+
+    if yminor:
+        ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
 def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
@@ -512,9 +559,9 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
             return format_col(colname)
 
     if classifier is None:
-        classifier = partial(misc._classifier, bins=bins, units='mm')
+        classifier = partial(utils.classifier, bins=bins, units='mm')
 
-    cats = misc._unique_categories(classifier, bins)
+    cats = utils.unique_categories(classifier, bins)
     aspect = factoropts.pop('aspect', 1.6)
 
     display_col = format_col(valuecol)
