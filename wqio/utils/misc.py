@@ -237,7 +237,7 @@ def stringify(value, fmt, attribute=None):
         return fmt % quantity
 
 
-def _classifier(value, bins, units=None):
+def classifier(value, bins, units=None):
     """
     An example classifier function for `storm_histogram`
 
@@ -290,7 +290,7 @@ def _classifier(value, bins, units=None):
     return '{} {}'.format(output, units or '').strip()
 
 
-def _unique_categories(classifier, bins):
+def unique_categories(classifier, bins):
     """
     Computs all of the unique category returned by a classifier.
 

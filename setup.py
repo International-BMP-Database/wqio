@@ -16,7 +16,7 @@ URL = "https://github.com/Geosyntec/wqio"
 DOWNLOAD_URL = "https://github.com/Geosyntec/wqio/archive/master.zip"
 LICENSE = "BSD 3-clause"
 PACKAGES = find_packages()
-PLATFORMS = "Python 2.7, 3.4 and later."
+PLATFORMS = "Python 3.4 and later."
 CLASSIFIERS = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",

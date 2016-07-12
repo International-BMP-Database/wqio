@@ -104,6 +104,30 @@ def test_log_formatter_alt_2():
     return fig
 
 
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_gridlines_basic(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
+    viz.gridlines(ax, 'xlabel', 'ylabel')
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_gridlines_ylog(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
+    viz.gridlines(ax, 'xlabel', 'ylabel', yscale='log')
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_gridlines_ylog_noyminor(plot_data):
+    fig, ax = pyplot.subplots()
+    ax.plot(plot_data)
+    viz.gridlines(ax, 'xlabel', 'ylabel', yscale='log', yminor=False)
+    return fig
+
+
 @pytest.fixture
 def jp_data():
     pyplot.rcdefaults()

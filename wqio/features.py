@@ -623,7 +623,7 @@ class Location(object):
         ax.set_yscale(yscale)
         if yscale == 'log':
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
-        utils.figutils.gridlines(ax, yminor=True)
+        viz.gridlines(ax, yminor=True)
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -693,7 +693,7 @@ class Location(object):
             pass
 
         if managegrid:
-            utils.figutils.gridlines(ax, yminor=True)
+            viz.gridlines(ax, yminor=True)
 
         if clearYLabels:
             ax.set_yticklabels([])
@@ -1278,7 +1278,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
         if yscale == 'log':
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
-        utils.figutils.gridlines(ax, yminor=True)
+        viz.gridlines(ax, yminor=True)
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -1366,7 +1366,7 @@ class Dataset(object):
             viz.rotateTickLabels(ax, 45, 'x')
 
         if managegrid:
-            utils.figutils.gridlines(ax, yminor=True)
+            viz.gridlines(ax, yminor=True)
 
         return fig
 
@@ -1623,7 +1623,7 @@ class Dataset(object):
             ylabel = 'Effluent'
 
         # create major/minor gridlines and apply the axes labels
-        utils.figutils.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
+        viz.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
 
         # show legend, if requested
         if showlegend:

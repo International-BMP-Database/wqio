@@ -186,17 +186,17 @@ def test_classifier(value, units, expected):
     if units is not None:
         expected = '{} {}'.format(expected, units)
 
-    result = misc._classifier(value, bins, units=units)
+    result = misc.classifier(value, bins, units=units)
     assert result == expected
-    assert numpy.isnan(misc._classifier(numpy.nan, bins, units=units))
+    assert numpy.isnan(misc.classifier(numpy.nan, bins, units=units))
 
 
 def test__unique_categories():
     bins = [5, 10, 15]
-    classifier = partial(misc._classifier, bins=bins, units='mm')
+    classifier = partial(misc.classifier, bins=bins, units='mm')
 
     known_categories = ['<5 mm', '5 - 10 mm', '10 - 15 mm', '>15 mm']
-    result_categories = misc._unique_categories(classifier, bins)
+    result_categories = misc.unique_categories(classifier, bins)
 
     assert result_categories == known_categories
 
