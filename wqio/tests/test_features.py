@@ -232,15 +232,33 @@ class _base_LocationMixin(object):
 
     def test_anderson(self):
         assert hasattr(self.loc, 'anderson')
-        nptest.assert_almost_equal(self.loc.anderson[0], self.known_anderson[0], decimal=5)
+
+        # Ad stat
+        assert abs(self.loc.anderson[0] - self.known_anderson[0]) < 0.0001
+
+        # critical values
         nptest.assert_allclose(self.loc.anderson[1], self.known_anderson[1], rtol=self.tolerance)
+
+        # significance level
         nptest.assert_allclose(self.loc.anderson[2], self.known_anderson[2], rtol=self.tolerance)
 
+        # p-value
+        assert abs(self.loc.anderson[3] - self.known_anderson[3]) < 0.0000001
+
     def test_anderson_log(self):
-        assert hasattr(self.loc, 'anderson')
-        nptest.assert_almost_equal(self.loc.anderson_log[0], self.known_anderson_log[0], decimal=5)
+        assert hasattr(self.loc, 'anderson_log')
+
+        # Ad stat
+        assert abs(self.loc.anderson_log[0] - self.known_anderson_log[0]) < 0.0001
+
+        # critical values
         nptest.assert_allclose(self.loc.anderson_log[1], self.known_anderson_log[1], rtol=self.tolerance)
+
+        # significance level
         nptest.assert_allclose(self.loc.anderson_log[2], self.known_anderson_log[2], rtol=self.tolerance)
+
+        # p-value
+        assert abs(self.loc.anderson_log[3] - self.known_anderson_log[3]) < 0.0000001
 
     def test_skew(self):
         assert hasattr(self.loc, 'skew')
@@ -339,8 +357,18 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_shapiro_log = [ 0.972679,  0.520949]
         self.known_lilliefors = [ 0.18518 ,  0.003756]
         self.known_lilliefors_log = [ 0.091855,  0.635536]
-        self.known_anderson = (1.543888, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
-        self.known_anderson_log = (0.30409633964188032, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
+        self.known_anderson = (
+            1.54388800,
+            [0.527, 0.6, 0.719, 0.839, 0.998],
+            [ 15., 10., 5., 2.5, 1.],
+            0.000438139
+        )
+        self.known_anderson_log = (
+            0.30409634,
+            [0.527, 0.6, 0.719, 0.839, 0.998],
+            [ 15., 10., 5., 2.5, 1.],
+            0.552806894
+        )
         self.known_skew = 0.869052892573
         self.known_std = 5.52730949374
         self.known_useRos = True
@@ -391,8 +419,18 @@ class Test_Location_noROS(_base_LocationMixin):
         self.known_shapiro_log = [ 0.964298,  0.306435]
         self.known_lilliefors = [ 0.160353,  0.023078]
         self.known_lilliefors_log = [ 0.08148,  0.84545]
-        self.known_anderson = (1.4392085, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
-        self.known_anderson_log = (0.3684061, [ 0.527,  0.6  ,  0.719,  0.839,  0.998], [ 15. ,  10. ,   5. ,   2.5,   1. ])
+        self.known_anderson = (
+            1.4392085,
+            [0.527, 0.6, 0.719, 0.839, 0.998],
+            [ 15., 10., 5., 2.5, 1.],
+            0.00080268
+        )
+        self.known_anderson_log = (
+            0.3684061,
+            [0.527, 0.6, 0.719, 0.839, 0.998],
+            [ 15., 10., 5., 2.5, 1.],
+            0.41004028
+        )
         self.known_skew = 0.853756570358
         self.known_std = 5.24122841148
         self.known_useRos = False

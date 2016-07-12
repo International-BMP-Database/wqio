@@ -5,6 +5,7 @@ from textwrap import dedent
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
+from wqio.tests import helpers
 
 import numpy
 from scipy import stats
@@ -108,6 +109,32 @@ def test_process_p_value():
         numutils.process_p_vals(1.001)
 
 
+def test_anderson_darling():
+    data = helpers.getTestROSData()
+    result = numutils.anderson_darling(data['res'])
+
+    tolerance = 0.05
+    known_anderson = (
+        1.4392085,
+        [0.527, 0.6, 0.719, 0.839, 0.998],
+        [15., 10., 5., 2.5, 1.],
+        0.00080268
+    )
+
+    # Ad stat
+    assert abs(result[0] - known_anderson[0]) < 0.0001
+
+    # critical values
+    nptest.assert_allclose(result[1], known_anderson[1], rtol=tolerance)
+
+    # significance level
+    nptest.assert_allclose(result[2], known_anderson[2], rtol=tolerance)
+
+    # p-value
+    assert abs(result[3] - known_anderson[3]) < 0.0000001
+
+
+
 class Test_processAndersonDarlingResults(object):
     def setup(self):
         fieldnames = ['statistic', 'critical_values', 'significance_level']
@@ -134,6 +161,17 @@ class Test_processAndersonDarlingResults(object):
     def test_bad(self):
         res = numutils.processAndersonDarlingResults(self.bad)
         assert res == self.known_bad
+
+@pytest.mark.parametrize(('AD', 'n_points', 'expected'), [
+    (0.302, 1, 0.0035899),
+    (0.302, 5, 0.4155200),
+    (0.302, 15, 0.5325205),
+    (0.150, 105, 0.9616770),
+])
+def test__anderson_darling_p_vals(AD, n_points, expected):
+    ad_result = (AD, None, None)
+    p_val = numutils._anderson_darling_p_vals(ad_result, n_points)
+    assert abs(p_val - expected) < 0.0001
 
 
 class Test_normalize_units(object):

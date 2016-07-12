@@ -374,12 +374,12 @@ class Location(object):
     @cache_readonly
     def anderson(self):
         if self.hasData:
-            return  stats.anderson(self.data)
+            return utils.anderson_darling(self.data)
 
     @cache_readonly
     def anderson_log(self):
         if self.hasData:
-            return stats.anderson(numpy.log(self.data))
+            return utils.anderson_darling(numpy.log(self.data))
 
     @cache_readonly
     def analysis_space(self):
