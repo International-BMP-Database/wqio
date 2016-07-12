@@ -112,13 +112,13 @@ class Test_processAndersonDarlingResults(object):
     def setup(self):
         fieldnames = ['statistic', 'critical_values', 'significance_level']
         AndersonResult = namedtuple('AndersonResult', fieldnames)
-        self.good = AndersonResult(
+        self.bad = AndersonResult(
             statistic=0.30194681312357829,
             critical_values=numpy.array([0.529, 0.602, 0.722, 0.842, 1.002]),
             significance_level=numpy.array([15., 10., 5., 2.5, 1.])
         )
 
-        self.bad = AndersonResult(
+        self.good = AndersonResult(
             statistic=numpy.inf,
             critical_values=numpy.array([ 0.907,  1.061,  1.32 ,  1.58 ,  1.926]),
             significance_level=numpy.array([ 15. ,  10. ,   5. ,   2.5,   1. ])

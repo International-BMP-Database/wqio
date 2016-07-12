@@ -163,7 +163,7 @@ def processAndersonDarlingResults(ad_results):
 
     a2, crit, sig = ad_results
     try:
-        ci = 100 - sig[a2 < crit][-1]
+        ci = 100 - sig[a2 > crit][-1]
         return '%0.1f%%' % (ci,)
     except IndexError:
         ci = 100 - sig[0]
