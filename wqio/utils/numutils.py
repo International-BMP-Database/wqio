@@ -175,7 +175,7 @@ def anderson_darling(data):
     AD = stats.anderson(data)
     field_names = list(AD._fields) + ['pvalue']
 
-    p = anderson_darling_p_vals(AD, len(data))
+    p = _anderson_darling_p_vals(AD, len(data))
     values = AD._asdict()
     values['pvalue'] = p
 
@@ -207,7 +207,7 @@ def processAndersonDarlingResults(ad_results):
         return '<%0.1f%%' % (ci,)
 
 
-def anderson_darling_p_vals(ad_results, n_points):
+def _anderson_darling_p_vals(ad_results, n_points):
     """
     Computes the p-value of the Anderson-Darling Result
 

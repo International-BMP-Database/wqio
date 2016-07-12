@@ -168,9 +168,9 @@ class Test_processAndersonDarlingResults(object):
     (0.302, 15, 0.5325205),
     (0.150, 105, 0.9616770),
 ])
-def test_anderson_darling_p_vals(AD, n_points, expected):
+def test__anderson_darling_p_vals(AD, n_points, expected):
     ad_result = (AD, None, None)
-    p_val = numutils.anderson_darling_p_vals(ad_result, n_points)
+    p_val = numutils._anderson_darling_p_vals(ad_result, n_points)
     assert abs(p_val - expected) < 0.0001
 
 
