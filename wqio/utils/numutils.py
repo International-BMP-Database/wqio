@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import numpy
 from scipy import stats
 import statsmodels.api as sm
@@ -144,6 +146,41 @@ def process_p_vals(pval):
         out = '%0.3f' % pval
 
     return out
+
+
+def anderson_darling(data):
+    """
+    Compute the Anderson-Darling Statistic and p-value
+
+    Parmeters
+    ---------
+    data : array-like
+
+    Returns
+    -------
+    ADResult : namedtuple
+        A collection of results. Keys are:
+
+          * ``statistic``
+          * ``critical_values``
+          * ``significance_level``
+          * ``pvalue``
+
+
+    See Also
+    --------
+    scipy.stats.anderson
+
+    """
+    AD = stats.anderson(data)
+    field_names = list(AD._fields) + ['pvalue']
+
+    p = anderson_darling_p_vals(AD, len(data))
+    values = AD._asdict()
+    values['pvalue'] = p
+
+    ADResult = namedtuple('ADResult', field_names)
+    return ADResult(**values)
 
 
 def processAndersonDarlingResults(ad_results):
