@@ -201,7 +201,6 @@ def anderson_darling_p_vals(ad_results, n_points):
     return p
 
 
-
 def normalize_units(df, units_map, targetunit, paramcol='parameter',
                     rescol='res', unitcol='units', debug=False):
     """
