@@ -152,7 +152,7 @@ def processAndersonDarlingResults(ad_results):
     Parameters
     ----------
     ad_result : tuple or namedtuple
-        The packed output from scipt.stats.anderson
+        The packed output from scipy.stats.anderson
 
     Returns
     -------
@@ -161,13 +161,45 @@ def processAndersonDarlingResults(ad_results):
 
     """
 
-    a2, crit, sig = ad_results
+    AD, crit, sig = ad_results
     try:
-        ci = 100 - sig[a2 > crit][-1]
+        ci = 100 - sig[AD > crit][-1]
         return '%0.1f%%' % (ci,)
     except IndexError:
         ci = 100 - sig[0]
         return '<%0.1f%%' % (ci,)
+
+
+def anderson_darling_p_vals(ad_results, n_points):
+    """
+    Computes the p-value of the Anderson-Darling Result
+
+    Parameters
+    ----------
+    ad_result : tuple or namedtuple
+        The packed output from scipy.stats.anderson
+    n_points : int
+        The number of points in the sample.
+
+    Returns
+    -------
+    p : float
+
+    """
+
+    AD, crit, sig = ad_results
+    AD_star = AD * (1 + 0.75/n_points + 2.25/n_points**2)
+    if AD_star >= 0.6:
+        p = numpy.exp(1.2397 - (5.709*AD_star) + (0.0186*AD_star**2))
+    elif 0.34 < AD_star < 0.6:
+        p = numpy.exp(0.9177 - (4.279*AD_star) - (1.38*AD_star**2))
+    elif 0.2 < AD_star < 0.34:
+        p = 1 - numpy.exp(-8.318 + (42.796*AD_star) - (59.938*AD_star**2))
+    else:
+        p = 1 - numpy.exp(-13.436 + (101.14*AD_star) - (223.73*AD_star**2))
+
+    return p
+
 
 
 def normalize_units(df, units_map, targetunit, paramcol='parameter',
