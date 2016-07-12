@@ -170,34 +170,38 @@ def processAndersonDarlingResults(ad_results):
         return '<%0.1f%%' % (ci,)
 
 
-def normalize_units(dataframe, units_map, targetunit, paramcol='parameter',
-                    rescol='Outflow_res', unitcol='Outflow_unit'):
-    """ Normalize units of measure in a dataframe.
+def normalize_units(df, units_map, targetunit, paramcol='parameter',
+                    rescol='res', unitcol='units', debug=False):
+    """
+    Normalize units of measure in a dataframe.
 
     Parameters
     ----------
-    dataframe : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe contained results and units of measure data.
     units_map : dictionary
-        Dictionary where keys are the units present in the dataframe and
+        Dictionary where keys are the units present in the df and
         values are the conversion factors required to standardize
         results to a common unit.
-    targetunit : string
+    targetunit : string or dict
         The desired final units of measure. Must be present in
-        ``units_map``.
+        ``units_map``. If a string, all rows in df will be
+        assigned ``targetunit``. If a dictionary, the units will be
+        mapped from the dictionary using the values of ``paramcol`` as
+        keys.
     paramcol, rescol, unitcol : string
         Labels for the parameter, results, and units columns in the
-        dataframe.
+        df.
 
     Returns
     -------
-    dataframe : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe with normalized units of measure.
 
     Notes
     -----
-    Input dataframes are modified in-placed and returned. If you need
-    to preserve the original dataframe, pass a copy to this function.
+    Input dfs are modified in-placed and returned. If you need
+    to preserve the original df, pass a copy to this function.
 
     See also
     --------
@@ -205,74 +209,23 @@ def normalize_units(dataframe, units_map, targetunit, paramcol='parameter',
 
     """
 
-    try:
-        units_map[targetunit]
-    except KeyError:
-        raise ValueError('{0} is not contained in `units_map`'.format(targetunit))
 
-    # standardize units in the wqdata
-    dataframe['normalize'] = dataframe[unitcol].map(units_map.get)
-    if isinstance(targetunit, dict):
-        dataframe['targetunit'] = dataframe[paramcol].map(targetunit.get)
-    else:
-        dataframe['targetunit'] = targetunit
+    # determine the preferred units in the wqdata
+    target = df[paramcol].map(targetunit.get)
 
-    dataframe['convert'] = dataframe['targetunit'].map(units_map.get)
-    dataframe[rescol] = dataframe[rescol] * dataframe['normalize'] / dataframe['convert']
+    # factors to normialize to standard units
+    normalization = df[unitcol].map(units_map.get)
 
-    # reassign unites
-    dataframe[unitcol] = dataframe.targetunit
-    return dataframe
+    # factor to convert to preferred units
+    conversion = target.map(units_map.get)
 
+    # convert results
+    df[rescol] = df[rescol] * normalization / conversion
 
-def normalize_units2(data, normfxn, convfxn, unitfxn, paramcol='parameter',
-                     rescol='res', unitcol='unit', dlcol=None):
-    """ Another units normalizer
+    # reassign units
+    df[unitcol] = target
 
-    Parameters
-    ----------
-    data : pandas.DataFrame
-        Dataframe contained results and units of measure data.
-    normfxn, convfxn, unitfxn : callable
-        Functions to normalize, convert, and specify the target units,
-        respectively.
-          - ``normfxn`` only accepts values from ``unitcol`` as input
-          - ``convfxn`` only accepts values from ``paramcol`` as input
-          - ``unitfxn`` only accepts values from ``paramcol`` as input
-    paramcol, rescol, unitcol : string
-        Labels for the parameter, results, and units columns in the
-        dataframe.
-    dlcol : string, optional
-        Label for column containing detection limits. If present, they
-        will be normalized as well.
-
-    Returns
-    -------
-    dataframe : pandas.DataFrame
-        Dataframe with normalized units of measure.
-
-    Notes
-    -----
-    Input dataframes are copied and remain unmodified.
-
-    See also
-    --------
-    normalize_units
-
-    """
-
-    d = data.copy()
-    normalization = d[unitcol].apply(normfxn)
-    conversion = d[paramcol].apply(convfxn)
-
-    factor = normalization / conversion
-
-    d[rescol] *= factor
-    if dlcol is not None:
-        d[dlcol] *= factor
-
-    d.loc[:, unitcol] = d[paramcol].apply(unitfxn)
-    return d
+    return df
 
 
 def pH2concentration(pH, *args):

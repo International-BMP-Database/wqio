@@ -1,5 +1,6 @@
 from collections import namedtuple
 from io import StringIO
+from textwrap import dedent
 
 import pytest
 import numpy.testing as nptest
@@ -137,7 +138,7 @@ class Test_processAndersonDarlingResults(object):
 
 class Test_normalize_units(object):
     def setup(self):
-        data_csv = StringIO("""\
+        data_csv = StringIO(dedent("""\
         storm,param,station,units,conc
         1,"Lead, Total",inflow,ug/L,10
         2,"Lead, Total",inflow,mg/L,0.02
@@ -146,8 +147,38 @@ class Test_normalize_units(object):
         1,"Lead, Total",outflow,mg/L,0.05
         2,"Lead, Total",outflow,ug/L,60
         3,"Lead, Total",outflow,ug/L,70
-        4,"Lead, Total",outflow,g/L,0.00008""")
+        4,"Lead, Total",outflow,g/L,0.00008
+        1,"Cadmium, Total",inflow,ug/L,10
+        2,"Cadmium, Total",inflow,mg/L,0.02
+        3,"Cadmium, Total",inflow,g/L,0.00003
+        4,"Cadmium, Total",inflow,ug/L,40
+        1,"Cadmium, Total",outflow,mg/L,0.05
+        2,"Cadmium, Total",outflow,ug/L,60
+        3,"Cadmium, Total",outflow,ug/L,70
+        4,"Cadmium, Total",outflow,g/L,0.00008
+        """))
         self.raw_data = pandas.read_csv(data_csv)
+
+        known_csv = StringIO(dedent("""\
+        storm,param,station,units,conc
+        1,"Lead, Total",inflow,ug/L,10.
+        2,"Lead, Total",inflow,ug/L,20.
+        3,"Lead, Total",inflow,ug/L,30.
+        4,"Lead, Total",inflow,ug/L,40.
+        1,"Lead, Total",outflow,ug/L,50.
+        2,"Lead, Total",outflow,ug/L,60.
+        3,"Lead, Total",outflow,ug/L,70.
+        4,"Lead, Total",outflow,ug/L,80.
+        1,"Cadmium, Total",inflow,mg/L,0.010
+        2,"Cadmium, Total",inflow,mg/L,0.020
+        3,"Cadmium, Total",inflow,mg/L,0.030
+        4,"Cadmium, Total",inflow,mg/L,0.040
+        1,"Cadmium, Total",outflow,mg/L,0.050
+        2,"Cadmium, Total",outflow,mg/L,0.060
+        3,"Cadmium, Total",outflow,mg/L,0.070
+        4,"Cadmium, Total",outflow,mg/L,0.080
+        """))
+        self.expected_data = pandas.read_csv(known_csv)
 
         self.units_map = {
             'ug/L': 1e-6,
@@ -155,34 +186,19 @@ class Test_normalize_units(object):
             'g/L' : 1e+0,
         }
 
+        self.param_units = {
+            "Lead, Total": 'ug/L',
+            "Cadmium, Total": 'mg/L',
+        }
+
         self.params = {
             "Lead, Total": 1e-6
         }
-        self.known_conc = numpy.array([ 10.,  20.,  30.,  40.,  50.,  60.,  70.,  80.])
 
     def test_normalize_units(self):
-        data = numutils.normalize_units(self.raw_data, self.units_map, 'ug/L',
-                                     paramcol='param', rescol='conc',
-                                     unitcol='units')
-        nptest.assert_array_equal(self.known_conc, data['conc'].values)
-
-
-    def test_normalize_units(self):
-        with pytest.raises(ValueError):
-            data = numutils.normalize_units(self.raw_data, self.units_map, 'ng/L',
-                                         paramcol='param', rescol='conc',
-                                         unitcol='units')
-            nptest.assert_array_equal(self.known_conc, data['conc'].values)
-
-
-    def test_normalize_units2_nodlcol(self):
-        normalize = self.units_map.get
-        convert = self.params.get
-        unit = lambda x: 'ug/L'
-        data = numutils.normalize_units2(self.raw_data, normalize, convert,
-                                     unit, paramcol='param', rescol='conc',
-                                     unitcol='units')
-        nptest.assert_array_almost_equal(self.known_conc, data['conc'].values)
+        data = numutils.normalize_units(self.raw_data, self.units_map, self.param_units,
+                                        paramcol='param', rescol='conc', unitcol='units')
+        pdtest.assert_frame_equal(data, self.expected_data)
 
 
 class Test_test_pH2concentration(object):
