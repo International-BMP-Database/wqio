@@ -185,13 +185,18 @@ def anderson_darling_p_vals(ad_results, n_points):
     -------
     p : float
 
+    References
+    ----------
+    R.B. D'Augostino and M.A. Stephens, Eds., 1986, Goodness-of-Fit
+    Techniques, Marcel Dekker
+
     """
 
     AD, crit, sig = ad_results
     AD_star = AD * (1 + 0.75/n_points + 2.25/n_points**2)
     if AD_star >= 0.6:
         p = numpy.exp(1.2397 - (5.709*AD_star) + (0.0186*AD_star**2))
-    elif 0.34 < AD_star < 0.6:
+    elif 0.34 <= AD_star < 0.6:
         p = numpy.exp(0.9177 - (4.279*AD_star) - (1.38*AD_star**2))
     elif 0.2 < AD_star < 0.34:
         p = 1 - numpy.exp(-8.318 + (42.796*AD_star) - (59.938*AD_star**2))
