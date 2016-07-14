@@ -1,3 +1,6 @@
+from textwrap import dedent
+from io import StringIO
+
 import pytest
 import numpy.testing as nptest
 import pandas.util.testing as pdtest
@@ -717,17 +720,19 @@ class _base_DataCollecionMixin(object):
     @helpers.seed
     def test_means(self):
         pdtest.assert_frame_equal(
-            numpy.round(self.dc.means, 3),
-            self.known_means,
-            check_names=False
+            self.dc.means.round(3),
+            self.known_means.round(3),
+            check_names=False,
+            check_less_precise=True
         )
 
     @helpers.seed
     def test_medians(self):
         pdtest.assert_frame_equal(
-            numpy.round(self.dc.medians, 3),
-            self.known_medians,
-            check_names=False
+            self.dc.medians.round(3),
+            self.known_medians.round(3),
+            check_names=False,
+            check_less_precise=True
         )
 
     def test_shaprio(self):
@@ -966,6 +971,16 @@ class _base_DataCollecionMixin(object):
         assert self.dc.datasets[7].definition == {'param': 'H'}
 
 
+def load_known_dc_stat(csv_data):
+    df = (
+        pandas.read_csv(StringIO(dedent(csv_data)))
+            .set_index(['param', 'station'])
+            .unstack(level='station')
+    )
+    df.columns = df.columns.swaplevel(0, 1)
+    return df.sort_index(axis='columns')
+
+
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
         self.data = helpers.make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
@@ -977,83 +992,62 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
         self.known_groupcols = ['loc', 'param']
         self.known_columns = ['loc', 'param', self.known_raw_rescol, 'cen']
         self.known_bsIter = 10000
-        self.known_means = pandas.DataFrame({
-            ('Outflow', 'upper'): {
-                'H': 3.830, 'C': 4.319, 'D': 7.455, 'G': 3.880,
-                'F': 4.600, 'A': 7.166, 'B': 9.050, 'E': 5.615
-            },
-            ('Inflow', 'mean'): {
-                'H': 3.252, 'C': 3.674, 'D': 4.241, 'G': 3.908,
-                'F': 5.355, 'A': 5.882, 'B': 6.969, 'E': 3.877
-            },
-            ('Reference', 'lower'): {
-                'H': 1.708, 'C': 1.817, 'D': 2.200, 'G': 1.826,
-                'F': 1.477, 'A': 1.397, 'B': 2.537, 'E': 1.241
-            },
-            ('Reference', 'upper'): {
-                'H': 3.411, 'C': 6.405, 'D': 5.602, 'G': 5.626,
-                'F': 9.489, 'A': 3.870, 'B': 7.396, 'E': 4.094
-            },
-            ('Inflow', 'lower'): {
-                'H': 1.907, 'C': 1.644, 'D': 1.786, 'G': 2.262,
-                'F': 2.539, 'A': 2.784, 'B': 3.781, 'E': 2.403
-            },
-            ('Inflow', 'upper'): {
-                'H': 4.694, 'C': 6.186, 'D':  7.300, 'G': 5.583,
-                'F': 8.444, 'A': 9.396, 'B': 10.239, 'E': 5.511
-            },
-            ('Reference', 'mean'): {
-                'H': 2.515, 'C': 3.892, 'D': 3.819, 'G': 3.619,
-                'F': 4.988, 'A': 2.555, 'B': 4.919, 'E': 2.587
-            },
-            ('Outflow', 'mean'): {
-                'H': 2.633, 'C': 3.327, 'D': 4.451, 'G': 2.758,
-                'F': 3.515, 'A': 4.808, 'B': 6.297, 'E': 4.011
-            },
-            ('Outflow', 'lower'): {
-                'H': 1.568, 'C': 2.346, 'D': 1.863, 'G': 1.643,
-                'F': 2.477, 'A': 2.712, 'B': 3.627, 'E': 2.503
-            }
-        })
+        self.known_means = load_known_dc_stat("""\
+            param,station,lower,mean,upper
+            A,Inflow,2.748679,5.881599,9.2116
+            A,Outflow,2.600673,4.80762,7.197304
+            A,Reference,1.416864,2.555152,3.839059
+            B,Inflow,3.908581,6.96897,10.273159
+            B,Outflow,3.710928,6.297485,9.189436
+            B,Reference,2.56929,4.918943,7.457957
+            C,Inflow,1.608618,3.674344,6.010133
+            C,Outflow,2.351154,3.32731,4.358206
+            C,Reference,1.855405,3.8916,6.490131
+            D,Inflow,1.755983,4.240805,7.240196
+            D,Outflow,1.98268,4.450713,7.433584
+            D,Reference,2.270379,3.818759,5.648175
+            E,Inflow,2.385389,3.877227,5.495141
+            E,Outflow,2.5154,4.01144,5.589268
+            E,Reference,1.240479,2.587013,4.085286
+            F,Inflow,2.641011,5.35544,8.614032
+            F,Outflow,2.487351,3.514617,4.608282
+            F,Reference,1.532666,4.987571,9.699604
+            G,Inflow,2.267453,3.907819,5.639204
+            G,Outflow,1.680899,2.758258,3.920394
+            G,Reference,1.877497,3.618892,5.698217
+            H,Inflow,1.920636,3.252142,4.726754
+            H,Outflow,1.549154,2.632812,3.841772
+            H,Reference,1.717932,2.515394,3.400027
+        """)
 
-        self.known_medians = pandas.DataFrame({
-            ('Outflow', 'upper'): {
-                'G': 2.421, 'E': 3.512, 'H': 2.387, 'F': 4.227,
-                'B': 5.167, 'C': 3.736, 'D': 1.930, 'A': 3.554
-            },
-            ('Inflow', 'lower'): {
-                'G': 0.735, 'E': 1.328, 'H': 1.305, 'F': 1.178,
-                'B': 1.717, 'C': 0.924, 'D': 0.766, 'A': 1.329
-            },
-            ('Outflow', 'lower'): {
-                'G': 0.817, 'E': 1.317, 'H': 0.662, 'F': 1.500,
-                'B': 0.889, 'C': 1.288, 'D': 0.877, 'A': 1.234
-            },
-            ('Reference', 'lower'): {
-                'G': 1.137, 'E': 0.615, 'H': 0.976, 'F': 0.776,
-                'B': 0.832, 'C': 0.938, 'D': 1.190, 'A': 0.691
-            },
-            ('Reference', 'median'): {
-                'G': 2.008, 'E': 1.211, 'H': 1.940, 'F': 1.473,
-                'B': 2.118, 'C': 1.833, 'D': 2.187, 'A': 1.293
-            },
-            ('Inflow', 'upper'): {
-                'G': 3.841, 'E': 4.113, 'H': 2.829, 'F': 4.345,
-                'B': 6.327, 'C': 2.012, 'D': 2.915, 'A': 3.485
-            },
-            ('Reference', 'upper'): {
-                'G': 2.513, 'E': 1.917, 'H': 2.846, 'F': 2.131,
-                'B': 4.418, 'C': 2.893, 'D': 3.719, 'A': 2.051
-            },
-            ('Outflow', 'median'): {
-                'G': 1.559, 'E': 2.101, 'H': 1.604, 'F': 2.495,
-                'B': 2.485, 'C': 3.075, 'D': 1.613, 'A': 2.500
-            },
-            ('Inflow', 'median'): {
-                'G': 1.844, 'E': 2.883, 'H': 1.729, 'F': 2.630,
-                'B': 3.511, 'C': 1.410, 'D': 1.873, 'A': 2.830
-            }
-        })
+        self.known_medians = load_known_dc_stat("""\
+            param,station,lower,median,upper
+            A,Inflow,1.329239,2.82959,3.485278
+            A,Outflow,1.23428,2.499703,3.553598
+            A,Reference,0.694529,1.292849,2.051181
+            B,Inflow,1.717358,3.511042,6.326503
+            B,Outflow,0.88851,2.484602,5.727451
+            B,Reference,0.833077,2.118402,4.418128
+            C,Inflow,0.895116,1.409523,2.011819
+            C,Outflow,1.318304,3.075015,3.833705
+            C,Reference,0.937387,1.832793,2.829857
+            D,Inflow,0.766254,1.873097,2.934091
+            D,Outflow,0.877327,1.613252,1.929779
+            D,Reference,1.190175,2.186729,3.718543
+            E,Inflow,1.327971,2.883189,4.113432
+            E,Outflow,1.341962,2.101454,3.51228
+            E,Reference,0.611767,1.210565,1.916643
+            F,Inflow,1.17812,2.629969,4.345175
+            F,Outflow,1.49992,2.495085,4.226673
+            F,Reference,0.775816,1.473314,2.190129
+            G,Inflow,0.735196,1.84397,3.840832
+            G,Outflow,0.817122,1.558962,2.420768
+            G,Reference,1.058775,2.008404,2.512609
+            H,Inflow,1.2963,1.729254,2.828794
+            H,Outflow,0.635636,1.604207,2.387034
+            H,Reference,0.976348,1.940175,2.846231
+        """)
+
 
         self.known_genericstat = pandas.DataFrame({
             ('Reference', 'stat'): {

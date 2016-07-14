@@ -430,43 +430,43 @@ class Location(object):
     @cache_readonly
     def pctl10(self):
         if self.hasData:
-            return stats.scoreatpercentile(self.data, 10)
+            return numpy.percentile(self.data, 10)
 
     @cache_readonly
     def pctl25(self):
         if self.hasData:
-            return stats.scoreatpercentile(self.data, 25)
+            return numpy.percentile(self.data, 25)
 
     @cache_readonly
     def pctl75(self):
         if self.hasData:
-            return stats.scoreatpercentile(self.data, 75)
+            return numpy.percentile(self.data, 75)
 
     @cache_readonly
     def pctl90(self):
         if self.hasData:
-            return stats.scoreatpercentile(self.data, 90)
+            return numpy.percentile(self.data, 90)
 
     # stats that we need
     @cache_readonly
     def median(self):
         if self.hasData:
-            return self._median_boostrap[0]
+            return numpy.median(self.data)
 
     @cache_readonly
     def median_conf_interval(self):
         if self.hasData:
-            return self._median_boostrap[1]
+            return bootstrap.BCA(self.data, numpy.median, niter=self.bsIter)
 
     @cache_readonly
     def mean(self):
         if self.hasData:
-            return self._mean_boostrap[0]
+            return numpy.mean(self.data)
 
     @cache_readonly
     def mean_conf_interval(self):
         if self.hasData:
-            return self._mean_boostrap[1]
+            return bootstrap.BCA(self.data, numpy.mean, niter=self.bsIter)
 
     @cache_readonly
     def std(self):
@@ -481,7 +481,10 @@ class Location(object):
     @cache_readonly
     def logmean_conf_interval(self):
         if self.all_positive and self.hasData:
-            return self._logmean_boostrap[1]
+            def fxn(x, **kwds):
+                return numpy.mean(numpy.log(x), **kwds)
+
+            return bootstrap.BCA(self.data, fxn, niter=self.bsIter)
 
     @cache_readonly
     def logstd(self):
@@ -502,34 +505,6 @@ class Location(object):
     def geostd(self):
         if self.all_positive and self.hasData:
             return numpy.exp(self.logstd)
-        else:
-            return None
-
-    # helper bootstrap objects
-    @cache_readonly
-    def _median_boostrap(self):
-        if self.hasData:
-            return bootstrap.BCA(self.data, numpy.median, niter=self.bsIter)
-
-    @cache_readonly
-    def _mean_boostrap(self):
-        if self.hasData:
-            return bootstrap.BCA(self.data, numpy.mean, niter=self.bsIter)
-
-    @cache_readonly
-    def _std_boostrap(self):
-        if self.hasData:
-            return bootstrap.BCA(self.data, numpy.std, niter=self.bsIter)
-
-    @cache_readonly
-    def _logmean_boostrap(self):
-        if self.all_positive and self.hasData:
-            return bootstrap.BCA(numpy.log(self.data), numpy.mean, niter=self.bsIter)
-
-    @cache_readonly
-    def _logstd_boostrap(self):
-        if self.all_positive and self.hasData:
-            return bootstrap.BCA(numpy.log(self.data), numpy.std, niter=self.bsIter)
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
@@ -1797,13 +1772,16 @@ class DataCollection(object):
         def fxn(x):
             data = x[self.rescol].values
             if use_bootstrap:
-                stat, (lci, uci) = bootstrap.BCA(data, statfxn=statfxn)
+                stat = statfxn(data)
+                lci, uci = bootstrap.BCA(data, statfxn=statfxn)
                 values = [lci, stat, uci]
                 statnames = ['lower', statname, 'upper']
             else:
                 values = validate.at_least_empty_list(statfxn(data, **statopts))
+                # nametuple
                 if hasattr(values, '_fields'):
                     statnames = values._fields
+                # tuple
                 else:
                     statnames = [statname]
                     if has_pvalue:

@@ -57,7 +57,7 @@ def _make_boot_index(elements, niter):
     return numpy.random.randint(low=0, high=elements, size=(niter, elements))
 
 
-def BCA(data, statfxn, niter=5000, alpha=0.05):
+def BCA(data, statfxn, niter=10000, alpha=0.05):
     """
     Estimates confidence intervals around a statistic using the
     Bias-Corrected and Accelerated method.
@@ -69,19 +69,17 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
     statfxn : callable
         A reducing function that returns a single value when passed
         ``data``.
-    niter : int (5000)
+    niter : int, optional (default = 10000)
         The number of iterations for which the data will be resampled
         and the statistic recomputed.
-    alpha : float (0.05)
+    alpha : float, optional (default = 0.05)
         The desired confidence interval subtracted from 1. For example,
         if you want the 95% CI, use ``alpha = 0.05``.
 
     Returns
     -------
-    result : float
-        Refined(?) estimate of the statistic.
     CI : numpy array
-        Confidence intervals of statistic.
+        Confidence intervals around the statistic.
 
     Examples
     --------
@@ -91,7 +89,7 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
     >>> # generate fake data and bootstrap it
     >>> data = numpy.random.normal(loc=2, scale=1.75, size=37)
     >>> wqio.bootstrap.BCA(data, numpy.mean, niter=1000, alpha=0.05)
-    (2.5670448684791953, array([ 1.89528037,  3.16395883]))
+    array([ 1.89528037,  3.16395883])
 
     """
 
@@ -130,10 +128,10 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
             warnings.warn("secondary result outside of CI", UserWarning)
             CI = percentile(data, statfxn, niter, alpha=alpha)
 
-    return primary_result, CI
+    return CI
 
 
-def percentile(data, statfxn, niter, alpha=0.05):
+def percentile(data, statfxn, niter=10000, alpha=0.05):
     """
     Estimates confidence intervals around a statistic using the
     percentile method.
@@ -145,19 +143,17 @@ def percentile(data, statfxn, niter, alpha=0.05):
     statfxn : callable
         A reducing function that returns a single value when passed
         ``data``.
-    niter : int (5000)
+    niter : int, optional (default = 10000)
         The number of iterations for which the data will be resampled
         and the statistic recomputed.
-    alpha : float (0.05)
+    alpha : float, optional (default = 0.05)
         The desired confidence interval subtracted from 1. For example,
         if you want the 95% CI, use ``alpha = 0.05``.
 
     Returns
     -------
-    result : float
-        Refined(?) estimate of the statistic.
     CI : numpy array
-        Confidence intervals of statistic.
+        Confidence intervals around the statistic.
 
     Examples
     --------
@@ -176,4 +172,4 @@ def percentile(data, statfxn, niter, alpha=0.05):
     # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
     CI = numpy.percentile(boot_stats, [alpha * 50, 100 - (alpha * 50)], axis=0)
 
-    return statfxn(data), CI
+    return CI
