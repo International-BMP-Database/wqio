@@ -86,33 +86,6 @@ def addColumnLevel(df, levelvalue, levelname):
     return newdf
 
 
-def getUniqueDataframeIndexVal(df, indexlevel):
-    """ Confirms that a given level of a dataframe's index only has
-    one unique value. Useful for confirming consistent units. Raises
-    error if level is not a single value. Returns unique value of the
-    index level.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe whose index will be inspected.
-    indexlevel : int or string
-        Level of the dataframe's index to be
-
-    Returns
-    -------
-    uniqueval
-        The unique value of the index.
-
-    """
-
-    index = numpy.unique(df.index.get_level_values(indexlevel).tolist())
-    if index.shape != (1,):
-        raise ValueError('index level "%s" is not unique!' % indexlevel)
-
-    return index[0]
-
-
 def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 

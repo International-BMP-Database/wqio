@@ -65,24 +65,6 @@ def test_addColumnLevel(basic_data):
         misc.addColumnLevel(newdata, 'test2', 'testlevel2')
 
 
-@helpers.seed
-def test_getUniqueDataframeIndexVal():
-    dates = range(5)
-    params = list('ABCDE')
-    locations = ['Inflow', 'Outflow']
-    index = pandas.MultiIndex.from_product(
-        [dates, params, locations],
-        names=['date', 'param', 'loc']
-    )
-    data = pandas.DataFrame(numpy.random.normal(size=len(index)), index=index)
-    test = misc.getUniqueDataframeIndexVal(data.select(lambda x: x[0] == 0), 'date')
-    assert test == 0
-
-    with pytest.raises(ValueError):
-        misc.getUniqueDataframeIndexVal(data, 'date')
-
-
-
 @pytest.fixture
 def index_df():
     index = pandas.MultiIndex.from_product([['A', 'B', 'C'], ['mg/L']], names=['loc', 'units'])
@@ -123,7 +105,6 @@ def test_redefineIndexLevel(index_df, criteria, dropold):
         columns=expected_cols
     )
     pdtest.assert_frame_equal(result, expected)
-
 
 
 @pytest.fixture
@@ -167,7 +148,11 @@ def test_categorize_columns():
     """))
     df = pandas.read_csv(csvdata)
     df2 = misc.categorize_columns(df, 'parameter', 'units', 'season')
+
+    # check pandas API that the first df has object columns
     assert object in df.dtypes.values
+
+    # confirm that all of those objects are gone
     assert object not in df2.dtypes.values
 
     with pytest.raises(ValueError):
