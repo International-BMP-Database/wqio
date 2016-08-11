@@ -1,11 +1,13 @@
 from datetime import datetime
 
+import numpy
 from matplotlib import pyplot
 import pandas
 
 import pytest
 
 from wqio import validate
+from wqio.tests import helpers
 
 
 @pytest.mark.parametrize(('value', 'expected'), [
@@ -40,3 +42,29 @@ def test_axes_with_None():
     fig1, ax1 = validate.axes(None)
     assert isinstance(ax1, pyplot.Axes)
     assert isinstance(fig1, pyplot.Figure)
+
+
+@pytest.fixture
+def multiindex_df():
+    dates = range(5)
+    params = list('ABCDE')
+    locations = ['Inflow', 'Outflow']
+    index = pandas.MultiIndex.from_product(
+        [dates, params, locations],
+        names=['date', 'param', 'loc']
+    )
+    data = pandas.DataFrame(numpy.random.normal(size=len(index)), index=index)
+    return data
+
+
+@pytest.mark.parametrize(('level', 'expected'), [(0, 0), (None, None)])
+@helpers.seed
+def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
+    if expected is None:
+        data = multiindex_df.copy()
+        with pytest.raises(ValueError):
+            validate.single_value_in_index(data, 'date')
+    else:
+        data = multiindex_df.select(lambda row: row[level] in [expected])
+        test = validate.single_value_in_index(data, 'date')
+        assert test == expected

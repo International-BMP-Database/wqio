@@ -1,3 +1,4 @@
+import numpy
 from matplotlib import pyplot
 import pandas
 
@@ -63,3 +64,31 @@ def axes(ax, fallback='new'):
         raise ValueError(msg)
 
     return fig, ax
+
+
+def single_value_in_index(df, index_level):
+    """ Confirms that a given level of a dataframe's index only has
+    one unique value. Useful for confirming consistent units. Raises
+    error if level is not a single value. Returns unique value of the
+    index level.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe whose index will be inspected.
+    index_level : int or string
+        Level of the dataframe's index that should only have one unique
+        value.
+
+    Returns
+    -------
+    uniqueval
+        The unique value of the index.
+
+    """
+
+    index = numpy.unique(df.index.get_level_values(index_level).tolist())
+    if index.shape != (1,):
+        raise ValueError('index level "{}" is not unique.'.format(index_level))
+
+    return index[0]
