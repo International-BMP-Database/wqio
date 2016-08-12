@@ -1528,23 +1528,25 @@ class Dataset(object):
 
         # plot the raw results, if requested
         else:
-            self._plot_nds(ax, which='neither', marker='o', alpha=0.8,
-                           label='Detected data pairs', markerfacecolor='black',
-                           markeredgecolor='white', **markerkwargs)
-            self._plot_nds(ax, which='influent', marker='v', alpha=0.45,
-                           label='Influent not detected',  markerfacecolor='none',
-                           markeredgecolor='black', **markerkwargs)
-            self._plot_nds(ax, which='effluent', marker='<', alpha=0.45,
-                           label='Effluent not detected',  markerfacecolor='none',
-                           markeredgecolor='black', **markerkwargs)
-            self._plot_nds(ax, which='both', marker='d', alpha=0.25,
-                           label='Both not detected',  markerfacecolor='none',
-                           markeredgecolor='black', **markerkwargs)
+            plot_params = [
+                dict(which='neither', marker='o', alpha=0.8, label='Detected data pairs',
+                     markerfacecolor='black', markeredgecolor='white'),
+                dict(which='influent', marker='v', alpha=0.45, label='Influent not detected',
+                     markerfacecolor='none', markeredgecolor='black'),
+                dict(which='effluent', marker='<', alpha=0.45, label='Effluent not detected',
+                     markerfacecolor='none', markeredgecolor='black'),
+                dict(which='both',  marker='d', alpha=0.25, label='Both not detected',
+                     markerfacecolor='none', markeredgecolor='black'),
+            ]
+            for pp in plot_params:
+                options = markerkwargs.copy()
+                options.update(pp)
+                self._plot_nds(ax, **options)
 
-        if xscale != 'log':
+        if xscale == 'linear':
             ax.set_xlim(left=0)
 
-        if yscale != 'log':
+        if yscale == 'linear':
             ax.set_ylim(bottom=0)
 
         # unify the axes limits
@@ -1646,34 +1648,29 @@ class Dataset(object):
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
         '''
-        # store the original useROS value
-        use_ros_cache = self.useROS
+        i_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
+        o_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
 
+        i_detect = ~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
+        o_detect = ~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
 
-        if which == 'both':
-            index = (self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
-                    (self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
+        index_combos = {
+            'both': i_nondetect & o_nondetect,
+            'influent': i_nondetect & o_detect,
+            'effluent': i_detect & o_nondetect,
+            'neither': i_detect & o_detect,
+        }
 
-        elif which == 'influent':
-            index = (self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
-                    (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
-
-        elif which == 'effluent':
-            index = (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
-                    (self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
-
-        elif which == 'neither':
-            index = (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) & \
-                    (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
-
-        else:
+        try:
+            index = index_combos[which]
+        except KeyError:
             msg = '`which` must be "both", "influent", ' \
                   '"effluent", or "neighter"'
             raise ValueError(msg)
 
         x = self.paired_data.loc[index][('inflow', 'res')]
         y = self.paired_data.loc[index][('outflow', 'res')]
-        ax.plot(x, y, label=label, **markerkwargs)
+        return ax.plot(x, y, label=label, **markerkwargs)
 
 
 class DataCollection(object):
