@@ -356,7 +356,6 @@ def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
     return bp
 
 
-
 def probplot(data, ax=None, axtype='prob', yscale='log',
              xlabel=None, ylabel=None, bestfit=False,
              scatter_kws=None, line_kws=None, return_results=False):
