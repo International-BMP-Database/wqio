@@ -4,7 +4,7 @@ import numpy
 import pandas
 
 
-@numpy.deprecate(new_name='addColumnLevel')
+@numpy.deprecate(new_name='add_column_level')
 def addSecondColumnLevel(levelval, levelname, df):
     """ Add a second level to the column-index if a dataframe.
 
@@ -35,10 +35,10 @@ def addSecondColumnLevel(levelval, levelname, df):
 
     """
 
-    return addColumnLevel(df, levelval, levelname)
+    return add_column_level(df, levelval, levelname)
 
 
-def addColumnLevel(df, levelvalue, levelname):
+def add_column_level(df, levelvalue, levelname):
     """ Adds a second level to the column-index if a dataframe.
 
     Parameters
@@ -60,7 +60,7 @@ def addColumnLevel(df, levelvalue, levelname):
     >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
     >>> df.columns
     Index(['res', 'qual'], dtype='object')
-    >>> df2 = utils.addColumnLevel(df, 'Infl', 'location')
+    >>> df2 = utils.add_column_level(df, 'Infl', 'location')
     >>> df2.columns
     MultiIndex(levels=[['Infl'], ['qual', 'res']],
                labels=[[0, 0], [1, 0]],

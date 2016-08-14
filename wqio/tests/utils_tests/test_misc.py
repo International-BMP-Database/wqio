@@ -23,6 +23,12 @@ def basic_data():
     return pandas.read_csv(StringIO(dedent(testcsv)), index_col=['Date'])
 
 
+@pytest.fixture
+def multiindex_df():
+    index = pandas.MultiIndex.from_product([['A', 'B', 'C'], ['mg/L']], names=['loc', 'units'])
+    return pandas.DataFrame([[1,2], [3, 4], [5,6]], index=index, columns=['a', 'b'])
+
+
 class mockDataset(object):
     def __init__(self, inflow, outflow):
         self.inflow = mockLocation(inflow)
@@ -54,26 +60,38 @@ def test_addSecondColumnLevel(basic_data):
         misc.addSecondColumnLevel('test2', 'testlevel2', newdata)
 
 
-def test_addColumnLevel(basic_data):
+def test_add_column_level(basic_data):
     known_cols = pandas.MultiIndex.from_tuples([(u'test', u'A'), (u'test', u'B'),
                                                 (u'test', u'C'), (u'test', u'D')])
-    newdata = misc.addColumnLevel(basic_data, 'test', 'testlevel')
+    newdata = misc.add_column_level(basic_data, 'test', 'testlevel')
     assert known_cols.tolist() == newdata.columns.tolist()
 
     # can only add levels to non-MultiIndex columns
     with pytest.raises(ValueError):
-        misc.addColumnLevel(newdata, 'test2', 'testlevel2')
+        misc.add_column_level(newdata, 'test2', 'testlevel2')
 
 
-@pytest.fixture
-def index_df():
-    index = pandas.MultiIndex.from_product([['A', 'B', 'C'], ['mg/L']], names=['loc', 'units'])
-    return pandas.DataFrame([[1,2], [3, 4], [5,6]], index=index, columns=['a', 'b'])
+@pytest.mark.parametrize('L1', [0, 'loc'])
+@pytest.mark.parametrize('L2', [2, 'units'])
+def test_swap_column_levels(multiindex_df, L1, L2):
+    columns = pandas.MultiIndex.from_product(
+        [['A', 'B', 'C'], ['res', 'cen'], ['mg/L']],
+        names=['loc', 'value', 'units']
+    )
+    data = numpy.arange(len(columns) * 10).reshape((10, len(columns)))
+    df = pandas.DataFrame(data, columns=columns).pipe(misc.swap_column_levels, L1, L2)
+
+    expected_columns = pandas.MultiIndex.from_product(
+        [['mg/L'], ['cen', 'res'], ['A', 'B', 'C']],
+        names=[ 'units', 'value', 'loc']
+    )
+
+    pdtest.assert_index_equal(df.columns, expected_columns)
 
 
 @pytest.mark.parametrize('criteria', [None, lambda row: row[0] in ['A', 'B']])
 @pytest.mark.parametrize('dropold', [True, False])
-def test_redefineIndexLevel(index_df, criteria, dropold):
+def test_redefineIndexLevel(multiindex_df, criteria, dropold):
     expected_cols = ['a', 'b']
     if dropold:
         expected_value = [[1,2], [3, 4], [5, 6]]
@@ -98,7 +116,7 @@ def test_redefineIndexLevel(index_df, criteria, dropold):
                 ('C', 'mg/L'), ('C', 'ug/L')
             ]
 
-    result = misc.redefineIndexLevel(index_df, 'units', 'ug/L', criteria=criteria, dropold=dropold)
+    result = misc.redefineIndexLevel(multiindex_df, 'units', 'ug/L', criteria=criteria, dropold=dropold)
     expected = pandas.DataFrame(
         data=expected_value,
         index=pandas.MultiIndex.from_tuples(expected_index, names=['loc', 'units']),
