@@ -1,3 +1,5 @@
+import itertools
+
 import numpy
 from scipy import stats
 from matplotlib import pyplot
@@ -1725,11 +1727,10 @@ class DataCollection(object):
         self.ndval = [ndval] if numpy.isscalar(ndval) else ndval
         self.bsIter = bsIter
 
-        self.groupcols = [stationcol, paramcol]
-        if othergroups is not None:
-            if numpy.isscalar(othergroups):
-                othergroups = [othergroups]
-            self.groupcols.extend(othergroups)
+        self.othergroups = validate.at_least_empty_list(othergroups)
+
+        self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
+        self.groupcols_comparison = [self.paramcol] + self.othergroups
 
         self.columns = self.groupcols + [self._raw_rescol, self.cencol]
 
@@ -1891,6 +1892,20 @@ class DataCollection(object):
         stat.sort_index(axis=1, inplace=True)
 
         return stat
+
+    def _comparison_stat(self, statfxn, statname=None, **statopts):
+        results = utils.misc._comp_stat_generator(
+            self.tidy,
+            self.groupcols_comparison,
+            self.stationcol,
+            self.rescol,
+            statfxn,
+            statname=statname,
+            **statopts
+        )
+        station_columns = [self.stationcol + '_1', self.stationcol + '_2']
+        index_cols = self.groupcols_comparison + station_columns
+        return pandas.DataFrame.from_records(results).set_index(index_cols)
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
