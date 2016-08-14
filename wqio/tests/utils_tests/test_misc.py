@@ -91,7 +91,7 @@ def test_swap_column_levels(multiindex_df, L1, L2):
 
 @pytest.mark.parametrize('criteria', [None, lambda row: row[0] in ['A', 'B']])
 @pytest.mark.parametrize('dropold', [True, False])
-def test_redefineIndexLevel(multiindex_df, criteria, dropold):
+def test_redefine_index_level(multiindex_df, criteria, dropold):
     expected_cols = ['a', 'b']
     if dropold:
         expected_value = [[1,2], [3, 4], [5, 6]]
@@ -116,7 +116,7 @@ def test_redefineIndexLevel(multiindex_df, criteria, dropold):
                 ('C', 'mg/L'), ('C', 'ug/L')
             ]
 
-    result = misc.redefineIndexLevel(multiindex_df, 'units', 'ug/L', criteria=criteria, dropold=dropold)
+    result = misc.redefine_index_level(multiindex_df, 'units', 'ug/L', criteria=criteria, dropold=dropold)
     expected = pandas.DataFrame(
         data=expected_value,
         index=pandas.MultiIndex.from_tuples(expected_index, names=['loc', 'units']),

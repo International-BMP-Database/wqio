@@ -133,7 +133,7 @@ def swap_column_levels(df, level_1, level_2):
     return df2.sort_index(axis='columns')
 
 
-def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
+def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
     Parameters
