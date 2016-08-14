@@ -22,6 +22,40 @@ def seed(func):
     return wrapper
 
 
+@seed
+def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
+    dl_map =         {
+        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
+        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
+    }
+
+    index = pandas.MultiIndex.from_product([
+        list('ABCDEFGH'),
+        list('1234567'),
+        ['GA', 'AL', 'OR', 'CA'],
+        ['Inflow', 'Outflow', 'Reference']
+    ], names=['param', 'bmp', 'state', 'loc'])
+
+    array = numpy.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
+    data = pandas.DataFrame(data=array, index=index, columns=[rescol])
+    data['DL'] = data.apply(
+        lambda r: dl_map.get(r.name[0]),
+        axis=1
+    )
+
+    data[rescol] = data.apply(
+        lambda r: dl_map.get(r.name[0]) if r[rescol] < r['DL'] else r[rescol],
+        axis=1
+    )
+
+    data[qualcol] = data.apply(
+        lambda r: ndval if r[rescol] <= r['DL'] else '=',
+        axis=1
+    )
+
+    return data
+
+
 def test_data_path(filename):
     path = resource_filename("wqio.tests._data", filename)
     return path
