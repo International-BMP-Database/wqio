@@ -687,37 +687,37 @@ class _base_DataCollecionMixin(object):
     known_ndval = 'ND'
 
     def test__raw_rescol(self):
-        self.dc._raw_rescol == self.known_raw_rescol
+        assert self.dc._raw_rescol == self.known_raw_rescol
 
     def test_data(self):
         assert isinstance(self.dc.data, pandas.DataFrame)
 
     def test_roscol(self):
-        self.dc.roscol == self.known_roscol
+        assert self.dc.roscol == self.known_roscol
 
     def test_rescol(self):
-        self.dc.rescol == self.known_rescol
+        assert self.dc.rescol == self.known_rescol
 
     def test_qualcol(self):
-        self.dc.qualcol == self.known_qualcol
+        assert self.dc.qualcol == self.known_qualcol
 
     def test_stationncol(self):
-        self.dc.stationcol == self.known_stationcol
+        assert self.dc.stationcol == self.known_stationcol
 
     def test_paramcol(self):
-        self.dc.paramcol == self.known_paramcol
+        assert self.dc.paramcol == self.known_paramcol
 
     def test_ndval(self):
         assert self.dc.ndval == [self.known_ndval]
 
     def test_bsIter(self):
-        self.dc.bsIter == self.known_bsIter
+        assert self.dc.bsIter == self.known_bsIter
 
     def test_groupby(self):
-        self.dc.groupcols == self.known_groupcols
+        assert self.dc.groupcols == self.known_groupcols
 
     def test_columns(self):
-        self.dc.columns == self.known_columns
+        assert self.dc.columns == self.known_columns
 
     def test_filterfxn(self):
         assert hasattr(self.dc, 'filterfxn')
