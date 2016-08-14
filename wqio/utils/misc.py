@@ -86,6 +86,53 @@ def add_column_level(df, levelvalue, levelname):
     return newdf
 
 
+def swap_column_levels(df, level_1, level_2):
+    """ Swaps columns levels in a dataframe with multi-level columns
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A dataframe with a multi-level column index
+    level_1, level_2 : int or string
+        The position or label of the columns levels to be swapped.
+
+    Returns
+    -------
+    swapped : pandas.DataFrame
+
+    Examples
+    --------
+    >>> import numpy
+    >>> import pandas
+    >>> import wqio
+    >>> columns = pandas.MultiIndex.from_product(
+    ...     [['A', 'B',], ['res', 'cen'], ['mg/L']],
+    ...     names=['loc', 'value', 'units']
+    ... )
+    >>> data = numpy.arange(len(columns) * 3).reshape((3, len(columns)))
+    >>> df = pandas.DataFrame(data, columns=columns)
+    >>> print(df)
+    loc      A         B
+    value  res  cen  res  cen
+    units mg/L mg/L mg/L mg/L
+    0        0    1    2    3
+    1        4    5    6    7
+    2        8    9   10   11
+
+    >>> print(wqio.utils.swap_column_levels(df, 'units', 'loc'))
+    units mg/L
+    value  cen     res
+    loc      A   B   A   B
+    0        1   3   0   2
+    1        5   7   4   6
+    2        9  11   8  10
+
+    """
+    df2 = df.copy()
+    df2.columns = df2.columns.swaplevel(level_1, level_2)
+    return df2.sort_index(axis='columns')
+
+
 def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
