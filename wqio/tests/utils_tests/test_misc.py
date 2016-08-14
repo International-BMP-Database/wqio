@@ -1,5 +1,4 @@
 import types
-from collections import namedtuple
 from functools import partial
 from textwrap import dedent
 from io import StringIO
@@ -208,14 +207,8 @@ def test__unique_categories():
 
 
 def test__comp_stat_generator():
-
-    def statfxn(x, y):
-        stat = namedtuple('teststat', ('statistic', 'pvalue'))
-        result = x.max() - y.min()
-        return stat(result, result * 0.25)
-
     df = helpers.make_dc_data().reset_index()
-    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc','res',  statfxn)
+    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc','res',  helpers.comp_statfxn)
     assert isinstance(gen, types.GeneratorType)
     result = pandas.DataFrame(gen)
 

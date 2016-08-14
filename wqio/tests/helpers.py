@@ -7,6 +7,7 @@ from warnings import simplefilter
 from functools import wraps
 from pkg_resources import resource_filename
 from io import StringIO
+from collections import namedtuple
 
 import numpy
 import numpy.testing as nptest
@@ -54,6 +55,12 @@ def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     )
 
     return data
+
+
+def comp_statfxn(x, y):
+    stat = namedtuple('teststat', ('statistic', 'pvalue'))
+    result = x.max() - y.min()
+    return stat(result, result * 0.25)
 
 
 def test_data_path(filename):
