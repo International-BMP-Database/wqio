@@ -1,6 +1,9 @@
+import types
+from collections import namedtuple
 from functools import partial
 from textwrap import dedent
 from io import StringIO
+
 
 import pytest
 import pandas.util.testing as pdtest
@@ -203,3 +206,46 @@ def test__unique_categories():
 
     assert result_categories == known_categories
 
+
+def test__comp_stat_generator():
+
+    def statfxn(x, y):
+        stat = namedtuple('teststat', ('statistic', 'pvalue'))
+        result = x.max() - y.min()
+        return stat(result, result * 0.25)
+
+    df = helpers.make_dc_data().reset_index()
+    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc','res',  statfxn)
+    assert isinstance(gen, types.GeneratorType)
+    result = pandas.DataFrame(gen)
+
+    expected_records = {
+        'bmp': {
+            0: '1', 1: '1', 2: '1', 3: '1', 4: '1',
+          331: '7', 332: '7', 333: '7', 334: '7', 335: '7'
+        },
+        'loc_1': {
+            0: 'Inflow', 1: 'Inflow', 2: 'Inflow', 3: 'Outflow', 4: 'Outflow',
+          331: 'Inflow', 332: 'Inflow', 333: 'Outflow', 334: 'Outflow', 335: 'Reference'
+        },
+        'loc_2': {
+            0: 'Inflow', 1: 'Outflow', 2: 'Reference', 3: 'Outflow', 4: 'Reference',
+          331: 'Outflow', 332: 'Reference', 333: 'Outflow', 334: 'Reference', 335: 'Reference'
+        },
+        'param': {
+            0: 'A', 1: 'A', 2: 'A', 3: 'A', 4: 'A',
+          331: 'H', 332: 'H', 333: 'H', 334: 'H', 335: 'H'
+        },
+        'pvalue': {
+            0: 7.828829, 1: 8.275032, 2: 8.557050, 3: 5.025827, 4: 5.307845,
+          331: 0.738585, 332: 0.747725, 333: 1.930349, 334: 1.939488, 335: 0.831757
+        },
+         'stat': {
+            0: 31.315317, 1: 33.100128, 2: 34.228203, 3: 20.103308, 4: 21.231383,
+          331: 2.954343, 332: 2.990900, 333: 7.721396, 334: 7.757954, 335: 3.327028
+        }
+    }
+    pdtest.assert_frame_equal(
+        pandas.DataFrame(expected_records),
+        pandas.concat([result.head(), result.tail()])
+    )
