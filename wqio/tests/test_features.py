@@ -730,6 +730,70 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
+    def test_shaprio(self):
+        expected_data = {
+            ('Inflow', 'pvalue'): [
+                1.35000277e-07, 1.15147395e-06, 2.84853918e-08, 7.25922699e-09,
+                4.04597494e-06, 5.37404680e-08, 6.98694420e-05, 2.09285303e-06,
+            ],
+            ('Outflow', 'shapiro'): [
+                0.68407392, 0.74749016, 0.897427022, 0.55306959,
+                0.78847879, 0.88128829, 0.778801679, 0.71769607,
+            ],
+            ('Reference', 'shapiro'): [
+                0.64490425, 0.66652446, 0.497832655, 0.65883779,
+                0.57689213, 0.39423871, 0.583670616, 0.78648996,
+            ],
+            ('Inflow', 'shapiro'): [
+                0.59733164, 0.67138719, 0.537596583, 0.48065340,
+                0.71066832, 0.56260156, 0.789419353, 0.69042921,
+            ],
+            ('Outflow', 'pvalue'): [
+                1.71045326e-06, 1.4417389138543513e-05, 0.0099637247622013092, 4.2077829220943386e-08,
+                6.73221293e-05, 0.0042873905040323734, 4.616594742401503e-05, 5.1183847062929999e-06,
+            ],
+            ('Reference', 'pvalue'): [
+                5.18675221e-07, 9.91817046e-07, 1.08479882e-08, 7.85432064e-07,
+                7.80523379e-08, 1.08831232e-09, 9.34287243e-08, 6.22547740e-05,
+            ],
+        }
+        result = self.dc.shapiro
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_shapiro_log(self):
+        expected_data = {
+            ('Inflow', 'log-shapiro'): [
+                0.962131, 0.983048, 0.974349, 0.971814,
+                0.953440, 0.986218, 0.970588, 0.980909,
+            ],
+            ('Inflow', 'pvalue'): [
+                0.3912280, 0.916009, 0.700492, 0.630001,
+                0.2414900, 0.964459, 0.596430, 0.871599,
+            ],
+            ('Outflow', 'log-shapiro'): [
+                0.969009, 0.915884, 0.9498569, 0.972526,
+                0.973539, 0.964473, 0.9782290, 0.982024,
+            ],
+            ('Outflow', 'pvalue'): [
+                0.554274, 0.027473, 0.196495, 0.649692,
+                0.677933, 0.442456, 0.806073, 0.895776,
+            ],
+            ('Reference', 'log-shapiro'): [
+                0.980489, 0.946262, 0.986095, 0.991098,
+                0.966805, 0.958543, 0.975473, 0.971864,
+            ],
+            ('Reference', 'pvalue'): [
+                0.861968, 0.159437, 0.963002, 0.996583,
+                0.498018, 0.321844, 0.731752, 0.631380,
+            ]
+        }
+        result = self.dc.shapiro_log
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
     @helpers.seed
     def test__generic_stat(self):
         result = self.dc._generic_stat(numpy.min, use_bootstrap=False)

@@ -1836,7 +1836,8 @@ class DataCollection(object):
 
     @cache_readonly
     def logstd(self):
-        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis), statname='Log-std. dev.')
+        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+                                  statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
@@ -1849,6 +1850,18 @@ class DataCollection(object):
         geostd = numpy.exp(self.logstd)
         geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
+
+    @cache_readonly
+    def shapiro(self):
+        return self._generic_stat(stats.shapiro, use_bootstrap=False,
+                                  has_pvalue=True, statname='shapiro')
+
+    @cache_readonly
+    def shapiro_log(self):
+        return self._generic_stat(lambda x: stats.shapiro(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-shapiro')
+
 
     def _comparison_stat(self, statfxn, statname=None, **statopts):
         results = utils.misc._comp_stat_generator(
