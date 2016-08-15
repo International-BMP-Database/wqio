@@ -1873,6 +1873,19 @@ class DataCollection(object):
                                   use_bootstrap=False, has_pvalue=True,
                                   statname='log-lillifors')
 
+    @cache_readonly
+    def anderson_darling(self):
+        raise NotImplementedError
+        return self._generic_stat(utils.anderson_darling, use_bootstrap=False,
+                                  has_pvalue=True, statname='anderson-darling')
+
+    @cache_readonly
+    def anderson_darling_log(self):
+        raise NotImplementedError
+        return self._generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-anderson-darling')
+
 
     def _comparison_stat(self, statfxn, statname=None, **statopts):
         results = utils.misc._comp_stat_generator(

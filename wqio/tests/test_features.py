@@ -858,6 +858,14 @@ class _base_DataCollecionMixin(object):
         expected.columns.names = ['station', 'result']
         pdtest.assert_frame_equal(result, expected, check_less_precise=True)
 
+    def test_anderson_darling(self):
+        with pytest.raises(NotImplementedError):
+            self.dc.anderson_darling
+
+    def test_anderson_darling_log(self):
+        with pytest.raises(NotImplementedError):
+            self.dc.anderson_darling_log
+
     @helpers.seed
     def test__generic_stat(self):
         result = self.dc._generic_stat(numpy.min, use_bootstrap=False)
