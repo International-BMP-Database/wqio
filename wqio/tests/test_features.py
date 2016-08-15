@@ -222,13 +222,13 @@ class _base_LocationMixin(object):
         assert hasattr(self.loc, 'shapiro_log')
         nptest.assert_allclose(self.loc.shapiro_log, self.known_shapiro_log, rtol=self.tolerance)
 
-    def test_lilliefors(self):
-        assert hasattr(self.loc, 'lilliefors')
-        nptest.assert_allclose(self.loc.lilliefors, self.known_lilliefors, rtol=self.tolerance)
+    def test_lillifors(self):
+        assert hasattr(self.loc, 'lillifors')
+        nptest.assert_allclose(self.loc.lillifors, self.known_lillifors, rtol=self.tolerance)
 
-    def test_lilliefors_log(self):
-        assert hasattr(self.loc, 'lilliefors_log')
-        nptest.assert_allclose(self.loc.lilliefors_log, self.known_lilliefors_log, rtol=self.tolerance)
+    def test_lillifors_log(self):
+        assert hasattr(self.loc, 'lillifors_log')
+        nptest.assert_allclose(self.loc.lillifors_log, self.known_lillifors_log, rtol=self.tolerance)
 
     def test_anderson(self):
         assert hasattr(self.loc, 'anderson')
@@ -355,8 +355,8 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_plognorm = 0.521462738514
         self.known_shapiro = [ 0.886889,  0.001789]
         self.known_shapiro_log = [ 0.972679,  0.520949]
-        self.known_lilliefors = [ 0.18518 ,  0.003756]
-        self.known_lilliefors_log = [ 0.091855,  0.635536]
+        self.known_lillifors = [ 0.18518 ,  0.003756]
+        self.known_lillifors_log = [ 0.091855,  0.635536]
         self.known_anderson = (
             1.54388800,
             [0.527, 0.6, 0.719, 0.839, 0.998],
@@ -417,8 +417,8 @@ class Test_Location_noROS(_base_LocationMixin):
         self.known_plognorm = 0.306435495615
         self.known_shapiro = [ 0.896744,  0.003236]
         self.known_shapiro_log = [ 0.964298,  0.306435]
-        self.known_lilliefors = [ 0.160353,  0.023078]
-        self.known_lilliefors_log = [ 0.08148,  0.84545]
+        self.known_lillifors = [ 0.160353,  0.023078]
+        self.known_lillifors_log = [ 0.08148,  0.84545]
         self.known_anderson = (
             1.4392085,
             [0.527, 0.6, 0.719, 0.839, 0.998],
@@ -708,13 +708,8 @@ class _base_DataCollecionMixin(object):
     def test_filterfxn(self):
         assert hasattr(self.dc, 'filterfxn')
 
-    def test_tidy_exists(self):
-        assert hasattr(self.dc, 'tidy')
-
-    def test_tidy_type(self):
+    def test_tidy(self):
         assert isinstance(self.dc.tidy, pandas.DataFrame)
-
-    def test_tidy_cols(self):
         tidycols = self.dc.tidy.columns.tolist()
         knowncols = self.known_columns + [self.known_roscol]
         assert sorted(tidycols) == sorted(knowncols)
@@ -735,10 +730,147 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
+    def test_shaprio(self):
+        expected_data = {
+            ('Inflow', 'pvalue'): [
+                1.35000277e-07, 1.15147395e-06, 2.84853918e-08, 7.25922699e-09,
+                4.04597494e-06, 5.37404680e-08, 6.98694420e-05, 2.09285303e-06,
+            ],
+            ('Outflow', 'shapiro'): [
+                0.68407392, 0.74749016, 0.897427022, 0.55306959,
+                0.78847879, 0.88128829, 0.778801679, 0.71769607,
+            ],
+            ('Reference', 'shapiro'): [
+                0.64490425, 0.66652446, 0.497832655, 0.65883779,
+                0.57689213, 0.39423871, 0.583670616, 0.78648996,
+            ],
+            ('Inflow', 'shapiro'): [
+                0.59733164, 0.67138719, 0.537596583, 0.48065340,
+                0.71066832, 0.56260156, 0.789419353, 0.69042921,
+            ],
+            ('Outflow', 'pvalue'): [
+                1.71045326e-06, 1.4417389138543513e-05, 0.0099637247622013092, 4.2077829220943386e-08,
+                6.73221293e-05, 0.0042873905040323734, 4.616594742401503e-05, 5.1183847062929999e-06,
+            ],
+            ('Reference', 'pvalue'): [
+                5.18675221e-07, 9.91817046e-07, 1.08479882e-08, 7.85432064e-07,
+                7.80523379e-08, 1.08831232e-09, 9.34287243e-08, 6.22547740e-05,
+            ],
+        }
+        result = self.dc.shapiro
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_shapiro_log(self):
+        expected_data = {
+            ('Inflow', 'log-shapiro'): [
+                0.962131, 0.983048, 0.974349, 0.971814,
+                0.953440, 0.986218, 0.970588, 0.980909,
+            ],
+            ('Inflow', 'pvalue'): [
+                0.3912280, 0.916009, 0.700492, 0.630001,
+                0.2414900, 0.964459, 0.596430, 0.871599,
+            ],
+            ('Outflow', 'log-shapiro'): [
+                0.969009, 0.915884, 0.9498569, 0.972526,
+                0.973539, 0.964473, 0.9782290, 0.982024,
+            ],
+            ('Outflow', 'pvalue'): [
+                0.554274, 0.027473, 0.196495, 0.649692,
+                0.677933, 0.442456, 0.806073, 0.895776,
+            ],
+            ('Reference', 'log-shapiro'): [
+                0.980489, 0.946262, 0.986095, 0.991098,
+                0.966805, 0.958543, 0.975473, 0.971864,
+            ],
+            ('Reference', 'pvalue'): [
+                0.861968, 0.159437, 0.963002, 0.996583,
+                0.498018, 0.321844, 0.731752, 0.631380,
+            ]
+        }
+        result = self.dc.shapiro_log
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_lillifors(self):
+        expected_data = {
+            ('Inflow', 'lillifors'): [
+                0.27843886, 0.24802344, 0.33527872, 0.37170719,
+                0.22752955, 0.28630622, 0.20595218, 0.27953043
+            ],
+            ('Inflow', 'pvalue'): [
+                6.24148409e-06, 0.000119332, 8.62060186e-09, 6.08463945e-11,
+                0.000695739, 2.72633652e-06, 0.003660092, 5.57279417e-06
+            ],
+            ('Outflow', 'lillifors'): [
+                0.31416123, 0.23332031, 0.13066911, 0.32460209,
+                0.20829954, 0.18088983, 0.25659462, 0.22520102
+            ],
+            ('Outflow', 'pvalue'): [
+                1.17145253e-07, 0.000430609, 0.248687678, 3.30298603e-08,
+                0.003085194, 0.019562376, 5.41005765e-05, 0.000840341
+            ],
+            ('Reference', 'lillifors'): [
+                0.28351398, 0.24930868, 0.29171088, 0.22593144,
+                0.32020481, 0.42722648, 0.32208719, 0.16592420
+            ],
+            ('Reference', 'pvalue'): [
+                3.66921686e-06, 0.000106205, 1.51965475e-06, 0.000792213,
+                5.66187072e-08, 1.06408145e-14, 4.49998108e-08, 0.046766975
+            ],
+        }
+        result = self.dc.lillifors
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_lillifors_log(self):
+        expected_data = {
+            ('Inflow', 'log-lillifors'): [
+                0.10979498, 0.08601191, 0.13721881, 0.123985937,
+                0.12767141, 0.09254070, 0.11319291, 0.107527896,
+            ],
+            ('Inflow', 'pvalue'): [
+                0.51940912, 0.95582245, 0.18986954, 0.321330151,
+                0.27964797, 0.82837543, 0.46666969, 0.556327244,
+            ],
+            ('Outflow', 'log-lillifors'): [
+                0.10661711, 0.12321271, 0.15586768, 0.144033649,
+                0.09536450, 0.11033031, 0.08012353, 0.089479881,
+            ],
+            ('Outflow', 'pvalue'): [
+                0.57153020, 0.33058849, 0.07956179, 0.140596426,
+                0.77423131, 0.51088991, 1.07047546, 0.887890467,
+            ],
+            ('Reference', 'log-lillifors'): [
+                0.08280941, 0.12379594, 0.10251285, 0.070249172,
+                0.08910822, 0.14824279, 0.10622305, 0.109876879,
+            ],
+            ('Reference', 'pvalue'): [
+                1.01845443, 0.32358845, 0.64250052, 1.251670597,
+                0.89515574, 0.11562015, 0.57817185, 0.518100907,
+            ],
+        }
+        result = self.dc.lillifors_log
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_anderson_darling(self):
+        with pytest.raises(NotImplementedError):
+            self.dc.anderson_darling
+
+    def test_anderson_darling_log(self):
+        with pytest.raises(NotImplementedError):
+            self.dc.anderson_darling_log
+
     @helpers.seed
     def test__generic_stat(self):
+        result = self.dc._generic_stat(numpy.min, use_bootstrap=False)
         pdtest.assert_frame_equal(
-            numpy.round(self.dc._generic_stat(numpy.min, use_bootstrap=False), 3),
+            numpy.round(result, 3),
             self.known_genericstat,
             check_names=False
         )
@@ -833,7 +965,6 @@ class _base_DataCollecionMixin(object):
         assert self.dc.datasets[7].definition == {'param': 'H'}
 
 
-
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
         self.data = helpers.make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
@@ -850,7 +981,7 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'H': 3.830, 'C': 4.319, 'D': 7.455, 'G': 3.880,
                 'F': 4.600, 'A': 7.166, 'B': 9.050, 'E': 5.615
             },
-            ('Inflow', 'stat'): {
+            ('Inflow', 'mean'): {
                 'H': 3.252, 'C': 3.674, 'D': 4.241, 'G': 3.908,
                 'F': 5.355, 'A': 5.882, 'B': 6.969, 'E': 3.877
             },
@@ -870,11 +1001,11 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'H': 4.694, 'C': 6.186, 'D':  7.300, 'G': 5.583,
                 'F': 8.444, 'A': 9.396, 'B': 10.239, 'E': 5.511
             },
-            ('Reference', 'stat'): {
+            ('Reference', 'mean'): {
                 'H': 2.515, 'C': 3.892, 'D': 3.819, 'G': 3.619,
                 'F': 4.988, 'A': 2.555, 'B': 4.919, 'E': 2.587
             },
-            ('Outflow', 'stat'): {
+            ('Outflow', 'mean'): {
                 'H': 2.633, 'C': 3.327, 'D': 4.451, 'G': 2.758,
                 'F': 3.515, 'A': 4.808, 'B': 6.297, 'E': 4.011
             },
@@ -901,7 +1032,7 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'G': 1.137, 'E': 0.615, 'H': 0.976, 'F': 0.776,
                 'B': 0.832, 'C': 0.938, 'D': 1.190, 'A': 0.691
             },
-            ('Reference', 'stat'): {
+            ('Reference', 'median'): {
                 'G': 2.008, 'E': 1.211, 'H': 1.940, 'F': 1.473,
                 'B': 2.118, 'C': 1.833, 'D': 2.187, 'A': 1.293
             },
@@ -913,26 +1044,26 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'G': 2.513, 'E': 1.917, 'H': 2.846, 'F': 2.131,
                 'B': 4.418, 'C': 2.893, 'D': 3.719, 'A': 2.051
             },
-            ('Outflow', 'stat'): {
+            ('Outflow', 'median'): {
                 'G': 1.559, 'E': 2.101, 'H': 1.604, 'F': 2.495,
                 'B': 2.485, 'C': 3.075, 'D': 1.613, 'A': 2.500
             },
-            ('Inflow', 'stat'): {
+            ('Inflow', 'median'): {
                 'G': 1.844, 'E': 2.883, 'H': 1.729, 'F': 2.630,
                 'B': 3.511, 'C': 1.410, 'D': 1.873, 'A': 2.830
             }
         })
 
         self.known_genericstat = pandas.DataFrame({
-            ('Reference', self.known_roscol): {
+            ('Reference', 'stat'): {
                 'D': 0.209, 'A': 0.119, 'B': 0.307, 'H': 0.221,
                 'G': 0.189, 'F': 0.099, 'E': 0.211, 'C': 0.135,
             },
-            ('Inflow', self.known_roscol): {
+            ('Inflow', 'stat'): {
                 'D': 0.107, 'A': 0.178, 'B': 0.433, 'H': 0.210,
                 'G': 0.096, 'F': 0.157, 'E': 0.236, 'C': 0.116,
             },
-            ('Outflow', self.known_roscol): {
+            ('Outflow', 'stat'): {
                 'D': 0.118, 'A': 0.344, 'B': 0.409, 'H': 0.128,
                 'G': 0.124, 'F': 0.300, 'E': 0.126, 'C': 0.219,
             }

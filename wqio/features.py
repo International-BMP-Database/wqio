@@ -210,8 +210,8 @@ class Location(object):
     * Indicates that there's an accompyaning tuple of confidence
       interval. For example, self.mean and self.mean_conf_interval
     + Indicatates that there's a equivalent stat for log-transormed
-      data. For example, self.mean and self.logmean or self.lilliefors
-      and self.lilliefors_log (subject to the absense of negitive
+      data. For example, self.mean and self.logmean or self.lillifors
+      and self.lillifors_log (subject to the absense of negitive
       results).
     ^ Indicatates that there's a equivalent stat in geometric space.
       For example, self.mean and self.geomean.
@@ -364,12 +364,12 @@ class Location(object):
             return stats.shapiro(numpy.log(self.data))
 
     @cache_readonly
-    def lilliefors(self):
+    def lillifors(self):
         if self.hasData:
             return sm.stats.lillifors(self.data)
 
     @cache_readonly
-    def lilliefors_log(self):
+    def lillifors_log(self):
         if self.hasData:
             return sm.stats.lillifors(numpy.log(self.data))
 
@@ -966,7 +966,7 @@ class Dataset(object):
 
     @cache_readonly
     def wilcoxon_z(self):
-        '''The Wilcoxon Z-statistic.
+        """The Wilcoxon Z-statistic.
 
         Tests the null hypothesis that the influent and effluent data are
         sampled from the same statistical distribution.
@@ -979,25 +979,25 @@ class Dataset(object):
         --------
         scipy.stats.wilcoxon
 
-        '''
+        """
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[0]
 
     @cache_readonly
     def wilcoxon_p(self):
-        '''Two-sided p-value of the Wilcoxon test
+        """Two-sided p-value of the Wilcoxon test
 
         See also
         --------
         scipy.stats.wilcoxon
 
-        '''
+        """
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[1]
 
     @cache_readonly
     def mannwhitney_u(self):
-        '''Mann-Whitney U-statistic.
+        """Mann-Whitney U-statistic.
 
         Performs a basic rank-sum test.
 
@@ -1009,13 +1009,13 @@ class Dataset(object):
         --------
         scipy.stats.mannwhitneyu
 
-        '''
+        """
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[0]
 
     @cache_readonly
     def mannwhitney_p(self):
-        '''Two-sided p-value of the Mann-Whitney test
+        """Two-sided p-value of the Mann-Whitney test
 
         Notes
         -----
@@ -1025,13 +1025,13 @@ class Dataset(object):
         --------
         scipy.stats.mannwhitneyu
 
-        '''
+        """
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[1]
 
     @cache_readonly
     def kendall_tau(self):
-        '''The Kendall-Tau statistic.
+        """The Kendall-Tau statistic.
 
         Measure of the correspondence between two the rankings of influent
         and effluent data.
@@ -1044,25 +1044,25 @@ class Dataset(object):
         --------
         scipy.stats.kendalltau
 
-        '''
+        """
         if self._kendall_stats is not None:
             return self._kendall_stats[0]
 
     @cache_readonly
     def kendall_p(self):
-        '''Two-sided p-value of the Kendall test
+        """Two-sided p-value of the Kendall test
 
         See also
         --------
         scipy.stats.kendalltau
 
-        '''
+        """
         if self._kendall_stats is not None:
             return self._kendall_stats[1]
 
     @cache_readonly
     def spearman_rho(self):
-        '''The Spearman's rho statistic.
+        """The Spearman's rho statistic.
 
         Tests for monotonicity of the relationship between influent and.
         effluent data.
@@ -1075,19 +1075,19 @@ class Dataset(object):
         --------
         scipy.stats.spearmanr
 
-        '''
+        """
         if self._spearman_stats is not None:
             return self._spearman_stats[0]
 
     @cache_readonly
     def spearman_p(self):
-        '''Two-sided p-value of the Spearman test
+        """Two-sided p-value of the Spearman test
 
         See also
         --------
         scipy.stats.spearmanr
 
-        '''
+        """
         if self._spearman_stats is not None:
             return self._spearman_stats[1]
 
@@ -1646,10 +1646,10 @@ class Dataset(object):
         return fig
 
     def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
-        '''
+        """
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
-        '''
+        """
         i_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
         o_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
 
@@ -1776,31 +1776,36 @@ class DataCollection(object):
 
         return _tidy
 
-    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None):
-        def CIs(x):
-            stat, (lci, uci) = bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
-            statnames = ['lower', 'stat', 'upper']
-            return pandas.Series([lci, stat, uci], index=statnames)
+    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None,
+                      has_pvalue=False, **statopts):
+        if statname is None:
+            statname = 'stat'
 
-        if use_bootstrap:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .apply(CIs)
-                    .unstack(level=self.stationcol)
-            )
-        else:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .agg({self.rescol: statfxn})
-                    .unstack(level=self.stationcol)
-            )
+        def fxn(x):
+            data = x[self.rescol].values
+            if use_bootstrap:
+                stat, (lci, uci) = bootstrap.BCA(data, statfxn=statfxn)
+                values = [lci, stat, uci]
+                statnames = ['lower', statname, 'upper']
+            else:
+                values = validate.at_least_empty_list(statfxn(data, **statopts))
+                if hasattr(values, '_fields'):
+                    statnames = values._fields
+                else:
+                    statnames = [statname]
+                    if has_pvalue:
+                        statnames.append('pvalue')
 
-        stat.columns = stat.columns.swaplevel(0, 1)
-        if statname is not None:
-            stat.columns.names = ['station', statname]
-        stat.sort_index(axis=1, inplace=True)
+            return pandas.Series(values, index=statnames)
+
+        stat = (
+            self.tidy
+                .groupby(by=self.groupcols)
+                .apply(fxn)
+                .unstack(level=self.stationcol)
+                .pipe(utils.swap_column_levels, 0, 1)
+                .rename_axis(['station', 'result'], axis='columns')
+        )
 
         return stat
 
@@ -1831,7 +1836,8 @@ class DataCollection(object):
 
     @cache_readonly
     def logstd(self):
-        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis), statname='Log-std. dev.')
+        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+                                  statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
@@ -1844,6 +1850,42 @@ class DataCollection(object):
         geostd = numpy.exp(self.logstd)
         geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
+
+    @cache_readonly
+    def shapiro(self):
+        return self._generic_stat(stats.shapiro, use_bootstrap=False,
+                                  has_pvalue=True, statname='shapiro')
+
+    @cache_readonly
+    def shapiro_log(self):
+        return self._generic_stat(lambda x: stats.shapiro(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-shapiro')
+
+    @cache_readonly
+    def lillifors(self):
+        return self._generic_stat(sm.stats.lillifors, use_bootstrap=False,
+                                  has_pvalue=True, statname='lillifors')
+
+    @cache_readonly
+    def lillifors_log(self):
+        return self._generic_stat(lambda x: sm.stats.lillifors(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-lillifors')
+
+    @cache_readonly
+    def anderson_darling(self):
+        raise NotImplementedError
+        return self._generic_stat(utils.anderson_darling, use_bootstrap=False,
+                                  has_pvalue=True, statname='anderson-darling')
+
+    @cache_readonly
+    def anderson_darling_log(self):
+        raise NotImplementedError
+        return self._generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-anderson-darling')
+
 
     def _comparison_stat(self, statfxn, statname=None, **statopts):
         results = utils.misc._comp_stat_generator(
