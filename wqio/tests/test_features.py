@@ -222,13 +222,13 @@ class _base_LocationMixin(object):
         assert hasattr(self.loc, 'shapiro_log')
         nptest.assert_allclose(self.loc.shapiro_log, self.known_shapiro_log, rtol=self.tolerance)
 
-    def test_lilliefors(self):
-        assert hasattr(self.loc, 'lilliefors')
-        nptest.assert_allclose(self.loc.lilliefors, self.known_lilliefors, rtol=self.tolerance)
+    def test_lillifors(self):
+        assert hasattr(self.loc, 'lillifors')
+        nptest.assert_allclose(self.loc.lillifors, self.known_lillifors, rtol=self.tolerance)
 
-    def test_lilliefors_log(self):
-        assert hasattr(self.loc, 'lilliefors_log')
-        nptest.assert_allclose(self.loc.lilliefors_log, self.known_lilliefors_log, rtol=self.tolerance)
+    def test_lillifors_log(self):
+        assert hasattr(self.loc, 'lillifors_log')
+        nptest.assert_allclose(self.loc.lillifors_log, self.known_lillifors_log, rtol=self.tolerance)
 
     def test_anderson(self):
         assert hasattr(self.loc, 'anderson')
@@ -355,8 +355,8 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_plognorm = 0.521462738514
         self.known_shapiro = [ 0.886889,  0.001789]
         self.known_shapiro_log = [ 0.972679,  0.520949]
-        self.known_lilliefors = [ 0.18518 ,  0.003756]
-        self.known_lilliefors_log = [ 0.091855,  0.635536]
+        self.known_lillifors = [ 0.18518 ,  0.003756]
+        self.known_lillifors_log = [ 0.091855,  0.635536]
         self.known_anderson = (
             1.54388800,
             [0.527, 0.6, 0.719, 0.839, 0.998],
@@ -417,8 +417,8 @@ class Test_Location_noROS(_base_LocationMixin):
         self.known_plognorm = 0.306435495615
         self.known_shapiro = [ 0.896744,  0.003236]
         self.known_shapiro_log = [ 0.964298,  0.306435]
-        self.known_lilliefors = [ 0.160353,  0.023078]
-        self.known_lilliefors_log = [ 0.08148,  0.84545]
+        self.known_lillifors = [ 0.160353,  0.023078]
+        self.known_lillifors_log = [ 0.08148,  0.84545]
         self.known_anderson = (
             1.4392085,
             [0.527, 0.6, 0.719, 0.839, 0.998],

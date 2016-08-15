@@ -210,8 +210,8 @@ class Location(object):
     * Indicates that there's an accompyaning tuple of confidence
       interval. For example, self.mean and self.mean_conf_interval
     + Indicatates that there's a equivalent stat for log-transormed
-      data. For example, self.mean and self.logmean or self.lilliefors
-      and self.lilliefors_log (subject to the absense of negitive
+      data. For example, self.mean and self.logmean or self.lillifors
+      and self.lillifors_log (subject to the absense of negitive
       results).
     ^ Indicatates that there's a equivalent stat in geometric space.
       For example, self.mean and self.geomean.
@@ -364,12 +364,12 @@ class Location(object):
             return stats.shapiro(numpy.log(self.data))
 
     @cache_readonly
-    def lilliefors(self):
+    def lillifors(self):
         if self.hasData:
             return sm.stats.lillifors(self.data)
 
     @cache_readonly
-    def lilliefors_log(self):
+    def lillifors_log(self):
         if self.hasData:
             return sm.stats.lillifors(numpy.log(self.data))
 
