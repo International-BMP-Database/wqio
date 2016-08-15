@@ -382,7 +382,7 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
     groups = df.groupby(by=groupcols)
     for name, g in groups:
         stations = g[pivotcol].unique()
-        for _x, _y in itertools.combinations_with_replacement(stations, 2):
+        for _x, _y in itertools.permutations(stations, 2):
             row = dict(zip(groupcols, name))
 
             station_columns = [pivotcol + '_1', pivotcol + '_2']

@@ -723,42 +723,39 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
+
     def test__comparison_stat(self):
         result = self.dc._comparison_stat(helpers.comp_statfxn, statname='Tester')
 
         expected_data = {
-            'Tester': {
-                ('A', 'Outflow', 'Reference'): 24.131785586325751,
-                ('B', 'Inflow', 'Outflow'): 41.225920803048233,
-                ('B', 'Inflow', 'Inflow'): 41.202046844726738,
-                ('A', 'Reference', 'Reference'): 13.166344785425334,
-                ('A', 'Inflow', 'Reference'): 36.01302896340723,
-                ('A', 'Inflow', 'Outflow'): 35.788809638987011,
-                ('B', 'Reference', 'Reference'): 23.308795751638577,
-                ('A', 'Outflow', 'Outflow'): 23.907566261905529,
-                ('B', 'Inflow', 'Reference'): 41.327592991149466,
-                ('A', 'Inflow', 'Inflow'): 35.954523853499325,
-                ('B', 'Outflow', 'Reference'): 22.336259954120322,
-                ('B', 'Outflow', 'Outflow'): 22.234587766019093,
-            },
-            'pvalue': {
-                ('A', 'Outflow', 'Reference'): 6.0329463965814378,
-                ('B', 'Inflow', 'Outflow'): 10.306480200762058,
-                ('B', 'Inflow', 'Inflow'): 10.300511711181684,
-                ('A', 'Reference', 'Reference'): 3.2915861963563335,
-                ('A', 'Inflow', 'Reference'): 9.0032572408518075,
-                ('A', 'Inflow', 'Outflow'): 8.9472024097467528,
-                ('B', 'Reference', 'Reference'): 5.8271989379096443,
-                ('A', 'Outflow', 'Outflow'): 5.9768915654763823,
-                ('B', 'Inflow', 'Reference'): 10.331898247787366,
-                ('A', 'Inflow', 'Inflow'): 8.9886309633748311,
-                ('B', 'Outflow', 'Reference'): 5.5840649885300806,
-                ('B', 'Outflow', 'Outflow'): 5.5586469415047732,
-            }
+            'pvalue': [
+                8.947202, 9.003257,  6.018320,  6.032946,
+                3.276959, 3.235531, 10.306480, 10.331898,
+                5.552678, 5.584064,  5.795812,  5.801780,
+            ],
+            'Tester': [
+                35.788809, 36.013028, 24.073280, 24.131785,
+                13.107839, 12.942125, 41.225920, 41.327592,
+                22.210713, 22.336259, 23.183249, 23.207123,
+            ]
         }
-        expected = pandas.DataFrame(expected_data).sort_index()
-        expected.index.names = ['param', 'loc_1', 'loc_2']
+        expected_index = pandas.MultiIndex.from_tuples([
+            ('A', 'Inflow', 'Outflow'),
+            ('A', 'Inflow', 'Reference'),
+            ('A', 'Outflow', 'Inflow'),
+            ('A', 'Outflow', 'Reference'),
+            ('A', 'Reference', 'Inflow'),
+            ('A', 'Reference', 'Outflow'),
+            ('B', 'Inflow', 'Outflow'),
+            ('B', 'Inflow', 'Reference'),
+            ('B', 'Outflow', 'Inflow'),
+            ('B', 'Outflow', 'Reference'),
+            ('B', 'Reference', 'Inflow'),
+            ('B', 'Reference', 'Outflow'),
+        ], names=['param', 'loc_1', 'loc_2'])
+        expected = pandas.DataFrame(expected_data, index=expected_index)
         pdtest.assert_frame_equal(result.query("param in ['A', 'B']"), expected)
+
 
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
