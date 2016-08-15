@@ -814,6 +814,25 @@ class _base_DataCollecionMixin(object):
             expected
         )
 
+    def test_locations(self):
+        for l in self.dc.locations:
+            assert isinstance(l, Location)
+        assert len(self.dc.locations) == 24
+        assert self.dc.locations[0].definition == {'loc': 'Inflow', 'param': 'A'}
+        assert self.dc.locations[1].definition == {'loc': 'Inflow', 'param': 'B'}
+        assert self.dc.locations[6].definition == {'loc': 'Inflow', 'param': 'G'}
+        assert self.dc.locations[8].definition == {'loc': 'Outflow', 'param': 'A'}
+
+    def test_datasets(self):
+        for d in self.dc.datasets:
+            assert isinstance(d, Dataset)
+        assert len(self.dc.datasets) == 8
+        assert self.dc.datasets[0].definition == {'param': 'A'}
+        assert self.dc.datasets[1].definition == {'param': 'B'}
+        assert self.dc.datasets[6].definition == {'param': 'G'}
+        assert self.dc.datasets[7].definition == {'param': 'H'}
+
+
 
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
