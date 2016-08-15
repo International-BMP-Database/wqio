@@ -651,6 +651,26 @@ class _base_DataCollecionMixin(object):
     known_stationcol = 'loc'
     known_paramcol = 'param'
     known_ndval = 'ND'
+    expected_comp_index = pandas.MultiIndex.from_tuples([
+        ('A', 'Inflow', 'Outflow'),
+        ('A', 'Inflow', 'Reference'),
+        ('A', 'Outflow', 'Inflow'),
+        ('A', 'Outflow', 'Reference'),
+        ('A', 'Reference', 'Inflow'),
+        ('A', 'Reference', 'Outflow'),
+        ('B', 'Inflow', 'Outflow'),
+        ('B', 'Inflow', 'Reference'),
+        ('B', 'Outflow', 'Inflow'),
+        ('B', 'Outflow', 'Reference'),
+        ('B', 'Reference', 'Inflow'),
+        ('B', 'Reference', 'Outflow'),
+    ], names=['param', 'loc_1', 'loc_2'])
+
+    def prep_comp_result(self, df):
+        return df.query("param in ['A', 'B']")
+
+    def prep_comp_expected(self, data):
+        return pandas.DataFrame(data, index=self.expected_comp_index)
 
     def test__raw_rescol(self):
         assert self.dc._raw_rescol == self.known_raw_rescol
@@ -723,6 +743,54 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
+    def test_mann_whitney(self):
+        expected_data = {
+            'pvalue': [
+                0.9934626, 0.1029978, 0.9934626, 0.0701802, 0.1029978, 0.07018023,
+                0.3214884, 0.0930252, 0.3214884, 0.5174506, 0.0930252, 0.51745067,
+            ],
+            'mann_whitney': [
+                391.0, 492.0, 393.0, 503.0, 292.0, 281.0,
+                453.0, 495.0, 331.0, 432.0, 289.0, 352.0,
+                ]
+            }
+        pdtest.assert_frame_equal(
+            self.prep_comp_result(self.dc.mann_whitney),
+            self.prep_comp_expected(expected_data),
+        )
+
+    def test_t_test(self):
+        expected_data = {
+            't_test': [
+                0.5069615, 1.7827515, -0.5069615, 1.6629067, -1.7827515, -1.6629067,
+                0.2994807, 0.9528661, -0.2994807, 0.7150517, -0.9528661, -0.7150517,
+            ],
+            'pvalue': [
+                0.6145228, 0.0835157, 0.6145228, 0.1038642, 0.0835157, 0.1038642,
+                0.7657606, 0.3452425, 0.7657606, 0.4776926, 0.3452425, 0.4776926,
+            ]
+        }
+        pdtest.assert_frame_equal(
+            self.prep_comp_result(self.dc.t_test),
+            self.prep_comp_expected(expected_data),
+        )
+
+    def test_levene(self):
+        expected_data = {
+            'levene': [
+                0.3312645, 2.8502753, 0.3312645, 2.1520503, 2.8502753, 2.1520503,
+                0.0024326, 0.2962336, 0.0024325, 0.4589038, 0.2962336, 0.4589038,
+            ],
+            'pvalue': [
+                0.5673062, 0.0971261, 0.5673062, 0.1481797, 0.0971261, 0.1481797,
+                0.9608452, 0.5884937, 0.9608452, 0.5010288, 0.5884937, 0.5010288
+            ]
+        }
+        pdtest.assert_frame_equal(
+            self.prep_comp_result(self.dc.levene),
+            self.prep_comp_expected(expected_data),
+            check_less_precise=True,
+        )
 
     def test__comparison_stat(self):
         result = self.dc._comparison_stat(helpers.comp_statfxn, statname='Tester')
@@ -739,22 +807,12 @@ class _base_DataCollecionMixin(object):
                 22.210713, 22.336259, 23.183249, 23.207123,
             ]
         }
-        expected_index = pandas.MultiIndex.from_tuples([
-            ('A', 'Inflow', 'Outflow'),
-            ('A', 'Inflow', 'Reference'),
-            ('A', 'Outflow', 'Inflow'),
-            ('A', 'Outflow', 'Reference'),
-            ('A', 'Reference', 'Inflow'),
-            ('A', 'Reference', 'Outflow'),
-            ('B', 'Inflow', 'Outflow'),
-            ('B', 'Inflow', 'Reference'),
-            ('B', 'Outflow', 'Inflow'),
-            ('B', 'Outflow', 'Reference'),
-            ('B', 'Reference', 'Inflow'),
-            ('B', 'Reference', 'Outflow'),
-        ], names=['param', 'loc_1', 'loc_2'])
-        expected = pandas.DataFrame(expected_data, index=expected_index)
-        pdtest.assert_frame_equal(result.query("param in ['A', 'B']"), expected)
+
+        expected = pandas.DataFrame(expected_data, index=self.expected_comp_index)
+        pdtest.assert_frame_equal(
+            self.prep_comp_result(result),
+            expected
+        )
 
 
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
