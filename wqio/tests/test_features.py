@@ -708,13 +708,8 @@ class _base_DataCollecionMixin(object):
     def test_filterfxn(self):
         assert hasattr(self.dc, 'filterfxn')
 
-    def test_tidy_exists(self):
-        assert hasattr(self.dc, 'tidy')
-
-    def test_tidy_type(self):
+    def test_tidy(self):
         assert isinstance(self.dc.tidy, pandas.DataFrame)
-
-    def test_tidy_cols(self):
         tidycols = self.dc.tidy.columns.tolist()
         knowncols = self.known_columns + [self.known_roscol]
         assert sorted(tidycols) == sorted(knowncols)
@@ -737,8 +732,9 @@ class _base_DataCollecionMixin(object):
 
     @helpers.seed
     def test__generic_stat(self):
+        result = self.dc._generic_stat(numpy.min, use_bootstrap=False)
         pdtest.assert_frame_equal(
-            numpy.round(self.dc._generic_stat(numpy.min, use_bootstrap=False), 3),
+            numpy.round(result, 3),
             self.known_genericstat,
             check_names=False
         )
@@ -833,7 +829,6 @@ class _base_DataCollecionMixin(object):
         assert self.dc.datasets[7].definition == {'param': 'H'}
 
 
-
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
         self.data = helpers.make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
@@ -850,7 +845,7 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'H': 3.830, 'C': 4.319, 'D': 7.455, 'G': 3.880,
                 'F': 4.600, 'A': 7.166, 'B': 9.050, 'E': 5.615
             },
-            ('Inflow', 'stat'): {
+            ('Inflow', 'mean'): {
                 'H': 3.252, 'C': 3.674, 'D': 4.241, 'G': 3.908,
                 'F': 5.355, 'A': 5.882, 'B': 6.969, 'E': 3.877
             },
@@ -870,11 +865,11 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'H': 4.694, 'C': 6.186, 'D':  7.300, 'G': 5.583,
                 'F': 8.444, 'A': 9.396, 'B': 10.239, 'E': 5.511
             },
-            ('Reference', 'stat'): {
+            ('Reference', 'mean'): {
                 'H': 2.515, 'C': 3.892, 'D': 3.819, 'G': 3.619,
                 'F': 4.988, 'A': 2.555, 'B': 4.919, 'E': 2.587
             },
-            ('Outflow', 'stat'): {
+            ('Outflow', 'mean'): {
                 'H': 2.633, 'C': 3.327, 'D': 4.451, 'G': 2.758,
                 'F': 3.515, 'A': 4.808, 'B': 6.297, 'E': 4.011
             },
@@ -901,7 +896,7 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'G': 1.137, 'E': 0.615, 'H': 0.976, 'F': 0.776,
                 'B': 0.832, 'C': 0.938, 'D': 1.190, 'A': 0.691
             },
-            ('Reference', 'stat'): {
+            ('Reference', 'median'): {
                 'G': 2.008, 'E': 1.211, 'H': 1.940, 'F': 1.473,
                 'B': 2.118, 'C': 1.833, 'D': 2.187, 'A': 1.293
             },
@@ -913,26 +908,26 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                 'G': 2.513, 'E': 1.917, 'H': 2.846, 'F': 2.131,
                 'B': 4.418, 'C': 2.893, 'D': 3.719, 'A': 2.051
             },
-            ('Outflow', 'stat'): {
+            ('Outflow', 'median'): {
                 'G': 1.559, 'E': 2.101, 'H': 1.604, 'F': 2.495,
                 'B': 2.485, 'C': 3.075, 'D': 1.613, 'A': 2.500
             },
-            ('Inflow', 'stat'): {
+            ('Inflow', 'median'): {
                 'G': 1.844, 'E': 2.883, 'H': 1.729, 'F': 2.630,
                 'B': 3.511, 'C': 1.410, 'D': 1.873, 'A': 2.830
             }
         })
 
         self.known_genericstat = pandas.DataFrame({
-            ('Reference', self.known_roscol): {
+            ('Reference', 'stat'): {
                 'D': 0.209, 'A': 0.119, 'B': 0.307, 'H': 0.221,
                 'G': 0.189, 'F': 0.099, 'E': 0.211, 'C': 0.135,
             },
-            ('Inflow', self.known_roscol): {
+            ('Inflow', 'stat'): {
                 'D': 0.107, 'A': 0.178, 'B': 0.433, 'H': 0.210,
                 'G': 0.096, 'F': 0.157, 'E': 0.236, 'C': 0.116,
             },
-            ('Outflow', self.known_roscol): {
+            ('Outflow', 'stat'): {
                 'D': 0.118, 'A': 0.344, 'B': 0.409, 'H': 0.128,
                 'G': 0.124, 'F': 0.300, 'E': 0.126, 'C': 0.219,
             }

@@ -1776,31 +1776,36 @@ class DataCollection(object):
 
         return _tidy
 
-    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None):
-        def CIs(x):
-            stat, (lci, uci) = bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
-            statnames = ['lower', 'stat', 'upper']
-            return pandas.Series([lci, stat, uci], index=statnames)
+    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None,
+                      has_pvalue=False, **statopts):
+        if statname is None:
+            statname = 'stat'
 
-        if use_bootstrap:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .apply(CIs)
-                    .unstack(level=self.stationcol)
-            )
-        else:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .agg({self.rescol: statfxn})
-                    .unstack(level=self.stationcol)
-            )
+        def fxn(x):
+            data = x[self.rescol].values
+            if use_bootstrap:
+                stat, (lci, uci) = bootstrap.BCA(data, statfxn=statfxn)
+                values = [lci, stat, uci]
+                statnames = ['lower', statname, 'upper']
+            else:
+                values = validate.at_least_empty_list(statfxn(data, **statopts))
+                if hasattr(values, '_fields'):
+                    statnames = values._fields
+                else:
+                    statnames = [statname]
+                    if has_pvalue:
+                        statnames.append('pvalue')
 
-        stat.columns = stat.columns.swaplevel(0, 1)
-        if statname is not None:
-            stat.columns.names = ['station', statname]
-        stat.sort_index(axis=1, inplace=True)
+            return pandas.Series(values, index=statnames)
+
+        stat = (
+            self.tidy
+                .groupby(by=self.groupcols)
+                .apply(fxn)
+                .unstack(level=self.stationcol)
+                .pipe(utils.swap_column_levels, 0, 1)
+                .rename_axis(['station', 'result'], axis='columns')
+        )
 
         return stat
 
