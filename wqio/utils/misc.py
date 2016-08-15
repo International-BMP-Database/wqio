@@ -1,10 +1,11 @@
 from io import StringIO
+import itertools
 
 import numpy
 import pandas
 
 
-@numpy.deprecate(new_name='addColumnLevel')
+@numpy.deprecate(new_name='add_column_level')
 def addSecondColumnLevel(levelval, levelname, df):
     """ Add a second level to the column-index if a dataframe.
 
@@ -35,10 +36,10 @@ def addSecondColumnLevel(levelval, levelname, df):
 
     """
 
-    return addColumnLevel(df, levelval, levelname)
+    return add_column_level(df, levelval, levelname)
 
 
-def addColumnLevel(df, levelvalue, levelname):
+def add_column_level(df, levelvalue, levelname):
     """ Adds a second level to the column-index if a dataframe.
 
     Parameters
@@ -60,7 +61,7 @@ def addColumnLevel(df, levelvalue, levelname):
     >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
     >>> df.columns
     Index(['res', 'qual'], dtype='object')
-    >>> df2 = utils.addColumnLevel(df, 'Infl', 'location')
+    >>> df2 = utils.add_column_level(df, 'Infl', 'location')
     >>> df2.columns
     MultiIndex(levels=[['Infl'], ['qual', 'res']],
                labels=[[0, 0], [1, 0]],
@@ -86,7 +87,54 @@ def addColumnLevel(df, levelvalue, levelname):
     return newdf
 
 
-def redefineIndexLevel(df, levelname, value, criteria=None, dropold=True):
+def swap_column_levels(df, level_1, level_2):
+    """ Swaps columns levels in a dataframe with multi-level columns
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A dataframe with a multi-level column index
+    level_1, level_2 : int or string
+        The position or label of the columns levels to be swapped.
+
+    Returns
+    -------
+    swapped : pandas.DataFrame
+
+    Examples
+    --------
+    >>> import numpy
+    >>> import pandas
+    >>> import wqio
+    >>> columns = pandas.MultiIndex.from_product(
+    ...     [['A', 'B',], ['res', 'cen'], ['mg/L']],
+    ...     names=['loc', 'value', 'units']
+    ... )
+    >>> data = numpy.arange(len(columns) * 3).reshape((3, len(columns)))
+    >>> df = pandas.DataFrame(data, columns=columns)
+    >>> print(df)
+    loc      A         B
+    value  res  cen  res  cen
+    units mg/L mg/L mg/L mg/L
+    0        0    1    2    3
+    1        4    5    6    7
+    2        8    9   10   11
+
+    >>> print(wqio.utils.swap_column_levels(df, 'units', 'loc'))
+    units mg/L
+    value  cen     res
+    loc      A   B   A   B
+    0        1   3   0   2
+    1        5   7   4   6
+    2        9  11   8  10
+
+    """
+    df2 = df.copy()
+    df2.columns = df2.columns.swaplevel(level_1, level_2)
+    return df2.sort_index(axis='columns')
+
+
+def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
     Parameters
@@ -293,3 +341,59 @@ def unique_categories(classifier, bins):
     midpoints = 0.5 * (bins[:-1] + bins[1:])
     all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
     return [classifier(value) for value in all_bins]
+
+
+def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
+                         statname=None, **statopts):
+    """ Generator of records containing results of comparitive
+    statistical functioons.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    groupcols : list of string
+        The columns on which the data will be groups. This should *not*
+        include the column that defines the separate datasets that will
+        be comparied.
+    pivotcol : string
+        The column that distinquishes the individual samples that are
+        being compared.
+    rescol : string
+        The column that containes the values to compare.
+    statfxn : callable
+        Any function that takes to array-like datasets and returns a
+        ``namedtuple`` with elements "statistic" and "pvalue". If the
+        "pvalue" portion is not relevant, simply wrap the function such
+        that it return None or similar for it.
+    statname : string, optional
+        The name of the primary statistic being returned.
+    **statopts : kwargs
+        Additional options to be fed to ``statfxn``.
+
+    Returns
+    -------
+    comp_stats : pandsa.DataFrame
+
+    """
+
+    if statname is None:
+        statname = 'stat'
+
+    groups = df.groupby(by=groupcols)
+    for name, g in groups:
+        stations = g[pivotcol].unique()
+        for _x, _y in itertools.combinations_with_replacement(stations, 2):
+            row = dict(zip(groupcols, name))
+
+            station_columns = [pivotcol + '_1', pivotcol + '_2']
+            row.update(dict(zip(station_columns, [_x, _y])))
+
+            x = g.loc[g[pivotcol] == _x, rescol].values
+            y = g.loc[g[pivotcol] == _y, rescol].values
+
+            stat = statfxn(x, y, **statopts)
+            row.update({
+                statname: stat.statistic,
+                'pvalue': stat.pvalue
+            })
+            yield row

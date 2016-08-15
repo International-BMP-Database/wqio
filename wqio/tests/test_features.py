@@ -643,40 +643,6 @@ class Test_Dataset(object):
         self.ds.__repr__
 
 
-@helpers.seed
-def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
-    dl_map = {
-        'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
-        'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
-    }
-
-    index = pandas.MultiIndex.from_product([
-        list('ABCDEFGH'),
-        list('1234567'),
-        ['GA', 'AL', 'OR', 'CA'],
-        ['Inflow', 'Outflow', 'Reference']
-    ], names=['param', 'bmp', 'state', 'loc'])
-
-    array = numpy.random.lognormal(mean=0.75, sigma=1.25, size=len(index))
-    data = pandas.DataFrame(data=array, index=index, columns=[rescol])
-    data['DL'] = data.apply(
-        lambda r: dl_map.get(r.name[0]),
-        axis=1
-    )
-
-    data[rescol] = data.apply(
-        lambda r: dl_map.get(r.name[0]) if r[rescol] < r['DL'] else r[rescol],
-        axis=1
-    )
-
-    data[qualcol] = data.apply(
-        lambda r: ndval if r[rescol] <= r['DL'] else '=',
-        axis=1
-    )
-
-    return data
-
-
 class _base_DataCollecionMixin(object):
     known_rescol = 'ros_res'
     known_raw_rescol = 'res'
@@ -687,37 +653,37 @@ class _base_DataCollecionMixin(object):
     known_ndval = 'ND'
 
     def test__raw_rescol(self):
-        self.dc._raw_rescol == self.known_raw_rescol
+        assert self.dc._raw_rescol == self.known_raw_rescol
 
     def test_data(self):
         assert isinstance(self.dc.data, pandas.DataFrame)
 
     def test_roscol(self):
-        self.dc.roscol == self.known_roscol
+        assert self.dc.roscol == self.known_roscol
 
     def test_rescol(self):
-        self.dc.rescol == self.known_rescol
+        assert self.dc.rescol == self.known_rescol
 
     def test_qualcol(self):
-        self.dc.qualcol == self.known_qualcol
+        assert self.dc.qualcol == self.known_qualcol
 
     def test_stationncol(self):
-        self.dc.stationcol == self.known_stationcol
+        assert self.dc.stationcol == self.known_stationcol
 
     def test_paramcol(self):
-        self.dc.paramcol == self.known_paramcol
+        assert self.dc.paramcol == self.known_paramcol
 
     def test_ndval(self):
         assert self.dc.ndval == [self.known_ndval]
 
     def test_bsIter(self):
-        self.dc.bsIter == self.known_bsIter
+        assert self.dc.bsIter == self.known_bsIter
 
     def test_groupby(self):
-        self.dc.groupcols == self.known_groupcols
+        assert self.dc.groupcols == self.known_groupcols
 
     def test_columns(self):
-        self.dc.columns == self.known_columns
+        assert self.dc.columns == self.known_columns
 
     def test_filterfxn(self):
         assert hasattr(self.dc, 'filterfxn')
@@ -757,11 +723,47 @@ class _base_DataCollecionMixin(object):
             check_names=False
         )
 
+    def test__comparison_stat(self):
+        result = self.dc._comparison_stat(helpers.comp_statfxn, statname='Tester')
+
+        expected_data = {
+            'Tester': {
+                ('A', 'Outflow', 'Reference'): 24.131785586325751,
+                ('B', 'Inflow', 'Outflow'): 41.225920803048233,
+                ('B', 'Inflow', 'Inflow'): 41.202046844726738,
+                ('A', 'Reference', 'Reference'): 13.166344785425334,
+                ('A', 'Inflow', 'Reference'): 36.01302896340723,
+                ('A', 'Inflow', 'Outflow'): 35.788809638987011,
+                ('B', 'Reference', 'Reference'): 23.308795751638577,
+                ('A', 'Outflow', 'Outflow'): 23.907566261905529,
+                ('B', 'Inflow', 'Reference'): 41.327592991149466,
+                ('A', 'Inflow', 'Inflow'): 35.954523853499325,
+                ('B', 'Outflow', 'Reference'): 22.336259954120322,
+                ('B', 'Outflow', 'Outflow'): 22.234587766019093,
+            },
+            'pvalue': {
+                ('A', 'Outflow', 'Reference'): 6.0329463965814378,
+                ('B', 'Inflow', 'Outflow'): 10.306480200762058,
+                ('B', 'Inflow', 'Inflow'): 10.300511711181684,
+                ('A', 'Reference', 'Reference'): 3.2915861963563335,
+                ('A', 'Inflow', 'Reference'): 9.0032572408518075,
+                ('A', 'Inflow', 'Outflow'): 8.9472024097467528,
+                ('B', 'Reference', 'Reference'): 5.8271989379096443,
+                ('A', 'Outflow', 'Outflow'): 5.9768915654763823,
+                ('B', 'Inflow', 'Reference'): 10.331898247787366,
+                ('A', 'Inflow', 'Inflow'): 8.9886309633748311,
+                ('B', 'Outflow', 'Reference'): 5.5840649885300806,
+                ('B', 'Outflow', 'Outflow'): 5.5586469415047732,
+            }
+        }
+        expected = pandas.DataFrame(expected_data).sort_index()
+        expected.index.names = ['param', 'loc_1', 'loc_2']
+        pdtest.assert_frame_equal(result.query("param in ['A', 'B']"), expected)
 
 class Test_DataCollection_baseline(_base_DataCollecionMixin):
     def setup(self):
-        self.data = make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
-                                 qualcol=self.known_qualcol)
+        self.data = helpers.make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
+                                         qualcol=self.known_qualcol)
         self.dc = DataCollection(self.data, paramcol='param', stationcol='loc',
                                  ndval=self.known_ndval, rescol=self.known_raw_rescol,
                                  qualcol=self.known_qualcol)

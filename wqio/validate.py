@@ -92,3 +92,11 @@ def single_value_in_index(df, index_level):
         raise ValueError('index level "{}" is not unique.'.format(index_level))
 
     return index[0]
+
+def at_least_empty_list(value):
+    if value is None or value == '':
+        value = []
+    elif numpy.isscalar(value):
+        value = [value]
+
+    return list(value)

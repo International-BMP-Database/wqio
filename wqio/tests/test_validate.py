@@ -68,3 +68,16 @@ def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
         data = multiindex_df.select(lambda row: row[level] in [expected])
         test = validate.single_value_in_index(data, 'date')
         assert test == expected
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    (None, []),
+    ('', []),
+    (1, [1]),
+    ('abc', ['abc']),
+    (numpy.array([1, 2, 3]), [1, 2, 3]),
+    ([1, 2, 3], [1, 2, 3])
+])
+def test_at_least_empty_list(value, expected):
+    result = validate.at_least_empty_list(value)
+    assert result == expected
