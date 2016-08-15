@@ -794,6 +794,70 @@ class _base_DataCollecionMixin(object):
         expected.columns.names = ['station', 'result']
         pdtest.assert_frame_equal(result, expected, check_less_precise=True)
 
+    def test_lillifors(self):
+        expected_data = {
+            ('Inflow', 'lillifors'): [
+                0.27843886, 0.24802344, 0.33527872, 0.37170719,
+                0.22752955, 0.28630622, 0.20595218, 0.27953043
+            ],
+            ('Inflow', 'pvalue'): [
+                6.24148409e-06, 0.000119332, 8.62060186e-09, 6.08463945e-11,
+                0.000695739, 2.72633652e-06, 0.003660092, 5.57279417e-06
+            ],
+            ('Outflow', 'lillifors'): [
+                0.31416123, 0.23332031, 0.13066911, 0.32460209,
+                0.20829954, 0.18088983, 0.25659462, 0.22520102
+            ],
+            ('Outflow', 'pvalue'): [
+                1.17145253e-07, 0.000430609, 0.248687678, 3.30298603e-08,
+                0.003085194, 0.019562376, 5.41005765e-05, 0.000840341
+            ],
+            ('Reference', 'lillifors'): [
+                0.28351398, 0.24930868, 0.29171088, 0.22593144,
+                0.32020481, 0.42722648, 0.32208719, 0.16592420
+            ],
+            ('Reference', 'pvalue'): [
+                3.66921686e-06, 0.000106205, 1.51965475e-06, 0.000792213,
+                5.66187072e-08, 1.06408145e-14, 4.49998108e-08, 0.046766975
+            ],
+        }
+        result = self.dc.lillifors
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
+    def test_lillifors_log(self):
+        expected_data = {
+            ('Inflow', 'log-lillifors'): [
+                0.10979498, 0.08601191, 0.13721881, 0.123985937,
+                0.12767141, 0.09254070, 0.11319291, 0.107527896,
+            ],
+            ('Inflow', 'pvalue'): [
+                0.51940912, 0.95582245, 0.18986954, 0.321330151,
+                0.27964797, 0.82837543, 0.46666969, 0.556327244,
+            ],
+            ('Outflow', 'log-lillifors'): [
+                0.10661711, 0.12321271, 0.15586768, 0.144033649,
+                0.09536450, 0.11033031, 0.08012353, 0.089479881,
+            ],
+            ('Outflow', 'pvalue'): [
+                0.57153020, 0.33058849, 0.07956179, 0.140596426,
+                0.77423131, 0.51088991, 1.07047546, 0.887890467,
+            ],
+            ('Reference', 'log-lillifors'): [
+                0.08280941, 0.12379594, 0.10251285, 0.070249172,
+                0.08910822, 0.14824279, 0.10622305, 0.109876879,
+            ],
+            ('Reference', 'pvalue'): [
+                1.01845443, 0.32358845, 0.64250052, 1.251670597,
+                0.89515574, 0.11562015, 0.57817185, 0.518100907,
+            ],
+        }
+        result = self.dc.lillifors_log
+        expected = pandas.DataFrame(expected_data, index=result.index)
+        expected.columns.names = ['station', 'result']
+        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
+
     @helpers.seed
     def test__generic_stat(self):
         result = self.dc._generic_stat(numpy.min, use_bootstrap=False)

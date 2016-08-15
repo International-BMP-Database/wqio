@@ -1862,6 +1862,17 @@ class DataCollection(object):
                                   use_bootstrap=False, has_pvalue=True,
                                   statname='log-shapiro')
 
+    @cache_readonly
+    def lillifors(self):
+        return self._generic_stat(sm.stats.lillifors, use_bootstrap=False,
+                                  has_pvalue=True, statname='lillifors')
+
+    @cache_readonly
+    def lillifors_log(self):
+        return self._generic_stat(lambda x: sm.stats.lillifors(numpy.log(x)),
+                                  use_bootstrap=False, has_pvalue=True,
+                                  statname='log-lillifors')
+
 
     def _comparison_stat(self, statfxn, statname=None, **statopts):
         results = utils.misc._comp_stat_generator(
