@@ -966,7 +966,7 @@ class Dataset(object):
 
     @cache_readonly
     def wilcoxon_z(self):
-        '''The Wilcoxon Z-statistic.
+        """The Wilcoxon Z-statistic.
 
         Tests the null hypothesis that the influent and effluent data are
         sampled from the same statistical distribution.
@@ -979,25 +979,25 @@ class Dataset(object):
         --------
         scipy.stats.wilcoxon
 
-        '''
+        """
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[0]
 
     @cache_readonly
     def wilcoxon_p(self):
-        '''Two-sided p-value of the Wilcoxon test
+        """Two-sided p-value of the Wilcoxon test
 
         See also
         --------
         scipy.stats.wilcoxon
 
-        '''
+        """
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[1]
 
     @cache_readonly
     def mannwhitney_u(self):
-        '''Mann-Whitney U-statistic.
+        """Mann-Whitney U-statistic.
 
         Performs a basic rank-sum test.
 
@@ -1009,13 +1009,13 @@ class Dataset(object):
         --------
         scipy.stats.mannwhitneyu
 
-        '''
+        """
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[0]
 
     @cache_readonly
     def mannwhitney_p(self):
-        '''Two-sided p-value of the Mann-Whitney test
+        """Two-sided p-value of the Mann-Whitney test
 
         Notes
         -----
@@ -1025,13 +1025,13 @@ class Dataset(object):
         --------
         scipy.stats.mannwhitneyu
 
-        '''
+        """
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[1]
 
     @cache_readonly
     def kendall_tau(self):
-        '''The Kendall-Tau statistic.
+        """The Kendall-Tau statistic.
 
         Measure of the correspondence between two the rankings of influent
         and effluent data.
@@ -1044,25 +1044,25 @@ class Dataset(object):
         --------
         scipy.stats.kendalltau
 
-        '''
+        """
         if self._kendall_stats is not None:
             return self._kendall_stats[0]
 
     @cache_readonly
     def kendall_p(self):
-        '''Two-sided p-value of the Kendall test
+        """Two-sided p-value of the Kendall test
 
         See also
         --------
         scipy.stats.kendalltau
 
-        '''
+        """
         if self._kendall_stats is not None:
             return self._kendall_stats[1]
 
     @cache_readonly
     def spearman_rho(self):
-        '''The Spearman's rho statistic.
+        """The Spearman's rho statistic.
 
         Tests for monotonicity of the relationship between influent and.
         effluent data.
@@ -1075,19 +1075,19 @@ class Dataset(object):
         --------
         scipy.stats.spearmanr
 
-        '''
+        """
         if self._spearman_stats is not None:
             return self._spearman_stats[0]
 
     @cache_readonly
     def spearman_p(self):
-        '''Two-sided p-value of the Spearman test
+        """Two-sided p-value of the Spearman test
 
         See also
         --------
         scipy.stats.spearmanr
 
-        '''
+        """
         if self._spearman_stats is not None:
             return self._spearman_stats[1]
 
@@ -1646,10 +1646,10 @@ class Dataset(object):
         return fig
 
     def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
-        '''
+        """
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
-        '''
+        """
         i_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
         o_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
 
