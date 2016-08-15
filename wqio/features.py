@@ -1776,6 +1776,101 @@ class DataCollection(object):
 
         return _tidy
 
+    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None):
+        def CIs(x):
+            stat, (lci, uci) = bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
+            statnames = ['lower', 'stat', 'upper']
+            return pandas.Series([lci, stat, uci], index=statnames)
+
+        if use_bootstrap:
+            stat = (
+                self.tidy
+                    .groupby(by=self.groupcols)
+                    .apply(CIs)
+                    .unstack(level=self.stationcol)
+            )
+        else:
+            stat = (
+                self.tidy
+                    .groupby(by=self.groupcols)
+                    .agg({self.rescol: statfxn})
+                    .unstack(level=self.stationcol)
+            )
+
+        stat.columns = stat.columns.swaplevel(0, 1)
+        if statname is not None:
+            stat.columns.names = ['station', statname]
+        stat.sort_index(axis=1, inplace=True)
+
+        return stat
+
+    @cache_readonly
+    def count(self):
+        return self._generic_stat(lambda x: x.count(), use_bootstrap=False, statname='Count')
+
+    @cache_readonly
+    def medians(self):
+        return self._generic_stat(numpy.median, statname='median')
+
+    @cache_readonly
+    def means(self):
+        return self._generic_stat(numpy.mean, statname='mean')
+
+    @cache_readonly
+    def std_devs(self):
+        return self._generic_stat(numpy.std, statname='std. dev.')
+
+    def percentiles(self, percentile):
+        return self._generic_stat(lambda x: numpy.percentile(x, percentile),
+                                  statname='pctl {}'.format(percentile),
+                                  use_bootstrap=False)
+
+    @cache_readonly
+    def logmean(self):
+        return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
+
+    @cache_readonly
+    def logstd(self):
+        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis), statname='Log-std. dev.')
+
+    @cache_readonly
+    def geomean(self):
+        geomean = numpy.exp(self.logmean)
+        geomean.columns.names = ['station', 'Geo-mean']
+        return geomean
+
+    @cache_readonly
+    def geostd(self):
+        geostd = numpy.exp(self.logstd)
+        geostd.columns.names = ['station', 'Geo-std. dev.']
+        return geostd
+
+    def _comparison_stat(self, statfxn, statname=None, **statopts):
+        results = utils.misc._comp_stat_generator(
+            self.tidy,
+            self.groupcols_comparison,
+            self.stationcol,
+            self.rescol,
+            statfxn,
+            statname=statname,
+            **statopts
+        )
+        station_columns = [self.stationcol + '_1', self.stationcol + '_2']
+        index_cols = self.groupcols_comparison + station_columns
+        return pandas.DataFrame.from_records(results).set_index(index_cols)
+
+    @cache_readonly
+    def mann_whitney(self):
+        return self._comparison_stat(stats.mannwhitneyu, statname='mann_whitney', alternative='two-sided')
+
+    @cache_readonly
+    def t_test(self):
+        return self._comparison_stat(stats.ttest_ind, statname='t_test', equal_var=False)
+
+    @cache_readonly
+    def levene(self):
+        return self._comparison_stat(stats.levene, statname='levene', center='median')
+
     @cache_readonly
     def locations(self):
         _locations = []
@@ -1823,89 +1918,6 @@ class DataCollection(object):
             _datasets.append(ds)
 
         return _datasets
-
-    @cache_readonly
-    def medians(self):
-        return self._generic_stat(numpy.median, statname='median')
-
-    @cache_readonly
-    def means(self):
-        return self._generic_stat(numpy.mean, statname='mean')
-
-    @cache_readonly
-    def std_devs(self):
-        return self._generic_stat(numpy.std, statname='std. dev.')
-
-    def percentiles(self, percentile):
-        return self._generic_stat(lambda x: numpy.percentile(x, percentile),
-                                  statname='pctl {}'.format(percentile),
-                                  use_bootstrap=False)
-
-    @cache_readonly
-    def logmean(self):
-        return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
-
-    @cache_readonly
-    def logstd(self):
-        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis), statname='Log-std. dev.')
-
-    @cache_readonly
-    def geomean(self):
-        geomean = numpy.exp(self.logmean)
-        geomean.columns.names = ['station', 'Geo-mean']
-        return geomean
-
-    @cache_readonly
-    def geostd(self):
-        geostd = numpy.exp(self.logstd)
-        geostd.columns.names = ['station', 'Geo-std. dev.']
-        return geostd
-
-    @cache_readonly
-    def count(self):
-        return self._generic_stat(lambda x: x.count(), use_bootstrap=False, statname='Count')
-
-    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None):
-        def CIs(x):
-            stat, (lci, uci) = bootstrap.BCA(x[self.rescol].values, statfxn=statfxn)
-            statnames = ['lower', 'stat', 'upper']
-            return pandas.Series([lci, stat, uci], index=statnames)
-
-        if use_bootstrap:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .apply(CIs)
-                    .unstack(level=self.stationcol)
-            )
-        else:
-            stat = (
-                self.tidy
-                    .groupby(by=self.groupcols)
-                    .agg({self.rescol: statfxn})
-                    .unstack(level=self.stationcol)
-            )
-
-        stat.columns = stat.columns.swaplevel(0, 1)
-        if statname is not None:
-            stat.columns.names = ['station', statname]
-        stat.sort_index(axis=1, inplace=True)
-
-        return stat
-
-    def _comparison_stat(self, statfxn, statname=None, **statopts):
-        results = utils.misc._comp_stat_generator(
-            self.tidy,
-            self.groupcols_comparison,
-            self.stationcol,
-            self.rescol,
-            statfxn,
-            statname=statname,
-            **statopts
-        )
-        station_columns = [self.stationcol + '_1', self.stationcol + '_2']
-        index_cols = self.groupcols_comparison + station_columns
-        return pandas.DataFrame.from_records(results).set_index(index_cols)
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
