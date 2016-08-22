@@ -1,12 +1,13 @@
-﻿from . import bootstrap
+from . import bootstrap
 from .ros import ROS, cohn_numbers
 
 from .features import (
     Parameter,
     Location,
     Dataset,
-    DataCollection
 )
+
+from .datacollections import DataCollection
 
 from .samples import (
     CompositeSample,
