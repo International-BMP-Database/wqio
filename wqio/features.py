@@ -1709,7 +1709,7 @@ class DataCollection(object):
         self.stationcol = stationcol
         self.paramcol = paramcol
         self.cencol = cencol
-        self.ndval = [ndval] if numpy.isscalar(ndval) else ndval
+        self.ndval = validate.at_least_empty_list(ndval)
         self.bsIter = bsIter
 
         self.othergroups = validate.at_least_empty_list(othergroups)
@@ -1717,11 +1717,13 @@ class DataCollection(object):
         self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
         self.groupcols_comparison = [self.paramcol] + self.othergroups
 
-        self.columns = self.groupcols + [self._raw_rescol, self.cencol]
 
-        self.data = dataframe.copy()
-        self.data[cencol] = self.data[self.qualcol].isin(self.ndval)
-        self.data
+        self.columns = self.groupcols + [self._raw_rescol, self.cencol]
+        self.data = (
+            dataframe
+                .assign(**{cencol: dataframe[self.qualcol].isin(self.ndval)})
+                .reset_index()
+        )
 
     @property
     def filterfxn(self):
@@ -1908,16 +1910,14 @@ class DataCollection(object):
         _locations = []
         groups = (
             self.data
-                .groupby(level=self.groupcols)
+                .groupby(by=self.groupcols)
                 .filter(self.filterfxn)
-                .groupby(level=self.groupcols)
+                .groupby(by=self.groupcols)
         )
         for names, data in groups:
             loc_dict = dict(zip(self.groupcols, names))
-            locdata = data.copy()
-            locdata.index = locdata.index.droplevel(level=self.stationcol)
             loc = Location(
-                locdata, station_type=loc_dict[self.stationcol].lower(),
+                data.copy(), station_type=loc_dict[self.stationcol].lower(),
                 rescol=self._raw_rescol, qualcol=self.qualcol,
                 ndval=self.ndval, bsIter=self.bsIter, useROS=self.useROS
             )
@@ -1932,7 +1932,7 @@ class DataCollection(object):
         _datasets = []
         groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
-        for names, data in self.data.groupby(level=groupcols):
+        for names, data in self.data.groupby(by=groupcols):
             ds_dict = dict(zip(groupcols, names))
 
             ds_dict[self.stationcol] = 'inflow'
