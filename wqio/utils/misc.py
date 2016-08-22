@@ -346,7 +346,7 @@ def unique_categories(classifier, bins):
 def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
                          statname=None, **statopts):
     """ Generator of records containing results of comparitive
-    statistical functioons.
+    statistical functions.
 
     Parameters
     ----------
@@ -364,7 +364,7 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
         Any function that takes to array-like datasets and returns a
         ``namedtuple`` with elements "statistic" and "pvalue". If the
         "pvalue" portion is not relevant, simply wrap the function such
-        that it return None or similar for it.
+        that it returns None or similar for it.
     statname : string, optional
         The name of the primary statistic being returned.
     **statopts : kwargs
@@ -372,7 +372,7 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
 
     Returns
     -------
-    comp_stats : pandsa.DataFrame
+    comp_stats : pandas.DataFrame
 
     """
 
@@ -393,7 +393,64 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
 
             stat = statfxn(x, y, **statopts)
             row.update({
-                statname: stat.statistic,
+                statname: stat[0],
+                'pvalue': stat.pvalue
+            })
+            yield row
+
+def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
+                           statname=None, **statopts):
+    """ Generator of records containing results of comparitive
+    statistical functions specifically for paired data.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    groupcols : list of string
+        The columns on which the data will be groups. This should *not*
+        include the column that defines the separate datasets that will
+        be comparied.
+    pivotcol : string
+        The column that distinquishes the individual samples that are
+        being compared.
+    rescol : string
+        The column that containes the values to compare.
+    statfxn : callable
+        Any function that takes to array-like datasets and returns a
+        ``namedtuple`` with elements "statistic" and "pvalue". If the
+        "pvalue" portion is not relevant, simply wrap the function such
+        that it returns None or similar for it.
+    statname : string, optional
+        The name of the primary statistic being returned.
+    **statopts : kwargs
+        Additional options to be fed to ``statfxn``.
+
+    Returns
+    -------
+    comp_stats : pandsa.DataFrame
+
+    """
+
+    if statname is None:
+        statname = 'stat'
+
+    groups = df.groupby(level=groupcols)[rescol]
+    for name, g in groups:
+        stations = g.columns.tolist()
+        for _x, _y in itertools.permutations(stations, 2):
+            row = dict(zip(groupcols, name))
+
+            station_columns = [pivotcol + '_1', pivotcol + '_2']
+            row.update(dict(zip(station_columns, [_x, _y])))
+
+            _df = g[[_x, _y]].dropna()
+
+            x = _df[_x].values
+            y = _df[_y].values
+
+            stat = statfxn(x, y, **statopts)
+            row.update({
+                statname: stat[0],
                 'pvalue': stat.pvalue
             })
             yield row
