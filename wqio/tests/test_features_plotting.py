@@ -9,7 +9,6 @@ from wqio.features import (
     Parameter,
     Location,
     Dataset,
-    DataCollection
 )
 
 

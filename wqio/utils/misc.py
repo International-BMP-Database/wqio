@@ -398,6 +398,7 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
             })
             yield row
 
+
 def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
                            statname=None, **statopts):
     """ Generator of records containing results of comparitive
