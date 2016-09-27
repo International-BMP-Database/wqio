@@ -335,7 +335,7 @@ def pH2concentration(pH, *args):
     return 10**(-1*pH) * avogadro * proton_mass * kg2g * g2mg
 
 
-def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
+def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
     """ Fits a line to x-y data in various forms (raw, log, prob scales)
 
     Parameters
@@ -356,6 +356,9 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
     dist : scipy.stats distribution or None, optional
         A fully-spec'd scipy.stats distribution such that ``dist.ppf``
         can be called. If not provided, defaults to scipt.stats.norm.
+    through_origin : bool, optional (default = False)
+        If True, the y-intercept of the best-fit line will be
+        constrained to 0 during the regression.
 
     Returns
     -------
@@ -394,10 +397,14 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
         y = numpy.log(y)
 
     x = sm.add_constant(x)
-    model = model = sm.OLS(y, x)
-    results = model.fit()
 
+    # fix the y-intercept at 0 if requested
+    # note that this is a nuance of the statsmodels package.
+    # `x[:, 0] = 5` doesn't fix the intercept at 5, for instance.
+    if through_origin:
+        x[:, 0] = 0
 
+    results = sm.OLS(y, x).fit()
     yhat = estimateFromLineParams(xhat, results.params[1],
                                         results.params[0],
                                         xlog=fitlogs in ['x', 'both'],

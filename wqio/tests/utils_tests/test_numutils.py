@@ -134,7 +134,6 @@ def test_anderson_darling():
     assert abs(result[3] - known_anderson[3]) < 0.0000001
 
 
-
 class Test_processAndersonDarlingResults(object):
     def setup(self):
         fieldnames = ['statistic', 'critical_values', 'significance_level']
@@ -308,6 +307,12 @@ class Test_fit_line(object):
         x_, y_, res = numutils.fit_line(x, y, **scales)
         nptest.assert_array_almost_equal(y_, self.known_y_linlin)
         assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
+
+    def test_xlinear_ylinear_through_origin(self):
+        scales = {'fitlogs': None, 'fitprobs': None}
+        x, y = self.zscores, self.data
+        x_, y_, res = numutils.fit_line(x, y, through_origin=True, **scales)
+        assert res.params[0] == 0
 
     def test_xlinear_ylog(self):
         scales = {'fitlogs': 'y', 'fitprobs': None}
