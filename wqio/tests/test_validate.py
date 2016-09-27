@@ -81,3 +81,25 @@ def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
 def test_at_least_empty_list(value, expected):
     result = validate.at_least_empty_list(value)
     assert result == expected
+
+
+@pytest.mark.parametrize(('value', 'options', 'expected'), [
+    (None, None, {}),
+    ('', None, {}),
+    ({'a': 1, 'b': 'bee'}, None, {'a': 1, 'b': 'bee'}),
+    (None, {'a': 2}, {'a': 2}),
+    ('', {'a': 2}, {'a': 2}),
+    ({'a': 1, 'b': 'bee'}, {'a': 2}, {'a': 2, 'b': 'bee'}),
+
+])
+def test_at_least_empty_dict(value, options, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            validate.at_least_empty_dict(value)
+
+    if options is None:
+        result = validate.at_least_empty_dict(value)
+    else:
+        result = validate.at_least_empty_dict(value, **options)
+
+    assert result == expected

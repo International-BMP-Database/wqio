@@ -93,6 +93,7 @@ def single_value_in_index(df, index_level):
 
     return index[0]
 
+
 def at_least_empty_list(value):
     if value is None or value == '':
         value = []
@@ -100,3 +101,16 @@ def at_least_empty_list(value):
         value = [value]
 
     return list(value)
+
+
+def at_least_empty_dict(value, **kwargs):
+    if value is None or value == '':
+        value = {}
+    elif not isinstance(value, dict):
+        raise ValueError('{} cannot be a dictionary'.format(value))
+    else:
+        value = value.copy()
+
+    value.update(**kwargs)
+
+    return value
