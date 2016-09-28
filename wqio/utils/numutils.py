@@ -4,6 +4,7 @@ import numpy
 from scipy import stats
 import statsmodels.api as sm
 
+from wqio import validate
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     """ Formats a number with the correct number of sig figs.
@@ -369,20 +370,18 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
 
     """
 
-    def _check_fit_arg(arg, argname):
-        valid_args = ['x', 'y', 'both', None]
-        if arg not in valid_args:
-            msg = 'Valid value for {} ({}). Must be on of {}'
-            raise ValueError(msg.format(argname, arg, valid_args))
+    fitprobs = validate.fit_arguments(fitprobs, "fitprobs")
+    fitlogs = validate.fit_arguments(fitlogs, "fitlogs")
 
-    _check_fit_arg(fitprobs, "fitprobs")
-    _check_fit_arg(fitlogs, "fitlogs")
+    x = numpy.asarray(x)
+    y = numpy.asarray(y)
 
     if xhat is None:
         xhat = numpy.array([numpy.min(x), numpy.max(x)])
 
     if dist is None:
         dist = stats.norm
+
 
     if fitprobs in ['x', 'both']:
         x = dist.ppf(x/100.)

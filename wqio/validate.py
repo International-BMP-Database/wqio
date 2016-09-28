@@ -114,3 +114,12 @@ def at_least_empty_dict(value, **kwargs):
     value.update(**kwargs)
 
     return value
+
+
+def fit_arguments(arg, argname):
+    valid_args = ['x', 'y', 'both', None]
+    if arg not in valid_args:
+        msg = 'Valid value for {} ({}). Must be on of {}'
+        raise ValueError(msg.format(argname, arg, valid_args))
+
+    return arg
