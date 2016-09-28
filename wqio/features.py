@@ -1476,7 +1476,7 @@ class Dataset(object):
     def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
                     xlabel=None, ylabel=None, one2one=False, useROS=False,
                     bestfit=False, minpoints=3, eqn_pos='lower right',
-                    equal_scales=True):
+                    equal_scales=True, fitopts=None):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1531,13 +1531,17 @@ class Dataset(object):
         # plot the raw results, if requested
         else:
             plot_params = [
-                dict(which='neither', marker='o', alpha=0.8, label='Detected data pairs',
+                dict(label='Detected data pairs',
+                     which='neither', marker='o', alpha=0.8,
                      markerfacecolor='black', markeredgecolor='white'),
-                dict(which='influent', marker='v', alpha=0.45, label='Influent not detected',
+                dict(label='Influent not detected',
+                     which='influent', marker='v', alpha=0.45,
                      markerfacecolor='none', markeredgecolor='black'),
-                dict(which='effluent', marker='<', alpha=0.45, label='Effluent not detected',
+                dict(label='Effluent not detected',
+                     which='effluent', marker='<', alpha=0.45,
                      markerfacecolor='none', markeredgecolor='black'),
-                dict(which='both',  marker='d', alpha=0.25, label='Both not detected',
+                dict(label='Both not detected',
+                     which='both',  marker='d', alpha=0.25,
                      markerfacecolor='none', markeredgecolor='black'),
             ]
             for pp in plot_params:
@@ -1590,7 +1594,8 @@ class Dataset(object):
             x = detects['inflow']
             y = detects['outflow']
 
-            xhat, yhat, modelres = utils.fit_line(x, y, fitlogs=fitlogs)
+            fitopts = validate.at_least_empty_dict(fitopts, fitlogs=fitlogs)
+            xhat, yhat, modelres = utils.fit_line(x, y, **fitopts)
 
             ax.plot(xhat, yhat, 'k--', alpha=0.75, label='Best-fit')
 
@@ -1610,8 +1615,8 @@ class Dataset(object):
 
                 ax.annotate(
                     r'$\log(y) = {} \, \log(x) + {}$'.format(
-                        utils.sigFigs(modelres.params['inflow'], n=3),
-                        utils.sigFigs(modelres.params['const'], n=3)
+                        utils.sigFigs(modelres.params[1], n=3),
+                        utils.sigFigs(modelres.params[0], n=3)
                     ),
                     (txt_x, txt_y),
                     xycoords='axes fraction'
@@ -1619,8 +1624,8 @@ class Dataset(object):
 
                 ax.annotate(
                     'Slope p-value: {}\nIntercept p-value: {}'.format(
-                        utils.process_p_vals(modelres.pvalues['inflow']),
-                        utils.process_p_vals(modelres.pvalues['const'])
+                        utils.process_p_vals(modelres.pvalues[1]),
+                        utils.process_p_vals(modelres.pvalues[0])
                     ),
                     (txt_x, txt_y - vert_offset),
                     xycoords='axes fraction'

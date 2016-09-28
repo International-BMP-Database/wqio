@@ -81,3 +81,42 @@ def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
 def test_at_least_empty_list(value, expected):
     result = validate.at_least_empty_list(value)
     assert result == expected
+
+
+@pytest.mark.parametrize(('value', 'options', 'expected'), [
+    (None, None, {}),
+    ('', None, {}),
+    ({'a': 1, 'b': 'bee'}, None, {'a': 1, 'b': 'bee'}),
+    (None, {'a': 2}, {'a': 2}),
+    ('', {'a': 2}, {'a': 2}),
+    ({'a': 1, 'b': 'bee'}, {'a': 2}, {'a': 2, 'b': 'bee'}),
+    ('a', {'b': 1}, None)
+])
+def test_at_least_empty_dict(value, options, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            validate.at_least_empty_dict(value)
+    else:
+        if options is None:
+            result = validate.at_least_empty_dict(value)
+        else:
+            result = validate.at_least_empty_dict(value, **options)
+
+        assert result == expected
+
+
+@pytest.mark.parametrize(('value', 'should_error'), [
+    ('x', False),
+    ('y', False),
+    ('both', False),
+    (None, False),
+    ('abc', True),
+    (1, True),
+])
+def test_fit_arguments(value, should_error):
+    if should_error:
+        with pytest.raises(ValueError):
+            validate.fit_arguments(value, 'example arg name')
+    else:
+        result = validate.fit_arguments(value, 'example arg name')
+        assert result == value

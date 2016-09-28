@@ -93,6 +93,7 @@ def single_value_in_index(df, index_level):
 
     return index[0]
 
+
 def at_least_empty_list(value):
     if value is None or value == '':
         value = []
@@ -100,3 +101,25 @@ def at_least_empty_list(value):
         value = [value]
 
     return list(value)
+
+
+def at_least_empty_dict(value, **kwargs):
+    if value is None or value == '':
+        value = {}
+    elif not isinstance(value, dict):
+        raise ValueError('{} cannot be a dictionary'.format(value))
+    else:
+        value = value.copy()
+
+    value.update(**kwargs)
+
+    return value
+
+
+def fit_arguments(arg, argname):
+    valid_args = ['x', 'y', 'both', None]
+    if arg not in valid_args:
+        msg = 'Valid value for {} ({}). Must be on of {}'
+        raise ValueError(msg.format(argname, arg, valid_args))
+
+    return arg

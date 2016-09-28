@@ -4,6 +4,7 @@ import numpy
 from scipy import stats
 import statsmodels.api as sm
 
+from wqio import validate
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     """ Formats a number with the correct number of sig figs.
@@ -335,7 +336,7 @@ def pH2concentration(pH, *args):
     return 10**(-1*pH) * avogadro * proton_mass * kg2g * g2mg
 
 
-def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
+def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
     """ Fits a line to x-y data in various forms (raw, log, prob scales)
 
     Parameters
@@ -356,6 +357,9 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
     dist : scipy.stats distribution or None, optional
         A fully-spec'd scipy.stats distribution such that ``dist.ppf``
         can be called. If not provided, defaults to scipt.stats.norm.
+    through_origin : bool, optional (default = False)
+        If True, the y-intercept of the best-fit line will be
+        constrained to 0 during the regression.
 
     Returns
     -------
@@ -366,20 +370,18 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
 
     """
 
-    def _check_fit_arg(arg, argname):
-        valid_args = ['x', 'y', 'both', None]
-        if arg not in valid_args:
-            msg = 'Valid value for {} ({}). Must be on of {}'
-            raise ValueError(msg.format(argname, arg, valid_args))
+    fitprobs = validate.fit_arguments(fitprobs, "fitprobs")
+    fitlogs = validate.fit_arguments(fitlogs, "fitlogs")
 
-    _check_fit_arg(fitprobs, "fitprobs")
-    _check_fit_arg(fitlogs, "fitlogs")
+    x = numpy.asarray(x)
+    y = numpy.asarray(y)
 
     if xhat is None:
         xhat = numpy.array([numpy.min(x), numpy.max(x)])
 
     if dist is None:
         dist = stats.norm
+
 
     if fitprobs in ['x', 'both']:
         x = dist.ppf(x/100.)
@@ -394,10 +396,14 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None):
         y = numpy.log(y)
 
     x = sm.add_constant(x)
-    model = model = sm.OLS(y, x)
-    results = model.fit()
 
+    # fix the y-intercept at 0 if requested
+    # note that this is a nuance of the statsmodels package.
+    # `x[:, 0] = 5` doesn't fix the intercept at 5, for instance.
+    if through_origin:
+        x[:, 0] = 0
 
+    results = sm.OLS(y, x).fit()
     yhat = estimateFromLineParams(xhat, results.params[1],
                                         results.params[0],
                                         xlog=fitlogs in ['x', 'both'],
