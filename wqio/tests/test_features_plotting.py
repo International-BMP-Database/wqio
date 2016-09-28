@@ -573,6 +573,18 @@ def test_ds_scatterplot_default(ds_NDs):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_ds_scatterplot_best_fit(ds_NDs):
+    fig = ds_NDs.scatterplot(bestfit=True)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_ds_scatterplot_best_fit_through_origin(ds_NDs):
+    fig = ds_NDs.scatterplot(bestfit=True, fitopts=dict(through_origin=True))
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_ds_scatterplot_provided_ax(ds_NDs):
     fig2, ax2 = pyplot.subplots()
     fig2 = ds_NDs.scatterplot(ax=ax2)
