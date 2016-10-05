@@ -86,46 +86,41 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
     ie_periods = MIN_PER_HOUR / data.index.freq.n * ie_hours
 
     # bool column where True means there's rain or flow of some kind
+    water_columns = [inflowcol, outflowcol, precipcol]
+    final_columns = water_columns + [baseflowcol]
     data = (
-        data.select(lambda c: c in [inflowcol, outflowcol, precipcol, baseflowcol], axis='columns')
+        data[final_columns]
             # if above zero and not baseflow
-            .assign(_wet=lambda df:
-                numpy.any((df.select(lambda c: c in [inflowcol, outflowcol, precipcol],
-                                   axis='columns') > 0), axis=1))
-            .assign(_wet=lambda df: df.apply(lambda ndf: False if ndf[baseflowcol] else ndf._wet, axis=1))
+            .assign(_wet=numpy.any(data[water_columns] > 0, axis=1) & ~data[baseflowcol])
             .assign(_windiff=lambda df:
                 df['_wet'].rolling(int(ie_periods), min_periods=1)
                     .apply(lambda w: w.any())
                     .diff())
-            .assign(_event_start=False, _event_end=False)
     )
-    # copy the bool column into its own df and add a bunch
-    # shifted columns so each row looks backwards and forwards
-    # copy the bool column into its own df and add a bunch
-    # shifted columns so each row looks backwards and forwards
+
+    # make sure that if the first record is associated with the first
+    # storm if it's wet
     firstrow = data.iloc[0]
     if firstrow['_wet']:
         data.loc[firstrow.name, '_windiff'] = 1
-
-    starts = data['_windiff'] == 1
-    stops = data['_windiff'].shift(-1 * ie_periods) == -1
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
     # number of storms that have started.
     # Stack Overflow: http://tinyurl.com/lsjkr9x
-
     data = (
-        data.assign(_event_start=numpy.where(starts, True, False))
-            .assign(_event_end=numpy.where(stops, True, False))
-            .assign(storm=lambda df: df['_event_start'].cumsum())
-            .assign(storm=lambda df: numpy.where(df['storm'] == df['_event_end'].shift(2).cumsum(), 0, df['storm']))
+        data.assign(_event_start=data['_windiff'] == 1)
+            .assign(_event_end=data['_windiff'].shift(-1 * ie_periods) == -1)
+            .assign(_storm=lambda df: df['_event_start'].cumsum())
+            .assign(storm=lambda df: numpy.where(
+                df['_storm'] == df['_event_end'].shift(2).cumsum(),
+                 0,             # inter-event period
+                 df['_storm']   # actual event
+            ))
     )
 
-
     if not debug:
-        cols_to_drop = ['_wet', '_windiff', '_event_end', '_event_start']
-        data = data.drop(cols_to_drop, axis=1)
+        data = data.select(lambda c: not c.startswith('_'), axis=1)
 
     return data
 
