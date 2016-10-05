@@ -18,8 +18,9 @@ SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
 SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
 
 
-def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowcol=None,
-                       baseflowcol=None, stormcol='storm', debug=False):
+def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
+                       outflowcol=None, baseflowcol=None,
+                       stormcol='storm', debug=False):
     """
     Parses the hydrologic data into distinct storms.
 
@@ -30,6 +31,21 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowco
 
     Parameters
     ----------
+    data : pandas.DataFrame
+    ie_hours : float
+        The Inter-Event dry duration (in hours) that classifies the
+        next hydrlogic activity as a new event.
+    precipcol : string, optional (default = None)
+        Name of column in `hydrodata` containing precipiation data.
+    inflowcol : string, optional (default = None)
+        Name of column in `hydrodata` containing influent flow data.
+    outflowcol : string, optional (default = None)
+        Name of column in `hydrodata` containing effluent flow data.
+    baseflowcol : string, optional (default = None)
+        Name of column in `hydrodata` containing boolean indicating
+        which records are considered baseflow.
+    stormcol : string (default = 'storm')
+        Name of column in `hydrodata` indentifying distinct storms.
     debug : bool (default = False)
         If True, diagnostic columns will not be dropped prior to
         returning the dataframe of parsed_storms.
@@ -697,7 +713,8 @@ class HydroRecord(object):
     outflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing effluent flow data.
     baseflowcol : string, optional (default = None)
-        Name of column in `hydrodata` containing boolean of if the time stamp is base flow.
+        Name of column in `hydrodata` containing boolean indicating
+        which records are considered baseflow.
     stormcol : string (default = 'storm')
         Name of column in `hydrodata` indentifying distinct storms.
     minprecip, mininflow, minoutflow : float, optional (default = 0)
