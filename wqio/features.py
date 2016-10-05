@@ -1655,11 +1655,11 @@ class Dataset(object):
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
         """
-        i_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
-        o_nondetect = self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
+        i_nondetect = self.paired_data[('inflow', 'cen')]
+        o_nondetect = self.paired_data[('outflow', 'cen')]
 
-        i_detect = ~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
-        o_detect = ~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)
+        i_detect = ~self.paired_data[('inflow', 'cen')]
+        o_detect = ~self.paired_data[('outflow', 'cen')]
 
         index_combos = {
             'both': i_nondetect & o_nondetect,

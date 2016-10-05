@@ -6,6 +6,7 @@ import statsmodels.api as sm
 
 from wqio import validate
 
+
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     """ Formats a number with the correct number of sig figs.
 
