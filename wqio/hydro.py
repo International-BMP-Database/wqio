@@ -19,7 +19,7 @@ SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
 
 
 def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowcol=None,
-                       stormcol='storm', debug=False):
+                       baseflowcol=None, stormcol='storm', debug=False):
     """
     Parses the hydrologic data into distinct storms.
 
@@ -63,12 +63,20 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None, outflowco
         outflowcol = 'outflow'
         data.loc[:, outflowcol] = numpy.nan
 
+    if baseflowcol is None:
+        baseflowcol = 'baseflow'
+        data.loc[:, baseflowcol] = False
+
     ie_periods = MIN_PER_HOUR / data.index.freq.n * ie_hours
 
     # bool column where True means there's rain or flow of some kind
     data = (
-        data.select(lambda c: c in [inflowcol, outflowcol, precipcol], axis='columns')
-            .assign(_wet=lambda df: numpy.any(df > 0, axis=1))
+        data.select(lambda c: c in [inflowcol, outflowcol, precipcol, baseflowcol], axis='columns')
+            # if above zero and not baseflow
+            .assign(_wet=lambda df:
+                numpy.any((df.select(lambda c: c in [inflowcol, outflowcol, precipcol],
+                                   axis='columns') > 0), axis=1))
+            .assign(_wet=lambda df: df.apply(lambda ndf: False if ndf[baseflowcol] else ndf._wet, axis=1))
             .assign(_windiff=lambda df:
                 df['_wet'].rolling(int(ie_periods), min_periods=1)
                     .apply(lambda w: w.any())
@@ -688,6 +696,8 @@ class HydroRecord(object):
         Name of column in `hydrodata` containing influent flow data.
     outflowcol : string, optional (default = None)
         Name of column in `hydrodata` containing effluent flow data.
+    baseflowcol : string, optional (default = None)
+        Name of column in `hydrodata` containing boolean of if the time stamp is base flow.
     stormcol : string (default = 'storm')
         Name of column in `hydrodata` indentifying distinct storms.
     minprecip, mininflow, minoutflow : float, optional (default = 0)
@@ -714,9 +724,9 @@ class HydroRecord(object):
 
     # TODO: rename `outputfreqMinutes` to `outputPeriodMinutes`
     def __init__(self, hydrodata, precipcol=None, inflowcol=None,
-                 outflowcol=None, tempcol=None, stormcol='storm',
-                 minprecip=0.0, mininflow=0.0, minoutflow=0.0,
-                 outputfreqMinutes=10, intereventHours=6,
+                 outflowcol=None, baseflowcol=None,tempcol=None,
+                 stormcol='storm', minprecip=0.0, mininflow=0.0,
+                 minoutflow=0.0, outputfreqMinutes=10, intereventHours=6,
                  volume_conversion=1, stormclass=None, lowmem=False):
 
         # validate input
@@ -734,6 +744,7 @@ class HydroRecord(object):
         self.precipcol = precipcol
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
+        self.baseflowcol = baseflowcol
         self.stormcol = stormcol
         self.tempcol = tempcol
         self.outputfreq = pandas.offsets.Minute(outputfreqMinutes)
@@ -816,6 +827,7 @@ class HydroRecord(object):
                                     precipcol=self.precipcol,
                                     inflowcol=self.inflowcol,
                                     outflowcol=self.outflowcol,
+                                    baseflowcol=self.baseflowcol,
                                     stormcol='storm',
                                     debug=debug)
         return parsed
