@@ -17,13 +17,22 @@ class fakeStormSublcass(hydro.Storm):
     is_subclassed = True
 
 
-def setup_storms(filename):
+def setup_storms(filename, baseflow=None):
     storm_file = helpers.test_data_path(filename)
     orig_record = pandas.read_csv(
         storm_file, index_col='date', parse_dates=True
     ).resample('5T').asfreq().fillna(0)
 
-    parsed = hydro.parse_storm_events(orig_record, 3, precipcol='rain', inflowcol='influent', debug=True)
+    baseflowcol = None
+    if baseflow is not None:
+        orig_record = orig_record.assign(baseflow=orig_record['influent'] < baseflow)
+        baseflowcol = 'baseflow'
+
+    parsed = hydro.parse_storm_events(orig_record, 3,
+                                      precipcol='rain',
+                                      inflowcol='influent',
+                                      baseflowcol=baseflowcol,
+                                      debug=True)
     return parsed
 
 
@@ -42,8 +51,12 @@ def storms_singular():
     return setup_storms('teststorm_singular.csv')
 
 
+@pytest.fixture
+def storms_with_baseflowcol():
+    return setup_storms('teststorm_simple.csv', baseflow=2)
+
 @pytest.mark.parametrize('parsed', [
-    storms_simple(), storms_firstobs(), storms_singular(),
+    storms_simple(), storms_firstobs(), storms_singular(), storms_with_baseflowcol()
 ])
 def test_number_of_storms(parsed):
     last_storm = parsed['storm'].max()
@@ -52,16 +65,20 @@ def test_number_of_storms(parsed):
 
 @pytest.mark.parametrize(('parsed', 'sn', 'idx', 'known'), [
     (storms_simple(), 1, 0, '2013-05-18 13:40:00'),
-    (storms_simple(), 2, 0, '2013-05-19 06:10'),
     (storms_simple(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_simple(), 2, 0, '2013-05-19 06:10'),
     (storms_simple(), 2, -1, '2013-05-19 11:35'),
+    (storms_with_baseflowcol(), 1, 0, '2013-05-18 14:05:00'),
+    (storms_with_baseflowcol(), 1, -1, '2013-05-19 01:40:00'),
+    (storms_with_baseflowcol(), 2, 0, '2013-05-19 06:35'),
+    (storms_with_baseflowcol(), 2, -1, '2013-05-19 11:30'),
     (storms_singular(), 1, 0, '2013-05-18 13:40:00'),
-    (storms_singular(), 2, 0, '2013-05-19 07:00'),
     (storms_singular(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_singular(), 2, 0, '2013-05-19 07:00'),
     (storms_singular(), 2, -1, '2013-05-19 07:05'),
     (storms_firstobs(), 1, 0, '2013-05-18 12:05'),
-    (storms_firstobs(), 2, 0, '2013-05-19 06:10'),
     (storms_firstobs(), 1, -1, '2013-05-19 01:45:00'),
+    (storms_firstobs(), 2, 0, '2013-05-19 06:10'),
     (storms_firstobs(), 2, -1, '2013-05-19 11:35'),
 ])
 def test_storm_start_end(parsed, sn, idx, known):
