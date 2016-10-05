@@ -342,7 +342,7 @@ class Test_Storm(object):
                                   outflowcol=self.hr.outflowcol,
                                   freqMinutes=self.hr.outputfreq.n)
 
-        self.known_columns = ['rain', 'influent', 'effluent', 'storm']
+        self.known_columns = ['rain', 'influent', 'effluent', 'baseflow', 'storm']
         self.known_index_type = pandas.DatetimeIndex
         self.known_start = pandas.Timestamp('2013-05-19 06:10')
         self.known_end = pandas.Timestamp('2013-05-19 11:55')
@@ -375,7 +375,7 @@ class Test_Storm(object):
         pass
 
     def test_columns(self):
-        assert self.known_columns == self.storm.data.columns.tolist()
+        assert sorted(self.known_columns) == sorted(self.storm.data.columns.tolist())
 
     def test_index_type(self):
         assert isinstance(self.storm.data.index, pandas.DatetimeIndex)
