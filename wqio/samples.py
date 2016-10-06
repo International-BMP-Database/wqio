@@ -28,6 +28,7 @@ class _basic_wq_sample(object):
     @property
     def season(self):
         return self._season
+
     @season.setter
     def season(self, value):
         self._season = value
@@ -35,6 +36,7 @@ class _basic_wq_sample(object):
     @property
     def wqdata(self):
         return self._wqdata
+
     @wqdata.setter
     def wqdata(self, value):
         self._wqdata = value
@@ -42,6 +44,7 @@ class _basic_wq_sample(object):
     @property
     def starttime(self):
         return self._startime
+
     @starttime.setter
     def starttime(self, value):
         self._startime = value
@@ -51,6 +54,7 @@ class _basic_wq_sample(object):
         if self._endtime is None:
             self._endtime = self._startime
         return self._endtime
+
     @endtime.setter
     def endtime(self, value):
         self._endtime = value
@@ -58,6 +62,7 @@ class _basic_wq_sample(object):
     @property
     def samplefreq(self):
         return self._samplefreq
+
     @samplefreq.setter
     def samplefreq(self, value):
         self._samplefreq = value
@@ -67,6 +72,7 @@ class _basic_wq_sample(object):
         if self._linestyle is None:
             self._linestyle = 'none'
         return self._linestyle
+
     @linestyle.setter
     def linestyle(self, value):
         self._linestyle = value
@@ -76,6 +82,7 @@ class _basic_wq_sample(object):
         if self._markersize is None:
             self._markersize = 4
         return self._markersize
+
     @markersize.setter
     def markersize(self, value):
         self._markersize = value
@@ -85,6 +92,7 @@ class _basic_wq_sample(object):
         if self._yfactor is None:
             self._yfactor = 0.25
         return self._yfactor
+
     @yfactor.setter
     def yfactor(self, value):
         self._yfactor = value
@@ -104,7 +112,7 @@ class _basic_wq_sample(object):
         if asrug:
             seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha, mew=0.75)
             line = pyplot.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
-                              color='black', alpha=alpha, linestyle='none')
+                                 color='black', alpha=alpha, linestyle='none')
 
         else:
             timeseries.plot(ax=ax, marker=self.marker, markersize=4,
@@ -112,7 +120,7 @@ class _basic_wq_sample(object):
                             zorder=10, label='_nolegend', alpha=alpha,
                             mew=0.75)
             line = pyplot.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
-                              color='black', alpha=alpha, linestyle='none')
+                                 color='black', alpha=alpha, linestyle='none')
 
         return line
 
@@ -124,6 +132,7 @@ class CompositeSample(_basic_wq_sample):
         if self._label is None:
             self._label = 'Composite Sample'
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -133,6 +142,7 @@ class CompositeSample(_basic_wq_sample):
         if self._marker is None:
             self._marker = 'x'
         return self._marker
+
     @marker.setter
     def marker(self, value):
         self._marker = value
@@ -162,6 +172,7 @@ class GrabSample(_basic_wq_sample):
         if self._label is None:
             self._label = 'Grab Sample'
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -171,6 +182,7 @@ class GrabSample(_basic_wq_sample):
         if self._marker is None:
             self._marker = '+'
         return self._marker
+
     @marker.setter
     def marker(self, value):
         self._marker = value
@@ -215,6 +227,6 @@ rescol, qualcol, dlcol, unitscol : string, optional
 """
 
 
-_basic_wq_sample.__doc__  = _basic_doc.format("Basic")
+_basic_wq_sample.__doc__ = _basic_doc.format("Basic")
 CompositeSample.__doc__ = _basic_doc.format("Composite")
 GrabSample.__doc__ = _basic_doc.format("Grab")

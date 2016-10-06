@@ -15,11 +15,11 @@ BASELINE_IMAGES = '_baseline_images/viz_tests'
 @pytest.fixture
 def plot_data():
     data = numpy.array([
-         3.113,   3.606,   4.046,   4.046,   4.71 ,   6.14 ,   6.978,
-         2.   ,   4.2  ,   4.62 ,   5.57 ,   5.66 ,   5.86 ,   6.65 ,
-         6.78 ,   6.79 ,   7.5  ,   7.5  ,   7.5  ,   8.63 ,   8.71 ,
-         8.99 ,   9.85 ,  10.82 ,  11.25 ,  11.25 ,  12.2  ,  14.92 ,
-        16.77 ,  17.81 ,  19.16 ,  19.19 ,  19.64 ,  20.18 ,  22.97
+        3.113, 3.606, 4.046, 4.046, 4.710, 6.140, 6.978,
+        2.000, 4.200, 4.620, 5.570, 5.660, 5.860, 6.650,
+        6.780, 6.790, 7.500, 7.500, 7.500, 8.630, 8.710,
+        8.990, 9.850, 10.820, 11.250, 11.250, 12.200, 14.920,
+        16.770, 17.810, 19.160, 19.190, 19.640, 20.180, 22.970
     ])
     return data
 
@@ -29,7 +29,7 @@ def boxplot_data(plot_data):
     bs = [{
         'cihi': 10.82,
         'cilo': 6.1399999999999997,
-        'fliers': numpy.array([ 22.97]),
+        'fliers': numpy.array([22.97]),
         'iqr': 6.1099999999999994,
         'mean': 9.5888285714285733,
         'med': 7.5,
@@ -145,26 +145,28 @@ def jp_data():
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_defaultlabels(jp_data):
     jg1 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='b')
-    return  jg1.fig
+    return jg1.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_xlabeled(jp_data):
-    jg2 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g', xlabel='Quantity B')
-    return  jg2.fig
+    jg2 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g',
+                        xlabel='Quantity B')
+    return jg2.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_ylabeled(jp_data):
-    jg3 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r', ylabel='Quantity C')
-    return  jg3.fig
+    jg3 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r',
+                        ylabel='Quantity C')
+    return jg3.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_bothlabeled(jp_data):
     jg4 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='k',
-                             xlabel='Quantity B', ylabel='Quantity C')
-    return  jg4.fig
+                        xlabel='Quantity B', ylabel='Quantity C')
+    return jg4.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
@@ -273,7 +275,6 @@ class base_whiskers_and_fliersMixin(object):
         self.q1 = numpy.percentile(self.data, 25)
         self.q3 = numpy.percentile(self.data, 75)
 
-
         self.bs = viz.whiskers_and_fliers(
             self.transformin(self.data),
             self.transformin(self.q1),
@@ -308,10 +309,8 @@ class Test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
         self.known_bs = {
             'whishi': 4.62,
             'fliers': numpy.array([
-                4.730,   5.130,   5.210,   5.400,
-                5.980,   6.120,   6.940,   7.380,
-                7.560,   8.060,  13.800,  15.100,
-               18.200
+                4.730, 5.130, 5.210, 5.400, 5.980, 6.120, 6.940,
+                7.380, 7.560, 8.060, 13.800, 15.100, 18.200
             ]),
             'whislo': 0.0011100000143051147
         }
@@ -343,7 +342,7 @@ class Test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
                 1.690e-01, 1.830e-01, 2.060e-01, 2.100e-01, 2.130e-01,
                 1.380e+01, 1.510e+01, 1.820e+01
             ]),
-            'whislo':  0.2700
+            'whislo': 0.2700
         }
         self.transformin = lambda x: numpy.log10(x)
         self.transformout = lambda x: 10**x
@@ -378,7 +377,7 @@ def test_probplot_prob(plot_data):
 def test_probplot_qq(plot_data):
     fig, ax = pyplot.subplots()
     fig = viz.probplot(plot_data, ax=ax, axtype='qq', ylabel='Test label',
-                            scatter_kws=dict(color='r'))
+                       scatter_kws=dict(color='r'))
     return fig
 
 
@@ -387,7 +386,7 @@ def test_probplot_pp(plot_data):
     fig, ax = pyplot.subplots()
     scatter_kws = dict(color='b', linestyle='--', markeredgecolor='g', markerfacecolor='none')
     fig = viz.probplot(plot_data, ax=ax, axtype='pp', yscale='linear',
-                            xlabel='test x', ylabel='test y', scatter_kws=scatter_kws)
+                       xlabel='test x', ylabel='test y', scatter_kws=scatter_kws)
     return fig
 
 
@@ -395,7 +394,7 @@ def test_probplot_pp(plot_data):
 def test_probplot_prob_bestfit(plot_data):
     fig, ax = pyplot.subplots()
     fig = viz.probplot(plot_data, ax=ax, xlabel='Test xlabel',
-                            bestfit=True)
+                       bestfit=True)
     assert isinstance(fig, pyplot.Figure)
     return fig
 
@@ -404,7 +403,7 @@ def test_probplot_prob_bestfit(plot_data):
 def test_probplot_qq_bestfit(plot_data):
     fig, ax = pyplot.subplots()
     fig = viz.probplot(plot_data, ax=ax, axtype='qq',
-                            bestfit=True, ylabel='Test label')
+                       bestfit=True, ylabel='Test label')
     return fig
 
 
@@ -414,8 +413,8 @@ def test_probplot_pp_bestfit(plot_data):
     scatter_kws = {'marker': 's', 'color': 'red'}
     line_kws = {'linestyle': '--', 'linewidth': 3}
     fig = viz.probplot(plot_data, ax=ax, axtype='pp', yscale='linear',
-                            xlabel='test x', bestfit=True, ylabel='test y',
-                            scatter_kws=scatter_kws, line_kws=line_kws)
+                       xlabel='test x', bestfit=True, ylabel='test y',
+                       scatter_kws=scatter_kws, line_kws=line_kws)
     return fig
 
 
@@ -423,7 +422,7 @@ def test_probplot_pp_bestfit(plot_data):
 def test__connect_spines():
     fig, ((ax1, ax2), (ax3, ax4)) = pyplot.subplots(ncols=2, nrows=2)
     viz._connect_spines(ax1, ax2, 0.5, 0.75)
-    viz._connect_spines(ax3, ax4, 0.9, 0.1, linewidth=2, color='r' , linestyle='dashed')
+    viz._connect_spines(ax3, ax4, 0.9, 0.1, linewidth=2, color='r', linestyle='dashed')
     return fig
 
 

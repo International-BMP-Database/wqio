@@ -25,7 +25,7 @@ def seed(func):
 
 @seed
 def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
-    dl_map =         {
+    dl_map = {
         'A': 0.1, 'B': 0.2, 'C': 0.3, 'D': 0.4,
         'E': 0.1, 'F': 0.2, 'G': 0.3, 'H': 0.4,
     }
@@ -92,11 +92,11 @@ def getTestROSData():
 def compare_versions(utility='latex'):  # pragma: no cover
     "return True if a is greater than or equal to b"
     requirements = {
-    	'latex': '3.1415'
+        'latex': '3.1415'
     }
 
     available = {
-    	'latex': checkdep_tex()
+        'latex': checkdep_tex()
     }
 
     required = requirements[utility]
@@ -105,11 +105,11 @@ def compare_versions(utility='latex'):  # pragma: no cover
         present = distutils.version.LooseVersion(present)
         required = distutils.version.LooseVersion(required)
         if present >= required:
-        	return True
+            return True
         else:
-        	return False
+            return False
     else:
-    	return False
+        return False
 
 
 def _show_package_info(package, name):  # pragma: no cover
@@ -120,7 +120,7 @@ def _show_package_info(package, name):  # pragma: no cover
 def _show_system_info():  # pragma: no cover
     import pytest
 
-    pyversion = sys.version.replace('\n','')
+    pyversion = sys.version.replace('\n', '')
     print("Python version %s" % pyversion)
     print("pytest version %d.%d.%d" % pytest.__versioninfo__)
 
@@ -142,14 +142,15 @@ def _show_system_info():  # pragma: no cover
 
 def checkdep_tex():  # pragma: no cover
     if sys.version_info[0] >= 3:
-        def byte2str(b): return b.decode('ascii')
+        def byte2str(b):
+            return b.decode('ascii')
 
     else:  # pragma: no cover
-
-        def byte2str(b): return b
+        def byte2str(b):
+            return b
 
     try:
-        s = subprocess.Popen(['tex','-version'], stdout=subprocess.PIPE,
+        s = subprocess.Popen(['tex', '-version'], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         line = byte2str(s.stdout.readlines()[0])
         pattern = '3\.1\d+'

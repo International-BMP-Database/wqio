@@ -4,7 +4,8 @@ import pytest
 
 import wqio
 
+
 def test(*args):
-    options = [resource_filename('wqio', 'tests')]
+    options = [resource_filename('wqio', '')]
     options.extend(list(args))
     return pytest.main(options)

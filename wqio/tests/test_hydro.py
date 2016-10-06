@@ -55,6 +55,7 @@ def storms_singular():
 def storms_with_baseflowcol():
     return setup_storms('teststorm_simple.csv', baseflow=2)
 
+
 @pytest.mark.parametrize('parsed', [
     storms_simple(), storms_firstobs(), storms_singular(), storms_with_baseflowcol()
 ])
@@ -93,13 +94,13 @@ class base_HydroRecordMixin(object):
         'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
         'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
     ]
+
     def teardown(self):
         pyplot.close('all')
 
     def test_attributes(self):
         assert hasattr(self.hr, '_raw_data')
         assert isinstance(self.hr._raw_data, pandas.DataFrame)
-
 
         assert hasattr(self.hr, 'data')
         assert isinstance(self.hr.data, pandas.DataFrame)
@@ -348,16 +349,16 @@ class Test_Storm(object):
             self.storm_file, index_col='date', parse_dates=True
         ).resample('5T').asfreq().fillna(0)
         self.hr = hydro.HydroRecord(self.orig_record,
-                                     precipcol='rain',
-                                     inflowcol='influent',
-                                     outflowcol='effluent',
-                                     outputfreqMinutes=5,
-                                     intereventHours=2)
+                                    precipcol='rain',
+                                    inflowcol='influent',
+                                    outflowcol='effluent',
+                                    outputfreqMinutes=5,
+                                    intereventHours=2)
         self.storm = hydro.Storm(self.hr.data, 2,
-                                  precipcol=self.hr.precipcol,
-                                  inflowcol=self.hr.inflowcol,
-                                  outflowcol=self.hr.outflowcol,
-                                  freqMinutes=self.hr.outputfreq.n)
+                                 precipcol=self.hr.precipcol,
+                                 inflowcol=self.hr.inflowcol,
+                                 outflowcol=self.hr.outflowcol,
+                                 freqMinutes=self.hr.outputfreq.n)
 
         self.known_columns = ['rain', 'influent', 'effluent', 'baseflow', 'storm']
         self.known_index_type = pandas.DatetimeIndex
@@ -532,9 +533,10 @@ def setup_storm():
     pyplot.rcdefaults()
     storm_file = helpers.test_data_path('teststorm_simple.csv')
     orig_record = (
-        pandas.read_csv(storm_file, index_col='date', parse_dates=True )
-            .resample('5T').asfreq()
-            .fillna(0)
+        pandas.read_csv(storm_file, index_col='date', parse_dates=True)
+              .resample('5T')
+              .asfreq()
+              .fillna(0)
     )
 
     hr = hydro.HydroRecord(
@@ -549,6 +551,7 @@ def setup_storm():
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_storm_summary():
     storm = setup_storm()
+
     def doplot(storm):
         labels = {
             storm.inflowcol: 'Effluent (l/s)',

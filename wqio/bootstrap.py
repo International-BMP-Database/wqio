@@ -118,7 +118,7 @@ def BCA(data, statfxn, niter=5000, alpha=0.05):
         z = stats.norm.ppf([0.5 * alpha, 1 - (0.5 * alpha)])
 
         # refine the confidence limits (alphas)
-        zTotal = (z0 + (z0 + z) / (1 - a_hat*(z0 + z)))
+        zTotal = (z0 + (z0 + z) / (1 - a_hat * (z0 + z)))
         new_alpha = stats.norm.cdf(zTotal) * 100.0
 
         # confidence intervals from the new alphas
@@ -174,7 +174,6 @@ def percentile(data, statfxn, niter, alpha=0.05):
     boot_stats = statfxn(data[index], axis=-1)
 
     # compute the `alpha/2` and `1-alpha/2` percentiles of `boot_stats`
-    CI = numpy.percentile(boot_stats, [alpha*50, 100-(alpha*50)], axis=0)
+    CI = numpy.percentile(boot_stats, [alpha * 50, 100 - (alpha * 50)], axis=0)
 
     return statfxn(data), CI
-

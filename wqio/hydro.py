@@ -89,13 +89,9 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
     water_columns = [inflowcol, outflowcol, precipcol]
     final_columns = water_columns + [baseflowcol]
     data = (
-        data[final_columns]
-            # if above zero and not baseflow
+        data.select(lambda c: c in final_columns, axis='columns')
             .assign(_wet=numpy.any(data[water_columns] > 0, axis=1) & ~data[baseflowcol])
-            .assign(_windiff=lambda df:
-                df['_wet'].rolling(int(ie_periods), min_periods=1)
-                    .apply(lambda w: w.any())
-                    .diff())
+            .assign(_windiff=lambda df: df['_wet'].rolling(int(ie_periods), min_periods=1).apply(lambda w: w.any()).diff())
     )
 
     # make sure that if the first record is associated with the first
@@ -114,8 +110,8 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
             .assign(_storm=lambda df: df['_event_start'].cumsum())
             .assign(storm=lambda df: numpy.where(
                 df['_storm'] == df['_event_end'].shift(2).cumsum(),
-                 0,             # inter-event period
-                 df['_storm']   # actual event
+                0,             # inter-event period
+                df['_storm']   # actual event
             ))
     )
 
@@ -250,10 +246,8 @@ class Storm(object):
             }
         }
 
-        # summaries
         self._summary_dict = None
 
-    # quantities
     @property
     def precip(self):
         if self._precip is None:
@@ -296,6 +290,7 @@ class Storm(object):
     @property
     def season(self):
         return self._season
+
     @season.setter
     def season(self, value):
         self._season = value
@@ -337,7 +332,6 @@ class Storm(object):
             self._outflow_end = self._get_event_time(self.outflowcol, 'end')
         return self._outflow_end
 
-    # peaks
     @property
     def _peak_depth(self):
         if self.has_precip:
@@ -361,7 +355,6 @@ class Storm(object):
             self._peak_outflow = self.outflow.max()
         return self._peak_outflow
 
-    # totals
     @property
     def total_precip_depth(self):
         if self._total_precip_depth is None and self.has_precip:
@@ -380,7 +373,6 @@ class Storm(object):
             self._total_outflow_volume = self.data[self.outflowcol].sum() * self.volume_conversion
         return self._total_outflow_volume
 
-    # centroids
     @property
     def centroid_precip_time(self):
         if self._centroid_precip_time is None and self.has_precip:
@@ -409,7 +401,6 @@ class Storm(object):
             ).total_seconds() / SEC_PER_HOUR
         return self._centroid_lag_hours
 
-    #times
     @property
     def peak_precip_intensity_time(self):
         if self._peak_precip_intensity_time is None and self.has_precip:
@@ -516,8 +507,8 @@ class Storm(object):
 
         artists = []
         labels = []
+        y_val = yfactor * ax.get_ylim()[1]
 
-        y_val = yfactor*ax.get_ylim()[1]
         if self.centroid_precip is not None:
             ax.plot([self.centroid_precip], [y_val], color='DarkGreen', marker='o',
                     linestyle='none', zorder=20, markersize=6)
@@ -578,13 +569,11 @@ class Storm(object):
         if label is None:
             label = quantity
 
-
         # select the plot props based on the column
         try:
             meta = self.meta[quantity]
         except KeyError:
             raise KeyError('%s not available'.format(quantity))
-
 
         # plot the data
         self.data[quantity].fillna(0).plot(ax=ax, kind='area', color=meta['color'],
@@ -678,13 +667,10 @@ class Storm(object):
         else:
             _leg = None
 
-
         seaborn.despine(ax=rainax, bottom=True, top=False)
         seaborn.despine(ax=flowax)
         flowax.set_xlabel('')
         rainax.set_xlabel('')
-        # grid lines and axis background color and layout
-        #fig.tight_layout()
 
         if filename is not None:
             fig.savefig(filename, dpi=300, transparent=True,
@@ -736,7 +722,7 @@ class HydroRecord(object):
 
     # TODO: rename `outputfreqMinutes` to `outputPeriodMinutes`
     def __init__(self, hydrodata, precipcol=None, inflowcol=None,
-                 outflowcol=None, baseflowcol=None,tempcol=None,
+                 outflowcol=None, baseflowcol=None, tempcol=None,
                  stormcol='storm', minprecip=0.0, mininflow=0.0,
                  minoutflow=0.0, outputfreqMinutes=10, intereventHours=6,
                  volume_conversion=1, stormclass=None, lowmem=False):

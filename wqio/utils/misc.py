@@ -76,7 +76,7 @@ def add_column_level(df, levelvalue, levelname):
         origlevel = df.columns.names[0]
 
     # define the index
-    colarray = [[levelvalue]*len(df.columns), df.columns]
+    colarray = [[levelvalue] * len(df.columns), df.columns]
     colindex = pandas.MultiIndex.from_arrays(colarray)
 
     # copy the dataframe and redefine the columns

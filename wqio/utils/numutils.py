@@ -78,7 +78,6 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
             else:
                 decimal_places = n - 1
                 if tex:
-
                     fmt = r'$%%0.%df \times 10 ^ {%d}$' % (decimal_places, order)
                     out = fmt % round(x / 10 ** order, decimal_places)
                 else:
@@ -232,15 +231,15 @@ def _anderson_darling_p_vals(ad_results, n_points):
     """
 
     AD, crit, sig = ad_results
-    AD_star = AD * (1 + 0.75/n_points + 2.25/n_points**2)
+    AD_star = AD * (1 + 0.75 / n_points + 2.25 / n_points**2)
     if AD_star >= 0.6:
-        p = numpy.exp(1.2397 - (5.709*AD_star) + (0.0186*AD_star**2))
+        p = numpy.exp(1.2397 - (5.709 * AD_star) + (0.0186 * AD_star**2))
     elif 0.34 <= AD_star < 0.6:
-        p = numpy.exp(0.9177 - (4.279*AD_star) - (1.38*AD_star**2))
+        p = numpy.exp(0.9177 - (4.279 * AD_star) - (1.38 * AD_star**2))
     elif 0.2 < AD_star < 0.34:
-        p = 1 - numpy.exp(-8.318 + (42.796*AD_star) - (59.938*AD_star**2))
+        p = 1 - numpy.exp(-8.318 + (42.796 * AD_star) - (59.938 * AD_star**2))
     else:
-        p = 1 - numpy.exp(-13.436 + (101.14*AD_star) - (223.73*AD_star**2))
+        p = 1 - numpy.exp(-13.436 + (101.14 * AD_star) - (223.73 * AD_star**2))
 
     return p
 
@@ -283,7 +282,6 @@ def normalize_units(df, units_map, targetunit, paramcol='parameter',
     normalize_units2
 
     """
-
 
     # determine the preferred units in the wqdata
     target = df[paramcol].map(targetunit.get)
@@ -334,7 +332,7 @@ def pH2concentration(pH, *args):
     # milligrams per gram
     g2mg = 1000
 
-    return 10**(-1*pH) * avogadro * proton_mass * kg2g * g2mg
+    return 10 ** (-1 * pH) * avogadro * proton_mass * kg2g * g2mg
 
 
 def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
@@ -383,13 +381,12 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
     if dist is None:
         dist = stats.norm
 
-
     if fitprobs in ['x', 'both']:
-        x = dist.ppf(x/100.)
-        xhat = dist.ppf(numpy.array(xhat)/100.)
+        x = dist.ppf(x / 100.)
+        xhat = dist.ppf(numpy.array(xhat) / 100.)
 
     if fitprobs in ['y', 'both']:
-        y  = dist.ppf(y/100.)
+        y = dist.ppf(y / 100.)
 
     if fitlogs in ['x', 'both']:
         x = numpy.log(x)
@@ -405,15 +402,14 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
         x[:, 0] = 0
 
     results = sm.OLS(y, x).fit()
-    yhat = estimateFromLineParams(xhat, results.params[1],
-                                        results.params[0],
-                                        xlog=fitlogs in ['x', 'both'],
-                                        ylog=fitlogs in ['y', 'both'])
+    yhat = estimateFromLineParams(xhat, results.params[1], results.params[0],
+                                  xlog=fitlogs in ['x', 'both'],
+                                  ylog=fitlogs in ['y', 'both'])
 
     if fitprobs in ['y', 'both']:
-        yhat = 100.* dist.cdf(yhat)
+        yhat = 100. * dist.cdf(yhat)
     if fitprobs in ['x', 'both']:
-        xhat = 100.* dist.cdf(xhat)
+        xhat = 100. * dist.cdf(xhat)
 
     return xhat, yhat, results
 
@@ -444,7 +440,7 @@ def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
     x = numpy.array(xdata)
     if ylog:
         if xlog:
-            yhat = numpy.exp(intercept) * x  ** slope
+            yhat = numpy.exp(intercept) * x ** slope
         else:
             yhat = numpy.exp(intercept) * numpy.exp(slope) ** x
 
@@ -477,7 +473,7 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
     """
 
     test1 = numpy.min(interval2) <= numpy.max(interval1) <= numpy.max(interval2)
-    test2 =  numpy.min(interval2) <= numpy.min(interval1) <= numpy.max(interval2)
+    test2 = numpy.min(interval2) <= numpy.min(interval1) <= numpy.max(interval2)
 
     # TODO: try test1 or test2 or (not oneway and test3)
 

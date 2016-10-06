@@ -16,8 +16,8 @@ from wqio import ros
 def basic_data():
     df = (
         helpers.getTestROSData()
-            .assign(conc=lambda df: df['res'])
-            .assign(censored=lambda df: df['qual'] == 'ND')
+               .assign(conc=lambda df: df['res'])
+               .assign(censored=lambda df: df['qual'] == 'ND')
     )
     return df
 
@@ -68,76 +68,41 @@ def intermediate_data():
 @pytest.fixture
 def advanced_data():
     df = pandas.DataFrame([
-        {'Zprelim': -1.4456202174142005, 'censored': True, 'conc': 5.0,
-        'det_limit_index': 1, 'plot_pos': 0.07414187643020594, 'rank': 1},
-        {'Zprelim': -1.2201035333697587, 'censored': True, 'conc': 5.0,
-        'det_limit_index': 1, 'plot_pos': 0.11121281464530891, 'rank': 2},
-        {'Zprelim': -1.043822530159519, 'censored': True, 'conc': 5.5,
-        'det_limit_index': 2, 'plot_pos': 0.14828375286041187, 'rank': 1},
-        {'Zprelim': -1.0438225301595188, 'censored': True, 'conc': 5.75,
-        'det_limit_index': 3, 'plot_pos': 0.1482837528604119, 'rank': 1},
-        {'Zprelim': -0.8109553641377003, 'censored': True, 'conc': 9.5,
-        'det_limit_index': 4, 'plot_pos': 0.20869565217391303, 'rank': 1},
-        {'Zprelim': -0.4046779045300476, 'censored': True, 'conc': 9.5,
-        'det_limit_index': 4, 'plot_pos': 0.34285714285714286, 'rank': 2},
-        {'Zprelim': -0.20857169501420522, 'censored': True, 'conc': 11.0,
-        'det_limit_index': 5, 'plot_pos': 0.41739130434782606, 'rank': 1},
-        {'Zprelim': -1.5927654676048002, 'censored': False, 'conc': 2.0,
-        'det_limit_index': 0, 'plot_pos': 0.055606407322654455, 'rank': 1},
-        {'Zprelim': -1.2201035333697587, 'censored': False, 'conc': 4.2,
-        'det_limit_index': 0, 'plot_pos': 0.11121281464530891, 'rank': 2},
-        {'Zprelim': -0.9668111610681008, 'censored': False, 'conc': 4.62,
-        'det_limit_index': 0, 'plot_pos': 0.16681922196796337, 'rank': 3},
-        {'Zprelim': -0.6835186393930371, 'censored': False, 'conc': 5.57,
-        'det_limit_index': 2, 'plot_pos': 0.24713958810068648, 'rank': 1},
-        {'Zprelim': -0.6072167256926887, 'censored': False, 'conc': 5.66,
-        'det_limit_index': 2, 'plot_pos': 0.27185354691075514, 'rank': 2},
-        {'Zprelim': -0.44953240276543616, 'censored': False, 'conc': 5.86,
-        'det_limit_index': 3, 'plot_pos': 0.3265238194299979, 'rank': 1},
-        {'Zprelim': -0.36788328223414807, 'censored': False, 'conc': 6.65,
-        'det_limit_index': 3, 'plot_pos': 0.35648013313917204, 'rank': 2},
-        {'Zprelim': -0.28861907892223937, 'censored': False, 'conc': 6.78,
-        'det_limit_index': 3, 'plot_pos': 0.38643644684834616, 'rank': 3},
-        {'Zprelim': -0.21113039741112186, 'censored': False, 'conc': 6.79,
-        'det_limit_index': 3, 'plot_pos': 0.4163927605575203, 'rank': 4},
-        {'Zprelim': -0.1348908823006299, 'censored': False, 'conc': 7.5,
-        'det_limit_index': 3, 'plot_pos': 0.4463490742666944, 'rank': 5},
-        {'Zprelim': -0.05942854708257491, 'censored': False, 'conc': 7.5,
-        'det_limit_index': 3, 'plot_pos': 0.4763053879758685, 'rank': 6},
-        {'Zprelim': 0.015696403006170083, 'censored': False, 'conc': 7.5,
-        'det_limit_index': 3, 'plot_pos': 0.5062617016850427, 'rank': 7},
-        {'Zprelim': 0.09091016994359362, 'censored': False, 'conc': 8.63,
-        'det_limit_index': 3, 'plot_pos': 0.5362180153942168, 'rank': 8},
-        {'Zprelim': 0.16664251178856201, 'censored': False, 'conc': 8.71,
-        'det_limit_index': 3, 'plot_pos': 0.5661743291033909, 'rank': 9},
-        {'Zprelim': 0.24334426739770573, 'censored': False, 'conc': 8.99,
-        'det_limit_index': 3, 'plot_pos': 0.596130642812565, 'rank': 10},
-        {'Zprelim': 0.3744432988606558, 'censored': False, 'conc': 9.85,
-        'det_limit_index': 4, 'plot_pos': 0.6459627329192545, 'rank': 1},
-        {'Zprelim': 0.4284507519609981, 'censored': False, 'conc': 10.82,
-        'det_limit_index': 4, 'plot_pos': 0.6658385093167701, 'rank': 2},
-        {'Zprelim': 0.5589578655042562, 'censored': False, 'conc': 11.25,
-        'det_limit_index': 5, 'plot_pos': 0.7119047619047619, 'rank': 1},
-        {'Zprelim': 0.6374841609623771, 'censored': False, 'conc': 11.25,
-        'det_limit_index': 5, 'plot_pos': 0.7380952380952381, 'rank': 2},
-        {'Zprelim': 0.7201566171385521, 'censored': False, 'conc': 12.2,
-        'det_limit_index': 5, 'plot_pos': 0.7642857142857142, 'rank': 3},
-        {'Zprelim': 0.8080746339118065, 'censored': False, 'conc': 14.92,
-        'det_limit_index': 5, 'plot_pos': 0.7904761904761904, 'rank': 4},
-        {'Zprelim': 0.9027347916438648, 'censored': False, 'conc': 16.77,
-        'det_limit_index': 5, 'plot_pos': 0.8166666666666667, 'rank': 5},
-        {'Zprelim': 1.0062699858608395, 'censored': False, 'conc': 17.81,
-        'det_limit_index': 5, 'plot_pos': 0.8428571428571429, 'rank': 6},
-        {'Zprelim': 1.1219004674623523, 'censored': False, 'conc': 19.16,
-        'det_limit_index': 5, 'plot_pos': 0.8690476190476191, 'rank': 7},
-        {'Zprelim': 1.2548759122271174, 'censored': False, 'conc': 19.19,
-        'det_limit_index': 5, 'plot_pos': 0.8952380952380953, 'rank': 8},
-        {'Zprelim': 1.414746425534976, 'censored': False, 'conc': 19.64,
-        'det_limit_index': 5, 'plot_pos': 0.9214285714285714, 'rank': 9},
-        {'Zprelim': 1.622193585315426, 'censored': False, 'conc': 20.18,
-        'det_limit_index': 5, 'plot_pos': 0.9476190476190476, 'rank': 10},
-        {'Zprelim': 1.9399896117517081, 'censored': False, 'conc': 22.97,
-        'det_limit_index': 5, 'plot_pos': 0.9738095238095239, 'rank': 11}
+        {'Zprelim': -1.44562021, 'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'plot_pos': 0.07414187, 'rank': 1},
+        {'Zprelim': -1.22010353, 'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'plot_pos': 0.11121281, 'rank': 2},
+        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.5, 'det_limit_index': 2, 'plot_pos': 0.14828375, 'rank': 1},
+        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.75, 'det_limit_index': 3, 'plot_pos': 0.14828375, 'rank': 1},
+        {'Zprelim': -0.81095536, 'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'plot_pos': 0.20869565, 'rank': 1},
+        {'Zprelim': -0.40467790, 'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'plot_pos': 0.34285714, 'rank': 2},
+        {'Zprelim': -0.20857169, 'censored': True, 'conc': 11.0, 'det_limit_index': 5, 'plot_pos': 0.41739130, 'rank': 1},
+        {'Zprelim': -1.59276546, 'censored': False, 'conc': 2.0, 'det_limit_index': 0, 'plot_pos': 0.05560640, 'rank': 1},
+        {'Zprelim': -1.22010353, 'censored': False, 'conc': 4.2, 'det_limit_index': 0, 'plot_pos': 0.11121281, 'rank': 2},
+        {'Zprelim': -0.96681116, 'censored': False, 'conc': 4.62, 'det_limit_index': 0, 'plot_pos': 0.16681922, 'rank': 3},
+        {'Zprelim': -0.68351863, 'censored': False, 'conc': 5.57, 'det_limit_index': 2, 'plot_pos': 0.24713958, 'rank': 1},
+        {'Zprelim': -0.60721672, 'censored': False, 'conc': 5.66, 'det_limit_index': 2, 'plot_pos': 0.27185354, 'rank': 2},
+        {'Zprelim': -0.44953240, 'censored': False, 'conc': 5.86, 'det_limit_index': 3, 'plot_pos': 0.32652381, 'rank': 1},
+        {'Zprelim': -0.36788328, 'censored': False, 'conc': 6.65, 'det_limit_index': 3, 'plot_pos': 0.35648013, 'rank': 2},
+        {'Zprelim': -0.28861907, 'censored': False, 'conc': 6.78, 'det_limit_index': 3, 'plot_pos': 0.38643644, 'rank': 3},
+        {'Zprelim': -0.21113039, 'censored': False, 'conc': 6.79, 'det_limit_index': 3, 'plot_pos': 0.41639276, 'rank': 4},
+        {'Zprelim': -0.13489088, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.44634907, 'rank': 5},
+        {'Zprelim': -0.05942854, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.47630538, 'rank': 6},
+        {'Zprelim': 0.015696403, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.50626170, 'rank': 7},
+        {'Zprelim': 0.090910169, 'censored': False, 'conc': 8.63, 'det_limit_index': 3, 'plot_pos': 0.53621801, 'rank': 8},
+        {'Zprelim': 0.166642511, 'censored': False, 'conc': 8.71, 'det_limit_index': 3, 'plot_pos': 0.56617432, 'rank': 9},
+        {'Zprelim': 0.243344267, 'censored': False, 'conc': 8.99, 'det_limit_index': 3, 'plot_pos': 0.59613064, 'rank': 10},
+        {'Zprelim': 0.374443298, 'censored': False, 'conc': 9.85, 'det_limit_index': 4, 'plot_pos': 0.64596273, 'rank': 1},
+        {'Zprelim': 0.428450751, 'censored': False, 'conc': 10.82, 'det_limit_index': 4, 'plot_pos': 0.66583850, 'rank': 2},
+        {'Zprelim': 0.558957865, 'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'plot_pos': 0.71190476, 'rank': 1},
+        {'Zprelim': 0.637484160, 'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'plot_pos': 0.73809523, 'rank': 2},
+        {'Zprelim': 0.720156617, 'censored': False, 'conc': 12.2, 'det_limit_index': 5, 'plot_pos': 0.76428571, 'rank': 3},
+        {'Zprelim': 0.808074633, 'censored': False, 'conc': 14.92, 'det_limit_index': 5, 'plot_pos': 0.79047619, 'rank': 4},
+        {'Zprelim': 0.902734791, 'censored': False, 'conc': 16.77, 'det_limit_index': 5, 'plot_pos': 0.81666666, 'rank': 5},
+        {'Zprelim': 1.006269985, 'censored': False, 'conc': 17.81, 'det_limit_index': 5, 'plot_pos': 0.84285714, 'rank': 6},
+        {'Zprelim': 1.121900467, 'censored': False, 'conc': 19.16, 'det_limit_index': 5, 'plot_pos': 0.86904761, 'rank': 7},
+        {'Zprelim': 1.254875912, 'censored': False, 'conc': 19.19, 'det_limit_index': 5, 'plot_pos': 0.89523809, 'rank': 8},
+        {'Zprelim': 1.414746425, 'censored': False, 'conc': 19.64, 'det_limit_index': 5, 'plot_pos': 0.92142857, 'rank': 9},
+        {'Zprelim': 1.622193585, 'censored': False, 'conc': 20.18, 'det_limit_index': 5, 'plot_pos': 0.94761904, 'rank': 10},
+        {'Zprelim': 1.939989611, 'censored': False, 'conc': 22.97, 'det_limit_index': 5, 'plot_pos': 0.97380952, 'rank': 11}
     ])
 
     return df
@@ -192,7 +157,7 @@ def expected_sorted():
 @pytest.fixture
 def expected_cohn():
     final_cols = ['lower_dl', 'upper_dl', 'nuncen_above', 'nobs_below',
-                 'ncen_equal', 'prob_exceedance']
+                  'ncen_equal', 'prob_exceedance']
     expected_cohn = pandas.DataFrame([
         {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
          'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
@@ -245,6 +210,7 @@ def test__detection_limit_index_populated(value, expected, basic_cohn):
     result = ros._detection_limit_index(value, basic_cohn)
     assert result == expected
 
+
 def test__detection_limit_index_out_of_bounds(basic_cohn):
     with pytest.raises(IndexError):
         ros._detection_limit_index(0, basic_cohn)
@@ -270,12 +236,12 @@ def test__ros_group_rank():
 ])
 def test__ros_plot_pos(row, expected, basic_cohn):
     result = ros._ros_plot_pos(row, 'censored', basic_cohn)
-    assert abs(result - expected)/expected < 0.00001
+    assert (abs(result - expected) / expected) < 0.00001
 
 
 def test__norm_plot_pos():
     result = ros._norm_plot_pos([1, 2, 3, 4])
-    expected = numpy.array([ 0.159104,  0.385452,  0.614548,  0.840896])
+    expected = numpy.array([0.159104,  0.385452,  0.614548,  0.840896])
     nptest.assert_array_almost_equal(result, expected)
 
 
@@ -283,49 +249,47 @@ def test_plotting_positions(intermediate_data, basic_cohn):
     results = ros.plotting_positions(intermediate_data, 'censored', basic_cohn)
     expected = numpy.array([
         0.07414188,  0.11121281,  0.14828375,  0.14828375,  0.20869565,
-        0.34285714,  0.4173913 ,  0.05560641,  0.11121281,  0.16681922,
+        0.34285714,  0.41739130,  0.05560641,  0.11121281,  0.16681922,
         0.24713959,  0.27185355,  0.32652382,  0.35648013,  0.38643645,
-        0.41639276,  0.44634907,  0.47630539,  0.5062617 ,  0.53621802,
+        0.41639276,  0.44634907,  0.47630539,  0.50626170,  0.53621802,
         0.56617433,  0.59613064,  0.64596273,  0.66583851,  0.71190476,
         0.73809524,  0.76428571,  0.79047619,  0.81666667,  0.84285714,
-        0.86904762,  0.8952381 ,  0.92142857,  0.94761905,  0.97380952
+        0.86904762,  0.89523810,  0.92142857,  0.94761905,  0.97380952
     ])
     nptest.assert_array_almost_equal(results, expected)
 
 
 def test__ros_estimate(advanced_data):
     expected = numpy.array([
-         3.11279729,   3.60634338,   4.04602788,   4.04602788,
-         4.71008116,   6.14010906,   6.97841457,   2.        ,
-         4.2       ,   4.62      ,   5.57      ,   5.66      ,
-         5.86      ,   6.65      ,   6.78      ,   6.79      ,
-         7.5       ,   7.5       ,   7.5       ,   8.63      ,
-         8.71      ,   8.99      ,   9.85      ,  10.82      ,
-        11.25      ,  11.25      ,  12.2       ,  14.92      ,
-        16.77      ,  17.81      ,  19.16      ,  19.19      ,
-        19.64      ,  20.18      ,  22.97
+        3.11279729,   3.60634338,   4.04602788,   4.04602788,
+        4.71008116,   6.14010906,   6.97841457,   2.00000000,
+        4.20000000,   4.62000000,   5.57000000,   5.66000000,
+        5.86000000,   6.65000000,   6.78000000,   6.79000000,
+        7.50000000,   7.50000000,   7.50000000,   8.63000000,
+        8.71000000,   8.99000000,   9.85000000,  10.82000000,
+        11.25000000,  11.25000000,  12.20000000,  14.92000000,
+        16.77000000,  17.81000000,  19.16000000,  19.19000000,
+        19.64000000,  20.18000000,  22.97
     ])
-    df = advanced_data.pipe(ros._ros_estimate, 'conc', 'censored',
-                                   numpy.log, numpy.exp)
+    df = advanced_data.pipe(ros._ros_estimate, 'conc', 'censored', numpy.log, numpy.exp)
     result = df['final'].values
     nptest.assert_array_almost_equal(result, expected)
 
 
 def test__do_ros(basic_data):
     expected = numpy.array([
-         3.11279729,   3.60634338,   4.04602788,   4.04602788,
-         4.71008116,   6.14010906,   6.97841457,   2.        ,
-         4.2       ,   4.62      ,   5.57      ,   5.66      ,
-         5.86      ,   6.65      ,   6.78      ,   6.79      ,
-         7.5       ,   7.5       ,   7.5       ,   8.63      ,
-         8.71      ,   8.99      ,   9.85      ,  10.82      ,
-        11.25      ,  11.25      ,  12.2       ,  14.92      ,
-        16.77      ,  17.81      ,  19.16      ,  19.19      ,
-        19.64      ,  20.18      ,  22.97
+        3.11279729,   3.60634338,   4.04602788,   4.04602788,
+        4.71008116,   6.14010906,   6.97841457,   2.00000000,
+        4.20000000,   4.62000000,   5.57000000,   5.66000000,
+        5.86000000,   6.65000000,   6.78000000,   6.79000000,
+        7.50000000,   7.50000000,   7.50000000,   8.63000000,
+        8.71000000,   8.99000000,   9.85000000,  10.82000000,
+        11.25000000,  11.25000000,  12.20000000,  14.92000000,
+        16.77000000,  17.81000000,  19.16000000,  19.19000000,
+        19.64000000,  20.18000000,  22.97
     ])
 
-    df = basic_data.pipe(ros._do_ros, 'conc', 'censored',
-                                numpy.log, numpy.exp)
+    df = basic_data.pipe(ros._do_ros, 'conc', 'censored', numpy.log, numpy.exp)
     result = df['final'].values
     nptest.assert_array_almost_equal(result, expected)
 
@@ -484,8 +448,8 @@ class Test_ROS_RNADAdata(CheckROSMixin):
        16.000 False
        17.716 False
        25.000 False
-       51.000 False"""
-    ))
+       51.000 False
+    """))
     rescol = 'res'
     cencol = 'cen'
     df = pandas.read_csv(datastring, sep='\s+')
@@ -549,7 +513,7 @@ class Test_ROS_OneND(CheckROSMixin):
     df = pandas.DataFrame({rescol: res, cencol: cen})
     expected_final = numpy.array([
         0.24, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
-        3.0 , 7.0, 9.0, 12., 15., 20., 27., 33., 50.
+        3.00, 7.0, 9.0, 12., 15., 20., 27., 33., 50.
     ])
 
     expected_cohn = pandas.DataFrame({
@@ -589,12 +553,12 @@ class Test_HalfDLs_80pctNDs(CheckROSMixin):
 
 class Test_HaflDLs_OneUncensored(CheckROSMixin):
     decimal = 3
-    res = numpy.array([1.0, 1.0, 12., 15., ])
-    cen = numpy.array([True, True, True, False ])
+    res = numpy.array([1.0, 1.0, 12., 15.0])
+    cen = numpy.array([True, True, True, False])
     rescol = 'value'
     cencol = 'qual'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([0.5,   0.5,   6. ,  15.])
+    expected_final = numpy.array([0.5, 0.5, 6.0, 15.0])
 
     expected_cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([0., 1., numpy.nan]),
@@ -620,7 +584,7 @@ class Test_ROS_MaxCen_GT_MaxUncen(Test_ROS_HelselAppendixB):
 class Test_ROS_OnlyDL_GT_MaxUncen(Test_NoOp_ZeroND):
     numpy.random.seed(0)
     N = 20
-    res =  [
+    res = [
         0.38, 0.43, 0.81, 0.86, 0.90, 1.13, 1.15, 1.37, 1.40,
         1.49, 1.51, 1.56, 2.14, 2.59, 2.66, 4.28, 4.46, 5.84,
         6.47, 9.40, 10.0, 10.0

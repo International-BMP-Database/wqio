@@ -59,6 +59,7 @@ class Parameter(object):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         self._name = value
@@ -66,6 +67,7 @@ class Parameter(object):
     @property
     def units(self):
         return self._units
+
     @units.setter
     def units(self, value):
         self._units = value
@@ -73,6 +75,7 @@ class Parameter(object):
     @property
     def usingTex(self):
         return self._usingTex
+
     @usingTex.setter
     def usingTex(self, value):
         if value in (True, False):
@@ -283,14 +286,16 @@ class Location(object):
     def data(self):
         if self.hasData:
             if self.useROS:
-               output = self.dataframe['final'].values
+                output = self.dataframe['final'].values
             else:
                 output = self.dataframe[self.rescol].values
+
             return output
 
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         self._name = value
@@ -298,6 +303,7 @@ class Location(object):
     @property
     def definition(self):
         return self._definition
+
     @definition.setter
     def definition(self, value):
         self._definition = value
@@ -305,6 +311,7 @@ class Location(object):
     @property
     def include(self):
         return self._include
+
     @include.setter
     def include(self, value):
         self._include = value
@@ -339,7 +346,7 @@ class Location(object):
 
     @cache_readonly
     def fractionND(self):
-        return self.ND/self.N
+        return self.ND / self.N
 
     @cache_readonly
     @numpy.deprecate
@@ -356,7 +363,7 @@ class Location(object):
     @cache_readonly
     def shapiro(self):
         if self.hasData:
-            return  stats.shapiro(self.data)
+            return stats.shapiro(self.data)
 
     @cache_readonly
     def shapiro_log(self):
@@ -393,7 +400,7 @@ class Location(object):
     @cache_readonly
     def cov(self):
         if self.hasData:
-           return self.data.std()/self.data.mean()
+            return self.data.std() / self.data.mean()
 
     @cache_readonly
     def min(self):
@@ -602,7 +609,8 @@ class Location(object):
 
         fig, ax = validate.axes(ax)
         if self.N >= minpoints:
-            bxpstats = self.boxplot_stats(log=yscale=='log', bacteria=bacteria)
+            y_log = yscale == 'log'
+            bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
             if xlabel is not None:
                 bxpstats[0]['label'] = xlabel
 
@@ -619,7 +627,7 @@ class Location(object):
             )
 
         else:
-            self.verticalScatter(ax=ax, pos=pos, jitter=width*0.5, alpha=0.75,
+            self.verticalScatter(ax=ax, pos=pos, jitter=width * 0.5, alpha=0.75,
                                  ylabel=ylabel, yscale=yscale, ignoreROS=True)
 
         ax.set_yscale(yscale)
@@ -689,7 +697,7 @@ class Location(object):
         scatter_kws['marker'] = plotopts.get('marker', self.plot_marker)
         scatter_kws['linestyle'] = plotopts.get('linestyle', 'none')
         fig = viz.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
-                                      bestfit=bestfit, scatter_kws=scatter_kws)
+                           bestfit=bestfit, scatter_kws=scatter_kws)
 
         if yscale == 'log':
             pass
@@ -761,7 +769,7 @@ class Location(object):
         self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
                      showmean=showmean, width=width, bacteria=bacteria,
                      ylabel=ylabel, xlabel=xlabel, patch_artist=patch_artist,
-                     xlims={'left': pos - (0.6*width), 'right': pos + (0.6*width)})
+                     xlims={'left': pos - (0.6 * width), 'right': pos + (0.6 * width)})
 
         self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
                       ylabel=None, clearYLabels=True, **plotopts)
@@ -928,6 +936,7 @@ class Dataset(object):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         self._name = value
@@ -935,6 +944,7 @@ class Dataset(object):
     @property
     def definition(self):
         return self._definition
+
     @definition.setter
     def definition(self, value):
         self._definition = value
@@ -944,6 +954,7 @@ class Dataset(object):
         if self._include is None:
             self._include = self.influent.include and self.effluent.include
         return self._include
+
     @include.setter
     def include(self, value):
         self._include = value
@@ -1139,16 +1150,16 @@ class Dataset(object):
     @cache_readonly
     def _kendall_stats(self):
         if self._paired_stats and \
-        self.influent.fractionND <= 0.5 and \
-        self.effluent.fractionND <= 0.5:
+           self.influent.fractionND <= 0.5 and \
+           self.effluent.fractionND <= 0.5:
             return stats.kendalltau(self.paired_data.inflow.res,
                                     self.paired_data.outflow.res)
 
     @cache_readonly
     def _spearman_stats(self):
         if self._paired_stats and \
-        self.influent.fractionND <= 0.5 and \
-        self.effluent.fractionND <= 0.5:
+           self.influent.fractionND <= 0.5 and \
+           self.effluent.fractionND <= 0.5:
             return stats.spearmanr(self.paired_data.inflow.res.values,
                                    self.paired_data.outflow.res.values)
 
@@ -1167,7 +1178,7 @@ class Dataset(object):
         return self.theilSlopes()
 
     def theilSlopes(self, log_infl=False, log_effl=False):
-        output = None #default
+        output = None
         # influent data
         infl = self.paired_data.inflow.res.values
         if log_infl:
@@ -1179,8 +1190,8 @@ class Dataset(object):
             effl = numpy.log(effl)
 
         if self._paired_stats and \
-        self.influent.fractionND <= 0.5 and \
-        self.effluent.fractionND <= 0.5:
+           self.influent.fractionND <= 0.5 and \
+           self.effluent.fractionND <= 0.5:
             # we need to make sure that the "y" values are the
             # Location with the greatest NUnique to avoid a
             # slope of zero if possible
@@ -1213,8 +1224,7 @@ class Dataset(object):
                 utils.estimateFromLineParams(infl, output['medslope'], output['intercept'],
                                              xlog=log_infl, ylog=log_effl)
 
-            output['estimate_error'] = self.paired_data.outflow.res.values - \
-                                       output['estimated_effluent']
+            output['estimate_error'] = self.paired_data.outflow.res.values - output['estimated_effluent']
 
         return output
 
@@ -1271,10 +1281,10 @@ class Dataset(object):
 
         fig, ax = validate.axes(ax)
 
-        for loc, offset in zip([self.influent, self.effluent], [-1*offset, offset]):
+        for loc, offset in zip([self.influent, self.effluent], [-1 * offset, offset]):
             if loc.include:
-                loc.boxplot(ax=ax, pos=pos+offset, notch=notch, showmean=showmean,
-                            width=width/2, bacteria=bacteria, ylabel=None,
+                loc.boxplot(ax=ax, pos=pos + offset, notch=notch, showmean=showmean,
+                            width=width / 2, bacteria=bacteria, ylabel=None,
                             patch_artist=patch_artist, minpoints=minpoints)
 
         ax.set_yscale(yscale)
@@ -1286,7 +1296,7 @@ class Dataset(object):
             ax.set_ylabel(ylabel)
 
         if xlims is None:
-            ax.set_xlim([pos-1, pos+1])
+            ax.set_xlim([pos - 1, pos + 1])
         else:
             if isinstance(xlims, dict):
                 ax.set_xlim(**xlims)
@@ -1294,7 +1304,7 @@ class Dataset(object):
                 ax.set_xlim(xlims)
 
         if bothTicks:
-            ax.set_xticks([pos-offset, pos+offset])
+            ax.set_xticks([pos - offset, pos + offset])
             ax.set_xticklabels([self.influent.name, self.effluent.name])
         else:
             ax.set_xticks([pos])
@@ -1526,7 +1536,7 @@ class Dataset(object):
         if useROS:
             x = self.paired_data.inflow.res
             y = self.paired_data.outflow.res
-            ax.plot(x, y, marker='o', label="Paired, ROS'd data",  alpha=0.3, **markerkwargs)
+            ax.plot(x, y, marker='o', label="Paired, ROS'd data", alpha=0.3, **markerkwargs)
 
         # plot the raw results, if requested
         else:
@@ -1541,7 +1551,7 @@ class Dataset(object):
                      which='effluent', marker='<', alpha=0.45,
                      markerfacecolor='none', markeredgecolor='black'),
                 dict(label='Both not detected',
-                     which='both',  marker='d', alpha=0.25,
+                     which='both', marker='d', alpha=0.25,
                      markerfacecolor='none', markeredgecolor='black'),
             ]
             for pp in plot_params:
@@ -1749,6 +1759,7 @@ class DataCollection(object):
             return lambda x: True
         else:
             return self._filterfxn
+
     @filterfxn.setter
     def filterfxn(self, value):
         self._cache.clear()
@@ -1758,10 +1769,12 @@ class DataCollection(object):
     def tidy(self):
         if self.useROS:
             def fxn(g):
-                rosdf = ROS(df=g, result=self._raw_rescol,
-                                      censorship=self.cencol, as_array=False)
-                rosdf = rosdf.rename(columns={'final': self.roscol})
-                return rosdf[[self._raw_rescol, self.roscol, self.cencol]]
+                rosdf = (
+                    ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
+                        .rename(columns={'final': self.roscol})
+                        [[self._raw_rescol, self.roscol, self.cencol]]
+                )
+                return rosdf
         else:
             def fxn(g):
                 g[self.roscol] = numpy.nan
@@ -1890,7 +1903,6 @@ class DataCollection(object):
         return self._generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
                                   use_bootstrap=False, has_pvalue=True,
                                   statname='log-anderson-darling')
-
 
     def _comparison_stat(self, statfxn, statname=None, **statopts):
         results = utils.misc._comp_stat_generator(

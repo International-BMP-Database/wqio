@@ -33,4 +33,3 @@ def test_bootstrappers(testdata, bootstrapper, known_ci):
     res, ci = bootstrapper(testdata, numpy.mean, 10000, 0.10)
     assert abs(res - numpy.mean(testdata)) < 0.001
     nptest.assert_array_almost_equal(known_ci, ci, decimal=3)
-

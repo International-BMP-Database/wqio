@@ -44,7 +44,7 @@ def getSeason(date):
             (date.month in [10, 11]) or \
             (date.month == 12 and date.day < 22):
         return 'autumn'
-    else: # pragma: no cover
+    else:  # pragma: no cover
         raise ValueError('could not assign season to  {}'.format(date))
 
 

@@ -18,7 +18,7 @@ class base_wqsampleMixin(object):
         self.known_sample_ts_type = pandas.DatetimeIndex
         self.known_linestyle = 'none'
         datafile = helpers.test_data_path('test_wqsample_data.csv')
-        self.rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
+        self.rawdata = pandas.read_csv(datafile, index_col=[0, 1, 2, 3, 4, 5, 6, 11, 12])
 
     def basic_teardown(self):
         pyplot.close('all')
@@ -107,7 +107,7 @@ class Test_GrabSample_NoStorm(base_wqsample_NoStorm):
         self.known_marker = '+'
         self.known_label = 'Grab Sample'
         self.wqs = samples.GrabSample(self.rawdata, self.known_starttime,
-                                     endtime=self.known_endtime, storm=None)
+                                      endtime=self.known_endtime, storm=None)
 
     def teardown(self):
         self.basic_teardown()
@@ -127,9 +127,9 @@ class Test_CompositeSample_NoStorm(base_wqsample_NoStorm):
         self.known_marker = 'x'
         self.known_label = 'Composite Sample'
         self.wqs = samples.CompositeSample(self.rawdata, self.known_starttime,
-                                          endtime=self.known_endtime,
-                                          samplefreq=self.known_samplefreq,
-                                          storm=None)
+                                           endtime=self.known_endtime,
+                                           samplefreq=self.known_samplefreq,
+                                           storm=None)
 
     def teardown(self):
         self.basic_teardown()
@@ -149,9 +149,9 @@ class Test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
         self.known_marker = 'x'
         self.known_label = 'Composite Sample'
         self.wqs = samples.CompositeSample(self.rawdata, self.known_starttime,
-                                          endtime=self.known_endtime,
-                                          samplefreq=self.known_samplefreq,
-                                          storm=None)
+                                           endtime=self.known_endtime,
+                                           samplefreq=self.known_samplefreq,
+                                           storm=None)
 
     def teardown(self):
         self.basic_teardown()
@@ -159,13 +159,13 @@ class Test_CompositeSample_NoStormNoFreq(base_wqsample_NoStorm):
 
 def setup_sample(sampletype, with_storm=False):
     datafile = helpers.test_data_path('test_wqsample_data.csv')
-    rawdata = pandas.read_csv(datafile, index_col=[0,1,2,3,4,5,6,11,12])
-    if sampletype.lower() =='grab':
+    rawdata = pandas.read_csv(datafile, index_col=[0, 1, 2, 3, 4, 5, 6, 11, 12])
+    if sampletype.lower() == 'grab':
         st = samples.GrabSample
         starttime = '2013-02-24 16:54'
         endtime = '2013-02-24 16:59'
         freq = None
-    elif sampletype.lower() =='composite':
+    elif sampletype.lower() == 'composite':
         st = samples.CompositeSample
         starttime = '2013-02-24 16:59'
         endtime = '2013-02-25 02:59'
