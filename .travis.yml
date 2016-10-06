@@ -5,9 +5,11 @@ matrix:
     - python: 3.4
       env:
         - COVERAGE=false
+        - ARGS="--mpl --verbose"
     - python: 3.5
       env:
         - COVERAGE=true
+        - ARGS="--mpl --verbose --pep8"
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -21,12 +23,12 @@ install:
   - source activate test
   - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy
   - conda install --yes coverage docopt requests pyyaml pytest pytest-cov
-  - conda install --yes mpl-probscale pytest-mpl --channel=conda-forge
+  - conda install --yes mpl-probscale pytest-mpl pytest-pep8 --channel=conda-forge
   - pip install codecov
   - pip install .
 
 script:
-  - python check_wqio.py --mpl --verbose
+  - python check_wqio.py ${ARGS}
 
 after_success:
   - if [ ${COVERAGE} = true ]; then
