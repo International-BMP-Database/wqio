@@ -627,8 +627,7 @@ class Location(object):
             )
 
         else:
-            self.verticalScatter(ax=ax, pos=pos, jitter=width * 0.5, alpha=0.75,
-                                 ylabel=ylabel, yscale=yscale, ignoreROS=True)
+            self.verticalScatter(ax=ax, pos=pos, ylabel=ylabel, yscale=yscale, ignoreROS=True)
 
         ax.set_yscale(yscale)
         if yscale == 'log':
@@ -644,7 +643,7 @@ class Location(object):
         if xlabel is not None:
             ax.set_xticklabels([xlabel])
 
-        if xlims is not None:
+        if xlims is not None and self.N >= minpoints:
             ax.set_xlim(**xlims)
 
         return fig
@@ -780,9 +779,8 @@ class Location(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
-                        ylabel=None, yscale='log', ignoreROS=True,
-                        markersize=4, xlims=None):
+    def verticalScatter(self, ax=None, pos=1, ylabel=None, yscale='log',
+                        ignoreROS=True, markersize=4, xlims=None):
         """ Draws a clustered & jittered scatter plot of the data
 
         Parameters
@@ -820,28 +818,33 @@ class Location(object):
 
         fig, ax = validate.axes(ax)
 
-        if jitter == 0:
-            xvals = [pos] * self.N
-        else:
-            low = pos - jitter * 0.5
-            high = pos + jitter * 0.5
-            xvals = numpy.random.uniform(low=low, high=high, size=self.N)
-
         if not ignoreROS and self.useROS:
-            ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha)
+            rescol = 'final'
+            hue_column = None
+            hue_order = None
+            df = self.dataframe.copy()
         else:
-            y_nondet = self.raw_data.loc[self.raw_data[self.cencol], self.rescol]
-            y_detect = self.raw_data.loc[~self.raw_data[self.cencol], self.rescol]
+            rescol = self.rescol
+            hue_column = 'Censored'
+            hue_order = [True, False]
+            df = self.raw_data.copy()
 
-            ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
-                    markerfacecolor='none', markeredgecolor=self.color,
-                    linestyle='none', alpha=alpha, label='Non-detects')
-
-            ax.plot(xvals[self.ND:], y_detect, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha, label='Detects')
+        plot = (
+            df.assign(pos=pos)
+            .assign(Result=lambda df: df[rescol])
+            .assign(Censored=lambda df: df[self.cencol])
+            .pipe(
+                (seaborn.swarmplot, 'data'),
+                x='pos',
+                y='Result',
+                hue=hue_column,
+                hue_order=hue_order,
+                size=markersize,
+                marker=self.plot_marker,
+                color=self.color,
+                edgecolor='k'
+            )
+        )
 
         ax.set_yscale(yscale)
         if ylabel is not None:

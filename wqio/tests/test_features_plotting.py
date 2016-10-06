@@ -53,6 +53,10 @@ def inflow_loc_green():
 def inflow_xlims():
     return {'left': 0, 'right': 2}
 
+@pytest.fixture
+def inflow_xlims_vs():
+    return {'left': -0.5, 'right': 0.5}
+
 
 @pytest.fixture
 def outflow_loc():
@@ -275,55 +279,43 @@ def test_loc_vertical_scatter_default(inflow_loc_blue):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_provided_ax(inflow_loc_blue, inflow_xlims):
+def test_loc_vertical_scatter_provided_ax(inflow_loc_blue, inflow_xlims_vs):
     fig, ax2 = pyplot.subplots()
-    fig = inflow_loc_blue.verticalScatter(ax=ax2, xlims=inflow_xlims)
+    fig = inflow_loc_blue.verticalScatter(ax=ax2, xlims=inflow_xlims_vs)
     assert isinstance(fig, pyplot.Figure)
     with pytest.raises(ValueError):
-        inflow_loc_blue.verticalScatter(ax='junk', xlims=inflow_xlims)
+        inflow_loc_blue.verticalScatter(ax='junk', xlims=inflow_xlims_vs)
 
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_pos(inflow_loc_blue, inflow_xlims):
-    fig = inflow_loc_blue.verticalScatter(pos=1.25, xlims=inflow_xlims)
+def test_loc_vertical_scatter_pos(inflow_loc_blue, inflow_xlims_vs):
+    fig = inflow_loc_blue.verticalScatter(pos=1.25, xlims=inflow_xlims_vs)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_nojitter(inflow_loc_blue, inflow_xlims):
-    fig = inflow_loc_blue.verticalScatter(jitter=0.0, xlims=inflow_xlims)
+def test_loc_vertical_scatter_ylabel(inflow_loc_red, inflow_xlims_vs):
+    fig = inflow_loc_red.verticalScatter(ylabel='Test Y-Label', xlims=inflow_xlims_vs)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_alpha(inflow_loc_blue, inflow_xlims):
-    fig = inflow_loc_blue.verticalScatter(alpha=0.25, xlims=inflow_xlims)
+def test_loc_vertical_scatter_yscale_linear(inflow_loc_red, inflow_xlims_vs):
+    fig = inflow_loc_red.verticalScatter(yscale='linear', xlims=inflow_xlims_vs)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_ylabel(inflow_loc_red, inflow_xlims):
-    fig = inflow_loc_red.verticalScatter(ylabel='Test Y-Label', xlims=inflow_xlims)
+def test_loc_vertical_scatter_not_ignoreROS(inflow_loc_red, inflow_xlims_vs):
+    fig = inflow_loc_red.verticalScatter(ignoreROS=False, xlims=inflow_xlims_vs)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_yscale_linear(inflow_loc_red, inflow_xlims):
-    fig = inflow_loc_red.verticalScatter(yscale='linear', xlims=inflow_xlims)
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_not_ignoreROS(inflow_loc_red, inflow_xlims):
-    fig = inflow_loc_red.verticalScatter(ignoreROS=False, xlims=inflow_xlims)
-    return fig
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_markersize(inflow_loc_red, inflow_xlims):
-    fig = inflow_loc_red.verticalScatter(markersize=8, xlims=inflow_xlims)
+def test_loc_vertical_scatter_markersize(inflow_loc_red, inflow_xlims_vs):
+    fig = inflow_loc_red.verticalScatter(markersize=8, xlims=inflow_xlims_vs)
     return fig
 
 
@@ -409,8 +401,8 @@ def test_ds_boxplot_with_ylabel(ds_basic, inflow_xlims):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_boxplot_fallback_to_vert_scatter(ds_basic, inflow_xlims):
-    fig9 = ds_basic.boxplot(minpoints=numpy.inf, xlims=inflow_xlims)
+def test_ds_boxplot_fallback_to_vert_scatter(ds_basic):
+    fig9 = ds_basic.boxplot(minpoints=numpy.inf)
     return fig9
 
 
