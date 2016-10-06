@@ -38,7 +38,7 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
 
     """
 
-    if which =='both':
+    if which == 'both':
         rotateTickLabels(ax, rotation, 'x', rotation_mode=rotation_mode, ha=ha)
         rotateTickLabels(ax, rotation, 'y', rotation_mode=rotation_mode, ha=ha)
     else:
@@ -205,7 +205,8 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     """
     wnf = {}
     if transformout is None:
-        transformout = lambda x: x
+        def transformout(x):
+            return x
 
     if q1 is None:
         q1 = numpy.percentile(x, 25)
@@ -242,8 +243,6 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
 
 def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
             color='b', marker='o', patch_artist=True, showmean=False):
-
-
 
     """
     Draws a boxplot on an axes
@@ -496,11 +495,11 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
         color_dict = {}
         lines = []
         for h, c in zip(hue_vals, colors):
-            lines.append(pyplot.Line2D([0,], [0], linestyle='-', color=c, label=h))
+            lines.append(pyplot.Line2D([0], [0], linestyle='-', color=c, label=h))
             color_dict[h] = c
 
         for col, ax in zip(cols, axes):
-            data_limits =[(0, dataframe[col].min()), (0, dataframe[col].max())]
+            data_limits = [(0, dataframe[col].min()), (0, dataframe[col].max())]
             ax.set_xticks([0])
             ax.update_datalim(data_limits)
             ax.set_xticklabels([col])
@@ -510,7 +509,7 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
 
         for row in data.values:
             for n, (ax1, ax2) in enumerate(zip(axes[:-1], axes[1:])):
-                line = _connect_spines(ax1, ax2, row[n], row[n+1], color=color_dict[row[-1]])
+                line = _connect_spines(ax1, ax2, row[n], row[n + 1], color=color_dict[row[-1]])
 
     if showlegend:
         fig.legend(lines, hue_vals)
@@ -575,11 +574,11 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
 
     fig = (
         df.assign(display=df[valuecol].apply(classifier).astype("category", categories=cats, ordered=True))
-          .drop([valuecol], axis=1)
-          .rename(columns={'display': valuecol})
-          .rename(columns=lambda c: format_col(c))
-          .pipe((seaborn.factorplot, 'data'), x=display_col, kind='count', aspect=aspect, **factoropts)
-          .set_ylabels("Occurences")
+        .drop([valuecol], axis=1)
+        .rename(columns={'display': valuecol})
+        .rename(columns=lambda c: format_col(c))
+        .pipe((seaborn.factorplot, 'data'), x=display_col, kind='count', aspect=aspect, **factoropts)
+        .set_ylabels("Occurences")
     )
 
     return fig

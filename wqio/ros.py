@@ -93,7 +93,7 @@ def cohn_numbers(df, result, censorship):
         below = df[result] < row['upper_dl']
 
         # index of non-detect results
-        detect = df[censorship] == False
+        detect = df[censorship].eq(False)
 
         # return the number of results where all conditions are True
         return df[above & below & detect].shape[0]
@@ -110,8 +110,8 @@ def cohn_numbers(df, result, censorship):
         less_thanequal = df[result] <= row['lower_dl']
 
         # index of detects, non-detects
-        uncensored = df[censorship] == False
-        censored = df[censorship] == True
+        uncensored = df[censorship].eq(False)
+        censored = df[censorship].eq(True)
 
         # number results less than or equal to lower_dl DL and non-detect
         LTE_censored = df[less_thanequal & censored].shape[0]
@@ -145,8 +145,8 @@ def cohn_numbers(df, result, censorship):
         N = len(A)
         PE = numpy.empty(N, dtype='float64')
         PE[-1] = 0.0
-        for j in range(N-2, -1, -1):
-            PE[j] = PE[j+1] + (1 - PE[j+1]) * A[j] / (A[j] + B[j])
+        for j in range(N - 2, -1, -1):
+            PE[j] = PE[j + 1] + (1 - PE[j + 1]) * A[j] / (A[j] + B[j])
 
         return PE
 
@@ -164,12 +164,12 @@ def cohn_numbers(df, result, censorship):
         # create a dataframe
         cohn = (
             pandas.DataFrame(DLs, columns=['lower_dl'])
-                .assign(upper_dl=lambda df: set_upper_limit(df))
-                .assign(nuncen_above=lambda df: df.apply(nuncen_above, axis=1))
-                .assign(nobs_below=lambda df: df.apply(nobs_below, axis=1))
-                .assign(ncen_equal=lambda df: df.apply(ncen_equal, axis=1))
-                .reindex(range(DLs.shape[0] + 1))
-                .assign(prob_exceedance=lambda df: compute_PE(df['nuncen_above'], df['nobs_below']))
+            .assign(upper_dl=lambda df: set_upper_limit(df))
+            .assign(nuncen_above=lambda df: df.apply(nuncen_above, axis=1))
+            .assign(nobs_below=lambda df: df.apply(nobs_below, axis=1))
+            .assign(ncen_equal=lambda df: df.apply(ncen_equal, axis=1))
+            .reindex(range(DLs.shape[0] + 1))
+            .assign(prob_exceedance=lambda df: compute_PE(df['nuncen_above'], df['nobs_below']))
         )
 
     else:
@@ -236,8 +236,8 @@ def _ros_group_rank(df, dl_idx, censorship):
 
     ranks = (
         df.assign(rank=1)
-          .groupby(by=[dl_idx, censorship])['rank']
-          .transform(lambda g: g.cumsum())
+        .groupby(by=[dl_idx, censorship])['rank']
+        .transform(lambda g: g.cumsum())
     )
     return ranks
 
@@ -276,10 +276,9 @@ def _ros_plot_pos(row, censorship, cohn):
     dl_1 = cohn.iloc[DL_index]
     dl_2 = cohn.iloc[DL_index + 1]
     if censored:
-        return (1 - dl_1['prob_exceedance']) * rank / (dl_1['ncen_equal']+1)
+        return (1 - dl_1['prob_exceedance']) * rank / (dl_1['ncen_equal'] + 1)
     else:
-        return (1 - dl_1['prob_exceedance']) + (dl_1['prob_exceedance'] - dl_2['prob_exceedance']) * \
-                rank / (dl_1['nuncen_above']+1)
+        return (1 - dl_1['prob_exceedance']) + (dl_1['prob_exceedance'] - dl_2['prob_exceedance']) * rank / (dl_1['nuncen_above'] + 1)
 
 
 def _norm_plot_pos(results):
@@ -367,8 +366,8 @@ def _ros_estimate(df, result, censorship, transform_in, transform_out):
     """
 
     # detect/non-detect selectors
-    uncensored_mask = df[censorship] == False
-    censored_mask = df[censorship] == True
+    uncensored_mask = df[censorship].eq(False)
+    censored_mask = df[censorship].eq(True)
 
     # fit a line to the logs of the detected data
     fit_params = stats.linregress(
