@@ -32,12 +32,14 @@ def inflow_loc_blue():
     loc.plot_marker = 'o'
     return loc
 
+
 @pytest.fixture
 def inflow_loc_red():
     loc = setup_location('inflow')
     loc.color = 'firebrick'
     loc.plot_marker = 'd'
     return loc
+
 
 @pytest.fixture
 def inflow_loc_green():

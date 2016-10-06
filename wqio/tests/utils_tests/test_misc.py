@@ -28,7 +28,7 @@ def basic_data():
 @pytest.fixture
 def multiindex_df():
     index = pandas.MultiIndex.from_product([['A', 'B', 'C'], ['mg/L']], names=['loc', 'units'])
-    return pandas.DataFrame([[1,2], [3, 4], [5,6]], index=index, columns=['a', 'b'])
+    return pandas.DataFrame([[1, 2], [3, 4], [5, 6]], index=index, columns=['a', 'b'])
 
 
 class mockDataset(object):
@@ -85,7 +85,7 @@ def test_swap_column_levels(multiindex_df, L1, L2):
 
     expected_columns = pandas.MultiIndex.from_product(
         [['mg/L'], ['cen', 'res'], ['A', 'B', 'C']],
-        names=[ 'units', 'value', 'loc']
+        names=['units', 'value', 'loc']
     )
 
     pdtest.assert_index_equal(df.columns, expected_columns)
@@ -96,7 +96,7 @@ def test_swap_column_levels(multiindex_df, L1, L2):
 def test_redefine_index_level(multiindex_df, criteria, dropold):
     expected_cols = ['a', 'b']
     if dropold:
-        expected_value = [[1,2], [3, 4], [5, 6]]
+        expected_value = [[1, 2], [3, 4], [5, 6]]
         if criteria:
             expected_index = [('A', 'ug/L'), ('B', 'ug/L'), ('C', 'mg/L')]
         else:
@@ -104,14 +104,14 @@ def test_redefine_index_level(multiindex_df, criteria, dropold):
 
     else:
         if criteria:
-            expected_value = [[1,2], [1,2], [3, 4], [3, 4], [5, 6]]
+            expected_value = [[1, 2], [1, 2], [3, 4], [3, 4], [5, 6]]
             expected_index = [
                 ('A', 'mg/L'), ('A', 'ug/L'),
                 ('B', 'mg/L'), ('B', 'ug/L'),
                 ('C', 'mg/L')
             ]
         else:
-            expected_value = [[1,2], [1,2], [3, 4], [3, 4], [5, 6], [5, 6]]
+            expected_value = [[1, 2], [1, 2], [3, 4], [3, 4], [5, 6], [5, 6]]
             expected_index = [
                 ('A', 'mg/L'), ('A', 'ug/L'),
                 ('B', 'mg/L'), ('B', 'ug/L'),
@@ -131,7 +131,7 @@ def test_redefine_index_level(multiindex_df, criteria, dropold):
 def basic_dataset():
     known_float = 123.4567
     inflow = [1, 3, 4, 12.57]
-    outflow = [2, 5 ,7, 15.17]
+    outflow = [2, 5, 7, 15.17]
     return mockDataset(inflow, outflow)
 
 
@@ -208,7 +208,7 @@ def test__unique_categories():
 
 def test__comp_stat_generator():
     df = helpers.make_dc_data().reset_index()
-    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc','res',  helpers.comp_statfxn)
+    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc', 'res', helpers.comp_statfxn)
     assert isinstance(gen, types.GeneratorType)
     result = pandas.DataFrame(gen)
 
@@ -225,7 +225,7 @@ def test__comp_stat_generator():
         ],
         'stat': [
             33.100128, 34.228203, 18.318497, 21.231383, 9.500766,
-             2.990900,  7.498225,  7.757954,  3.067299, 3.290471,
+            2.990900, 7.498225, 7.757954, 3.067299, 3.290471,
         ],
         'pvalue': [
             8.275032, 8.557050, 4.579624, 5.307845, 2.375191,

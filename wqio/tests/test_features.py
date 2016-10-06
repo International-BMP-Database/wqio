@@ -48,7 +48,7 @@ class Test_Parameter_simple(_base_Parameter_Mixin):
 
 
 class Test_Parameter_complex(_base_Parameter_Mixin):
-    #place holder for when TeX/validation/etc gets integrated
+    # place holder for when TeX/validation/etc gets integrated
     def setup(self):
         self.known_name = 'Nitrate & Nitrite'
         self.known_units = 'mg/L'
@@ -176,7 +176,7 @@ class _base_LocationMixin(object):
 
     def test_median_conf_interval(self):
         assert hasattr(self.loc, 'median_conf_interval')
-        nptest.assert_allclose(self.loc.median_conf_interval, self.known_median_conf_interval, rtol=self.tolerance*1.5)
+        nptest.assert_allclose(self.loc.median_conf_interval, self.known_median_conf_interval, rtol=self.tolerance * 1.5)
 
     def test_min(self):
         assert hasattr(self.loc, 'min')
@@ -345,7 +345,7 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_mean = 9.59372041292
         self.known_mean_conf_interval = [7.75516047, 11.45197482]
         self.known_median = 7.73851689962
-        self.known_median_conf_interval = [ 5.57,  8.63]
+        self.known_median_conf_interval = [5.57,  8.63]
         self.known_min = 2.0
         self.known_pctl10 = 4.04355908285
         self.known_pctl25 = 5.615
@@ -353,27 +353,27 @@ class Test_Location_ROS(_base_LocationMixin):
         self.known_pctl90 = 19.178
         self.known_pnorm = 0.00179254170507
         self.known_plognorm = 0.521462738514
-        self.known_shapiro = [ 0.886889,  0.001789]
-        self.known_shapiro_log = [ 0.972679,  0.520949]
-        self.known_lillifors = [ 0.18518 ,  0.003756]
-        self.known_lillifors_log = [ 0.091855,  0.635536]
+        self.known_shapiro = [0.886889, 0.001789]
+        self.known_shapiro_log = [0.972679, 0.520949]
+        self.known_lillifors = [0.185180, 0.003756]
+        self.known_lillifors_log = [0.091855, 0.635536]
         self.known_anderson = (
             1.54388800,
             [0.527, 0.6, 0.719, 0.839, 0.998],
-            [ 15., 10., 5., 2.5, 1.],
+            [15., 10., 5., 2.5, 1.],
             0.000438139
         )
         self.known_anderson_log = (
             0.30409634,
             [0.527, 0.6, 0.719, 0.839, 0.998],
-            [ 15., 10., 5., 2.5, 1.],
+            [15., 10., 5., 2.5, 1.],
             0.552806894
         )
         self.known_skew = 0.869052892573
         self.known_std = 5.52730949374
         self.known_useRos = True
         self.known_all_positive = True
-        self.known_filtered_shape = (27,2)
+        self.known_filtered_shape = (27, 2)
         self.known_filtered_data_shape = (27,)
 
 
@@ -415,26 +415,26 @@ class Test_Location_noROS(_base_LocationMixin):
         self.known_pctl90 = 19.178
         self.known_pnorm = 0.00323620648123
         self.known_plognorm = 0.306435495615
-        self.known_shapiro = [ 0.896744,  0.003236]
-        self.known_shapiro_log = [ 0.964298,  0.306435]
-        self.known_lillifors = [ 0.160353,  0.023078]
-        self.known_lillifors_log = [ 0.08148,  0.84545]
+        self.known_shapiro = [0.896744, 0.003236]
+        self.known_shapiro_log = [0.964298, 0.306435]
+        self.known_lillifors = [0.160353, 0.023078]
+        self.known_lillifors_log = [0.08148, 0.84545]
         self.known_anderson = (
             1.4392085,
             [0.527, 0.6, 0.719, 0.839, 0.998],
-            [ 15., 10., 5., 2.5, 1.],
+            [15., 10., 5., 2.5, 1.],
             0.00080268
         )
         self.known_anderson_log = (
             0.3684061,
             [0.527, 0.6, 0.719, 0.839, 0.998],
-            [ 15., 10., 5., 2.5, 1.],
+            [15., 10., 5., 2.5, 1.],
             0.41004028
         )
         self.known_skew = 0.853756570358
         self.known_std = 5.24122841148
         self.known_useRos = False
-        self.known_filtered_shape = (30,2)
+        self.known_filtered_shape = (30, 2)
         self.known_filtered_data_shape = (30,)
 
     def test_median_conf_interval(self):
@@ -884,8 +884,9 @@ class _base_DataCollecionMixin(object):
             'mann_whitney': [
                 391.0, 492.0, 393.0, 503.0, 292.0, 281.0,
                 453.0, 495.0, 331.0, 432.0, 289.0, 352.0,
-                ]
-            }
+            ]
+        }
+
         pdtest.assert_frame_equal(
             self.prep_comp_result(self.dc.mann_whitney),
             self.prep_comp_expected(expected_data),

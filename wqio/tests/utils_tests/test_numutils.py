@@ -146,8 +146,8 @@ class Test_processAndersonDarlingResults(object):
 
         self.good = AndersonResult(
             statistic=numpy.inf,
-            critical_values=numpy.array([ 0.907,  1.061,  1.32 ,  1.58 ,  1.926]),
-            significance_level=numpy.array([ 15. ,  10. ,   5. ,   2.5,   1. ])
+            critical_values=numpy.array([0.907, 1.061, 1.32, 1.58, 1.926]),
+            significance_level=numpy.array([15.0, 10.0, 5.0, 2.50, 1.0])
         )
 
         self.known_good = '99.0%'
@@ -160,6 +160,7 @@ class Test_processAndersonDarlingResults(object):
     def test_bad(self):
         res = numutils.processAndersonDarlingResults(self.bad)
         assert res == self.known_bad
+
 
 @pytest.mark.parametrize(('AD', 'n_points', 'expected'), [
     (0.302, 1, 0.0035899),
@@ -220,7 +221,7 @@ class Test_normalize_units(object):
         self.units_map = {
             'ug/L': 1e-6,
             'mg/L': 1e-3,
-            'g/L' : 1e+0,
+            'g/L': 1e+0,
         }
 
         self.param_units = {
@@ -258,48 +259,48 @@ class Test_test_pH2concentration(object):
 class Test_fit_line(object):
     def setup(self):
         self.data = numpy.array([
-            2.00,   4.0 ,   4.62,   5.00,   5.00,   5.50,   5.57,   5.66,
-            5.75,   5.86,   6.65,   6.78,   6.79,   7.50,   7.50,   7.50,
-            8.63,   8.71,   8.99,   9.50,   9.50,   9.85,  10.82,  11.00,
-           11.25,  11.25,  12.20,  14.92,  16.77,  17.81,  19.16,  19.19,
-           19.64,  20.18,  22.97
+            2.000, 4.000, 4.620, 5.000, 5.000, 5.500, 5.570, 5.660,
+            5.750, 5.860, 6.650, 6.780, 6.790, 7.500, 7.500, 7.500,
+            8.630, 8.710, 8.990, 9.500, 9.500, 9.850, 10.82, 11.00,
+            11.25, 11.25, 12.20, 14.92, 16.77, 17.81, 19.16, 19.19,
+            19.64, 20.18, 22.97
         ])
 
         self.zscores = numpy.array([
-            -2.06188401, -1.66883254, -1.4335397 , -1.25837339, -1.11509471,
-            -0.99166098, -0.8817426 , -0.78156696, -0.68868392, -0.60139747,
-            -0.51847288, -0.4389725 , -0.36215721, -0.28742406, -0.21426459,
-            -0.14223572, -0.07093824,  0.00000000,  0.07093824,  0.14223572,
-             0.21426459,  0.28742406,  0.36215721,  0.43897250,  0.51847288,
-             0.60139747,  0.68868392,  0.78156696,  0.88174260,  0.99166098,
-             1.11509471,  1.25837339,  1.43353970,  1.66883254,  2.06188401
+            -2.06188401, -1.66883254, -1.43353970, -1.25837339, -1.11509471,
+            -0.99166098, -0.88174260, -0.78156696, -0.68868392, -0.60139747,
+            -0.51847288, -0.43897250, -0.36215721, -0.28742406, -0.21426459,
+            -0.14223572, -0.07093824, 0.00000000, 0.07093824, 0.14223572,
+            0.21426459, 0.28742406, 0.36215721, 0.43897250, 0.51847288,
+            0.60139747, 0.68868392, 0.78156696, 0.88174260, 0.99166098,
+            1.11509471, 1.25837339, 1.43353970, 1.66883254, 2.06188401
         ])
 
         self.probs = stats.norm.cdf(self.zscores) * 100.
 
         self.y = numpy.array([
-            0.07323274,  0.12319301,  0.16771455,  0.1779695 ,  0.21840761,
-            0.25757016,  0.2740265 ,  0.40868106,  0.44872637,  0.5367353 ,
-            0.55169933,  0.56211726,  0.62375442,  0.66631353,  0.68454978,
-            0.72137134,  0.87602096,  0.94651962,  1.01927875,  1.06040448,
-            1.07966792,  1.17969506,  1.21132273,  1.30751428,  1.45371899,
-            1.76381932,  1.98832275,  2.09275652,  2.66552831,  2.86453334,
-            3.23039631,  4.23953492,  4.25892247,  4.5834766 ,  6.53100725
+            0.07323274, 0.12319301, 0.16771455, 0.17796950, 0.21840761,
+            0.25757016, 0.27402650, 0.40868106, 0.44872637, 0.53673530,
+            0.55169933, 0.56211726, 0.62375442, 0.66631353, 0.68454978,
+            0.72137134, 0.87602096, 0.94651962, 1.01927875, 1.06040448,
+            1.07966792, 1.17969506, 1.21132273, 1.30751428, 1.45371899,
+            1.76381932, 1.98832275, 2.09275652, 2.66552831, 2.86453334,
+            3.23039631, 4.23953492, 4.25892247, 4.58347660, 6.53100725
         ])
 
-        self.known_y_linlin = numpy.array([ -0.89650596,  21.12622025])
-        self.known_y_linlog = numpy.array([  2.80190754,  27.64958934])
-        self.known_y_linprob = numpy.array([  8.48666156,  98.51899616])
-        self.known_y_loglin = numpy.array([-2.57620461,  1.66767934])
-        self.known_y_loglog = numpy.array([ 0.0468154 ,  5.73261406])
-        self.known_y_logprob = numpy.array([  0.49945757,  95.23103009])
-        self.known_y_problin = numpy.array([ -0.89650596,  21.12622025])
-        self.known_y_problog = numpy.array([  2.80190754,  27.64958934])
-        self.known_y_probprob = numpy.array([  1.96093902,  98.03906098])
+        self.known_y_linlin = numpy.array([-0.89650596, 21.12622025])
+        self.known_y_linlog = numpy.array([2.80190754, 27.64958934])
+        self.known_y_linprob = numpy.array([8.48666156, 98.51899616])
+        self.known_y_loglin = numpy.array([-2.57620461, 1.66767934])
+        self.known_y_loglog = numpy.array([0.04681540, 5.73261406])
+        self.known_y_logprob = numpy.array([0.49945757, 95.23103009])
+        self.known_y_problin = numpy.array([-0.89650596, 21.12622025])
+        self.known_y_problog = numpy.array([2.80190754, 27.64958934])
+        self.known_y_probprob = numpy.array([1.96093902, 98.03906098])
 
         self.custom_xhat = [-2, -1, 0, 1, 2]
         self.known_custom_yhat = numpy.array([-0.56601826, 4.77441944, 10.11485714,
-                                           15.45529485, 20.79573255])
+                                              15.45529485, 20.79573255])
 
     def test_xlinear_ylinear(self):
         scales = {'fitlogs': None, 'fitprobs': None}
@@ -396,55 +397,54 @@ class Test_estimateLineFromParams(object):
         self.intercept = 3.5
 
         self.known_ylinlin = numpy.array([
-             5.5,   6.5,   7.5,   8.5,   9.5,  10.5,  11.5,  12.5,  13.5,
-            14.5,  15.5,  16.5,  17.5,  18.5,  19.5,  20.5,  21.5,  22.5,
-            23.5,  24.5
+            5.50, 6.50, 7.50, 8.50, 9.50, 10.5, 11.5, 12.5, 13.5,
+            14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5, 21.5, 22.5,
+            23.5, 24.5
         ])
 
-
         self.known_yloglin = numpy.array([
-            3.5       ,  4.31093022,  4.88629436,  5.33258146,  5.69722458,
-            6.00552594,  6.27258872,  6.50815479,  6.71887582,  6.90949618,
-            7.08351894,  7.24360435,  7.3918203 ,  7.52980604,  7.65888308,
-            7.78013233,  7.89444915,  8.0025836 ,  8.10517019,  8.20275051
+            3.50000000, 4.31093022, 4.88629436, 5.33258146, 5.69722458,
+            6.00552594, 6.27258872, 6.50815479, 6.71887582, 6.90949618,
+            7.08351894, 7.24360435, 7.39182030, 7.52980604, 7.65888308,
+            7.78013233, 7.89444915, 8.00258360, 8.10517019, 8.20275051
         ])
 
         self.known_yloglog = numpy.array([
-              33.11545196,    74.50976691,   132.46180783,   206.97157474,
-             298.03906763,   405.66428649,   529.84723134,   670.58790216,
-             827.88629897,  1001.74242175,  1192.15627051,  1399.12784525,
-            1622.65714598,  1862.74417268,  2119.38892536,  2392.59140402,
-            2682.35160865,  2988.66953927,  3311.54519587,  3650.97857845
+            33.1154519600, 74.5097669100, 132.461807830, 206.971574740,
+            298.039067630, 405.664286490, 529.847231340, 670.587902160,
+            827.886298970, 1001.74242175, 1192.15627051, 1399.12784525,
+            1622.65714598, 1862.74417268, 2119.38892536, 2392.59140402,
+            2682.35160865, 2988.66953927, 3311.54519587, 3650.97857845
         ])
 
         self.known_ylinlog = numpy.array([
-             2.44691932e+02,   6.65141633e+02,   1.80804241e+03,
-             4.91476884e+03,   1.33597268e+04,   3.63155027e+04,
-             9.87157710e+04,   2.68337287e+05,   7.29416370e+05,
-             1.98275926e+06,   5.38969848e+06,   1.46507194e+07,
-             3.98247844e+07,   1.08254988e+08,   2.94267566e+08,
-             7.99902177e+08,   2.17435955e+09,   5.91052206e+09,
-             1.60664647e+10,   4.36731791e+10
-         ])
+            2.44691932e+02, 6.65141633e+02, 1.80804241e+03,
+            4.91476884e+03, 1.33597268e+04, 3.63155027e+04,
+            9.87157710e+04, 2.68337287e+05, 7.29416370e+05,
+            1.98275926e+06, 5.38969848e+06, 1.46507194e+07,
+            3.98247844e+07, 1.08254988e+08, 2.94267566e+08,
+            7.99902177e+08, 2.17435955e+09, 5.91052206e+09,
+            1.60664647e+10, 4.36731791e+10
+        ])
 
     def test_linlin(self):
         ylinlin = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                              xlog=False, ylog=False)
+                                                  xlog=False, ylog=False)
         nptest.assert_array_almost_equal(ylinlin, self.known_ylinlin)
 
     def test_loglin(self):
         yloglin = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                              xlog=True, ylog=False)
+                                                  xlog=True, ylog=False)
         nptest.assert_array_almost_equal(yloglin, self.known_yloglin)
 
     def test_loglog(self):
         yloglog = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                              xlog=True, ylog=True)
+                                                  xlog=True, ylog=True)
         nptest.assert_array_almost_equal(yloglog, self.known_yloglog)
 
     def test_linlog(self):
         ylinlog = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                              xlog=False, ylog=True)
+                                                  xlog=False, ylog=True)
         percent_diff = numpy.abs(ylinlog - self.known_ylinlog) / self.known_ylinlog
         nptest.assert_array_almost_equal(
             percent_diff,
@@ -468,27 +468,27 @@ def test_checkIntervalOverlap_twoway():
 class Test_winsorize_dataframe(object):
     def setup(self):
         self.x = numpy.array([
-            0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
         ])
 
         self.w_05 = numpy.array([
-            1,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 19
         ])
 
         self.w_10 = numpy.array([
-            2,  2,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 18, 18
         ])
 
         self.w_20 = numpy.array([
-            4,  4,  4,  4,  4,  5,  6,  7,  8,  9, 10,
+            4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 16, 16, 16, 16
         ])
 
         self.w_05_20 = numpy.array([
-            1,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+            1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 16, 16, 16, 16
         ])
 
@@ -511,7 +511,7 @@ class Test_winsorize_dataframe(object):
 
     def test_three_col(self):
         w = numutils.winsorize_dataframe(self.df, A=0.20, C=0.10, B=0.20)
-        expected = pandas.DataFrame({'A': self.w_20,'B': self.w_20, 'C': self.w_10})
+        expected = pandas.DataFrame({'A': self.w_20, 'B': self.w_20, 'C': self.w_10})
         pdtest.assert_frame_equal(w, expected)
 
     def test_tuple_limit(self):
