@@ -241,7 +241,7 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     return wnf
 
 
-def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
+def boxplot(boxplot_stats, ax=None, position=None, width=0.8, shownotches=True,
             color='b', marker='o', patch_artist=True, showmean=False):
 
     """
@@ -253,11 +253,11 @@ def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
         List of matplotlib boxplot-compatible statistics to be plotted
     ax : matplotlib Axes, optional
         The axis on which the boxplot will be drawn.
-    position : int or list of int,
+    position : int or list of int, optional
         Location on the x-axis where the boxplot will be drawn.
     width : float, optional (default = 0.8)
         Width of the boxplots.
-    notch : bool, optional (default = True)
+    shownotches : bool, optional (default = True)
         Toggles notched boxplots where the notches show a confidence
         interval around the mediand.
     color : string, optional (default = 'b')
@@ -281,7 +281,9 @@ def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
 
     fig, ax = validate.axes(ax)
 
-    if numpy.isscalar(position):
+    if position is None:
+        position = numpy.arange(len(boxplot_stats)) + 1
+    elif numpy.isscalar(position):
         position = [position]
 
     meanprops = dict(
@@ -346,7 +348,7 @@ def boxplot(boxplot_stats, ax=None, position=1, width=0.8, notch=True,
         whiskerprops=whiskerprops,
         medianprops=medianprops,
         boxprops=boxprops,
-        shownotches=notch,
+        shownotches=shownotches,
         showcaps=False,
         manage_xticks=False,
         patch_artist=patch_artist,

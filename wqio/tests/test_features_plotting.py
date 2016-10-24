@@ -53,6 +53,7 @@ def inflow_loc_green():
 def inflow_xlims():
     return {'left': 0, 'right': 2}
 
+
 @pytest.fixture
 def inflow_xlims_vs():
     return {'left': -0.5, 'right': 0.5}
@@ -96,7 +97,7 @@ def test_loc_boxplot_width(inflow_loc_red, inflow_xlims):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_boxplot_no_notch(inflow_loc_red, inflow_xlims):
-    fig6 = inflow_loc_red.boxplot(notch=False, xlims=inflow_xlims)
+    fig6 = inflow_loc_red.boxplot(shownotches=False, xlims=inflow_xlims)
     return fig6
 
 
@@ -110,12 +111,6 @@ def test_loc_boxplot_bacteria_geomean(inflow_loc_green, inflow_xlims):
 def test_loc_boxplot_with_ylabel(inflow_loc_green, inflow_xlims):
     fig8 = inflow_loc_green.boxplot(ylabel='Test Ylabel', xlims=inflow_xlims)
     return fig8
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_boxplot_fallback_to_vert_scatter(inflow_loc_green, inflow_xlims):
-    fig9 = inflow_loc_green.boxplot(minpoints=numpy.inf, xlims=inflow_xlims)
-    return fig9
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
@@ -225,7 +220,7 @@ def test_loc_statplot_yscale_linear(inflow_loc_blue):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_statplot_no_notch(inflow_loc_blue):
-    fig3 = inflow_loc_blue.statplot(notch=False)
+    fig3 = inflow_loc_blue.statplot(shownotches=False)
     return fig3
 
 
@@ -279,43 +274,43 @@ def test_loc_vertical_scatter_default(inflow_loc_blue):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_provided_ax(inflow_loc_blue, inflow_xlims_vs):
+def test_loc_vertical_scatter_provided_ax(inflow_loc_blue):
     fig, ax2 = pyplot.subplots()
-    fig = inflow_loc_blue.verticalScatter(ax=ax2, xlims=inflow_xlims_vs)
+    fig = inflow_loc_blue.verticalScatter(ax=ax2)
     assert isinstance(fig, pyplot.Figure)
     with pytest.raises(ValueError):
-        inflow_loc_blue.verticalScatter(ax='junk', xlims=inflow_xlims_vs)
+        inflow_loc_blue.verticalScatter(ax='junk')
 
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_pos(inflow_loc_blue, inflow_xlims_vs):
-    fig = inflow_loc_blue.verticalScatter(pos=1.25, xlims=inflow_xlims_vs)
+def test_loc_vertical_scatter_pos(inflow_loc_blue):
+    fig = inflow_loc_blue.verticalScatter(pos=1.25)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_ylabel(inflow_loc_red, inflow_xlims_vs):
-    fig = inflow_loc_red.verticalScatter(ylabel='Test Y-Label', xlims=inflow_xlims_vs)
+def test_loc_vertical_scatter_ylabel(inflow_loc_red):
+    fig = inflow_loc_red.verticalScatter(ylabel='Test Y-Label')
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_yscale_linear(inflow_loc_red, inflow_xlims_vs):
-    fig = inflow_loc_red.verticalScatter(yscale='linear', xlims=inflow_xlims_vs)
+def test_loc_vertical_scatter_yscale_linear(inflow_loc_red):
+    fig = inflow_loc_red.verticalScatter(yscale='linear')
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_not_ignoreROS(inflow_loc_red, inflow_xlims_vs):
-    fig = inflow_loc_red.verticalScatter(ignoreROS=False, xlims=inflow_xlims_vs)
+def test_loc_vertical_scatter_not_ignoreROS(inflow_loc_red):
+    fig = inflow_loc_red.verticalScatter(ignoreROS=False)
     return fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_vertical_scatter_markersize(inflow_loc_red, inflow_xlims_vs):
-    fig = inflow_loc_red.verticalScatter(markersize=8, xlims=inflow_xlims_vs)
+def test_loc_vertical_scatter_markersize(inflow_loc_red):
+    fig = inflow_loc_red.verticalScatter(markersize=8)
     return fig
 
 
@@ -384,7 +379,7 @@ def test_ds_boxplot_width(ds_basic, inflow_xlims):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_ds_boxplot_no_notch(ds_basic, inflow_xlims):
-    fig6 = ds_basic.boxplot(notch=False, xlims=inflow_xlims)
+    fig6 = ds_basic.boxplot(shownotches=False, xlims=inflow_xlims)
     return fig6
 
 
@@ -398,12 +393,6 @@ def test_ds_boxplot_bacteria_geomean(ds_basic, inflow_xlims):
 def test_ds_boxplot_with_ylabel(ds_basic, inflow_xlims):
     fig8 = ds_basic.boxplot(ylabel='Test Ylabel', xlims=inflow_xlims)
     return fig8
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_boxplot_fallback_to_vert_scatter(ds_basic):
-    fig9 = ds_basic.boxplot(minpoints=numpy.inf)
-    return fig9
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
@@ -513,7 +502,7 @@ def test_ds_statplot_yscale_linear(ds_basic):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_ds_statplot_no_notch(ds_basic):
-    fig3 = ds_basic.statplot(notch=False)
+    fig3 = ds_basic.statplot(shownotches=False)
     return fig3
 
 
