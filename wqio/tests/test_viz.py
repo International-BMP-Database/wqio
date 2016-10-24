@@ -351,7 +351,7 @@ class Test_whiskers_and_fliers_log10(base_whiskers_and_fliersMixin):
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_basic(boxplot_data):
     fig, ax = pyplot.subplots()
-    viz.boxplot(boxplot_data, ax=ax, notch=True, patch_artist=False)
+    viz.boxplot(boxplot_data, ax=ax, shownotches=True, patch_artist=False)
     ax.set_xlim((0, 2))
     return fig
 
@@ -359,7 +359,7 @@ def test_boxplot_basic(boxplot_data):
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_boxplot_with_mean(boxplot_data):
     fig, ax = pyplot.subplots()
-    viz.boxplot(boxplot_data, ax=ax, notch=True, patch_artist=True,
+    viz.boxplot(boxplot_data, ax=ax, shownotches=True, patch_artist=True,
                 marker='^', color='red', showmean=True)
     ax.set_xlim((0, 2))
     return fig

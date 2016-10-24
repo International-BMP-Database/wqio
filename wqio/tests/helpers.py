@@ -163,7 +163,7 @@ def checkdep_tex():  # pragma: no cover
 
 def assert_bigstring_equal(input_string, known_string, input_out, known_out):  # pragma: no cover
     try:
-        nt.assert_equal(input_string, known_string)
+        input_string == known_string
     except:
         with open(input_out, 'w') as f:
             f.write(input_string)

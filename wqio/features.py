@@ -561,8 +561,8 @@ class Location(object):
         return [bxpstats]
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', notch=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, xlabel=None, minpoints=5,
+    def boxplot(self, ax=None, pos=1, yscale='log', shownotches=True, showmean=True,
+                width=0.8, bacteria=False, ylabel=None, xlabel=None,
                 patch_artist=False, xlims=None):
         """ Draws a boxplot and whisker on a matplotlib figure
 
@@ -575,7 +575,7 @@ class Location(object):
             Location along x-axis where boxplot will be placed.
         yscale : optional string ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-        notch : optional bool (default=True)
+        shownotches : optional bool (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
         showmean : optional bool (default=True)
@@ -590,10 +590,6 @@ class Location(object):
             Label for y-axis
         xlabel : string or None (default):
             Label for x-axis. If None, uses self.name
-        minpoints : int, optional (default = 5)
-            The minimum number of data points required to draw a
-            boxplot. If too few points are present, the drawing will
-            fallback to a verticalScatter plot.
         patch_artist : optional bool (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
@@ -608,27 +604,22 @@ class Location(object):
         """
 
         fig, ax = validate.axes(ax)
-        if self.N >= minpoints:
-            y_log = yscale == 'log'
-            bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
-            if xlabel is not None:
-                bxpstats[0]['label'] = xlabel
+        y_log = yscale == 'log'
+        bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
+        if xlabel is not None:
+            bxpstats[0]['label'] = xlabel
 
-            bp = viz.boxplot(
-                bxpstats,
-                ax=ax,
-                position=pos,
-                width=width,
-                color=self.color,
-                marker=self.plot_marker,
-                patch_artist=patch_artist,
-                showmean=showmean,
-                notch=notch,
-            )
-
-        else:
-            self.verticalScatter(ax=ax, pos=pos, jitter=width * 0.5, alpha=0.75,
-                                 ylabel=ylabel, yscale=yscale, ignoreROS=True)
+        bp = viz.boxplot(
+            bxpstats,
+            ax=ax,
+            position=pos,
+            width=width,
+            color=self.color,
+            marker=self.plot_marker,
+            patch_artist=patch_artist,
+            showmean=showmean,
+            shownotches=shownotches,
+        )
 
         ax.set_yscale(yscale)
         if yscale == 'log':
@@ -716,7 +707,7 @@ class Location(object):
 
         return fig
 
-    def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
+    def statplot(self, pos=1, yscale='log', shownotches=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, xlabel=None,
                  axtype='prob', patch_artist=False, **plotopts):
         """ Creates a two-axis figure with a boxplot & probability plot.
@@ -727,7 +718,7 @@ class Location(object):
             Location along x-axis where boxplot will be placed.
         yscale : string, optional ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-        notch : bool, optional (default=True)
+        shownotches : bool, optional (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
         showmean : bool, optional (default=True)
@@ -766,7 +757,7 @@ class Location(object):
         ax1 = pyplot.subplot2grid((1, 4), (0, 0))
         ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
-        self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
+        self.boxplot(ax=ax1, pos=pos, yscale=yscale, shownotches=shownotches,
                      showmean=showmean, width=width, bacteria=bacteria,
                      ylabel=ylabel, xlabel=xlabel, patch_artist=patch_artist,
                      xlims={'left': pos - (0.6 * width), 'right': pos + (0.6 * width)})
@@ -780,9 +771,8 @@ class Location(object):
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def verticalScatter(self, ax=None, pos=1, jitter=0.4, alpha=0.75,
-                        ylabel=None, yscale='log', ignoreROS=True,
-                        markersize=4, xlims=None):
+    def verticalScatter(self, ax=None, pos=1, ylabel=None, yscale='log',
+                        ignoreROS=True, markersize=6):
         """ Draws a clustered & jittered scatter plot of the data
 
         Parameters
@@ -808,9 +798,6 @@ class Location(object):
             ROS'd data with a single marker.
         markersize : int, optional (default = 6)
             Size of data markers on the figure in points.
-        xlims : dict, optional
-            Dictionary of limits for the x-axis. Keys must be either
-            "left", "right", or both
 
         Returns
         -------
@@ -820,35 +807,38 @@ class Location(object):
 
         fig, ax = validate.axes(ax)
 
-        if jitter == 0:
-            xvals = [pos] * self.N
-        else:
-            low = pos - jitter * 0.5
-            high = pos + jitter * 0.5
-            xvals = numpy.random.uniform(low=low, high=high, size=self.N)
-
         if not ignoreROS and self.useROS:
-            ax.plot(xvals, self.data, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha)
+            rescol = 'final'
+            hue_column = None
+            hue_order = None
+            df = self.dataframe.copy()
         else:
-            y_nondet = self.raw_data.loc[self.raw_data[self.cencol], self.rescol]
-            y_detect = self.raw_data.loc[~self.raw_data[self.cencol], self.rescol]
+            rescol = self.rescol
+            hue_column = 'Censored'
+            hue_order = [True, False]
+            df = self.raw_data.copy()
 
-            ax.plot(xvals[:self.ND], y_nondet, marker='v', markersize=markersize,
-                    markerfacecolor='none', markeredgecolor=self.color,
-                    linestyle='none', alpha=alpha, label='Non-detects')
-
-            ax.plot(xvals[self.ND:], y_detect, marker=self.plot_marker, markersize=markersize,
-                    markerfacecolor=self.color, markeredgecolor='white',
-                    linestyle='none', alpha=alpha, label='Detects')
+        plot = (
+            df.assign(pos=pos)
+            .assign(Result=lambda df: df[rescol])
+            .assign(Censored=lambda df: df[self.cencol])
+            .pipe(
+                (seaborn.swarmplot, 'data'),
+                y='Result',
+                x='pos',
+                hue=hue_column,
+                hue_order=hue_order,
+                size=markersize,
+                marker=self.plot_marker,
+                color=self.color,
+                edgecolor='k',
+                linewidth=1.25,
+            )
+        )
 
         ax.set_yscale(yscale)
         if ylabel is not None:
             ax.set_ylabel(ylabel)
-
-        if xlims is not None:
-            ax.set_xlim(**xlims)
 
         return fig
 
@@ -1229,10 +1219,10 @@ class Dataset(object):
         return output
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', notch=True,
+    def boxplot(self, ax=None, pos=1, yscale='log', shownotches=True,
                 showmean=True, width=0.8, bacteria=False, ylabel=None,
                 xlims=None, bothTicks=True, offset=0.5,
-                patch_artist=False, minpoints=5):
+                patch_artist=False):
         """ Adds a boxplot to a matplotlib figure
 
         Parameters
@@ -1244,7 +1234,7 @@ class Dataset(object):
             Location along x-axis where boxplot will be placed.
         yscale : optional string ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-        notch : bool, optional (default=True)
+        shownotches : bool, optional (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
         showmean : bool, optional (default is True)
@@ -1268,10 +1258,6 @@ class Dataset(object):
         patch_artist : bool, optional (default = False)
             Toggles the use of patch artist instead of a line artists
             for the boxes
-        minpoints : int, optional (default = 5)
-            The minimum number of data points required to draw a
-            boxplot. If too few points are present, the drawing will
-            fallback to a verticalScatter plot.
 
         Returns
         -------
@@ -1282,13 +1268,22 @@ class Dataset(object):
         fig, ax = validate.axes(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1 * offset, offset]):
-            if loc.include:
-                loc.boxplot(ax=ax, pos=pos + offset, notch=notch, showmean=showmean,
-                            width=width / 2, bacteria=bacteria, ylabel=None,
-                            patch_artist=patch_artist, minpoints=minpoints)
+            y_log = yscale == 'log'
+            bxpstats = loc.boxplot_stats(log=y_log, bacteria=bacteria)
+            bp = viz.boxplot(
+                bxpstats,
+                ax=ax,
+                position=pos + offset,
+                width=width,
+                color=loc.color,
+                marker=loc.plot_marker,
+                patch_artist=patch_artist,
+                showmean=showmean,
+                shownotches=shownotches,
+            )
 
         ax.set_yscale(yscale)
-        if yscale == 'log':
+        if y_log:
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
         viz.gridlines(ax, yminor=True)
 
@@ -1382,7 +1377,7 @@ class Dataset(object):
 
         return fig
 
-    def statplot(self, pos=1, yscale='log', notch=True, showmean=True,
+    def statplot(self, pos=1, yscale='log', shownotches=True, showmean=True,
                  width=0.8, bacteria=False, ylabel=None, axtype='qq',
                  patch_artist=False):
         """Creates a two-axis figure with a boxplot & probability plot.
@@ -1393,7 +1388,7 @@ class Dataset(object):
             Location along x-axis where boxplot will be placed.
         yscale : string, optional ['linear' or 'log' (default)]
             Scale formatting of the y-axis
-        notch : bool, optional (default=True)
+        shownotches : bool, optional (default=True)
             Toggles drawing of bootstrapped confidence interval around
             the median.
         showmean : bool, optional (default=True)
@@ -1425,7 +1420,7 @@ class Dataset(object):
         ax1 = pyplot.subplot2grid((1, 4), (0, 0))
         ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
-        self.boxplot(ax=ax1, pos=pos, yscale=yscale, notch=notch,
+        self.boxplot(ax=ax1, pos=pos, yscale=yscale, shownotches=shownotches,
                      showmean=showmean, width=width, bacteria=bacteria,
                      ylabel=ylabel, patch_artist=patch_artist)
 
@@ -2029,7 +2024,7 @@ class DataCollection(object):
             plotcol = 'Log of {}'.format(self.rescol.replace('_', ' '))
             df[plotcol] = numpy.log(df[self.rescol])
         else:
-            pltcol = self.rescol
+            plotcol = self.rescol
 
         fgrid = seaborn.FacetGrid(df, row=row, col=col, hue=hue,
                                   sharex=True, sharey=True,
