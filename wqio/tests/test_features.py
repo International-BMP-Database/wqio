@@ -466,11 +466,13 @@ class Test_Dataset(object):
         out_data = helpers.getTestROSData()
         out_data['res'] -= 1.5
 
-        self.influent = Location(in_data, station_type='inflow', bsIter=self.known_bsIter,
-                                 rescol='res', qualcol='qual', useROS=False)
+        self.influent = Location(in_data, station_type='inflow',
+                                 bsIter=self.known_bsIter, rescol='res',
+                                 qualcol='qual', useROS=False)
 
-        self.effluent = Location(out_data, station_type='outflow', bsIter=self.known_bsIter,
-                                 rescol='res', qualcol='qual', useROS=False)
+        self.effluent = Location(out_data, station_type='outflow',
+                                 bsIter=self.known_bsIter, rescol='res',
+                                 qualcol='qual', useROS=False)
 
         self.ds = Dataset(self.influent, self.effluent)
 
@@ -974,8 +976,8 @@ class _base_DataCollecionMixin(object):
 def load_known_dc_stat(csv_data):
     df = (
         pandas.read_csv(StringIO(dedent(csv_data)))
-            .set_index(['param', 'station'])
-            .unstack(level='station')
+        .set_index(['param', 'station'])
+        .unstack(level='station')
     )
     df.columns = df.columns.swaplevel(0, 1)
     return df.sort_index(axis='columns')
@@ -1047,7 +1049,6 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
             H,Outflow,0.635636,1.604207,2.387034
             H,Reference,0.976348,1.940175,2.846231
         """)
-
 
         self.known_genericstat = pandas.DataFrame({
             ('Reference', 'stat'): {
