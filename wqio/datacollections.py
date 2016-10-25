@@ -31,10 +31,10 @@ class DataCollection(object):
         Other columns besides ``stationcol`` and ``paramcol`` that
         should be considered when grouping into subsets of data.
     pairgroups : list of strings, optional
-        The remaining columns that, along with ``stationcol``,
-        ``paramcol``, and ``othergroups``, can define a unique index
-        on ``dataframe`` such that it can be "unstack" (i.e., pivoted,
-        cross-tabbed) to place the ``stationcol`` values into columns.
+        Other columns besides ``stationcol`` and ``paramcol`` that
+        can be sued define a unique index on ``dataframe`` such that it
+        can be "unstack" (i.e., pivoted, cross-tabbed) to place the
+        ``stationcol`` values into columns.
     useros : bool (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
@@ -47,6 +47,7 @@ class DataCollection(object):
         confidence intervals around a statistic.
 
     """
+
     cencol = '__censorship'
 
     def __init__(self, dataframe, rescol='res', qualcol='qual',
@@ -58,9 +59,9 @@ class DataCollection(object):
         self._cache = resettable_cache()
 
         # basic input
-        self._filterfxn = filterfxn
         self._raw_data = dataframe
         self._raw_rescol = rescol
+        self.filterfxn = filterfxn
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
@@ -77,10 +78,8 @@ class DataCollection(object):
         else:
             self.rescol = rescol
 
-
         self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
         self.groupcols_comparison = [self.paramcol] + self.othergroups
-
 
         self.pairgroups = self.pairgroups + [self.stationcol, self.paramcol]
 
@@ -90,18 +89,6 @@ class DataCollection(object):
                 .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
                 .reset_index()
         )
-
-    @property
-    def filterfxn(self):
-        if self._filterfxn is None:
-            return lambda x: True
-        else:
-            return self._filterfxn
-
-    @filterfxn.setter
-    def filterfxn(self, value):
-        self._cache.clear()
-        self._filterfxn = value
 
     @cache_readonly
     def tidy(self):
@@ -137,6 +124,8 @@ class DataCollection(object):
         _pairs = (
             self.data
                 .reset_index()
+                .groupby(by=self.groupcols)
+                .filter(self.filterfxn)
                 .set_index(self.pairgroups)
                 .unstack(level=self.stationcol)
                 .rename_axis(['value', self.stationcol], axis='columns')
@@ -181,21 +170,21 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self._generic_stat(lambda x: x.count(), use_bootstrap=False, statname='Count')
+        return self._generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
 
     @cache_readonly
-    def medians(self):
+    def median(self):
         return self._generic_stat(numpy.median, statname='median')
 
     @cache_readonly
-    def means(self):
+    def mean(self):
         return self._generic_stat(numpy.mean, statname='mean')
 
     @cache_readonly
-    def std_devs(self):
-        return self._generic_stat(numpy.std, statname='std. dev.')
+    def std_dev(self):
+        return self._generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
 
-    def percentiles(self, percentile):
+    def percentile(self, percentile):
         return self._generic_stat(lambda x: numpy.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
                                   use_bootstrap=False)
@@ -205,9 +194,9 @@ class DataCollection(object):
         return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
 
     @cache_readonly
-    def logstd(self):
+    def logstd_dev(self):
         return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
-                                  statname='Log-std. dev.')
+                                  use_bootstrap=False, statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
@@ -216,8 +205,8 @@ class DataCollection(object):
         return geomean
 
     @cache_readonly
-    def geostd(self):
-        geostd = numpy.exp(self.logstd)
+    def geostd_dev(self):
+        geostd = numpy.exp(self.logstd_dev)
         geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
 
@@ -306,7 +295,8 @@ class DataCollection(object):
     def spearman(self):
         return self._comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
 
-    def theilslops(self):
+    @cache_readonly
+    def theilslopes(self):
         raise NotImplementedError
 
     @cache_readonly
@@ -331,18 +321,16 @@ class DataCollection(object):
 
         return _locations
 
-    @cache_readonly
-    def datasets(self):
-        _datasets = []
+    def datasets(self, loc1, loc2):
         groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
         for names, data in self.data.groupby(by=groupcols):
             ds_dict = dict(zip(groupcols, names))
 
-            ds_dict[self.stationcol] = 'inflow'
+            ds_dict[self.stationcol] = loc1
             infl = self.selectLocations(squeeze=True, **ds_dict)
 
-            ds_dict[self.stationcol] = 'outflow'
+            ds_dict[self.stationcol] = loc2
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
@@ -351,15 +339,17 @@ class DataCollection(object):
             ds = Dataset(infl, effl, useros=self.useros, name=dsname)
             ds.definition = ds_dict
 
-            _datasets.append(ds)
-
-        return _datasets
+            yield ds
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
         items = collection.copy()
         for key, value in kwargs.items():
-            items = [r for r in filter(lambda x: x.definition[key] == value, items)]
+            if numpy.isscalar(value):
+                cond = lambda x: x.definition[key] == value
+            else:
+                cond = lambda x: x.definition[key] in value
+            items = [r for r in filter(cond, items)]
 
         if squeeze:
             if len(items) == 1:
@@ -375,9 +365,9 @@ class DataCollection(object):
         )
         return locations
 
-    def selectDatasets(self, squeeze=False, **kwargs):
+    def selectDatasets(self, loc1, loc2, squeeze=False, **kwargs):
         datasets = self._filter_collection(
-            self.datasets.copy(), squeeze=squeeze, **kwargs
+            self.datasets(loc1, loc2), squeeze=squeeze, **kwargs
         )
         return datasets
 

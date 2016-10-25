@@ -57,6 +57,58 @@ def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     return data
 
 
+@seed
+def make_dc_data_complex(dropsome=True):
+    dl_map = {
+        'A': 0.25, 'B': 0.50, 'C': 0.10, 'D': 1.00,
+        'E': 0.25, 'F': 0.50, 'G': 0.10, 'H': 1.00,
+    }
+
+    index = pandas.MultiIndex.from_product([
+        list('ABCDEFGH'),
+        list('1234567'),
+        ['GA', 'AL', 'OR', 'CA'],
+        ['Inflow', 'Outflow', 'Reference']
+    ], names=['param', 'bmp', 'state', 'loc'])
+
+    xtab = (
+        pandas.DataFrame(index=index, columns=['res'])
+            .unstack(level='param')
+            .unstack(level='state')
+    )
+
+    xtab_rows = xtab.shape[0]
+    for c in xtab.columns:
+        mu = numpy.random.uniform(low=-1.7, high=2)
+        sigma = numpy.random.uniform(low=0.1, high=2)
+        xtab[c] = numpy.random.lognormal(mean=mu, sigma=sigma, size=xtab_rows)
+
+    data = xtab.stack(level='state').stack(level='param')
+
+    data['DL'] = data.apply(
+        lambda r: dl_map.get(r.name[-1]),
+        axis=1
+    )
+
+    data['res'] = data.apply(
+        lambda r: dl_map.get(r.name[-1]) if r['res'] < r['DL'] else r['res'],
+        axis=1
+    )
+
+    data['qual'] = data.apply(
+        lambda r: '<' if r['res'] <= r['DL'] else '=',
+        axis=1
+    )
+
+    if dropsome:
+        if int(dropsome) == 1:
+            dropsome = 0.25
+        index = numpy.random.uniform(size=data.shape[0]) >= dropsome
+        data = data.loc[index]
+
+    return data
+
+
 def comp_statfxn(x, y):
     stat = namedtuple('teststat', ('statistic', 'pvalue'))
     result = x.max() - y.min()

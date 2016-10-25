@@ -4,6 +4,7 @@ from io import StringIO
 import numpy
 import pandas
 
+from unittest import mock
 import pytest
 import pandas.util.testing as pdtest
 from wqio.tests import helpers
@@ -12,481 +13,546 @@ from wqio.features import Location, Dataset
 from wqio.datacollections import DataCollection
 
 
-class _base_DataCollecionMixin(object):
-    known_rescol = 'ros_res'
-    known_raw_rescol = 'res'
-    known_roscol = 'ros_res'
-    known_qualcol = 'qual'
-    known_stationcol = 'loc'
-    known_paramcol = 'param'
-    known_ndval = 'ND'
-    expected_comp_index = pandas.MultiIndex.from_tuples([
-        ('A', 'Inflow', 'Outflow'),
-        ('A', 'Inflow', 'Reference'),
-        ('A', 'Outflow', 'Inflow'),
-        ('A', 'Outflow', 'Reference'),
-        ('A', 'Reference', 'Inflow'),
-        ('A', 'Reference', 'Outflow'),
-        ('B', 'Inflow', 'Outflow'),
-        ('B', 'Inflow', 'Reference'),
-        ('B', 'Outflow', 'Inflow'),
-        ('B', 'Outflow', 'Reference'),
-        ('B', 'Reference', 'Inflow'),
-        ('B', 'Reference', 'Outflow'),
-    ], names=['param', 'loc_1', 'loc_2'])
+def check_stat(expected_csv, result, comp=False):
+    index_col = [0]
+    if comp:
+        index_col += [1]
 
-    def prep_comp_result(self, df):
-        return df.query("param in ['A', 'B']")
+    file_obj = StringIO(dedent(expected_csv))
+    expected = pandas.read_csv(file_obj, header=[0, 1], index_col=index_col)
 
-    def prep_comp_expected(self, data):
-        return pandas.DataFrame(data, index=self.expected_comp_index)
+    if comp:
+        expected = expected.stack(level=-1)
 
-    def test__raw_rescol(self):
-        assert self.dc._raw_rescol == self.known_raw_rescol
-
-    def test_data(self):
-        assert isinstance(self.dc.data, pandas.DataFrame)
-
-    def test_roscol(self):
-        assert self.dc.roscol == self.known_roscol
-
-    def test_rescol(self):
-        assert self.dc.rescol == self.known_rescol
-
-    def test_qualcol(self):
-        assert self.dc.qualcol == self.known_qualcol
-
-    def test_stationncol(self):
-        assert self.dc.stationcol == self.known_stationcol
-
-    def test_paramcol(self):
-        assert self.dc.paramcol == self.known_paramcol
-
-    def test_ndval(self):
-        assert self.dc.ndval == [self.known_ndval]
-
-    def test_bsiter(self):
-        assert self.dc.bsiter == self.known_bsiter
-
-    def test_groupby(self):
-        assert self.dc.groupcols == self.known_groupcols
-
-    def test_columns(self):
-        assert self.dc.columns == self.known_columns
-
-    def test_filterfxn(self):
-        assert hasattr(self.dc, 'filterfxn')
-
-    def test_tidy(self):
-        assert isinstance(self.dc.tidy, pandas.DataFrame)
-        tidycols = self.dc.tidy.columns.tolist()
-        knowncols = self.known_columns + [self.known_roscol]
-        assert sorted(tidycols) == sorted(knowncols)
-
-    @helpers.seed
-    def test_means(self):
-        pdtest.assert_frame_equal(
-            self.dc.means.round(3),
-            self.known_means.round(3),
-            check_names=False,
-            check_less_precise=True
-        )
-
-    @helpers.seed
-    def test_medians(self):
-        pdtest.assert_frame_equal(
-            self.dc.medians.round(3),
-            self.known_medians.round(3),
-            check_names=False,
-            check_less_precise=True
-        )
-
-    def test_shaprio(self):
-        expected_data = {
-            ('Inflow', 'pvalue'): [
-                1.35000277e-07, 1.15147395e-06, 2.84853918e-08, 7.25922699e-09,
-                4.04597494e-06, 5.37404680e-08, 6.98694420e-05, 2.09285303e-06,
-            ],
-            ('Outflow', 'shapiro'): [
-                0.68407392, 0.74749016, 0.897427022, 0.55306959,
-                0.78847879, 0.88128829, 0.778801679, 0.71769607,
-            ],
-            ('Reference', 'shapiro'): [
-                0.64490425, 0.66652446, 0.497832655, 0.65883779,
-                0.57689213, 0.39423871, 0.583670616, 0.78648996,
-            ],
-            ('Inflow', 'shapiro'): [
-                0.59733164, 0.67138719, 0.537596583, 0.48065340,
-                0.71066832, 0.56260156, 0.789419353, 0.69042921,
-            ],
-            ('Outflow', 'pvalue'): [
-                1.71045326e-06, 1.4417389138543513e-05, 0.0099637247622013092, 4.2077829220943386e-08,
-                6.73221293e-05, 0.0042873905040323734, 4.616594742401503e-05, 5.1183847062929999e-06,
-            ],
-            ('Reference', 'pvalue'): [
-                5.18675221e-07, 9.91817046e-07, 1.08479882e-08, 7.85432064e-07,
-                7.80523379e-08, 1.08831232e-09, 9.34287243e-08, 6.22547740e-05,
-            ],
-        }
-        result = self.dc.shapiro
-        expected = pandas.DataFrame(expected_data, index=result.index)
-        expected.columns.names = ['station', 'result']
-        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
-
-    def test_shapiro_log(self):
-        expected_data = {
-            ('Inflow', 'log-shapiro'): [
-                0.962131, 0.983048, 0.974349, 0.971814,
-                0.953440, 0.986218, 0.970588, 0.980909,
-            ],
-            ('Inflow', 'pvalue'): [
-                0.3912280, 0.916009, 0.700492, 0.630001,
-                0.2414900, 0.964459, 0.596430, 0.871599,
-            ],
-            ('Outflow', 'log-shapiro'): [
-                0.969009, 0.915884, 0.9498569, 0.972526,
-                0.973539, 0.964473, 0.9782290, 0.982024,
-            ],
-            ('Outflow', 'pvalue'): [
-                0.554274, 0.027473, 0.196495, 0.649692,
-                0.677933, 0.442456, 0.806073, 0.895776,
-            ],
-            ('Reference', 'log-shapiro'): [
-                0.980489, 0.946262, 0.986095, 0.991098,
-                0.966805, 0.958543, 0.975473, 0.971864,
-            ],
-            ('Reference', 'pvalue'): [
-                0.861968, 0.159437, 0.963002, 0.996583,
-                0.498018, 0.321844, 0.731752, 0.631380,
-            ]
-        }
-        result = self.dc.shapiro_log
-        expected = pandas.DataFrame(expected_data, index=result.index)
-        expected.columns.names = ['station', 'result']
-        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
-
-    def test_lillifors(self):
-        expected_data = {
-            ('Inflow', 'lillifors'): [
-                0.27843886, 0.24802344, 0.33527872, 0.37170719,
-                0.22752955, 0.28630622, 0.20595218, 0.27953043
-            ],
-            ('Inflow', 'pvalue'): [
-                6.24148409e-06, 0.000119332, 8.62060186e-09, 6.08463945e-11,
-                0.000695739, 2.72633652e-06, 0.003660092, 5.57279417e-06
-            ],
-            ('Outflow', 'lillifors'): [
-                0.31416123, 0.23332031, 0.13066911, 0.32460209,
-                0.20829954, 0.18088983, 0.25659462, 0.22520102
-            ],
-            ('Outflow', 'pvalue'): [
-                1.17145253e-07, 0.000430609, 0.248687678, 3.30298603e-08,
-                0.003085194, 0.019562376, 5.41005765e-05, 0.000840341
-            ],
-            ('Reference', 'lillifors'): [
-                0.28351398, 0.24930868, 0.29171088, 0.22593144,
-                0.32020481, 0.42722648, 0.32208719, 0.16592420
-            ],
-            ('Reference', 'pvalue'): [
-                3.66921686e-06, 0.000106205, 1.51965475e-06, 0.000792213,
-                5.66187072e-08, 1.06408145e-14, 4.49998108e-08, 0.046766975
-            ],
-        }
-        result = self.dc.lillifors
-        expected = pandas.DataFrame(expected_data, index=result.index)
-        expected.columns.names = ['station', 'result']
-        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
-
-    def test_lillifors_log(self):
-        expected_data = {
-            ('Inflow', 'log-lillifors'): [
-                0.10979498, 0.08601191, 0.13721881, 0.123985937,
-                0.12767141, 0.09254070, 0.11319291, 0.107527896,
-            ],
-            ('Inflow', 'pvalue'): [
-                0.51940912, 0.95582245, 0.18986954, 0.321330151,
-                0.27964797, 0.82837543, 0.46666969, 0.556327244,
-            ],
-            ('Outflow', 'log-lillifors'): [
-                0.10661711, 0.12321271, 0.15586768, 0.144033649,
-                0.09536450, 0.11033031, 0.08012353, 0.089479881,
-            ],
-            ('Outflow', 'pvalue'): [
-                0.57153020, 0.33058849, 0.07956179, 0.140596426,
-                0.77423131, 0.51088991, 1.07047546, 0.887890467,
-            ],
-            ('Reference', 'log-lillifors'): [
-                0.08280941, 0.12379594, 0.10251285, 0.070249172,
-                0.08910822, 0.14824279, 0.10622305, 0.109876879,
-            ],
-            ('Reference', 'pvalue'): [
-                1.01845443, 0.32358845, 0.64250052, 1.251670597,
-                0.89515574, 0.11562015, 0.57817185, 0.518100907,
-            ],
-        }
-        result = self.dc.lillifors_log
-        expected = pandas.DataFrame(expected_data, index=result.index)
-        expected.columns.names = ['station', 'result']
-        pdtest.assert_frame_equal(result, expected, check_less_precise=True)
-
-    def test_anderson_darling(self):
-        with pytest.raises(NotImplementedError):
-            self.dc.anderson_darling
-
-    def test_anderson_darling_log(self):
-        with pytest.raises(NotImplementedError):
-            self.dc.anderson_darling_log
-
-    @helpers.seed
-    def test__generic_stat(self):
-        result = self.dc._generic_stat(numpy.min, use_bootstrap=False)
-        pdtest.assert_frame_equal(
-            numpy.round(result, 3),
-            self.known_genericstat,
-            check_names=False
-        )
-
-    def test_mann_whitney(self):
-        expected_data = {
-            'pvalue': [
-                0.9934626, 0.1029978, 0.9934626, 0.0701802, 0.1029978, 0.07018023,
-                0.3214884, 0.0930252, 0.3214884, 0.5174506, 0.0930252, 0.51745067,
-            ],
-            'mann_whitney': [
-                391.0, 492.0, 393.0, 503.0, 292.0, 281.0,
-                453.0, 495.0, 331.0, 432.0, 289.0, 352.0,
-            ]
-        }
-
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.mann_whitney),
-            self.prep_comp_expected(expected_data),
-        )
-
-    def test_t_test(self):
-        expected_data = {
-            't_test': [
-                0.5069615, 1.7827515, -0.5069615, 1.6629067, -1.7827515, -1.6629067,
-                0.2994807, 0.9528661, -0.2994807, 0.7150517, -0.9528661, -0.7150517,
-            ],
-            'pvalue': [
-                0.6145228, 0.0835157, 0.6145228, 0.1038642, 0.0835157, 0.1038642,
-                0.7657606, 0.3452425, 0.7657606, 0.4776926, 0.3452425, 0.4776926,
-            ]
-        }
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.t_test),
-            self.prep_comp_expected(expected_data),
-        )
-
-    def test_levene(self):
-        expected_data = {
-            'levene': [
-                0.3312645, 2.8502753, 0.3312645, 2.1520503, 2.8502753, 2.1520503,
-                0.0024326, 0.2962336, 0.0024325, 0.4589038, 0.2962336, 0.4589038,
-            ],
-            'pvalue': [
-                0.5673062, 0.0971261, 0.5673062, 0.1481797, 0.0971261, 0.1481797,
-                0.9608452, 0.5884937, 0.9608452, 0.5010288, 0.5884937, 0.5010288
-            ]
-        }
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.levene),
-            self.prep_comp_expected(expected_data),
-            check_less_precise=True,
-        )
-
-    def test_wilcoxon(self):
-        expected_data = {
-            'wilcoxon': [
-                183., 118., 183., 130., 118., 130.,
-                183., 154., 183., 180., 154., 180.,
-            ],
-            'pvalue': [
-                0.6488010, 0.052920, 0.6488010, 0.096449, 0.052920, 0.096449,
-                0.6488010, 0.264507, 0.6488010, 0.600457, 0.264507, 0.600457,
-            ]
-        }
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.wilcoxon),
-            self.prep_comp_expected(expected_data),
-            check_less_precise=True,
-        )
-
-    def test_kendall(self):
-        expected_data = {
-            'kendalltau': [
-                0.04232804,  0.06349206,  0.04232804,  0.02645503,  0.06349206,
-                0.02645503, -0.06878307, -0.04232804, -0.06878307,  0.09523810,
-                -0.04232804,  0.0952381
-            ],
-            'pvalue': [
-                0.75192334,  0.63538834,  0.75192334,  0.84338527,  0.63538834,
-                0.84338527,  0.60748308,  0.75192334,  0.60748308,  0.47693882,
-                0.75192334,  0.47693882
-            ]
-        }
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.kendall),
-            self.prep_comp_expected(expected_data),
-            check_less_precise=True,
-        )
-
-    def test_spearman(self):
-        expected_data = {
-            'spearmanrho': [
-                0.066776, 0.133004, 0.066776, 0.029556, 0.133004, 0.029556,
-                -0.119868, -0.079365, -0.119868, 0.122058, -0.079365, 0.122058,
-            ],
-            'pvalue': [
-                0.735654,  0.499856,  0.735654,  0.881316,  0.499856,  0.881316,
-                0.543476,  0.688090,  0.543476,  0.536084,  0.688090,  0.536084,
-            ]
-        }
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(self.dc.spearman),
-            self.prep_comp_expected(expected_data),
-            check_less_precise=True,
-        )
-
-    def test__comparison_stat(self):
-        result = self.dc._comparison_stat(helpers.comp_statfxn, statname='Tester')
-
-        expected_data = {
-            'pvalue': [
-                8.947202, 9.003257,  6.018320,  6.032946,
-                3.276959, 3.235531, 10.306480, 10.331898,
-                5.552678, 5.584064,  5.795812,  5.801780,
-            ],
-            'Tester': [
-                35.788809, 36.013028, 24.073280, 24.131785,
-                13.107839, 12.942125, 41.225920, 41.327592,
-                22.210713, 22.336259, 23.183249, 23.207123,
-            ]
-        }
-
-        expected = pandas.DataFrame(expected_data, index=self.expected_comp_index)
-        pdtest.assert_frame_equal(
-            self.prep_comp_result(result),
-            expected
-        )
-
-    def test_locations(self):
-        for l in self.dc.locations:
-            assert isinstance(l, Location)
-        assert len(self.dc.locations) == 24
-        assert self.dc.locations[0].definition == {'loc': 'Inflow', 'param': 'A'}
-        assert self.dc.locations[1].definition == {'loc': 'Inflow', 'param': 'B'}
-        assert self.dc.locations[6].definition == {'loc': 'Inflow', 'param': 'G'}
-        assert self.dc.locations[8].definition == {'loc': 'Outflow', 'param': 'A'}
-
-    def test_datasets(self):
-        for d in self.dc.datasets:
-            assert isinstance(d, Dataset)
-        assert len(self.dc.datasets) == 8
-        assert self.dc.datasets[0].definition == {'param': 'A'}
-        assert self.dc.datasets[1].definition == {'param': 'B'}
-        assert self.dc.datasets[6].definition == {'param': 'G'}
-        assert self.dc.datasets[7].definition == {'param': 'H'}
+    pdtest.assert_frame_equal(expected, result, check_less_precise=True)
 
 
-def load_known_dc_stat(csv_data):
-    df = (
-        pandas.read_csv(StringIO(dedent(csv_data)))
-        .set_index(['param', 'station'])
-        .unstack(level='station')
-    )
-    df.columns = df.columns.swaplevel(0, 1)
-    return df.sort_index(axis='columns')
+def remove_g_and_h(group):
+    return group.name[1] not in ['G' , 'H']
 
 
-class Test_DataCollection_baseline(_base_DataCollecionMixin):
-    def setup(self):
-        self.data = helpers.make_dc_data(ndval=self.known_ndval, rescol=self.known_raw_rescol,
-                                         qualcol=self.known_qualcol)
-        self.dc = DataCollection(self.data, paramcol='param', stationcol='loc',
-                                 ndval=self.known_ndval, rescol=self.known_raw_rescol,
-                                 qualcol=self.known_qualcol, pairgroups=['state', 'bmp'])
+@pytest.fixture
+def dc():
+    df = helpers.make_dc_data_complex()
+    dc = DataCollection(df, rescol='res', qualcol='qual',
+                        stationcol='loc', paramcol='param',
+                        ndval='<', othergroups=None,
+                        pairgroups=['state', 'bmp'],
+                        useros=True, filterfxn=remove_g_and_h,
+                        bsiter=10000)
 
-        self.known_groupcols = ['loc', 'param']
-        self.known_columns = ['loc', 'param', self.known_raw_rescol, '__censorship']
-        self.known_bsiter = 10000
-        self.known_means = load_known_dc_stat("""\
-            param,station,lower,mean,upper
-            A,Inflow,2.748679,5.881599,9.2116
-            A,Outflow,2.600673,4.80762,7.197304
-            A,Reference,1.416864,2.555152,3.839059
-            B,Inflow,3.908581,6.96897,10.273159
-            B,Outflow,3.710928,6.297485,9.189436
-            B,Reference,2.56929,4.918943,7.457957
-            C,Inflow,1.608618,3.674344,6.010133
-            C,Outflow,2.351154,3.32731,4.358206
-            C,Reference,1.855405,3.8916,6.490131
-            D,Inflow,1.755983,4.240805,7.240196
-            D,Outflow,1.98268,4.450713,7.433584
-            D,Reference,2.270379,3.818759,5.648175
-            E,Inflow,2.385389,3.877227,5.495141
-            E,Outflow,2.5154,4.01144,5.589268
-            E,Reference,1.240479,2.587013,4.085286
-            F,Inflow,2.641011,5.35544,8.614032
-            F,Outflow,2.487351,3.514617,4.608282
-            F,Reference,1.532666,4.987571,9.699604
-            G,Inflow,2.267453,3.907819,5.639204
-            G,Outflow,1.680899,2.758258,3.920394
-            G,Reference,1.877497,3.618892,5.698217
-            H,Inflow,1.920636,3.252142,4.726754
-            H,Outflow,1.549154,2.632812,3.841772
-            H,Reference,1.717932,2.515394,3.400027
-        """)
-
-        self.known_medians = load_known_dc_stat("""\
-            param,station,lower,median,upper
-            A,Inflow,1.329239,2.82959,3.485278
-            A,Outflow,1.23428,2.499703,3.553598
-            A,Reference,0.694529,1.292849,2.051181
-            B,Inflow,1.717358,3.511042,6.326503
-            B,Outflow,0.88851,2.484602,5.727451
-            B,Reference,0.833077,2.118402,4.418128
-            C,Inflow,0.895116,1.409523,2.011819
-            C,Outflow,1.318304,3.075015,3.833705
-            C,Reference,0.937387,1.832793,2.829857
-            D,Inflow,0.766254,1.873097,2.934091
-            D,Outflow,0.877327,1.613252,1.929779
-            D,Reference,1.190175,2.186729,3.718543
-            E,Inflow,1.327971,2.883189,4.113432
-            E,Outflow,1.341962,2.101454,3.51228
-            E,Reference,0.611767,1.210565,1.916643
-            F,Inflow,1.17812,2.629969,4.345175
-            F,Outflow,1.49992,2.495085,4.226673
-            F,Reference,0.775816,1.473314,2.190129
-            G,Inflow,0.735196,1.84397,3.840832
-            G,Outflow,0.817122,1.558962,2.420768
-            G,Reference,1.058775,2.008404,2.512609
-            H,Inflow,1.2963,1.729254,2.828794
-            H,Outflow,0.635636,1.604207,2.387034
-            H,Reference,0.976348,1.940175,2.846231
-        """)
-
-        self.known_genericstat = pandas.DataFrame({
-            ('Reference', 'stat'): {
-                'D': 0.209, 'A': 0.119, 'B': 0.307, 'H': 0.221,
-                'G': 0.189, 'F': 0.099, 'E': 0.211, 'C': 0.135,
-            },
-            ('Inflow', 'stat'): {
-                'D': 0.107, 'A': 0.178, 'B': 0.433, 'H': 0.210,
-                'G': 0.096, 'F': 0.157, 'E': 0.236, 'C': 0.116,
-            },
-            ('Outflow', 'stat'): {
-                'D': 0.118, 'A': 0.344, 'B': 0.409, 'H': 0.128,
-                'G': 0.124, 'F': 0.300, 'E': 0.126, 'C': 0.219,
-            }
-        })
+    return dc
 
 
-class Test_DataCollection_customNDval(Test_DataCollection_baseline):
-    known_raw_rescol = 'conc'
-    known_roscol = 'ros_conc'
-    known_rescol = 'ros_conc'
-    known_qualcol = 'anote'
-    known_stationcol = 'loc'
-    known_paramcol = 'param'
+def test_basic_attr(dc):
+    assert dc._raw_rescol == 'res'
+    assert isinstance(dc.data, pandas.DataFrame)
+    assert dc.roscol == 'ros_res'
+    assert dc.rescol == 'ros_res'
+    assert dc.qualcol == 'qual'
+    assert dc.stationcol == 'loc'
+    assert dc.paramcol == 'param'
+    assert dc.ndval == ['<']
+    assert dc.bsiter == 10000
+    assert dc.groupcols == ['loc', 'param']
+    assert dc.columns == ['loc', 'param', 'res', '__censorship']
+    assert hasattr(dc, 'filterfxn')
+
+
+def test_data(dc):
+    assert isinstance(dc.data, pandas.DataFrame)
+    assert dc.data.shape == (519, 8)
+    assert 'G' in dc.data['param'].unique()
+    assert 'H' in dc.data['param'].unique()
+
+
+def test_tidy(dc):
+    assert isinstance(dc.tidy, pandas.DataFrame)
+    assert dc.tidy.shape == (388, 5)
+    assert 'G' not in dc.tidy['param'].unique()
+    assert 'H' not in dc.tidy['param'].unique()
+    assert dc.tidy.columns.tolist() == ['loc', 'param', 'res', '__censorship', 'ros_res']
+
+
+def test_paired(dc):
+    assert isinstance(dc.paired, pandas.DataFrame)
+    assert dc.paired.shape == (164, 6)
+    assert 'G' not in dc.paired.index.get_level_values('param').unique()
+    assert 'H' not in dc.paired.index.get_level_values('param').unique()
+    dc.paired.columns.tolist() == [('res', 'Inflow'),
+                                   ('res', 'Outflow'),
+                                   ('res', 'Reference'),
+                                   ('__censorship', 'Inflow'),
+                                   ('__censorship', 'Outflow'),
+                                   ('__censorship', 'Reference')]
+
+
+def test_count(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        result,Count,Count,Count
+        param,,,
+        A,21,22,20
+        B,24,22,19
+        C,24,24,25
+        D,24,25,21
+        E,19,16,20
+        F,21,24,17
+    """
+    check_stat(known_csv, dc.count)
+
+
+@helpers.seed
+def test_median(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Inflow,Outflow,Outflow,Outflow,Reference,Reference,Reference
+        result,lower,median,upper,lower,median,upper,lower,median,upper
+        param,,,,,,,,,
+        A,0.334506,1.197251,2.013994,0.883961,2.231058,2.626023,1.073386,1.639472,1.717293
+        B,1.366948,2.773989,3.294859,0.238161,1.546499,2.579206,0.204164,1.565076,2.137915
+        C,0.169047,0.525957,0.68024,0.247769,0.396984,0.540742,0.136462,0.412693,0.559458
+        D,0.374122,1.201892,2.117927,0.516989,1.362759,1.827087,0.314655,0.882695,1.24545
+        E,0.240769,1.070858,1.152887,0.287914,0.516746,1.477551,0.366824,0.80716,2.040739
+        F,0.05667,0.832488,1.282846,0.425237,1.510942,2.209813,0.162327,0.745993,1.992513
+    """
+    check_stat(known_csv, dc.median)
+
+
+@helpers.seed
+def test_mean(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Inflow,Outflow,Outflow,Outflow,Reference,Reference,Reference
+        result,lower,mean,upper,lower,mean,upper,lower,mean,upper
+        param,,,,,,,,,
+        A,1.244875,2.646682,4.290582,1.952764,5.249281,9.015144,1.501006,3.777974,6.293246
+        B,3.088871,7.647175,12.670781,1.597771,6.863835,12.65965,1.006978,4.504255,9.489099
+        C,0.372328,0.513248,0.657034,0.418296,1.004637,1.708248,0.355404,0.541962,0.742944
+        D,1.298897,3.021235,5.011268,1.269134,2.318808,3.456552,1.006727,1.945828,2.912135
+        E,0.841728,1.914696,3.086477,0.581081,1.098241,1.647634,1.115033,2.283292,3.5266
+        F,0.730967,9.825404,25.303784,1.47824,3.450184,5.660159,1.001284,2.491708,4.141191
+    """
+    check_stat(known_csv, dc.mean)
+
+
+@helpers.seed
+def test_std_dev(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        result,std. dev.,std. dev.,std. dev.
+        param,,,
+        A,3.58649,8.719371,5.527633
+        B,12.360099,13.60243,10.759285
+        C,0.353755,1.691208,0.493325
+        D,4.811938,2.849393,2.248178
+        E,2.55038,1.096698,2.789238
+        F,34.447565,5.361033,3.398367
+    """
+    check_stat(known_csv, dc.std_dev)
+
+
+@helpers.seed
+def test_percentile_25(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        result,pctl 25,pctl 25,pctl 25
+        param,,,
+        A,0.522601,0.906029,1.094721
+        B,1.472541,0.251126,0.314226
+        C,0.164015,0.267521,0.136462
+        D,0.35688,0.516989,0.383895
+        E,0.364748,0.311508,0.394658
+        F,0.120068,0.406132,0.224429
+    """
+    check_stat(known_csv, dc.percentile(25))
+
+
+@helpers.seed
+def test_percentile_75(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        result,pctl 75,pctl 75,pctl 75
+        param,,,
+        A,2.563541,3.838021,2.650648
+        B,4.728871,2.849948,2.261847
+        C,0.776388,0.853535,0.792612
+        D,3.04268,2.79341,3.611793
+        E,1.532775,1.59183,3.201534
+        F,1.792985,2.80979,2.742249
+    """
+    check_stat(known_csv, dc.percentile(75))
+
+
+@helpers.seed
+def test_logmean(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Inflow,Outflow,Outflow,Outflow,Reference,Reference,Reference
+        result,Log-mean,lower,upper,Log-mean,lower,upper,Log-mean,lower,upper
+        param,,,,,,,,,
+        A,0.140559,-0.542266,0.655481,0.733004,0.083331,1.219697,0.545205,-0.095031,1.012713
+        B,1.026473,0.379605,1.527193,0.105106,-0.910899,0.862624,0.068638,-0.937859,0.663884
+        C,-0.963004,-1.316093,-0.652167,-0.83221,-1.47521,-0.406836,-1.088377,-1.551392,-0.70957
+        D,0.062317,-0.674413,0.579414,0.185757,-0.367616,0.591613,-0.063507,-0.670086,0.426025
+        E,-0.103655,-0.773771,0.399788,-0.456202,-1.101804,0.022327,-0.068135,-0.778097,0.516806
+        F,-0.442721,-1.890026,0.310913,0.211658,-0.48962,0.747611,-0.253352,-1.121651,0.494673
+    """
+    check_stat(known_csv, dc.logmean)
+
+
+@helpers.seed
+def test_logstd_dev(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        result,Log-std. dev.,Log-std. dev.,Log-std. dev.
+        param,,,
+        A,1.374026,1.343662,1.225352
+        B,1.430381,2.07646,1.662001
+        C,0.818504,1.263631,1.057177
+        D,1.530871,1.187246,1.277927
+        E,1.264403,1.121038,1.474431
+        F,2.324063,1.516331,1.701596
+    """
+    check_stat(known_csv, dc.logstd_dev)
+
+
+@helpers.seed
+def test_geomean(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Inflow,Outflow,Outflow,Outflow,Reference,Reference,Reference
+        Geo-mean,Log-mean,lower,upper,Log-mean,lower,upper,Log-mean,lower,upper
+        param,,,,,,,,,
+        A,1.150917,0.581429,1.926069,2.081323,1.086901,3.386162,1.724962,0.909344,2.75306
+        B,2.791205,1.461706,4.605233,1.110829,0.402163,2.369369,1.071049,0.391465,1.942321
+        C,0.381744,0.268181,0.520916,0.435087,0.228731,0.665753,0.336763,0.211953,0.491856
+        D,1.064299,0.509456,1.784993,1.204129,0.692383,1.8069,0.938467,0.511665,1.53116
+        E,0.901536,0.46127,1.491509,0.633686,0.332271,1.022578,0.934134,0.459279,1.676664
+        F,0.642286,0.151068,1.36467,1.235726,0.612859,2.111949,0.776195,0.325742,1.639961
+    """
+    check_stat(known_csv, dc.geomean)
+
+
+@helpers.seed
+def test_geostd_dev(dc):
+    known_csv = """\
+        station,Inflow,Outflow,Reference
+        Geo-std. dev.,Log-std. dev.,Log-std. dev.,Log-std. dev.
+        param,,,
+        A,3.951225,3.833055,3.405365
+        B,4.180294,7.976181,5.269843
+        C,2.267105,3.538244,2.878234
+        D,4.622199,3.278041,3.589191
+        E,3.540977,3.068036,4.368548
+        F,10.217099,4.55548,5.48269
+    """
+    check_stat(known_csv, dc.geostd_dev)
+
+
+@helpers.seed
+def test_shapiro(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
+        result,pvalue,shapiro,pvalue,shapiro,pvalue,shapiro
+        param,,,,,,
+        A,1.8405e-05,0.685783088,7.41e-07,0.576068878,4.478e-06,0.617349863
+        B,5.35e-07,0.594411373,2.6e-07,0.530962467,9.6e-08,0.414710045
+        C,0.028773842,0.905906141,1.65e-07,0.546625972,0.002789602,0.860373497
+        D,1.125e-06,0.622915387,1.4798e-05,0.72237432,0.000201738,0.765179813
+        E,1.6584e-05,0.654137194,0.004895572,0.818813443,0.000165472,0.749170363
+        F,4e-09,0.292915702,1.543e-06,0.63467145,0.000167156,0.713968396
+    """
+    check_stat(known_csv, dc.shapiro)
+
+
+@helpers.seed
+def test_shapiro_log(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
+        result,log-shapiro,pvalue,log-shapiro,pvalue,log-shapiro,pvalue
+        param,,,,,,
+        A,0.983521938,0.96662426,0.979861856,0.913820148,0.939460814,0.234214202
+        B,0.957531095,0.390856266,0.97048676,0.722278714,0.967978418,0.735424638
+        C,0.906479359,0.029602444,0.974698305,0.78197974,0.967106879,0.572929323
+        D,0.989704251,0.995502174,0.990663111,0.997093379,0.964812279,0.617747009
+        E,0.955088913,0.479993254,0.95211035,0.523841977,0.963425279,0.61430341
+        F,0.97542423,0.847370088,0.982230783,0.933124721,0.966197193,0.749036908
+    """
+    check_stat(known_csv, dc.shapiro_log)
+
+
+@helpers.seed
+def test_lillifors(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
+        result,lillifors,pvalue,lillifors,pvalue,lillifors,pvalue
+        param,,,,,,
+        A,0.3081305983,1.42209e-05,0.3405937884,3.324e-07,0.3644530472,1.337e-07
+        B,0.3676403629,3.3e-09,0.4203432704,0.0,0.4171653285,1.2e-09
+        C,0.1667986537,0.082737184,0.3247330623,4.463e-07,0.1617532493,0.0904548308
+        D,0.2730119678,6.65111e-05,0.2403110942,0.0006650862,0.2969189853,3.74178e-05
+        E,0.3413982663,2.6564e-06,0.2393138433,0.0148623981,0.2337732366,0.005474318
+        F,0.419545454,1e-10,0.3313152839,2.197e-07,0.2842488753,0.0007414141
+    """
+    check_stat(known_csv, dc.lillifors)
+
+
+@helpers.seed
+def test_lillifors_log(dc):
+    known_csv = """\
+        station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
+        result,log-lillifors,pvalue,log-lillifors,pvalue,log-lillifors,pvalue
+        param,,,,,,
+        A,0.0854810908,1.2224517667,0.1544394307,0.1864662398,0.2014138865,0.0326873688
+        B,0.1616283923,0.105046439,0.1244790187,0.509572695,0.1593433434,0.232181211
+        C,0.1695727779,0.0724891545,0.1238817404,0.4427931135,0.117466422,0.4999577134
+        D,0.0688554854,1.3825869916,0.0606735557,1.4636046313,0.1340195402,0.4203260216
+        E,0.1350657651,0.4926307578,0.1455234065,0.5101195969,0.091648756,1.1600717068
+        F,0.1442079426,0.3040411253,0.0846326712,1.1205112067,0.0858693334,1.3971403427
+    """
+    check_stat(known_csv, dc.lillifors_log)
+
+
+@helpers.seed
+def test_anderson_darling(dc):
+    with pytest.raises(NotImplementedError):
+        _ = dc.anderson_darling
+
+
+@helpers.seed
+def test_anderson_darling_log(dc):
+    with pytest.raises(NotImplementedError):
+        _ = dc.anderson_darling_log
+
+
+@helpers.seed
+def test_mann_whitney(dc):
+    known_csv = """\
+        ,,mann_whitney,mann_whitney,mann_whitney,pvalue,pvalue,pvalue
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,180.0,179.0,,0.2198330905,0.4263216587
+        A,Outflow,282.0,,248.0,0.2198330905,,0.488580368
+        A,Reference,241.0,192.0,,0.4263216587,0.488580368,
+        B,Inflow,,345.0,317.0,,0.0766949991,0.0304383994
+        B,Outflow,183.0,,216.0,0.0766949991,,0.8650586835
+        B,Reference,139.0,202.0,,0.0304383994,0.8650586835,
+        C,Inflow,,282.0,323.0,,0.9097070273,0.6527104406
+        C,Outflow,294.0,,323.0,0.9097070273,,0.6527104406
+        C,Reference,277.0,277.0,,0.6527104406,0.6527104406,
+        D,Inflow,,285.0,263.0,,0.7718162376,0.8111960975
+        D,Outflow,315.0,,293.0,0.7718162376,,0.5082395211
+        D,Reference,241.0,232.0,,0.8111960975,0.5082395211,
+        E,Inflow,,164.0,188.0,,0.7033493939,0.9663820218
+        E,Outflow,140.0,,132.0,0.7033493939,,0.3813114322
+        E,Reference,192.0,188.0,,0.9663820218,0.3813114322,
+        F,Inflow,,201.0,172.0,,0.2505911218,0.8601783903
+        F,Outflow,303.0,,236.0,0.2505911218,,0.4045186043
+        F,Reference,185.0,172.0,,0.8601783903,0.4045186043
+    """
+    check_stat(known_csv, dc.mann_whitney, comp=True)
+
+
+@helpers.seed
+def test_t_test(dc):
+    known_csv = """\
+        ,,pvalue,pvalue,pvalue,t_test,t_test,t_test
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,0.2178424157,0.4563196599,,-1.2604458127,-0.7539785777
+        A,Outflow,0.2178424157,,0.5240147979,1.2604458127,,0.643450194
+        A,Reference,0.4563196599,0.5240147979,,0.7539785777,-0.643450194,
+        B,Inflow,,0.8430007638,0.3898358794,,0.1992705833,0.869235357
+        B,Outflow,0.8430007638,,0.5491097882,-0.1992705833,,0.6043850808
+        B,Reference,0.3898358794,0.5491097882,,-0.869235357,-0.6043850808,
+        C,Inflow,,0.1847386316,0.8191392537,,-1.3639360123,-0.2300373632
+        C,Outflow,0.1847386316,,0.2179907667,1.3639360123,,1.2615982727
+        C,Reference,0.8191392537,0.2179907667,,0.2300373632,-1.2615982727,
+        D,Inflow,,0.5484265023,0.344783812,,0.6056706932,0.9582600001
+        D,Outflow,0.5484265023,,0.6299742693,-0.6056706932,,0.4851636024
+        D,Reference,0.344783812,0.6299742693,,-0.9582600001,-0.4851636024,
+        E,Inflow,,0.2304569921,0.6770414622,,1.2287029977,-0.4198288251
+        E,Outflow,0.2304569921,,0.1023435465,-1.2287029977,,-1.6935358498
+        E,Reference,0.6770414622,0.1023435465,,0.4198288251,1.6935358498,
+        F,Inflow,,0.422008391,0.3549979666,,0.8190789273,0.9463539528
+        F,Outflow,0.422008391,,0.4988994144,-0.8190789273,,0.6826435968
+        F,Reference,0.3549979666,0.4988994144,,-0.9463539528,-0.6826435968
+    """
+    check_stat(known_csv, dc.t_test, comp=True)
+
+
+@helpers.seed
+def test_levene(dc):
+    known_csv = """\
+        ,,levene,levene,levene,pvalue,pvalue,pvalue
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,1.176282059,0.293152155,,0.284450688,0.591287419
+        A,Outflow,1.176282059,,0.397705309,0.284450688,,0.531863542
+        A,Reference,0.293152155,0.397705309,,0.591287419,0.531863542,
+        B,Inflow,,0.003559637,0.402002411,,0.952694449,0.529578712
+        B,Outflow,0.003559637,,0.408938588,0.952694449,,0.526247443
+        B,Reference,0.402002411,0.408938588,,0.529578712,0.526247443,
+        C,Inflow,,1.965613561,0.679535532,,0.167626459,0.413910674
+        C,Outflow,1.965613561,,1.462364363,0.167626459,,0.232602352
+        C,Reference,0.679535532,1.462364363,,0.413910674,0.232602352,
+        D,Inflow,,0.643364813,0.983777911,,0.426532092,0.32681669
+        D,Outflow,0.643364813,,0.116830634,0.426532092,,0.734124856
+        D,Reference,0.983777911,0.116830634,,0.32681669,0.734124856,
+        E,Inflow,,0.961616536,0.410491665,,0.333914902,0.525668596
+        E,Outflow,0.961616536,,2.726351564,0.333914902,,0.107912818
+        E,Reference,0.410491665,2.726351564,,0.525668596,0.107912818,
+        F,Inflow,,0.841984453,0.734809611,,0.363948105,0.396999375
+        F,Outflow,0.841984453,,0.25881357,0.363948105,,0.613802541
+        F,Reference,0.734809611,0.25881357,,0.396999375,0.613802541,
+    """
+    check_stat(known_csv, dc.levene, comp=True)
+
+
+@helpers.seed
+def test_wilcoxon(dc):
+    known_csv = """\
+        ,,pvalue,pvalue,pvalue,wilcoxon,wilcoxon,wilcoxon
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,0.0351569731,0.4074344561,,32.0,59.0
+        A,Outflow,0.0351569731,,0.2552905052,32.0,,46.0
+        A,Reference,0.4074344561,0.2552905052,,59.0,46.0,
+        B,Inflow,,0.6001794871,0.1823383542,,38.0,22.0
+        B,Outflow,0.6001794871,,0.8588630128,38.0,,31.0
+        B,Reference,0.1823383542,0.8588630128,,22.0,31.0,
+        C,Inflow,,0.1592244176,0.5840564537,,75.0,120.0
+        C,Outflow,0.1592244176,,0.4470311612,75.0,,113.0
+        C,Reference,0.5840564537,0.4470311612,,120.0,113.0,
+        D,Inflow,,0.5936182408,0.5302845968,,44.0,31.0
+        D,Outflow,0.5936182408,,0.9721253297,44.0,,45.0
+        D,Reference,0.5302845968,0.9721253297,,31.0,45.0,
+        E,Inflow,,0.8589549227,0.3862707204,,21.0,19.0
+        E,Outflow,0.8589549227,,0.0711892343,21.0,,16.0
+        E,Reference,0.3862707204,0.0711892343,,19.0,16.0,
+        F,Inflow,,0.4924592975,0.952765022,,62.0,22.0
+        F,Outflow,0.4924592975,,0.6566419343,62.0,,28.0
+        F,Reference,0.952765022,0.6566419343,,22.0,28.0
+    """
+    check_stat(known_csv, dc.wilcoxon, comp=True)
+
+
+@helpers.seed
+def test_kendall(dc):
+    known_csv = """\
+        ,,kendalltau,kendalltau,kendalltau,pvalue,pvalue,pvalue
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,-0.0516608683,-0.007380124,,0.7722642973,0.9670209303
+        A,Outflow,-0.0516608683,,-0.0833333333,0.7722642973,,0.6525480985
+        A,Reference,-0.007380124,-0.0833333333,,0.9670209303,0.6525480985,
+        B,Inflow,,0.4413510128,0.298245614,,0.0105349902,0.1071073491
+        B,Outflow,0.4413510128,,0.5598548065,0.0105349902,,0.0017102581
+        B,Reference,0.298245614,0.5598548065,,0.1071073491,0.0017102581,
+        C,Inflow,,0.2802226672,0.0840060487,,0.0755697234,0.5745825312
+        C,Outflow,0.2802226672,,-0.1417004049,0.0755697234,,0.3437304156
+        C,Reference,0.0840060487,-0.1417004049,,0.5745825312,0.3437304156,
+        D,Inflow,,0.4034688906,0.0952986215,,0.0085867302,0.5934234027
+        D,Outflow,0.4034688906,,0.3183367978,0.0085867302,,0.056850268
+        D,Reference,0.0952986215,0.3183367978,,0.5934234027,0.056850268,
+        E,Inflow,,0.1142857143,0.6407032156,,0.6679640324,0.003735355
+        E,Outflow,0.1142857143,,0.1679438246,0.6679640324,,0.4472078693
+        E,Reference,0.6407032156,0.1679438246,,0.003735355,0.4472078693,
+        F,Inflow,,0.0,0.0723101526,,1.0,0.7434709221
+        F,Outflow,0.0,,0.3888888889,1.0,,0.0433081484
+        F,Reference,0.0723101526,0.3888888889,,0.7434709221,0.0433081484
+    """
+    check_stat(known_csv, dc.kendall, comp=True)
+
+
+@helpers.seed
+def test_spearman(dc):
+    known_csv = """\
+        ,,pvalue,pvalue,pvalue,spearmanrho,spearmanrho,spearmanrho
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,0.7574884491,0.9627447553,,-0.0809319588,0.012262418
+        A,Outflow,0.7574884491,,0.7617330788,-0.0809319588,,-0.0823529412
+        A,Reference,0.9627447553,0.7617330788,,0.012262418,-0.0823529412,
+        B,Inflow,,0.0110829791,0.0775159774,,0.5831305575,0.4537313433
+        B,Outflow,0.0110829791,,0.0024069317,0.5831305575,,0.6850916941
+        B,Reference,0.0775159774,0.0024069317,,0.4537313433,0.6850916941,
+        C,Inflow,,0.1330504059,0.6063501968,,0.3387640122,0.1134228342
+        C,Outflow,0.1330504059,,0.3431640379,0.3387640122,,-0.2070506455
+        C,Reference,0.6063501968,0.3431640379,,0.1134228342,-0.2070506455,
+        D,Inflow,,0.0195715066,0.4751861062,,0.4935814032,0.1858231711
+        D,Outflow,0.0195715066,,0.1263974782,0.4935814032,,0.363209462
+        D,Reference,0.4751861062,0.1263974782,,0.1858231711,0.363209462,
+        E,Inflow,,0.9828818202,0.0013596162,,0.0084033613,0.8112988341
+        E,Outflow,0.9828818202,,0.3413722947,0.0084033613,,0.3012263814
+        E,Reference,0.0013596162,0.3413722947,,0.8112988341,0.3012263814,
+        F,Inflow,,0.9645303744,0.6759971848,,-0.0106277141,0.1348767061
+        F,Outflow,0.9645303744,,0.0560590794,-0.0106277141,,0.5028571429
+        F,Reference,0.6759971848,0.0560590794,,0.1348767061,0.5028571429
+    """
+    check_stat(known_csv, dc.spearman, comp=True)
+
+
+@helpers.seed
+def test_theilslopes(dc):
+    with pytest.raises(NotImplementedError):
+        _ = dc.theilslopes
+
+
+def test_locations(dc):
+    for l in dc.locations:
+        assert isinstance(l, Location)
+    assert len(dc.locations) == 18
+    assert dc.locations[0].definition == {'loc': 'Inflow', 'param': 'A'}
+    assert dc.locations[1].definition == {'loc': 'Inflow', 'param': 'B'}
+
+
+def test_datasets(dc):
+    _ds = []
+    for d in dc.datasets('Inflow', 'Outflow'):
+        assert isinstance(d, Dataset)
+        _ds.append(d)
+    assert len(_ds) == 8
+    assert _ds[0].definition == {'param': 'A'}
+    assert _ds[1].definition == {'param': 'B'}
+
+
+# this sufficiently tests dc._filter_collection
+def test_selectLocations(dc):
+    locs = dc.selectLocations(param='A', loc=['Inflow', 'Outflow'])
+    assert len(locs) == 2
+    for n, loc in enumerate(locs):
+        assert isinstance(loc, Location)
+        assert loc.definition['param'] == 'A'
+        if n == 0:
+            assert loc.definition['loc'] == 'Inflow'
+        elif n == 1:
+            assert loc.definition['loc'] == 'Outflow'
+
+
+def test_selectLocations_squeeze_False(dc):
+    locs = dc.selectLocations(param='A', loc=['Inflow'], squeeze=False)
+    assert len(locs) == 1
+    for n, loc in enumerate(locs):
+        assert isinstance(loc, Location)
+        assert loc.definition['param'] == 'A'
+        assert loc.definition['loc'] == 'Inflow'
+
+
+def test_selectLocations_squeeze_True(dc):
+    loc = dc.selectLocations(param='A', loc=['Inflow'], squeeze=True)
+    assert isinstance(loc, Location)
+    assert loc.definition['param'] == 'A'
+    assert loc.definition['loc'] == 'Inflow'
+
+
+def test_selectLocations_squeeze_True_None(dc):
+    loc = dc.selectLocations(param='A', loc=['Junk'], squeeze=True)
+    assert loc is None
+
+
+# since the test_selectLocations* tests stress _filter_collection
+# enough, we'll mock it out for datasets:
+def test_selectDatasets(dc):
+    with mock.patch.object(dc, '_filter_collection') as _fc:
+        with mock.patch.object(dc, 'datasets', return_value=['A', 'B']) as _ds:
+            dc.selectDatasets('Inflow', 'Reference', foo='A', bar='C')
+            _ds.assert_called_once_with('Inflow', 'Reference')
+            _fc.assert_called_once_with(['A', 'B'], foo='A', bar='C', squeeze=False)
