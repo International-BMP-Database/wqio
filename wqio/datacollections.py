@@ -346,10 +346,9 @@ class DataCollection(object):
         items = collection.copy()
         for key, value in kwargs.items():
             if numpy.isscalar(value):
-                cond = lambda x: x.definition[key] == value
+                items = [r for r in filter(lambda x: x.definition[key] == value, items)]
             else:
-                cond = lambda x: x.definition[key] in value
-            items = [r for r in filter(cond, items)]
+                items = [r for r in filter(lambda x: x.definition[key] in value, items)]
 
         if squeeze:
             if len(items) == 1:

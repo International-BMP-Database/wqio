@@ -28,7 +28,7 @@ def check_stat(expected_csv, result, comp=False):
 
 
 def remove_g_and_h(group):
-    return group.name[1] not in ['G' , 'H']
+    return group.name[1] not in ['G', 'H']
 
 
 @pytest.fixture
