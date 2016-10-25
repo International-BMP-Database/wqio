@@ -14,7 +14,7 @@ from wqio.features import Location, Dataset
 
 
 class DataCollection(object):
-    """ WIP: object to compare an arbitrary number of Locations
+    """Generalized water quality comparison object.
 
     Parameters
     ----------
@@ -30,53 +30,64 @@ class DataCollection(object):
     othergroups : list of strings, optional
         Other columns besides ``stationcol`` and ``paramcol`` that
         should be considered when grouping into subsets of data.
-    useROS : bool (default = True)
+    pairgroups : list of strings, optional
+        The remaining columns that, along with ``stationcol``,
+        ``paramcol``, and ``othergroups``, can define a unique index
+        on ``dataframe`` such that it can be "unstack" (i.e., pivoted,
+        cross-tabbed) to place the ``stationcol`` values into columns.
+    useros : bool (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
     filterfxn : callable, optional
         Function that will we passes to a pandas.Groupby object that
         will filter out groups that should not be analyzed (for
         whatever reason).
-    bsIter : int
+    bsiter : int
         Number of iterations the bootstrapper should use when estimating
         confidence intervals around a statistic.
 
     """
+    cencol = '__censorship'
 
-    def __init__(self, dataframe, rescol='res', qualcol='qual', cencol='cen',
+    def __init__(self, dataframe, rescol='res', qualcol='qual',
                  stationcol='station', paramcol='parameter', ndval='ND',
-                 othergroups=None, pairgroups=None, useROS=True, filterfxn=None,
-                 bsIter=10000):
+                 othergroups=None, pairgroups=None, useros=True,
+                 filterfxn=None, bsiter=10000):
 
-        self._filterfxn = filterfxn
-        self._raw_rescol = rescol
+        # cache for all of the properties
         self._cache = resettable_cache()
 
-        self.useROS = useROS
-        self.roscol = 'ros_' + rescol
-        if self.useROS:
-            self.rescol = self.roscol
-        else:
-            self.rescol = rescol
+        # basic input
+        self._filterfxn = filterfxn
+        self._raw_data = dataframe
+        self._raw_rescol = rescol
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
-        self.cencol = cencol
         self.ndval = validate.at_least_empty_list(ndval)
-        self.bsIter = bsIter
-
         self.othergroups = validate.at_least_empty_list(othergroups)
+        self.pairgroups = validate.at_least_empty_list(pairgroups)
+        self.bsiter = bsiter
+
+        self.useros = useros
+
+        self.roscol = 'ros_' + rescol
+        if self.useros:
+            self.rescol = self.roscol
+        else:
+            self.rescol = rescol
+
 
         self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
         self.groupcols_comparison = [self.paramcol] + self.othergroups
 
-        _pcols = validate.at_least_empty_list(pairgroups)
-        self.pairgroups = _pcols + [self.stationcol, self.paramcol]
+
+        self.pairgroups = self.pairgroups + [self.stationcol, self.paramcol]
 
         self.columns = self.groupcols + [self._raw_rescol, self.cencol]
         self.data = (
             dataframe
-                .assign(**{cencol: dataframe[self.qualcol].isin(self.ndval)})
+                .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
                 .reset_index()
         )
 
@@ -94,7 +105,7 @@ class DataCollection(object):
 
     @cache_readonly
     def tidy(self):
-        if self.useROS:
+        if self.useros:
             def fxn(g):
                 rosdf = (
                     ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
@@ -312,7 +323,7 @@ class DataCollection(object):
             loc = Location(
                 data.copy(), station_type=loc_dict[self.stationcol].lower(),
                 rescol=self._raw_rescol, qualcol=self.qualcol,
-                ndval=self.ndval, bsIter=self.bsIter, useROS=self.useROS
+                ndval=self.ndval, bsiter=self.bsiter, useros=self.useros
             )
 
             loc.definition = loc_dict
@@ -337,7 +348,7 @@ class DataCollection(object):
             ds_dict.pop(self.stationcol)
             dsname = '_'.join(names).replace(', ', '')
 
-            ds = Dataset(infl, effl, useROS=self.useROS, name=dsname)
+            ds = Dataset(infl, effl, useros=self.useros, name=dsname)
             ds.definition = ds_dict
 
             _datasets.append(ds)
@@ -370,8 +381,8 @@ class DataCollection(object):
         )
         return datasets
 
-    def stat_summary(self, groupcols=None, useROS=True):
-        if useROS:
+    def stat_summary(self, groupcols=None, useros=True):
+        if useros:
             col = self.roscol
         else:
             col = self.rescol

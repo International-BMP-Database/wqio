@@ -21,7 +21,7 @@ class _base_LocationMixin(object):
 
         # basic test data
         self.tolerance = 0.05
-        self.known_bsIter = 1500
+        self.known_bsiter = 1500
         self.data = helpers.getTestROSData()
 
         # Location stuff
@@ -40,13 +40,13 @@ class _base_LocationMixin(object):
         self.known_min_DL = 5.00
         self.known_filtered_include = False
 
-    def test_bsIter(self):
-        assert hasattr(self.loc, 'bsIter')
-        assert self.loc.bsIter == self.known_bsIter
+    def test_bsiter(self):
+        assert hasattr(self.loc, 'bsiter')
+        assert self.loc.bsiter == self.known_bsiter
 
-    def test_useROS(self):
-        assert hasattr(self.loc, 'useROS')
-        assert self.loc.useROS == self.known_useRos
+    def test_useros(self):
+        assert hasattr(self.loc, 'useros')
+        assert self.loc.useros == self.known_useros
 
     def test_name(self):
         assert hasattr(self.loc, 'name')
@@ -283,8 +283,8 @@ class _base_LocationMixin(object):
 class Test_Location_ROS(_base_LocationMixin):
     def setup(self):
         self.main_setup()
-        self.loc = Location(self.data, station_type='inflow', bsIter=self.known_bsIter,
-                            rescol='res', qualcol='qual', useROS=True)
+        self.loc = Location(self.data, station_type='inflow', bsiter=self.known_bsiter,
+                            rescol='res', qualcol='qual', useros=True)
 
         # known statistics
         self.known_N = 35
@@ -329,7 +329,7 @@ class Test_Location_ROS(_base_LocationMixin):
         )
         self.known_skew = 0.869052892573
         self.known_std = 5.52730949374
-        self.known_useRos = True
+        self.known_useros = True
         self.known_all_positive = True
         self.known_filtered_shape = (27, 2)
         self.known_filtered_data_shape = (27,)
@@ -339,13 +339,13 @@ class Test_Location_noROS(_base_LocationMixin):
     def setup(self):
         self.main_setup()
 
-        # set useROS to True, then turn it off later to make sure that everything
+        # set useros to True, then turn it off later to make sure that everything
         # propogated correctly
-        self.loc = Location(self.data, station_type='inflow', bsIter=self.known_bsIter,
-                            rescol='res', qualcol='qual', useROS=True)
+        self.loc = Location(self.data, station_type='inflow', bsiter=self.known_bsiter,
+                            rescol='res', qualcol='qual', useros=True)
 
         # turn ROS off
-        self.loc.useROS = False
+        self.loc.useros = False
 
         # known statistics
         self.known_N = 35
@@ -391,7 +391,7 @@ class Test_Location_noROS(_base_LocationMixin):
         )
         self.known_skew = 0.853756570358
         self.known_std = 5.24122841148
-        self.known_useRos = False
+        self.known_useros = False
         self.known_filtered_shape = (30, 2)
         self.known_filtered_data_shape = (30,)
 
@@ -413,7 +413,7 @@ class Test_Dataset(object):
 
         # basic test data
         self.tolerance = 0.05
-        self.known_bsIter = 750
+        self.known_bsiter = 750
 
         in_data = helpers.getTestROSData()
         in_data['res'] += 3
@@ -422,12 +422,12 @@ class Test_Dataset(object):
         out_data['res'] -= 1.5
 
         self.influent = Location(in_data, station_type='inflow',
-                                 bsIter=self.known_bsIter, rescol='res',
-                                 qualcol='qual', useROS=False)
+                                 bsiter=self.known_bsiter, rescol='res',
+                                 qualcol='qual', useros=False)
 
         self.effluent = Location(out_data, station_type='outflow',
-                                 bsIter=self.known_bsIter, rescol='res',
-                                 qualcol='qual', useROS=False)
+                                 bsiter=self.known_bsiter, rescol='res',
+                                 qualcol='qual', useros=False)
 
         self.ds = Dataset(self.influent, self.effluent)
 

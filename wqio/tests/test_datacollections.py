@@ -65,8 +65,8 @@ class _base_DataCollecionMixin(object):
     def test_ndval(self):
         assert self.dc.ndval == [self.known_ndval]
 
-    def test_bsIter(self):
-        assert self.dc.bsIter == self.known_bsIter
+    def test_bsiter(self):
+        assert self.dc.bsiter == self.known_bsiter
 
     def test_groupby(self):
         assert self.dc.groupcols == self.known_groupcols
@@ -409,8 +409,8 @@ class Test_DataCollection_baseline(_base_DataCollecionMixin):
                                  qualcol=self.known_qualcol, pairgroups=['state', 'bmp'])
 
         self.known_groupcols = ['loc', 'param']
-        self.known_columns = ['loc', 'param', self.known_raw_rescol, 'cen']
-        self.known_bsIter = 10000
+        self.known_columns = ['loc', 'param', self.known_raw_rescol, '__censorship']
+        self.known_bsiter = 10000
         self.known_means = load_known_dc_stat("""\
             param,station,lower,mean,upper
             A,Inflow,2.748679,5.881599,9.2116

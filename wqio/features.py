@@ -60,13 +60,13 @@ class Location(object):
     station_type : string, optional
         Type of location being analyzed. Valid values are:
         'inflow' (default) or 'outflow'.
-    useROS : bool, optional (default = True)
+    useros : bool, optional (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
     cencol : string, optional (default = 'cen')
         Name of the column indicaticating if a results is censored.
         These values will be computed from ``qualcol`` and ``ndval``.
-    bsIter : int, optional (default = 1e4)
+    bsiter : int, optional (default = 1e4)
         Number of interations to use when using a bootstrap
         algorithm to refine a statistic.
     include : bool, optional (default = True)
@@ -150,8 +150,8 @@ class Location(object):
     """
 
     def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND',
-                 station_type='inflow', useROS=True, cencol='cen',
-                 bsIter=10000, include=True):
+                 station_type='inflow', useros=True, cencol='cen',
+                 bsiter=10000, include=True):
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -168,8 +168,8 @@ class Location(object):
         self._cache = resettable_cache()
 
         # properties of the dataframe and analysis
-        self.bsIter = bsIter
-        self.useROS = useROS
+        self.bsiter = bsiter
+        self.useros = useros
         self.rescol = rescol
         self.qualcol = qualcol
         self.cencol = cencol
@@ -191,7 +191,7 @@ class Location(object):
             if self._dataframe is None:
                 df = self.raw_data.copy()
                 df[self.cencol] = df[self.qualcol].isin(self.ndvals)
-                if self.useROS:
+                if self.useros:
                     ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
                     self._dataframe = ros[['final', self.cencol]]
                 else:
@@ -206,7 +206,7 @@ class Location(object):
     @property
     def data(self):
         if self.hasData:
-            if self.useROS:
+            if self.useros:
                 output = self.dataframe['final'].values
             else:
                 output = self.dataframe[self.rescol].values
@@ -377,7 +377,7 @@ class Location(object):
     @cache_readonly
     def median_conf_interval(self):
         if self.hasData:
-            return bootstrap.BCA(self.data, numpy.median, niter=self.bsIter)
+            return bootstrap.BCA(self.data, numpy.median, niter=self.bsiter)
 
     @cache_readonly
     def mean(self):
@@ -387,7 +387,7 @@ class Location(object):
     @cache_readonly
     def mean_conf_interval(self):
         if self.hasData:
-            return bootstrap.BCA(self.data, numpy.mean, niter=self.bsIter)
+            return bootstrap.BCA(self.data, numpy.mean, niter=self.bsiter)
 
     @cache_readonly
     def std(self):
@@ -405,7 +405,7 @@ class Location(object):
             def fxn(x, **kwds):
                 return numpy.mean(numpy.log(x), **kwds)
 
-            return bootstrap.BCA(self.data, fxn, niter=self.bsIter)
+            return bootstrap.BCA(self.data, fxn, niter=self.bsiter)
 
     @cache_readonly
     def logstd(self):
@@ -690,7 +690,7 @@ class Location(object):
         ignoreROS : bool, optional (default = True)
             By default, this function will plot the original, non-ROS'd
             data with a different symbol for non-detects. If `True`, the
-            and `self.useROS` is `True`, this function will plot the
+            and `self.useros` is `True`, this function will plot the
             ROS'd data with a single marker.
         markersize : int, optional (default = 6)
             Size of data markers on the figure in points.
@@ -703,7 +703,7 @@ class Location(object):
 
         fig, ax = validate.axes(ax)
 
-        if not ignoreROS and self.useROS:
+        if not ignoreROS and self.useros:
             rescol = 'final'
             hue_column = None
             hue_order = None
@@ -747,7 +747,7 @@ class Dataset(object):
     influent, effluent : wqio.Location
         Location objects that will be compared. Data from each Location
         should be joinable on the dataframe's index.
-    useROS : bool (default = True)
+    useros : bool (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
     name : string optional
@@ -762,14 +762,14 @@ class Dataset(object):
     # TODO: constructor should take dataframe, and build Location object,
     # not the other way around. This will allow Dataset.influent = None
     # by passing in a dataframe where df.shape[0] == 0
-    def __init__(self, influent, effluent, useROS=True, name=None):
+    def __init__(self, influent, effluent, useros=True, name=None):
 
         # basic attributes
         self.influent = influent
         self.effluent = effluent
         self._name = name
         self._include = None
-        self.useROS = useROS
+        self.useros = useros
         self._definition = {}
         self._cache = resettable_cache()
 
@@ -1375,7 +1375,7 @@ class Dataset(object):
         return jg
 
     def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
-                    xlabel=None, ylabel=None, one2one=False, useROS=False,
+                    xlabel=None, ylabel=None, one2one=False, useros=False,
                     bestfit=False, minpoints=3, eqn_pos='lower right',
                     equal_scales=True, fitopts=None):
         """ Creates an influent/effluent scatter plot
@@ -1397,7 +1397,7 @@ class Dataset(object):
         one2one : bool, optional (default is False), optional
             Toggles the inclusion of the 1:1 line (i.e. line of
             equality).
-        useROS : bool, optional (default is False)
+        useros : bool, optional (default is False)
             Toggles the use of the ROS'd results. If False, raw results
             (i.e., detection limit for NDs) are used with varying
             symbology.
@@ -1424,7 +1424,7 @@ class Dataset(object):
         )
 
         # plot the ROSd'd result, if requested
-        if useROS:
+        if useros:
             x = self.paired_data.inflow.res
             y = self.paired_data.outflow.res
             ax.plot(x, y, marker='o', label="Paired, ROS'd data", alpha=0.3, **markerkwargs)
