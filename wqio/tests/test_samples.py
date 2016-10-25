@@ -10,6 +10,49 @@ from wqio import samples
 BASELINE_IMAGES = '_baseline_images/samples_tests'
 
 
+class _base_Parameter_Mixin(object):
+    def setup(self):
+        self.known_name = 'Copper'
+        self.known_units = 'ug/L'
+        self.known_pu_nocomma = 'Copper (ug/L)'
+        self.known_pu_comma = 'Copper, ug/L'
+        self.param = samples.Parameter(name=self.known_name, units=self.known_units)
+
+    def teardown(self):
+        pass
+
+    def test_name(self):
+        assert self.known_name == self.param.name
+
+    def test_units(self):
+        assert self.known_units == self.param.units
+
+    def test_paramunit_nocomma(self):
+        assert self.known_pu_nocomma == self.param.paramunit(usecomma=False)
+
+    def test_paramunit_comma(self):
+        assert self.known_pu_comma == self.param.paramunit(usecomma=True)
+
+
+class Test_Parameter_simple(_base_Parameter_Mixin):
+    def setup(self):
+        self.known_name = 'Copper'
+        self.known_units = 'ug/L'
+        self.known_pu_nocomma = 'Copper (ug/L)'
+        self.known_pu_comma = 'Copper, ug/L'
+        self.param = samples.Parameter(name=self.known_name, units=self.known_units)
+
+
+class Test_Parameter_complex(_base_Parameter_Mixin):
+    # place holder for when TeX/validation/etc gets integrated
+    def setup(self):
+        self.known_name = 'Nitrate & Nitrite'
+        self.known_units = 'mg/L'
+        self.known_pu_nocomma = 'Nitrate & Nitrite (mg/L)'
+        self.known_pu_comma = 'Nitrate & Nitrite, mg/L'
+        self.param = samples.Parameter(name=self.known_name, units=self.known_units)
+
+
 class base_wqsampleMixin(object):
     def basic_setup(self):
         self.known_wqdata_type = pandas.DataFrame
