@@ -185,6 +185,7 @@ class DataCollection(object):
         return self._generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
 
     def percentile(self, percentile):
+        """Return the percentiles (0 - 100) for the data."""
         return self._generic_stat(lambda x: numpy.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
                                   use_bootstrap=False)
@@ -322,6 +323,27 @@ class DataCollection(object):
         return _locations
 
     def datasets(self, loc1, loc2):
+        """ Generate ``Dataset`` objects from the raw data of the
+        ``DataColletion``.
+
+        Data are first grouped by ``self.groupcols`` and
+        ``self.stationcol``. Data frame each group are then queried
+        for into separate ``Lcoations`` from ``loc1`` and ``loc2``.
+        The resulting ``Locations`` are used to create a ``Dataset``.
+
+        Parameters
+        ----------
+        loc1, loc2 : string
+            Values found in the ``self.stationcol`` property that will
+            be used to distinguish the two ``Location`` objects for the
+            ``Datasets``.
+
+        Yields
+        ------
+        ``Dataset`` objects
+
+        """
+
         groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
         for names, data in self.data.groupby(by=groupcols):
