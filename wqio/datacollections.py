@@ -455,19 +455,3 @@ class DataCollection(object):
                 .unstack(level=self.stationcol)
         )
         return summary
-
-    def facet_kde(self, row='category', col='parameter', hue='station',
-                  log=True):
-        df = self.tidy.copy()
-        if log:
-            plotcol = 'Log of {}'.format(self.rescol.replace('_', ' '))
-            df[plotcol] = numpy.log(df[self.rescol])
-        else:
-            plotcol = self.rescol
-
-        fgrid = seaborn.FacetGrid(df, row=row, col=col, hue=hue,
-                                  sharex=True, sharey=True,
-                                  margin_titles=True,
-                                  legend_out=False)
-        fgrid.map(seaborn.kdeplot, plotcol, shade=True)
-        return fgrid
