@@ -358,15 +358,83 @@ class DataCollection(object):
 
         return items
 
-    def selectLocations(self, squeeze=False, **kwargs):
+    def selectLocations(self, squeeze=False, **conditions):
+        """ Select ``Location`` objects meeting specified criteria
+        from the ``DataColletion``.
+
+        Parameters
+        ----------
+        squeeze : bool, optional
+            When True and only one object is found, it returns the bare
+            object. Otherwise, a list is returned.
+        **conditions : optional parameters
+            The conditions to be applied to the definitions of the
+            ``Locations`` to filter them out. If a scalar is provided
+            as the value, normal comparison (==) is used. If a sequence
+            is provided, the ``in`` operator is used.
+
+        Returns
+        -------
+        locations : list of ``wqio.Location`` objects
+
+        Example
+        -------
+        >>> from wqio.tests import make_dc_data_complex
+        >>> import wqio
+        >>> df = make_dc_data_complex()
+        >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
+        ...                          stationcol='loc', paramcol='param',
+        ...                          ndval='<', othergroups=None,
+        ...                          pairgroups=['state', 'bmp'],
+        ...                          useros=True, bsiter=10000)
+        >>> dc.selectLocations(param='A', loc=['Inflow', 'Reference'])
+
+        """
+
         locations = self._filter_collection(
-            self.locations.copy(), squeeze=squeeze, **kwargs
+            self.locations.copy(), squeeze=squeeze, **conditions
         )
         return locations
 
-    def selectDatasets(self, loc1, loc2, squeeze=False, **kwargs):
+    def selectDatasets(self, loc1, loc2, squeeze=False, **conditions):
+        """ Select ``Dataset`` objects meeting specified criteria
+        from the ``DataColletion``.
+
+        Parameters
+        ----------
+        loc1, loc2 : string
+            Values found in the ``self.stationcol`` property that will
+            be used to distinguish the two ``Location`` objects for the
+            ``Datasets``.
+        squeeze : bool, optional
+            When True and only one object is found, it returns the bare
+            object. Otherwise, a list is returned.
+        **conditions : optional parameters
+            The conditions to be applied to the definitions of the
+            ``Locations`` to filter them out. If a scalar is provided
+            as the value, normal comparison (==) is used. If a sequence
+            is provided, the ``in`` operator is used.
+
+        Returns
+        -------
+        locations : list of ``wqio.Location`` objects
+
+        Example
+        -------
+        >>> from wqio.tests import make_dc_data_complex
+        >>> import wqio
+        >>> df = make_dc_data_complex()
+        >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
+        ...                          stationcol='loc', paramcol='param',
+        ...                          ndval='<', othergroups=None,
+        ...                          pairgroups=['state', 'bmp'],
+        ...                          useros=True, bsiter=10000)
+        >>> dc.selectDatasets('Inflow', 'Outflow', param='A',
+        ...                   state=['OR', 'CA'])
+
+        """
         datasets = self._filter_collection(
-            self.datasets(loc1, loc2), squeeze=squeeze, **kwargs
+            self.datasets(loc1, loc2), squeeze=squeeze, **conditions
         )
         return datasets
 
@@ -384,7 +452,7 @@ class DataCollection(object):
             self.tidy
                 .groupby(by=groupcols)
                 .apply(lambda g: g[col].describe(percentiles=ptiles).T)
-                .unstack(level='station')
+                .unstack(level=self.stationcol)
         )
         return summary
 
