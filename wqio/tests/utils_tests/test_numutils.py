@@ -174,9 +174,9 @@ def test__anderson_darling_p_vals(AD, n_points, expected):
     assert abs(p_val - expected) < 0.0001
 
 
-class Test_normalize_units(object):
-    def setup(self):
-        data_csv = StringIO(dedent("""\
+@pytest.fixture
+def units_norm_data():
+    data_csv = StringIO(dedent("""\
         storm,param,station,units,conc
         1,"Lead, Total",inflow,ug/L,10
         2,"Lead, Total",inflow,mg/L,0.02
@@ -194,10 +194,10 @@ class Test_normalize_units(object):
         2,"Cadmium, Total",outflow,ug/L,60
         3,"Cadmium, Total",outflow,ug/L,70
         4,"Cadmium, Total",outflow,g/L,0.00008
-        """))
-        self.raw_data = pandas.read_csv(data_csv)
+    """))
+    raw = pandas.read_csv(data_csv)
 
-        known_csv = StringIO(dedent("""\
+    known_csv = StringIO(dedent("""\
         storm,param,station,units,conc
         1,"Lead, Total",inflow,ug/L,10.
         2,"Lead, Total",inflow,ug/L,20.
@@ -215,28 +215,79 @@ class Test_normalize_units(object):
         2,"Cadmium, Total",outflow,mg/L,0.060
         3,"Cadmium, Total",outflow,mg/L,0.070
         4,"Cadmium, Total",outflow,mg/L,0.080
-        """))
-        self.expected_data = pandas.read_csv(known_csv)
+    """))
+    expected = pandas.read_csv(known_csv)
+    return raw, expected
 
-        self.units_map = {
-            'ug/L': 1e-6,
-            'mg/L': 1e-3,
-            'g/L': 1e+0,
-        }
 
-        self.param_units = {
-            "Lead, Total": 'ug/L',
-            "Cadmium, Total": 'mg/L',
-        }
+def test_normalize_units(units_norm_data):
+    unitsmap = {
+        'ug/L': 1e-6,
+        'mg/L': 1e-3,
+        'g/L': 1e+0,
+    }
 
-        self.params = {
-            "Lead, Total": 1e-6
-        }
+    targetunits = {
+        "Lead, Total": 'ug/L',
+        "Cadmium, Total": 'mg/L',
+    }
+    raw, expected = units_norm_data
+    result = numutils.normalize_units(raw, unitsmap, targetunits,
+                                      paramcol='param', rescol='conc',
+                                      unitcol='units')
+    pdtest.assert_frame_equal(result, expected)
 
-    def test_normalize_units(self):
-        data = numutils.normalize_units(self.raw_data, self.units_map, self.param_units,
-                                        paramcol='param', rescol='conc', unitcol='units')
-        pdtest.assert_frame_equal(data, self.expected_data)
+
+def test_normalize_units_bad_targetunits(units_norm_data):
+    unitsmap = {
+        'ug/L': 1e-6,
+        'mg/L': 1e-3,
+        'g/L': 1e+0,
+    }
+
+    targetunits = {
+        "Lead, Total": 'ug/L',
+    }
+    raw, expected = units_norm_data
+    with pytest.raises(ValueError):
+        numutils.normalize_units(raw, unitsmap, targetunits,
+                                 paramcol='param', rescol='conc',
+                                 unitcol='units', napolicy='raise')
+
+
+def test_normalize_units_bad_normalization(units_norm_data):
+    unitsmap = {
+        'mg/L': 1e-3,
+        'g/L': 1e+0,
+    }
+
+    targetunits = {
+        "Lead, Total": 'ug/L',
+        "Cadmium, Total": 'mg/L',
+    }
+    raw, expected = units_norm_data
+    with pytest.raises(ValueError):
+        numutils.normalize_units(raw, unitsmap, targetunits,
+                                 paramcol='param', rescol='conc',
+                                 unitcol='units', napolicy='raise')
+
+
+def test_normalize_units_bad_conversion(units_norm_data):
+    unitsmap = {
+        'ug/L': 1e-6,
+        'mg/L': 1e-3,
+        'g/L': 1e+0,
+    }
+
+    targetunits = {
+        "Lead, Total": 'ng/L',
+        "Cadmium, Total": 'mg/L',
+    }
+    raw, expected = units_norm_data
+    with pytest.raises(ValueError):
+        numutils.normalize_units(raw, unitsmap, targetunits,
+                                 paramcol='param', rescol='conc',
+                                 unitcol='units', napolicy='raise')
 
 
 class Test_test_pH2concentration(object):

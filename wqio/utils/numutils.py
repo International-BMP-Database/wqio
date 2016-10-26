@@ -244,8 +244,8 @@ def _anderson_darling_p_vals(ad_results, n_points):
     return p
 
 
-def normalize_units(df, units_map, targetunit, paramcol='parameter',
-                    rescol='res', unitcol='units', debug=False):
+def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
+                    rescol='res', unitcol='units', napolicy='ignore'):
     """
     Normalize units of measure in a dataframe.
 
@@ -253,52 +253,56 @@ def normalize_units(df, units_map, targetunit, paramcol='parameter',
     ----------
     df : pandas.DataFrame
         Dataframe contained results and units of measure data.
-    units_map : dictionary
+    unitsmap : dictionary
         Dictionary where keys are the units present in the df and
         values are the conversion factors required to standardize
         results to a common unit.
     targetunit : string or dict
         The desired final units of measure. Must be present in
-        ``units_map``. If a string, all rows in df will be
+        ``unitsmap``. If a string, all rows in df will be
         assigned ``targetunit``. If a dictionary, the units will be
         mapped from the dictionary using the values of ``paramcol`` as
         keys.
-    paramcol, rescol, unitcol : string
+    paramcol, rescol, unitcol : string, optional
         Labels for the parameter, results, and units columns in the
         df.
+    napolicy : string, optional
+        Determines how mull/missing values are stored. By default,
+        this is set to "ignore". Use "raise" to throw a ``ValueError``
+        if when unit conversion or target units data cannot be found.
 
     Returns
     -------
-    df : pandas.DataFrame
+    normalized : pandas.DataFrame
         Dataframe with normalized units of measure.
-
-    Notes
-    -----
-    Input dfs are modified in-placed and returned. If you need
-    to preserve the original df, pass a copy to this function.
-
-    See also
-    --------
-    normalize_units2
 
     """
 
     # determine the preferred units in the wqdata
     target = df[paramcol].map(targetunit.get)
+    if napolicy == 'raise' and target.isnull().any():
+        msg = "Some target units could not be mapped to the {} column"
+        raise ValueError(msg.format(paramcol))
 
     # factors to normialize to standard units
-    normalization = df[unitcol].map(units_map.get)
+    normalization = df[unitcol].map(unitsmap.get)
+    if napolicy == 'raise' and normalization.isnull().any():
+        msg = "Some normalization factors could not be mapped to the {} column"
+        raise ValueError(msg.format(unitcol))
 
     # factor to convert to preferred units
-    conversion = target.map(units_map.get)
+    conversion = target.map(unitsmap.get)
+    if napolicy == 'raise' and conversion.isnull().any():
+        msg = "Some conversion factors could not be mapped to the target units"
+        raise ValueError(msg)
 
     # convert results
-    df[rescol] = df[rescol] * normalization / conversion
+    normalized = df.assign(**{
+        rescol: df[rescol] * normalization / conversion,
+        unitcol: target,
+    })
 
-    # reassign units
-    df[unitcol] = target
-
-    return df
+    return normalized
 
 
 def pH2concentration(pH, *args):
