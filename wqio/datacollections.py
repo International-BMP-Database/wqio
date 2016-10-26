@@ -14,7 +14,7 @@ from wqio.features import Location, Dataset
 
 
 class DataCollection(object):
-    """ WIP: object to compare an arbitrary number of Locations
+    """Generalized water quality comparison object.
 
     Parameters
     ----------
@@ -30,71 +30,69 @@ class DataCollection(object):
     othergroups : list of strings, optional
         Other columns besides ``stationcol`` and ``paramcol`` that
         should be considered when grouping into subsets of data.
-    useROS : bool (default = True)
+    pairgroups : list of strings, optional
+        Other columns besides ``stationcol`` and ``paramcol`` that
+        can be sued define a unique index on ``dataframe`` such that it
+        can be "unstack" (i.e., pivoted, cross-tabbed) to place the
+        ``stationcol`` values into columns.
+    useros : bool (default = True)
         Toggles the use of Regression On Order Statistics to
         estimate non-detect values when computing statistics.
     filterfxn : callable, optional
         Function that will we passes to a pandas.Groupby object that
         will filter out groups that should not be analyzed (for
         whatever reason).
-    bsIter : int
+    bsiter : int
         Number of iterations the bootstrapper should use when estimating
         confidence intervals around a statistic.
 
     """
 
-    def __init__(self, dataframe, rescol='res', qualcol='qual', cencol='cen',
-                 stationcol='station', paramcol='parameter', ndval='ND',
-                 othergroups=None, pairgroups=None, useROS=True, filterfxn=None,
-                 bsIter=10000):
+    cencol = '__censorship'
 
-        self._filterfxn = filterfxn
-        self._raw_rescol = rescol
+    def __init__(self, dataframe, rescol='res', qualcol='qual',
+                 stationcol='station', paramcol='parameter', ndval='ND',
+                 othergroups=None, pairgroups=None, useros=True,
+                 filterfxn=None, bsiter=10000):
+
+        # cache for all of the properties
         self._cache = resettable_cache()
 
-        self.useROS = useROS
-        self.roscol = 'ros_' + rescol
-        if self.useROS:
-            self.rescol = self.roscol
-        else:
-            self.rescol = rescol
+        # basic input
+        self._raw_data = dataframe
+        self._raw_rescol = rescol
+        self.filterfxn = filterfxn
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
-        self.cencol = cencol
         self.ndval = validate.at_least_empty_list(ndval)
-        self.bsIter = bsIter
-
         self.othergroups = validate.at_least_empty_list(othergroups)
+        self.pairgroups = validate.at_least_empty_list(pairgroups)
+        self.bsiter = bsiter
+
+        self.useros = useros
+
+        self.roscol = 'ros_' + rescol
+        if self.useros:
+            self.rescol = self.roscol
+        else:
+            self.rescol = rescol
 
         self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
         self.groupcols_comparison = [self.paramcol] + self.othergroups
 
-        _pcols = validate.at_least_empty_list(pairgroups)
-        self.pairgroups = _pcols + [self.stationcol, self.paramcol]
+        self.pairgroups = self.pairgroups + [self.stationcol, self.paramcol]
 
         self.columns = self.groupcols + [self._raw_rescol, self.cencol]
         self.data = (
             dataframe
-                .assign(**{cencol: dataframe[self.qualcol].isin(self.ndval)})
+                .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
                 .reset_index()
         )
 
-    @property
-    def filterfxn(self):
-        if self._filterfxn is None:
-            return lambda x: True
-        else:
-            return self._filterfxn
-
-    @filterfxn.setter
-    def filterfxn(self, value):
-        self._cache.clear()
-        self._filterfxn = value
-
     @cache_readonly
     def tidy(self):
-        if self.useROS:
+        if self.useros:
             def fxn(g):
                 rosdf = (
                     ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
@@ -126,6 +124,8 @@ class DataCollection(object):
         _pairs = (
             self.data
                 .reset_index()
+                .groupby(by=self.groupcols)
+                .filter(self.filterfxn)
                 .set_index(self.pairgroups)
                 .unstack(level=self.stationcol)
                 .rename_axis(['value', self.stationcol], axis='columns')
@@ -170,21 +170,22 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self._generic_stat(lambda x: x.count(), use_bootstrap=False, statname='Count')
+        return self._generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
 
     @cache_readonly
-    def medians(self):
+    def median(self):
         return self._generic_stat(numpy.median, statname='median')
 
     @cache_readonly
-    def means(self):
+    def mean(self):
         return self._generic_stat(numpy.mean, statname='mean')
 
     @cache_readonly
-    def std_devs(self):
-        return self._generic_stat(numpy.std, statname='std. dev.')
+    def std_dev(self):
+        return self._generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
 
-    def percentiles(self, percentile):
+    def percentile(self, percentile):
+        """Return the percentiles (0 - 100) for the data."""
         return self._generic_stat(lambda x: numpy.percentile(x, percentile),
                                   statname='pctl {}'.format(percentile),
                                   use_bootstrap=False)
@@ -194,9 +195,9 @@ class DataCollection(object):
         return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
 
     @cache_readonly
-    def logstd(self):
+    def logstd_dev(self):
         return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
-                                  statname='Log-std. dev.')
+                                  use_bootstrap=False, statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
@@ -205,8 +206,8 @@ class DataCollection(object):
         return geomean
 
     @cache_readonly
-    def geostd(self):
-        geostd = numpy.exp(self.logstd)
+    def geostd_dev(self):
+        geostd = numpy.exp(self.logstd_dev)
         geostd.columns.names = ['station', 'Geo-std. dev.']
         return geostd
 
@@ -295,7 +296,8 @@ class DataCollection(object):
     def spearman(self):
         return self._comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
 
-    def theilslops(self):
+    @cache_readonly
+    def theilslopes(self):
         raise NotImplementedError
 
     @cache_readonly
@@ -312,7 +314,7 @@ class DataCollection(object):
             loc = Location(
                 data.copy(), station_type=loc_dict[self.stationcol].lower(),
                 rescol=self._raw_rescol, qualcol=self.qualcol,
-                ndval=self.ndval, bsIter=self.bsIter, useROS=self.useROS
+                ndval=self.ndval, bsiter=self.bsiter, useros=self.useros
             )
 
             loc.definition = loc_dict
@@ -320,35 +322,55 @@ class DataCollection(object):
 
         return _locations
 
-    @cache_readonly
-    def datasets(self):
-        _datasets = []
+    def datasets(self, loc1, loc2):
+        """ Generate ``Dataset`` objects from the raw data of the
+        ``DataColletion``.
+
+        Data are first grouped by ``self.groupcols`` and
+        ``self.stationcol``. Data frame each group are then queried
+        for into separate ``Lcoations`` from ``loc1`` and ``loc2``.
+        The resulting ``Locations`` are used to create a ``Dataset``.
+
+        Parameters
+        ----------
+        loc1, loc2 : string
+            Values found in the ``self.stationcol`` property that will
+            be used to distinguish the two ``Location`` objects for the
+            ``Datasets``.
+
+        Yields
+        ------
+        ``Dataset`` objects
+
+        """
+
         groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
         for names, data in self.data.groupby(by=groupcols):
             ds_dict = dict(zip(groupcols, names))
 
-            ds_dict[self.stationcol] = 'inflow'
+            ds_dict[self.stationcol] = loc1
             infl = self.selectLocations(squeeze=True, **ds_dict)
 
-            ds_dict[self.stationcol] = 'outflow'
+            ds_dict[self.stationcol] = loc2
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
             dsname = '_'.join(names).replace(', ', '')
 
-            ds = Dataset(infl, effl, useROS=self.useROS, name=dsname)
+            ds = Dataset(infl, effl, useros=self.useros, name=dsname)
             ds.definition = ds_dict
 
-            _datasets.append(ds)
-
-        return _datasets
+            yield ds
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
         items = collection.copy()
         for key, value in kwargs.items():
-            items = [r for r in filter(lambda x: x.definition[key] == value, items)]
+            if numpy.isscalar(value):
+                items = [r for r in filter(lambda x: x.definition[key] == value, items)]
+            else:
+                items = [r for r in filter(lambda x: x.definition[key] in value, items)]
 
         if squeeze:
             if len(items) == 1:
@@ -358,20 +380,88 @@ class DataCollection(object):
 
         return items
 
-    def selectLocations(self, squeeze=False, **kwargs):
+    def selectLocations(self, squeeze=False, **conditions):
+        """ Select ``Location`` objects meeting specified criteria
+        from the ``DataColletion``.
+
+        Parameters
+        ----------
+        squeeze : bool, optional
+            When True and only one object is found, it returns the bare
+            object. Otherwise, a list is returned.
+        **conditions : optional parameters
+            The conditions to be applied to the definitions of the
+            ``Locations`` to filter them out. If a scalar is provided
+            as the value, normal comparison (==) is used. If a sequence
+            is provided, the ``in`` operator is used.
+
+        Returns
+        -------
+        locations : list of ``wqio.Location`` objects
+
+        Example
+        -------
+        >>> from wqio.tests import make_dc_data_complex
+        >>> import wqio
+        >>> df = make_dc_data_complex()
+        >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
+        ...                          stationcol='loc', paramcol='param',
+        ...                          ndval='<', othergroups=None,
+        ...                          pairgroups=['state', 'bmp'],
+        ...                          useros=True, bsiter=10000)
+        >>> dc.selectLocations(param='A', loc=['Inflow', 'Reference'])
+
+        """
+
         locations = self._filter_collection(
-            self.locations.copy(), squeeze=squeeze, **kwargs
+            self.locations.copy(), squeeze=squeeze, **conditions
         )
         return locations
 
-    def selectDatasets(self, squeeze=False, **kwargs):
+    def selectDatasets(self, loc1, loc2, squeeze=False, **conditions):
+        """ Select ``Dataset`` objects meeting specified criteria
+        from the ``DataColletion``.
+
+        Parameters
+        ----------
+        loc1, loc2 : string
+            Values found in the ``self.stationcol`` property that will
+            be used to distinguish the two ``Location`` objects for the
+            ``Datasets``.
+        squeeze : bool, optional
+            When True and only one object is found, it returns the bare
+            object. Otherwise, a list is returned.
+        **conditions : optional parameters
+            The conditions to be applied to the definitions of the
+            ``Locations`` to filter them out. If a scalar is provided
+            as the value, normal comparison (==) is used. If a sequence
+            is provided, the ``in`` operator is used.
+
+        Returns
+        -------
+        locations : list of ``wqio.Location`` objects
+
+        Example
+        -------
+        >>> from wqio.tests import make_dc_data_complex
+        >>> import wqio
+        >>> df = make_dc_data_complex()
+        >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
+        ...                          stationcol='loc', paramcol='param',
+        ...                          ndval='<', othergroups=None,
+        ...                          pairgroups=['state', 'bmp'],
+        ...                          useros=True, bsiter=10000)
+        >>> dc.selectDatasets('Inflow', 'Outflow', param='A',
+        ...                   state=['OR', 'CA'])
+
+        """
         datasets = self._filter_collection(
-            self.datasets.copy(), squeeze=squeeze, **kwargs
+            self.datasets(loc1, loc2), squeeze=squeeze, **conditions
         )
         return datasets
 
-    def stat_summary(self, groupcols=None, useROS=True):
-        if useROS:
+    def stat_summary(self, groupcols=None, useros=True):
+        if useros:
             col = self.roscol
         else:
             col = self.rescol
@@ -384,22 +474,6 @@ class DataCollection(object):
             self.tidy
                 .groupby(by=groupcols)
                 .apply(lambda g: g[col].describe(percentiles=ptiles).T)
-                .unstack(level='station')
+                .unstack(level=self.stationcol)
         )
         return summary
-
-    def facet_kde(self, row='category', col='parameter', hue='station',
-                  log=True):
-        df = self.tidy.copy()
-        if log:
-            plotcol = 'Log of {}'.format(self.rescol.replace('_', ' '))
-            df[plotcol] = numpy.log(df[self.rescol])
-        else:
-            plotcol = self.rescol
-
-        fgrid = seaborn.FacetGrid(df, row=row, col=col, hue=hue,
-                                  sharex=True, sharey=True,
-                                  margin_titles=True,
-                                  legend_out=False)
-        fgrid.map(seaborn.kdeplot, plotcol, shade=True)
-        return fgrid

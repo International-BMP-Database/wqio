@@ -17,8 +17,8 @@ BASELINE_IMAGES = '_baseline_images/features_tests'
 @helpers.seed
 def setup_location(station_type):
     data = helpers.getTestROSData()
-    loc = Location(data, station_type=station_type, bsIter=10000,
-                   rescol='res', qualcol='qual', useROS=True)
+    loc = Location(data, station_type=station_type, bsiter=10000,
+                   rescol='res', qualcol='qual', useros=True)
     pyplot.rcdefaults()
     return loc
 
@@ -324,11 +324,11 @@ def setup_dataset(extra_NDs=False):
         in_data.loc[[0, 1, 2], 'qual'] = 'ND'
         out_data.loc[[14, 15, 16], 'qual'] = 'ND'
 
-    influent = Location(in_data, station_type='inflow', bsIter=10000,
-                        rescol='res', qualcol='qual', useROS=False)
+    influent = Location(in_data, station_type='inflow', bsiter=10000,
+                        rescol='res', qualcol='qual', useros=False)
 
-    effluent = Location(out_data, station_type='outflow', bsIter=10000,
-                        rescol='res', qualcol='qual', useROS=False)
+    effluent = Location(out_data, station_type='outflow', bsiter=10000,
+                        rescol='res', qualcol='qual', useros=False)
 
     ds = Dataset(influent, effluent, name='Test Dataset')
     pyplot.rcdefaults()
@@ -631,8 +631,8 @@ def test_ds_scatterplot_one2one(ds_NDs):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_scatterplot_useROS(ds_NDs):
-    fig11 = ds_NDs.scatterplot(useROS=True)
+def test_ds_scatterplot_useros(ds_NDs):
+    fig11 = ds_NDs.scatterplot(useros=True)
     return fig11
 
 
