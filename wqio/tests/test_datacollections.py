@@ -538,7 +538,6 @@ def test_stat_summary(dc):
                               check_less_precise=True)
 
 
-
 def test_locations(dc):
     for l in dc.locations:
         assert isinstance(l, Location)
