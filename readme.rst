@@ -44,6 +44,10 @@ From source::
     $ git clone git@github.com:Geosyntec/wqio.git
     $ cd wqio
     $ pip install -e .
+    
+Periodic builds of ``master`` through conda::
+
+    $ conda install wqio --channel=phobson/label/dev
 
 Running tests
 =============
