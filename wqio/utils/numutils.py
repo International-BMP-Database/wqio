@@ -281,20 +281,23 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
     # determine the preferred units in the wqdata
     target = df[paramcol].map(targetunit.get)
     if napolicy == 'raise' and target.isnull().any():
-        msg = "Some target units could not be mapped to the {} column"
-        raise ValueError(msg.format(paramcol))
+        nulls = df[target.isnull()][paramcol].unique()
+        msg = "Some target units could not be mapped to the {} column ({})"
+        raise ValueError(msg.format(paramcol, nulls))
 
     # factors to normialize to standard units
     normalization = df[unitcol].map(unitsmap.get)
     if napolicy == 'raise' and normalization.isnull().any():
-        msg = "Some normalization factors could not be mapped to the {} column"
-        raise ValueError(msg.format(unitcol))
+        nulls = df[normalization.isnull()][unitcol]
+        msg = "Some normalization factors could not be mapped to the {} column ({})"
+        raise ValueError(msg.format(unitcol, nulls))
 
     # factor to convert to preferred units
     conversion = target.map(unitsmap.get)
     if napolicy == 'raise' and conversion.isnull().any():
-        msg = "Some conversion factors could not be mapped to the target units"
-        raise ValueError(msg)
+        nulls = target[conversion.isnull()]
+        msg = "Some conversion factors could not be mapped to the target units ({})"
+        raise ValueError(msg.format(nulls))
 
     # convert results
     normalized = df.assign(**{
