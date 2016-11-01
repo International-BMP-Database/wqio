@@ -24,7 +24,6 @@ requirements:
     - statsmodels
     - seaborn
     - mpl-probscale
-    - nose
 
   run:
     - python
@@ -37,7 +36,6 @@ requirements:
     - xlrd
     - six
     - mpl-probscale
-    - nose
 
 test:
   requires:
