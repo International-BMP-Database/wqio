@@ -91,6 +91,15 @@ def test_swap_column_levels(multiindex_df, L1, L2):
     pdtest.assert_index_equal(df.columns, expected_columns)
 
 
+@pytest.mark.parametrize(('df', 'expected'), [
+    (multiindex_df().T, ['A_mg/L', 'B_mg/L', 'C_mg/L']),
+    (basic_data(), ['A', 'B', 'C', 'D']),
+])
+def test_flatten_columns(df, expected):
+    flat = misc.flatten_columns(df)
+    assert flat.columns.tolist() == expected
+
+
 @pytest.mark.parametrize('criteria', [None, lambda row: row[0] in ['A', 'B']])
 @pytest.mark.parametrize('dropold', [True, False])
 def test_redefine_index_level(multiindex_df, criteria, dropold):
