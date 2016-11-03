@@ -134,6 +134,27 @@ def swap_column_levels(df, level_1, level_2):
     return df2.sort_index(axis='columns')
 
 
+def flatten_columns(df, sep='_'):
+    """ Completely flattens a multi-level column index
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The DataFrame with multi-level columns that will be flattened.
+    sep : string, optional
+        The string that will be used to delimit each level of the
+        column index in the flattened names.
+
+    Returns
+    -------
+    flattened : pandas.DataFrame
+
+    """
+
+    df.columns = [sep.join(_) for _ in df.columns]
+    return df
+
+
 def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
