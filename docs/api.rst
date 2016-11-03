@@ -7,8 +7,7 @@ Statisical APIs
 .. toctree::
    :maxdepth: 2
 
-   api/bootstrap.rst
-   api/ros.rst
+   api/statistics.rst
 
 
 Water Quality and Hydrology APIs
