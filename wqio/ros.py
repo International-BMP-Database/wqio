@@ -32,18 +32,25 @@ def _ros_sort(df, result, censorship):
     """
 
     # separate uncensored data from censored data
-    censored = df[df[censorship]].sort_values(by=result)
-    uncensored = df[~df[censorship]].sort_values(by=result)
-
-    if censored[result].max() > uncensored[result].max():
-        censored = censored[censored[result] <= uncensored[result].max()]
+    max_uncensored = df.loc[~df[censorship], result].max()
+    if (df.loc[df[censorship], result] > max_uncensored).any():
         msg = (
             "Dropping censored results greater than "
             "the max uncensored result."
         )
         warnings.warn(msg)
 
-    return censored.append(uncensored)[[result, censorship]].reset_index(drop=True)
+    df_sorted = (
+        df.sort_values(by=[censorship, result], ascending=[False, True])
+            .where(lambda df:
+                   (~df[censorship]) |  # uncensored values
+                   ((df[result] < max_uncensored) & df[censorship])  # censored values < max_uncen
+                   )
+            .dropna(how='all')
+            .reset_index(drop=True)
+            .assign(**{censorship: lambda df: df[censorship].astype(bool)})
+    )
+    return df_sorted[[result, censorship]]
 
 
 def cohn_numbers(df, result, censorship):
