@@ -69,29 +69,36 @@ class DataCollection(object):
         # basic input
         self._raw_data = dataframe
         self._raw_rescol = rescol
-        self.filterfxn = filterfxn
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
         self.ndval = validate.at_least_empty_list(ndval)
         self.othergroups = validate.at_least_empty_list(othergroups)
         self.pairgroups = validate.at_least_empty_list(pairgroups)
+        self.useros = useros
+        self.filterfxn = filterfxn or (lambda x: True)
         self.bsiter = bsiter
 
-        self.useros = useros
-
+        # column that stores ROS'd values
         self.roscol = 'ros_' + rescol
+
+        # column stators "final" values
         if self.useros:
             self.rescol = self.roscol
         else:
             self.rescol = rescol
 
+        # columns to group by when ROS'd, doing general stats
         self.groupcols = [self.stationcol, self.paramcol] + self.othergroups
         self.groupcols_comparison = [self.paramcol] + self.othergroups
 
+        # columns to group and pivot by when doing paired stats
         self.pairgroups = self.pairgroups + [self.stationcol, self.paramcol]
 
-        self.columns = self.groupcols + [self._raw_rescol, self.cencol]
+        # final column list of the tidy dataframe
+        self.tidy_columns = self.groupcols + [self._raw_rescol, self.cencol]
+
+        # the "raw" data with the censorship column added
         self.data = (
             dataframe
                 .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
@@ -113,10 +120,10 @@ class DataCollection(object):
                 g[self.roscol] = numpy.nan
                 return g
 
-        keep_cols = self.columns + [self.roscol]
+        keep_cols = self.tidy_columns + [self.roscol]
         _tidy = (
             self.data
-                .reset_index()[self.columns]
+                .reset_index()[self.tidy_columns]
                 .groupby(by=self.groupcols)
                 .filter(self.filterfxn)
                 .groupby(by=self.groupcols)
@@ -461,10 +468,10 @@ class DataCollection(object):
             ds_dict.pop(self.stationcol)
             dsname = '_'.join(names).replace(', ', '')
 
-            ds = Dataset(infl, effl, useros=self.useros, name=dsname)
-            ds.definition = ds_dict
-
-            yield ds
+            if effl:
+                ds = Dataset(infl, effl, useros=self.useros, name=dsname)
+                ds.definition = ds_dict
+                yield ds
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
