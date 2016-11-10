@@ -163,7 +163,7 @@ def percentile(data, statfxn, niter=10000, alpha=0.05):
     >>> # generate fake data and bootstrap it
     >>> data = numpy.random.normal(loc=2, scale=1.75, size=37)
     >>> wqio.bootstrap.percentile(data, numpy.median, niter=1000, alpha=0.05)
-    (2.583930072904967, array([ 2.20960993,  3.33181602]))
+    array([ 2.20960993,  3.33181602])
     """
 
     index = _make_boot_index(data.shape[0], niter)
