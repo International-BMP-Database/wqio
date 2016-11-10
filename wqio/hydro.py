@@ -18,7 +18,8 @@ SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
 SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
 
 
-def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
+def parse_storm_events(data, intereventHours, outputfreqMinutes,
+                       precipcol=None, inflowcol=None,
                        outflowcol=None, baseflowcol=None,
                        stormcol='storm', debug=False):
     """
@@ -32,7 +33,7 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
     Parameters
     ----------
     data : pandas.DataFrame
-    ie_hours : float
+    intereventHours : float
         The Inter-Event dry duration (in hours) that classifies the
         next hydrlogic activity as a new event.
     precipcol : string, optional (default = None)
@@ -57,14 +58,12 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
     Returns
     -------
     parsed_storms : pandas.DataFrame
-        Copy of the origin `hydrodata` DataFrame, but resmapled to a
+        Copy of the origin `hydrodata` DataFrame, but resampled to a
         fixed frequency, columns possibly renamed, and a `storm` column
         added to denote the storm to which each record belongs. Records
         where `storm` == 0 are not a part of any storm.
 
     """
-
-    data = data.copy()
 
     # pull out the rain and flow data
     if precipcol is None:
@@ -83,40 +82,48 @@ def parse_storm_events(data, ie_hours, precipcol=None, inflowcol=None,
         baseflowcol = 'baseflow'
         data.loc[:, baseflowcol] = False
 
-    ie_periods = MIN_PER_HOUR / data.index.freq.n * ie_hours
+    freq = pandas.offsets.Minute(outputfreqMinutes)
+    data = data.resample(freq).agg({
+        precipcol: numpy.sum,
+        inflowcol: numpy.mean,
+        outflowcol: numpy.mean,
+        baseflowcol: numpy.any
+    })
+
+    ie_periods = MIN_PER_HOUR / data.index.freq.n * intereventHours
 
     # bool column where True means there's rain or flow of some kind
     water_columns = [inflowcol, outflowcol, precipcol]
     final_columns = water_columns + [baseflowcol]
     data = (
         data.select(lambda c: c in final_columns, axis='columns')
-            .assign(_wet=numpy.any(data[water_columns] > 0, axis=1) & ~data[baseflowcol])
-            .assign(_windiff=lambda df: df['_wet'].rolling(int(ie_periods), min_periods=1).apply(lambda w: w.any()).diff())
+            .assign(__wet=numpy.any(data[water_columns] > 0, axis=1) & ~data[baseflowcol])
+            .assign(__windiff=lambda df: df['__wet'].rolling(int(ie_periods), min_periods=1).apply(lambda w: w.any()).diff())
     )
 
     # make sure that if the first record is associated with the first
     # storm if it's wet
     firstrow = data.iloc[0]
-    if firstrow['_wet']:
-        data.loc[firstrow.name, '_windiff'] = 1
+    if firstrow['__wet']:
+        data.loc[firstrow.name, '__windiff'] = 1
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
     # number of storms that have started.
     # Stack Overflow: http://tinyurl.com/lsjkr9x
     data = (
-        data.assign(_event_start=data['_windiff'] == 1)
-            .assign(_event_end=data['_windiff'].shift(-1 * ie_periods) == -1)
-            .assign(_storm=lambda df: df['_event_start'].cumsum())
+        data.assign(__event_start=data['__windiff'] == 1)
+            .assign(__event_end=data['__windiff'].shift(-1 * ie_periods) == -1)
+            .assign(__storm=lambda df: df['__event_start'].cumsum())
             .assign(storm=lambda df: numpy.where(
-                df['_storm'] == df['_event_end'].shift(2).cumsum(),
+                df['__storm'] == df['__event_end'].shift(2).cumsum(),
                 0,             # inter-event period
-                df['_storm']   # actual event
+                df['__storm']   # actual event
             ))
     )
 
     if not debug:
-        data = data.select(lambda c: not c.startswith('_'), axis=1)
+        data = data.select(lambda c: not c.startswith('__'), axis=1)
 
     return data
 
@@ -822,6 +829,7 @@ class HydroRecord(object):
     def _define_storms(self, debug=False):
 
         parsed = parse_storm_events(self._raw_data, self.intereventHours,
+                                    self.outputfreq.n,
                                     precipcol=self.precipcol,
                                     inflowcol=self.inflowcol,
                                     outflowcol=self.outflowcol,

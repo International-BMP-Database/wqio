@@ -28,7 +28,7 @@ def setup_storms(filename, baseflow=None):
         orig_record = orig_record.assign(baseflow=orig_record['influent'] < baseflow)
         baseflowcol = 'baseflow'
 
-    parsed = hydro.parse_storm_events(orig_record, 3,
+    parsed = hydro.parse_storm_events(orig_record, 3, 5,
                                       precipcol='rain',
                                       inflowcol='influent',
                                       baseflowcol=baseflowcol,
