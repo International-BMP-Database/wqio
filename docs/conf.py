@@ -36,11 +36,12 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'plot_generator',
-    'plot_directive',
+    #'plot_generator',
+    #'plot_directive',
     'numpydoc',
     'ipython_directive',
     'ipython_console_highlighting',
+    'sphinx_gallery.gen_gallery',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
