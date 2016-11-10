@@ -99,14 +99,39 @@ class Test_formatResult(object):
         assert numutils.formatResult(self.med_num, '', 3) == '12.5'
 
 
-def test_process_p_value():
-    assert numutils.process_p_vals(None) == 'NA'
-    assert numutils.process_p_vals(0.0009) == '<0.001'
-    assert numutils.process_p_vals(0.001) == '0.001'
-    assert numutils.process_p_vals(0.0012) == '0.001'
-    assert numutils.process_p_vals(0.01) == '0.010'
-    with pytest.raises(ValueError):
-        numutils.process_p_vals(1.001)
+@pytest.mark.parametrize(('pval', 'expected'), [
+    (None, 'NA'),
+    (0.0005, '<0.001'),
+    (0.005, '0.005'),
+    (0.001, '0.001'),
+    (0.0012, '0.001'),
+    (0.06, '0.060'),
+    (1.01, None),
+])
+def test_process_p_vals(pval, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            numutils.process_p_vals(pval)
+    else:
+        result = numutils.process_p_vals(pval)
+        assert result == expected
+
+
+@pytest.mark.parametrize(('pval', 'expected'), [
+    (None, 'ಠ_ಠ'),
+    (0.005, '¯\(ツ)/¯'),
+    (0.03, '¯\_(ツ)_/¯'),
+    (0.06, '¯\__(ツ)__/¯'),
+    (0.11, '(╯°□°)╯︵ ┻━┻'),
+    (1.01, None),
+])
+def test_translate_p_vals(pval, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            numutils.translate_p_vals(pval)
+    else:
+        result = numutils.translate_p_vals(pval)
+        assert result == expected
 
 
 def test_anderson_darling():

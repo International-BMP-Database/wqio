@@ -142,11 +142,40 @@ def process_p_vals(pval):
     elif 0 < pval < 0.001:
         out = formatResult(0.001, '<', sigfigs=1)
     elif pval > 1 or pval < 0:
-        raise ValueError('p-values cannot be greater than 1 and less than 0')
+        raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
     else:
         out = '%0.3f' % pval
 
     return out
+
+
+def translate_p_vals(pval):
+    """ Translates ambiguous p-values into more meaningful emoji.
+
+    Parameters
+    ----------
+    pval : float
+
+    Returns
+    -------
+    emoji : string
+
+    """
+
+    if pval is None:
+        emoji = 'ಠ_ಠ'
+    elif pval <= 0.01:
+        emoji = '¯\(ツ)/¯'
+    elif 0.01 < pval <= 0.05:
+        emoji = '¯\_(ツ)_/¯'
+    elif 0.05 < pval <= 0.1:
+        emoji = '¯\__(ツ)__/¯'
+    elif 0.1 < pval <= 1:
+        emoji = '(╯°□°)╯︵ ┻━┻'
+    else:
+        raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
+
+    return emoji
 
 
 def anderson_darling(data):
@@ -279,21 +308,21 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
     """
 
     # determine the preferred units in the wqdata
-    target = df[paramcol].map(targetunit.get)
+    target = df[paramcol].map(targetunit)
     if napolicy == 'raise' and target.isnull().any():
         nulls = df[target.isnull()][paramcol].unique()
         msg = "Some target units could not be mapped to the {} column ({})"
         raise ValueError(msg.format(paramcol, nulls))
 
     # factors to normialize to standard units
-    normalization = df[unitcol].map(unitsmap.get)
+    normalization = df[unitcol].map(unitsmap)
     if napolicy == 'raise' and normalization.isnull().any():
         nulls = df[normalization.isnull()][unitcol]
         msg = "Some normalization factors could not be mapped to the {} column ({})"
         raise ValueError(msg.format(unitcol, nulls))
 
     # factor to convert to preferred units
-    conversion = target.map(unitsmap.get)
+    conversion = target.map(unitsmap)
     if napolicy == 'raise' and conversion.isnull().any():
         nulls = target[conversion.isnull()]
         msg = "Some conversion factors could not be mapped to the target units ({})"
