@@ -23,31 +23,39 @@ class DataCollection(object):
     rescol, qualcol, stationcol, paramcol : string
         Column labels for the results, qualifiers, stations (monitoring
         locations), and parameters (pollutants), respectively.
-    ndval : string (default = 'ND')
-        The *only* value found in ``qualcol`` that indicates that a
-        result is a non-detect. Non-detect results should be reported
-        as the detection limits.
+
+        .. note::
+
+           Non-detect results should be reported as the detection
+           limit of that observation.
+
+    ndval : string or list of strings, options
+        The values found in ``qualcol`` that indicates that a
+        result is a non-detect.
     othergroups : list of strings, optional
-        Other columns besides ``stationcol`` and ``paramcol`` that
+        The columns (besides ``stationcol`` and ``paramcol``) that
         should be considered when grouping into subsets of data.
     pairgroups : list of strings, optional
         Other columns besides ``stationcol`` and ``paramcol`` that
-        can be sued define a unique index on ``dataframe`` such that it
+        can be used define a unique index on ``dataframe`` such that it
         can be "unstack" (i.e., pivoted, cross-tabbed) to place the
-        ``stationcol`` values into columns.
+        ``stationcol`` values into columns. Values of ``pairgroups``
+        may overlap with ``othergroups``.
     useros : bool (default = True)
-        Toggles the use of Regression On Order Statistics to
-        estimate non-detect values when computing statistics.
+        Toggles the use of regression-on-order statistics to estimate
+        non-detect values when computing statistics.
     filterfxn : callable, optional
-        Function that will we passes to a pandas.Groupby object that
-        will filter out groups that should not be analyzed (for
-        whatever reason).
+        Function that will be passed to the ``filter`` method of a
+        ``pandas.Groupby`` object to remove groups that should not be
+        analyzed (for whatever reason). If not provided, all groups
+        returned by ``dataframe.groupby(by=groupcols)`` will be used.
     bsiter : int
         Number of iterations the bootstrapper should use when estimating
         confidence intervals around a statistic.
 
     """
 
+    # column that stores the censorsip status of an observation
     cencol = '__censorship'
 
     def __init__(self, dataframe, rescol='res', qualcol='qual',
@@ -132,8 +140,56 @@ class DataCollection(object):
         )[[self._raw_rescol, self.cencol]]
         return _pairs
 
-    def _generic_stat(self, statfxn, use_bootstrap=True, statname=None,
-                      has_pvalue=False, **statopts):
+    def generic_stat(self, statfxn, use_bootstrap=True, statname=None,
+                     has_pvalue=False, **statopts):
+        """Generic function to estimate a statistic and its CIs.
+
+        Parameters
+        ----------
+        statfxn : callable
+            A function that takes a 1-D sequnce and returns a scalar
+            results. Its call signature should be in the form:
+            ``statfxn(seq, **kwargs)``.
+        use_bootstrap : bool, optional
+            Toggles using a BCA bootstrapping method to estimate the
+            95% confidence interval around the statistic.
+        statname : string, optional
+            Name of the statistic. Included as a column name in the
+            final dataframe.
+        has_pvalue : bool, optional
+            Set to ``True`` if ``statfxn`` returns a tuple of the
+            statistic and it's p-value.
+        **statopts : optional kwargs
+            Additional keyword arguments that will be passed to
+            ``statfxn``.
+
+        Returns
+        -------
+        stat_df : pandas.DataFrame
+            A dataframe all the results of the ``statfxn`` when applied
+            to ``self.tidy.groupby(self.groupcols)``.
+
+        Examples
+        --------
+        This actually demonstrates how ``DataCollection.mean`` is
+        implemented.
+
+        >>> import numpy
+        >>> import wqio
+        >>> from wqio.tests import helpers
+        >>> df = helpers.make_dc_data_complex()
+        >>> dc = DataCollection(df, rescol='res', qualcol='qual',
+        ...                     stationcol='loc', paramcol='param',
+        ...                     ndval='<')
+        >>> dc.generic_stat(numpy.mean, statname='Arith. Mean')
+
+        You can also use ``lambda`` objects
+
+        >>> dc.generic_stat(lambda x: numpy.percentile(x, 35),
+        ....                statname='35th Percentile')
+
+        """
+
         if statname is None:
             statname = 'stat'
 
@@ -170,34 +226,34 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self._generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
+        return self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
 
     @cache_readonly
     def median(self):
-        return self._generic_stat(numpy.median, statname='median')
+        return self.generic_stat(numpy.median, statname='median')
 
     @cache_readonly
     def mean(self):
-        return self._generic_stat(numpy.mean, statname='mean')
+        return self.generic_stat(numpy.mean, statname='mean')
 
     @cache_readonly
     def std_dev(self):
-        return self._generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
+        return self.generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
 
     def percentile(self, percentile):
         """Return the percentiles (0 - 100) for the data."""
-        return self._generic_stat(lambda x: numpy.percentile(x, percentile),
-                                  statname='pctl {}'.format(percentile),
-                                  use_bootstrap=False)
+        return self.generic_stat(lambda x: numpy.percentile(x, percentile),
+                                 statname='pctl {}'.format(percentile),
+                                 use_bootstrap=False)
 
     @cache_readonly
     def logmean(self):
-        return self._generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
+        return self.generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
 
     @cache_readonly
     def logstd_dev(self):
-        return self._generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
-                                  use_bootstrap=False, statname='Log-std. dev.')
+        return self.generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+                                 use_bootstrap=False, statname='Log-std. dev.')
 
     @cache_readonly
     def geomean(self):
@@ -213,52 +269,99 @@ class DataCollection(object):
 
     @cache_readonly
     def shapiro(self):
-        return self._generic_stat(stats.shapiro, use_bootstrap=False,
-                                  has_pvalue=True, statname='shapiro')
+        return self.generic_stat(stats.shapiro, use_bootstrap=False,
+                                 has_pvalue=True, statname='shapiro')
 
     @cache_readonly
     def shapiro_log(self):
-        return self._generic_stat(lambda x: stats.shapiro(numpy.log(x)),
-                                  use_bootstrap=False, has_pvalue=True,
-                                  statname='log-shapiro')
+        return self.generic_stat(lambda x: stats.shapiro(numpy.log(x)),
+                                 use_bootstrap=False, has_pvalue=True,
+                                 statname='log-shapiro')
 
     @cache_readonly
     def lillifors(self):
-        return self._generic_stat(sm.stats.lillifors, use_bootstrap=False,
-                                  has_pvalue=True, statname='lillifors')
+        return self.generic_stat(sm.stats.lillifors, use_bootstrap=False,
+                                 has_pvalue=True, statname='lillifors')
 
     @cache_readonly
     def lillifors_log(self):
-        return self._generic_stat(lambda x: sm.stats.lillifors(numpy.log(x)),
-                                  use_bootstrap=False, has_pvalue=True,
-                                  statname='log-lillifors')
+        return self.generic_stat(lambda x: sm.stats.lillifors(numpy.log(x)),
+                                 use_bootstrap=False, has_pvalue=True,
+                                 statname='log-lillifors')
 
     @cache_readonly
     def anderson_darling(self):
         raise NotImplementedError
-        return self._generic_stat(utils.anderson_darling, use_bootstrap=False,
-                                  has_pvalue=True, statname='anderson-darling')
+        return self.generic_stat(utils.anderson_darling, use_bootstrap=False,
+                                 has_pvalue=True, statname='anderson-darling')
 
     @cache_readonly
     def anderson_darling_log(self):
         raise NotImplementedError
-        return self._generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
-                                  use_bootstrap=False, has_pvalue=True,
-                                  statname='log-anderson-darling')
+        return self.generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
+                                 use_bootstrap=False, has_pvalue=True,
+                                 statname='log-anderson-darling')
 
-    def _comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
+    def comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
+        """Generic function to apply comparative hypothesis tests to
+        the groups of the ``DataCollection``.
+
+        Parameters
+        ----------
+        statfxn : callable
+            A function that takes a 1-D sequnce and returns a scalar
+            results. Its call signature should be in the form:
+            ``statfxn(seq, **kwargs)``.
+        statname : string, optional
+            Name of the statistic. Included as a column name in the
+            final dataframe.
+        apired : bool, optional
+            Set to ``True`` if ``statfxn`` requires paired data.
+        **statopts : optional kwargs
+            Additional keyword arguments that will be passed to
+            ``statfxn``.
+
+        Returns
+        -------
+        stat_df : pandas.DataFrame
+            A dataframe all the results of the ``statfxn`` when applied
+            to ``self.tidy.groupby(self.groupcols)`` or
+            ``self.paired.groupby(self.groupcols)`` when necessary.
+
+        Examples
+        --------
+        This actually demonstrates how ``DataCollection.mann_whitney``
+        is implemented.
+
+        >>> from scipy import stats
+        >>> import wqio
+        >>> from wqio.tests import helpers
+        >>> df = helpers.make_dc_data_complex()
+        >>> dc = DataCollection(df, rescol='res', qualcol='qual',
+        ...                     stationcol='loc', paramcol='param',
+        ...                     ndval='<')
+        >>> dc.comparison_stat(stats.mannwhitneyu,
+        ...                    statname='mann_whitney',
+        ...                    alternative='two-sided')
+
+        And with paired statistics
+
+        >>> dc.comparison_stat(stats.wilcoxon, statname='wilcoxon',
+        ...                    paired=True)
+
+        """
+
         if paired:
             data = self.paired
-            meta_columns = self.groupcols_comparison
             generator = utils.misc._paired_stat_generator
             rescol = self._raw_rescol
         else:
             data = self.tidy
-            meta_columns = self.groupcols_comparison
             generator = utils.misc._comp_stat_generator
             rescol = self.rescol
 
         station_columns = [self.stationcol + '_1', self.stationcol + '_2']
+        meta_columns = self.groupcols_comparison
         index_cols = meta_columns + station_columns
 
         results = generator(
@@ -274,27 +377,27 @@ class DataCollection(object):
 
     @cache_readonly
     def mann_whitney(self):
-        return self._comparison_stat(stats.mannwhitneyu, statname='mann_whitney', alternative='two-sided')
+        return self.comparison_stat(stats.mannwhitneyu, statname='mann_whitney', alternative='two-sided')
 
     @cache_readonly
     def t_test(self):
-        return self._comparison_stat(stats.ttest_ind, statname='t_test', equal_var=False)
+        return self.comparison_stat(stats.ttest_ind, statname='t_test', equal_var=False)
 
     @cache_readonly
     def levene(self):
-        return self._comparison_stat(stats.levene, statname='levene', center='median')
+        return self.comparison_stat(stats.levene, statname='levene', center='median')
 
     @cache_readonly
     def wilcoxon(self):
-        return self._comparison_stat(stats.wilcoxon, statname='wilcoxon', paired=True)
+        return self.comparison_stat(stats.wilcoxon, statname='wilcoxon', paired=True)
 
     @cache_readonly
     def kendall(self):
-        return self._comparison_stat(stats.kendalltau, statname='kendalltau', paired=True)
+        return self.comparison_stat(stats.kendalltau, statname='kendalltau', paired=True)
 
     @cache_readonly
     def spearman(self):
-        return self._comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
+        return self.comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
 
     @cache_readonly
     def theilslopes(self):
@@ -455,12 +558,30 @@ class DataCollection(object):
         ...                   state=['OR', 'CA'])
 
         """
+
         datasets = self._filter_collection(
             self.datasets(loc1, loc2), squeeze=squeeze, **conditions
         )
         return datasets
 
     def stat_summary(self, groupcols=None, useros=True):
+        """ A generic, high-level summary of the data collection.
+
+        Parameters
+        ----------
+        groupcols : list of strings, optional
+            The columns by which ``self.tidy`` will be grouped when
+            computing the statistics.
+        useros : bool, optional
+            Toggles of the use of the ROS'd (``True``) or raw
+            (``False``) data.
+
+        Returns
+        -------
+        stat_df : pandas.DataFrame
+
+        """
+
         if useros:
             col = self.roscol
         else:
@@ -468,6 +589,8 @@ class DataCollection(object):
 
         if groupcols is None:
             groupcols = self.groupcols
+        else:
+            groupcols = validate.at_least_empty_list(groupcols)
 
         ptiles = [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
