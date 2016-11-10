@@ -55,7 +55,7 @@ def test_basic_attr(dc):
     assert dc.ndval == ['<']
     assert dc.bsiter == 10000
     assert dc.groupcols == ['loc', 'param']
-    assert dc.columns == ['loc', 'param', 'res', '__censorship']
+    assert dc.tidy_columns == ['loc', 'param', 'res', '__censorship']
     assert hasattr(dc, 'filterfxn')
 
 
@@ -551,7 +551,7 @@ def test_datasets(dc):
     for d in dc.datasets('Inflow', 'Outflow'):
         assert isinstance(d, Dataset)
         _ds.append(d)
-    assert len(_ds) == 8
+    assert len(_ds) == 6
     assert _ds[0].definition == {'param': 'A'}
     assert _ds[1].definition == {'param': 'B'}
 
