@@ -15,6 +15,7 @@ from .samples import (
 )
 
 from . hydro import (
+    parse_storm_events,
     HydroRecord,
     Storm,
     DrainageArea,
