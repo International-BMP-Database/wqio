@@ -1,3 +1,4 @@
+import types
 from collections import namedtuple
 from io import StringIO
 from textwrap import dedent
@@ -594,3 +595,70 @@ class Test_winsorize_dataframe(object):
         w = numutils.winsorize_dataframe(self.df, A=(0.05, 0.20), C=0.10, B=0.20)
         expected = pandas.DataFrame({'A': self.w_05_20, 'B': self.w_20, 'C': self.w_10})
         pdtest.assert_frame_equal(w, expected)
+
+
+def test__comp_stat_generator():
+    df = helpers.make_dc_data().reset_index()
+    gen = numutils._comp_stat_generator(df, ['param', 'bmp'], 'loc', 'res', helpers.comp_statfxn)
+    assert isinstance(gen, types.GeneratorType)
+    result = pandas.DataFrame(gen)
+
+    expected = {
+        'bmp': ['1', '1', '1', '1', '1', '7', '7', '7', '7', '7'],
+        'param': ['A', 'A', 'A', 'A', 'A', 'H', 'H', 'H', 'H', 'H'],
+        'loc_1': [
+            'Inflow', 'Inflow', 'Outflow', 'Outflow', 'Reference',
+            'Inflow', 'Outflow', 'Outflow', 'Reference', 'Reference',
+        ],
+        'loc_2': [
+            'Outflow', 'Reference', 'Inflow', 'Reference', 'Inflow',
+            'Reference', 'Inflow', 'Reference', 'Inflow', 'Outflow',
+        ],
+        'stat': [
+            33.100128, 34.228203, 18.318497, 21.231383, 9.500766,
+            2.990900, 7.498225, 7.757954, 3.067299, 3.290471,
+        ],
+        'pvalue': [
+            8.275032, 8.557050, 4.579624, 5.307845, 2.375191,
+            0.747725, 1.874556, 1.939488, 0.766824, 0.822617,
+        ],
+    }
+    pdtest.assert_frame_equal(
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]),
+        pandas.concat([result.head(), result.tail()])
+    )
+
+
+def test__paired_stat_generator():
+    df = helpers.make_dc_data_complex().unstack(level='loc')
+    gen = numutils._paired_stat_generator(df, ['param'], 'loc', 'res', helpers.comp_statfxn)
+    assert isinstance(gen, types.GeneratorType)
+    result = pandas.DataFrame(gen)
+
+    expected = {
+        'loc_1': [
+            'Inflow', 'Inflow', 'Outflow', 'Outflow', 'Reference',
+            'Inflow', 'Outflow', 'Outflow', 'Reference', 'Reference',
+        ],
+        'loc_2': [
+            'Outflow', 'Reference', 'Inflow', 'Reference', 'Inflow',
+            'Reference', 'Inflow', 'Reference', 'Inflow', 'Outflow',
+        ],
+        'param': [
+            'A', 'A', 'A', 'A', 'A',
+            'H', 'H', 'H', 'H', 'H',
+        ],
+        'pvalue': [
+            2.688485, 3.406661, 9.084853, 9.084853, 5.243408,
+            9.399253, 20.234093, 20.23409, 2.801076, 2.801075,
+        ],
+        'stat': [
+            10.753940, 13.626645, 36.339414, 36.339414, 20.973631,
+            37.597010, 80.936373, 80.936373, 11.204302, 11.204302,
+        ]
+    }
+
+    pdtest.assert_frame_equal(
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
+        pandas.concat([result.head(), result.tail()])
+    )
