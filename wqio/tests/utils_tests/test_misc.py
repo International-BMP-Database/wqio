@@ -1,4 +1,3 @@
-import types
 from functools import partial
 from textwrap import dedent
 from io import StringIO
@@ -213,35 +212,3 @@ def test__unique_categories():
     result_categories = misc.unique_categories(classifier, bins)
 
     assert result_categories == known_categories
-
-
-def test__comp_stat_generator():
-    df = helpers.make_dc_data().reset_index()
-    gen = misc._comp_stat_generator(df, ['param', 'bmp'], 'loc', 'res', helpers.comp_statfxn)
-    assert isinstance(gen, types.GeneratorType)
-    result = pandas.DataFrame(gen)
-
-    data = {
-        'bmp': ['1', '1', '1', '1', '1', '7', '7', '7', '7', '7'],
-        'param': ['A', 'A', 'A', 'A', 'A', 'H', 'H', 'H', 'H', 'H'],
-        'loc_1': [
-            'Inflow', 'Inflow', 'Outflow', 'Outflow', 'Reference',
-            'Inflow', 'Outflow', 'Outflow', 'Reference', 'Reference',
-        ],
-        'loc_2': [
-            'Outflow', 'Reference', 'Inflow', 'Reference', 'Inflow',
-            'Reference', 'Inflow', 'Reference', 'Inflow', 'Outflow',
-        ],
-        'stat': [
-            33.100128, 34.228203, 18.318497, 21.231383, 9.500766,
-            2.990900, 7.498225, 7.757954, 3.067299, 3.290471,
-        ],
-        'pvalue': [
-            8.275032, 8.557050, 4.579624, 5.307845, 2.375191,
-            0.747725, 1.874556, 1.939488, 0.766824, 0.822617,
-        ],
-    }
-    pdtest.assert_frame_equal(
-        pandas.DataFrame(data, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]),
-        pandas.concat([result.head(), result.tail()])
-    )

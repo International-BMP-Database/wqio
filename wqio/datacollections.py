@@ -209,11 +209,9 @@ class DataCollection(object):
                 statnames = ['lower', statname, 'upper']
             else:
                 values = validate.at_least_empty_list(statfxn(data, **statopts))
-                # nametuple
-                if hasattr(values, '_fields'):
+                if hasattr(values, '_fields'):  # nametuple
                     statnames = values._fields
-                # tuple
-                else:
+                else:  # tuple
                     statnames = [statname]
                     if has_pvalue:
                         statnames.append('pvalue')
@@ -360,11 +358,11 @@ class DataCollection(object):
 
         if paired:
             data = self.paired
-            generator = utils.misc._paired_stat_generator
+            generator = utils.numutils._paired_stat_generator
             rescol = self._raw_rescol
         else:
             data = self.tidy
-            generator = utils.misc._comp_stat_generator
+            generator = utils.numutils._comp_stat_generator
             rescol = self.rescol
 
         station_columns = [self.stationcol + '_1', self.stationcol + '_2']
