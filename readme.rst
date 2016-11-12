@@ -3,6 +3,10 @@
 
 wqio - Water Quality, Inflow/Outflow
 ------------------------------------
+
+.. toctree::
+   :maxdepth: 2
+
 .. image:: https://travis-ci.org/Geosyntec/wqio.svg?branch=master
     :target: https://travis-ci.org/Geosyntec/wqio
 
@@ -15,9 +19,6 @@ wqio - Water Quality, Inflow/Outflow
 
 .. image:: https://anaconda.org/phobson/wqio/badges/license.svg
     :target: https://anaconda.org/phobson/wqio
-
-.. toctree::
-   :maxdepth: 2
 
 Installation
 ============
@@ -44,7 +45,7 @@ From source::
     $ git clone git@github.com:Geosyntec/wqio.git
     $ cd wqio
     $ pip install -e .
-    
+
 Periodic builds of ``master`` through conda::
 
     $ conda install wqio --channel=phobson/label/dev
@@ -62,11 +63,11 @@ Install pytest and plugins::
 
 Run the tests with the test runner::
 
-    $ python check_wqio.py --mpl --cov
+    $ python check_wqio.py --mpl --cov --pep8
 
 Run the tests from within python::
 
     $ python
     >>> import matploltib as mpl; mpl.use('agg')
     >>> import wqio
-    >>> wqio.test('--mpl', '--cov')
+    >>> wqio.test('--mpl', '--cov', '--pep8')

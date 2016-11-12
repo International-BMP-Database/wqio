@@ -1,7 +1,7 @@
 .. _hydro_auto:
 
 Hydrologic functions API
-========================
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: wqio.hydro
    :members:
