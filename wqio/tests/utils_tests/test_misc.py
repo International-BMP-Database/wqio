@@ -50,17 +50,6 @@ class mockSummary(object):
         self.nonething = None
 
 
-def test_addSecondColumnLevel(basic_data):
-    known_cols = pandas.MultiIndex.from_tuples([(u'test', u'A'), (u'test', u'B'),
-                                                (u'test', u'C'), (u'test', u'D')])
-    newdata = misc.addSecondColumnLevel('test', 'testlevel', basic_data)
-    assert known_cols.tolist() == newdata.columns.tolist()
-
-    # can only add levels to non-MultiIndex columns
-    with pytest.raises(ValueError):
-        misc.addSecondColumnLevel('test2', 'testlevel2', newdata)
-
-
 def test_add_column_level(basic_data):
     known_cols = pandas.MultiIndex.from_tuples([(u'test', u'A'), (u'test', u'B'),
                                                 (u'test', u'C'), (u'test', u'D')])

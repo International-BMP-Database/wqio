@@ -4,38 +4,8 @@ import numpy
 import pandas
 
 
-@numpy.deprecate(new_name='add_column_level')
-def addSecondColumnLevel(levelval, levelname, df):
-    """ Add a second level to the column-index if a dataframe.
-
-    Parameters
-    ----------
-    levelval : int or string
-        Constant value to be assigned to the second level.
-    levelname : string
-        The name of the second level.
-    df : pandas.DataFrame
-        The original dataframe to be modified.
-
-    Returns
-    -------
-    newdf : pandas.DataFrame
-        The mutated dataframe with a MultiIndex in the columns.
-
-    Example
-    -------
-    >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
-    >>> df.columns
-    Index(['res', 'qual'], dtype='object')
-    >>> df2 = utils.addSecondColumnLevel('Infl', 'location', df)
-    >>> df2.columns
-    MultiIndex(levels=[['Infl'], ['qual', 'res']],
-               labels=[[0, 0], [1, 0]],
-               names=['loc', 'quantity'])
-
-    """
-
-    return add_column_level(df, levelval, levelname)
+def head_tail(df, N=5):
+    return pandas.concat([df.head(N), df.tail(N)])
 
 
 def add_column_level(df, levelvalue, levelname):
@@ -86,7 +56,7 @@ def add_column_level(df, levelvalue, levelname):
     return newdf
 
 
-def swap_column_levels(df, level_1, level_2):
+def swap_column_levels(df, level_1, level_2, sort=True):
     """ Swaps columns levels in a dataframe with multi-level columns
 
     Parameters
@@ -130,7 +100,10 @@ def swap_column_levels(df, level_1, level_2):
     """
     df2 = df.copy()
     df2.columns = df2.columns.swaplevel(level_1, level_2)
-    return df2.sort_index(axis='columns')
+    if sort:
+        df2 = df2.sort_index(axis='columns')
+
+    return df2
 
 
 def flatten_columns(df, sep='_'):
