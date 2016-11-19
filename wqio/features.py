@@ -187,15 +187,16 @@ class Location(object):
 
     @property
     def dataframe(self):
-        if self.hasData:
-            if self._dataframe is None:
-                df = self.raw_data.copy()
-                df[self.cencol] = df[self.qualcol].isin(self.ndvals)
-                if self.useros:
-                    ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
-                    self._dataframe = ros[['final', self.cencol]]
-                else:
-                    self._dataframe = df[[self.rescol, self.cencol]]
+        if self.raw_data.shape[0] > 0 and self._dataframe is None:
+            df = (
+                self.raw_data
+                    .assign(**{self.cencol: lambda df: df[self.qualcol].isin(self.ndvals)})
+            )
+            if self.useros:
+                ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
+                self._dataframe = ros[['final', self.cencol]]
+            else:
+                self._dataframe = df[[self.rescol, self.cencol]]
         return self._dataframe
 
     @property
@@ -243,14 +244,11 @@ class Location(object):
 
     @cache_readonly
     def N(self):
-        return self.raw_data.shape[0]
+        return self.data.shape[0]
 
     @cache_readonly
     def hasData(self):
-        if self.N == 0:
-            return False
-        else:
-            return True
+        return self.dataframe.shape[0] > 0
 
     @cache_readonly
     def all_positive(self):
@@ -500,7 +498,7 @@ class Location(object):
         """
 
         fig, ax = validate.axes(ax)
-        y_log = yscale == 'log'
+        y_log = (yscale == 'log')
         bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
         if xlabel is not None:
             bxpstats[0]['label'] = xlabel
@@ -519,8 +517,8 @@ class Location(object):
 
         ax.set_yscale(yscale)
         if yscale == 'log':
-            ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
-        viz.gridlines(ax, yminor=True)
+            ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=True, threshold=6))
+        viz.gridlines(ax, yminor=False)
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -788,8 +786,8 @@ class Dataset(object):
                 columns=self.effluent.raw_data.columns
             )
 
-        infl = utils.addSecondColumnLevel('inflow', 'station', infl)
-        effl = utils.addSecondColumnLevel('outflow', 'station', effl)
+        infl = utils.add_column_level(infl, 'inflow', 'station')
+        effl = utils.add_column_level(effl, 'outflow', 'station')
         return infl.join(effl, how='outer')
 
     @cache_readonly
@@ -1164,19 +1162,20 @@ class Dataset(object):
         fig, ax = validate.axes(ax)
 
         for loc, offset in zip([self.influent, self.effluent], [-1 * offset, offset]):
-            y_log = yscale == 'log'
-            bxpstats = loc.boxplot_stats(log=y_log, bacteria=bacteria)
-            bp = viz.boxplot(
-                bxpstats,
-                ax=ax,
-                position=pos + offset,
-                width=width,
-                color=loc.color,
-                marker=loc.plot_marker,
-                patch_artist=patch_artist,
-                showmean=showmean,
-                shownotches=shownotches,
-            )
+            if loc is not None:
+                y_log = (yscale == 'log')
+                bxpstats = loc.boxplot_stats(log=y_log, bacteria=bacteria)
+                bp = viz.boxplot(
+                    bxpstats,
+                    ax=ax,
+                    position=pos + offset,
+                    width=width,
+                    color=loc.color,
+                    marker=loc.plot_marker,
+                    patch_artist=patch_artist,
+                    showmean=showmean,
+                    shownotches=shownotches,
+                )
 
         ax.set_yscale(yscale)
         if y_log:
