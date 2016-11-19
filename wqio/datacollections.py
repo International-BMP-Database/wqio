@@ -67,7 +67,7 @@ class DataCollection(object):
         self._cache = resettable_cache()
 
         # basic input
-        self._raw_data = dataframe
+        self.raw_data = dataframe
         self._raw_rescol = rescol
         self.qualcol = qualcol
         self.stationcol = stationcol
@@ -417,12 +417,15 @@ class DataCollection(object):
                 .filter(self.filterfxn)
                 .groupby(by=self.groupcols)
         )
+        cols = [self._raw_rescol, self.qualcol]
         for names, data in groups:
             loc_dict = dict(zip(self.groupcols, names))
-            loc = Location(
-                data.copy(), station_type=loc_dict[self.stationcol].lower(),
-                rescol=self._raw_rescol, qualcol=self.qualcol,
-                ndval=self.ndval, bsiter=self.bsiter, useros=self.useros
+            loc = (
+                data.set_index(self.pairgroups)[cols]
+                    .reset_index(level=self.stationcol, drop=True)
+                    .pipe(Location, station_type=loc_dict[self.stationcol].lower(),
+                          rescol=self._raw_rescol, qualcol=self.qualcol,
+                          ndval=self.ndval, bsiter=self.bsiter, useros=self.useros)
             )
 
             loc.definition = loc_dict
@@ -473,7 +476,7 @@ class DataCollection(object):
 
     @staticmethod
     def _filter_collection(collection, squeeze, **kwargs):
-        items = collection.copy()
+        items = list(collection)
         for key, value in kwargs.items():
             if numpy.isscalar(value):
                 items = [r for r in filter(lambda x: x.definition[key] == value, items)]
