@@ -629,6 +629,37 @@ def test__comp_stat_generator():
     )
 
 
+def test__comp_stat_generator_single_group_col():
+    df = helpers.make_dc_data().reset_index()
+    gen = numutils._comp_stat_generator(df, 'param', 'loc', 'res', helpers.comp_statfxn)
+    assert isinstance(gen, types.GeneratorType)
+    result = pandas.DataFrame(gen)
+
+    expected = {
+        'stat': [
+            35.78880963, 36.032519607, 24.07328047, 24.151276229, 13.107839675,
+            16.69316696, 14.336154663, 14.33615466, 11.298920232, 11.298920232
+        ],
+        'loc_1': [
+            'Inflow', 'Inflow', 'Outflow', 'Outflow', 'Reference',
+            'Inflow', 'Outflow', 'Outflow', 'Reference', 'Reference'
+        ],
+        'loc_2': [
+            'Outflow', 'Reference', 'Inflow', 'Reference', 'Inflow',
+            'Reference', 'Inflow', 'Reference', 'Inflow', 'Outflow'
+        ],
+        'param': ['A', 'A', 'A', 'A', 'A', 'H', 'H', 'H', 'H', 'H'],
+        'pvalue': [
+            8.94720240, 9.008129901, 6.018320119, 6.037819057, 3.276959918,
+            4.17329174, 3.584038665, 3.584038665, 2.824730058, 2.824730058
+        ]
+    }
+    pdtest.assert_frame_equal(
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
+        pandas.concat([result.head(), result.tail()])
+    )
+
+
 def test__paired_stat_generator():
     df = helpers.make_dc_data_complex().unstack(level='loc')
     gen = numutils._paired_stat_generator(df, ['param'], 'loc', 'res', helpers.comp_statfxn)
