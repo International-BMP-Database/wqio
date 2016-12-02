@@ -587,10 +587,13 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
     if statname is None:
         statname = 'stat'
 
+    groupcols = validate.at_least_empty_list(groupcols)
+
     groups = df.groupby(by=groupcols)
     for name, g in groups:
         stations = g[pivotcol].unique()
         for _x, _y in itertools.permutations(stations, 2):
+            name = validate.at_least_empty_list(name)
             row = dict(zip(groupcols, name))
 
             station_columns = [pivotcol + '_1', pivotcol + '_2']
