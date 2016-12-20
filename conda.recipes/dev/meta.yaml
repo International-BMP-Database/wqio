@@ -8,9 +8,12 @@ source:
    # List any patch files here
    # - fix.patch
 
+channels:
+    - conda-forge
+
 build:
   script: python setup.py install
-  number: 3
+  number: 7 
 
 requirements:
   build:

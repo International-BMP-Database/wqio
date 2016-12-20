@@ -1,5 +1,8 @@
 .. include:: ../readme.rst
 
+.. toctree::
+   :maxdepth: 3
+
 API and Source Reference
 ========================
 
@@ -7,6 +10,8 @@ API and Source Reference
    :maxdepth: 3
 
    api.rst
+   dev.rst
+   auto_examples/index
 
 Indices and tables
 ==================
