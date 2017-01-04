@@ -44,7 +44,7 @@ From source::
     $ git clone git@github.com:Geosyntec/wqio.git
     $ cd wqio
     $ pip install -e .
-    
+
 Periodic builds of ``master`` through conda::
 
     $ conda install wqio --channel=phobson/label/dev
@@ -64,9 +64,40 @@ Run the tests with the test runner::
 
     $ python check_wqio.py --mpl --cov
 
-Run the tests from within python::
+Or run the tests from within python::
 
     $ python
     >>> import matploltib as mpl; mpl.use('agg')
     >>> import wqio
     >>> wqio.test('--mpl', '--cov')
+
+
+Configuring Atom/Sublime Text 3 to run the tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In Sublime, got to Tools -> Build System -> New Build System.
+Then add the following configuration and save as "wqio.sublime-build"::
+
+    {
+        "working_dir": "<path to the git repository>",
+        "cmd": "<full path of the python executable> check_wqio.py --verbose <other pytest options>",
+    }
+
+
+In Atom, install the build_ package, create a new file called ".atom-build.yml" in the
+top level of the project directory, and add the following contents::
+
+    cmd: "<full path of the python executable>"
+    name: "wqio"
+    args:
+      - check_wqio.py
+      - --verbose
+      - <other pytest options ...>
+    cwd: <path to the git repository>
+    sh: false
+    keymap: ctrl-b
+    atomCommandName: namespace:buildwqio
+
+After this, hitting ctrl+b in either text editor will run the test suite.
+
+.. _build: https://atom.io/packages/build
