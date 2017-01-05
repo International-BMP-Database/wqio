@@ -22,13 +22,13 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
                        precipcol=None, inflowcol=None,
                        outflowcol=None, baseflowcol=None,
                        stormcol='storm', debug=False):
-    """
-    Parses the hydrologic data into distinct storms.
+    """Parses the hydrologic data into distinct storms.
 
     In this context, a storm is defined as starting whenever the
     hydrologic records shows non-zero precipitation or [in|out]flow
     from the BMP after a minimum inter-event dry period duration
-    specified in the the function call.
+    specified in the the function call. The storms ends the observation
+    *after* the last non-zero precipitation or flow value.
 
     Parameters
     ----------
