@@ -22,19 +22,14 @@ def _acceleration(data):
 
     """
 
-    data = numpy.asarray(data)
-
     # intermediate values
-    SSD = numpy.sum((data.mean() - data)**3)
-    SCD = numpy.sum((data.mean() - data)**2)
+    sumcube_resids = ((data.mean() - data)**3).sum()
 
     # dodge the ZeroDivision error
-    if SCD == 0:
-        SCD = 1e-12
+    sumsqr_resids = max(((data.mean() - data)**2).sum(), 1e-12)
 
     # compute and return the acceleration
-    acc = SSD / (6 * SCD**1.5)
-    return acc
+    return sumcube_resids / (6 * sumsqr_resids**1.5)
 
 
 def _make_boot_index(elements, niter):
@@ -92,6 +87,8 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
     array([ 1.89528037,  3.16395883])
 
     """
+
+    data = numpy.asarray(data)
 
     index = _make_boot_index(data.shape[0], niter)
     boot_stats = statfxn(data[index], axis=-1)
