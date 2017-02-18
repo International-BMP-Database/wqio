@@ -10,7 +10,11 @@ matrix:
       env:
         - COVERAGE=false
         - ARGS="--mpl --verbose"
-    - python: 3.5
+    - python: 3.6
+      env:
+        - COVERAGE=false
+        - ARGS="--mpl --verbose"
+    - python: 3.6
       env:
         - COVERAGE=true
         - ARGS="--mpl --verbose --pep8"

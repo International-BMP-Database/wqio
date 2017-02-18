@@ -203,20 +203,20 @@ class _base_LocationMixin(object):
         # p-value
         assert abs(self.loc.anderson[3] - self.known_anderson[3]) < 0.0000001
 
-    def test_anderson_log(self):
-        assert hasattr(self.loc, 'anderson_log')
+    # def test_anderson_log(self):
+    #     assert hasattr(self.loc, 'anderson_log')
 
-        # Ad stat
-        assert abs(self.loc.anderson_log[0] - self.known_anderson_log[0]) < 0.0001
+    #     # Ad stat
+    #     assert abs(self.loc.anderson_log[0] - self.known_anderson_log[0]) < 0.0001
 
-        # critical values
-        nptest.assert_allclose(self.loc.anderson_log[1], self.known_anderson_log[1], rtol=self.tolerance)
+    #     # critical values
+    #     nptest.assert_allclose(self.loc.anderson_log[1], self.known_anderson_log[1], rtol=self.tolerance)
 
-        # significance level
-        nptest.assert_allclose(self.loc.anderson_log[2], self.known_anderson_log[2], rtol=self.tolerance)
+    #     # significance level
+    #     nptest.assert_allclose(self.loc.anderson_log[2], self.known_anderson_log[2], rtol=self.tolerance)
 
-        # p-value
-        assert abs(self.loc.anderson_log[3] - self.known_anderson_log[3]) < 0.0000001
+    #     # p-value
+    #     assert abs(self.loc.anderson_log[3] - self.known_anderson_log[3]) < 0.0000001
 
     def test_skew(self):
         assert hasattr(self.loc, 'skew')

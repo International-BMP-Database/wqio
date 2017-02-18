@@ -90,7 +90,7 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
         baseflowcol: numpy.any
     })
 
-    ie_periods = MIN_PER_HOUR / data.index.freq.n * intereventHours
+    ie_periods = int(MIN_PER_HOUR / data.index.freq.n * intereventHours)
 
     # bool column where True means there's rain or flow of some kind
     water_columns = [inflowcol, outflowcol, precipcol]
