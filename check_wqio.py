@@ -6,5 +6,5 @@ from matplotlib import pyplot
 pyplot.style.use('classic')
 
 import wqio
-status = wqio.test(False, *sys.argv[1:])
+status = wqio.test(*sys.argv[1:])
 sys.exit(status)

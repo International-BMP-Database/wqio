@@ -10,7 +10,7 @@ source:
 
 build:
   script: python setup.py install
-  number: 3
+  number: 4
 
 requirements:
   build:
@@ -40,7 +40,6 @@ requirements:
 test:
   requires:
     - pytest
-    - pytest-cov
     - pytest-mpl
 
   imports:
@@ -48,7 +47,7 @@ test:
     - wqio.utils
 
   commands:
-    - python -c "import matplotlib as mpl; mpl.use('agg'); import sys; import wqio; sys.exit(wqio.test())"
+    - python -c "import wqio; wqio.test()"
 
 about:
   home: https://github.com/Geosyntec/wqio.git
