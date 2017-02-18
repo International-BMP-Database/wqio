@@ -50,14 +50,14 @@ Thumbs.db
 # big files #
 #############
 other_docs/*
-src/bmp/summary/*
-src/bmp/data/project/*
+wqio/bmp/summary/*
+wqio/bmp/data/project/*
 
 
 # tex files #
 #############
-src/bmp/tex/*.pdf
-src/cvc/output/tex/*
+wqio/bmp/tex/*.pdf
+wqio/cvc/output/tex/*
 *.aux
 *.out
 *.toc
@@ -66,11 +66,11 @@ src/cvc/output/tex/*
 
 # test output #
 ###############
-src/*/tests/*.pdf
-src/*/tests/*.png
-src/*/tests/*.csv
-src/*/tests/*.tex
-src/*/tests/*.xlsx
+wqio/*/tests/*.pdf
+wqio/*/tests/*.png
+wqio/*/tests/*.csv
+wqio/*/tests/*.tex
+wqio/*/tests/*.xlsx
 .cache
 .noseids
 .coverage
@@ -79,14 +79,15 @@ result_images
 
 # scratch files #
 #################
-src/scratch/*
-src/bmp/tex/boxplotlegend.png
+wqio/scratch/*
+wqio/bmp/tex/boxplotlegend.png
 *ipython_log*
 *.noseids
 .ipynb_checkpoints
 *.sublime-workspace
-src/*/old/*
-src/bmp/data/old/*
+wqio/*/old/*
+wqio/bmp/data/old/*
+docs/*
 
 # Visual Studio stuff #
 #######################
