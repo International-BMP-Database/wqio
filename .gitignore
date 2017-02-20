@@ -1,6 +1,7 @@
 # build systems #
 #################
 .atom-build.yml
+.vscode
 
 
 # Compiled source #
