@@ -29,7 +29,7 @@ before_install:
 install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes matplotlib seaborn statsmodels numexpr openpyxl scipy
+  - conda install --yes numpy scipy matplotlib statsmodels seaborn
   - conda install --yes coverage docopt requests pyyaml pytest pytest-cov
   - conda install --yes mpl-probscale pytest-mpl pytest-pep8 --channel=conda-forge
   - pip install codecov
