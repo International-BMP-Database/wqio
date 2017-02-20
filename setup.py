@@ -26,7 +26,15 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
 ]
-INSTALL_REQUIRES = ['seaborn', 'probscale']
+INSTALL_REQUIRES = [
+    'numpy',
+    'scipy',
+    'matplotlib',
+    'pandas',
+    'statsmodels',
+    'seaborn',
+    'probscale',
+]
 PACKAGE_DATA = {
     'wqio.tests._data': ['*.csv', '*.tex', 'matplotlibrc'],
     'wqio.tests._baseline_images.features_tests': ['*png'],
