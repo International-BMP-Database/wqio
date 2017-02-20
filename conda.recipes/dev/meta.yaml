@@ -10,7 +10,7 @@ source:
 
 build:
   script: python setup.py install
-  number: 4
+  number: 9
 
 requirements:
   build:
@@ -20,7 +20,6 @@ requirements:
     - numpy
     - scipy
     - matplotlib
-    - numexpr
     - statsmodels
     - seaborn
     - mpl-probscale
@@ -31,8 +30,6 @@ requirements:
     - pandas
     - seaborn
     - statsmodels
-    - numexpr
-    - openpyxl
     - xlrd
     - six
     - mpl-probscale
@@ -47,7 +44,7 @@ test:
     - wqio.utils
 
   commands:
-    - python -c "import wqio; wqio.test()"
+    - python -c "import sys, wqio; sys.exit(wqio.test())"
 
 about:
   home: https://github.com/Geosyntec/wqio.git
