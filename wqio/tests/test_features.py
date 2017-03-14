@@ -1,3 +1,4 @@
+from distutils.version import LooseVersion
 from textwrap import dedent
 from io import StringIO
 
@@ -7,12 +8,16 @@ import pandas.util.testing as pdtest
 from wqio.tests import helpers
 
 import numpy
+import scipy
 import pandas
 
 from wqio.features import (
     Location,
     Dataset,
 )
+
+
+OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion('0.19')
 
 
 class _base_LocationMixin(object):
@@ -432,7 +437,7 @@ class Test_Dataset(object):
         self.ds = Dataset(self.influent, self.effluent)
 
         self.known_dumpFile = None
-        self.known_kendall_stats = (1.00, 2.916727e-17)
+        self.known_kendall_stats = (1.00, 5.482137e-17)
         self.known_kendall_tau = self.known_kendall_stats[0]
         self.known_kendall_p = self.known_kendall_stats[1]
 
@@ -521,10 +526,12 @@ class Test_Dataset(object):
         assert hasattr(self.ds, 'mannwhitney_p')
         nptest.assert_allclose(self.ds.mannwhitney_p, self.known_mannwhitney_p, rtol=self.tolerance)
 
+    @pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
     def test_kendall_tau(self):
         assert hasattr(self.ds, 'kendall_tau')
         nptest.assert_allclose(self.ds.kendall_tau, self.known_kendall_tau, rtol=self.tolerance)
 
+    @pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
     def test_kendall_p(self):
         assert hasattr(self.ds, 'kendall_p')
         nptest.assert_allclose(self.ds.kendall_p, self.known_kendall_p, rtol=self.tolerance)
@@ -561,6 +568,7 @@ class Test_Dataset(object):
         assert hasattr(self.ds, '_mannwhitney_stats')
         nptest.assert_allclose(self.ds._mannwhitney_stats, self.known_mannwhitney_stats, rtol=self.tolerance)
 
+    @pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
     def test_kendall_stats(self):
         assert hasattr(self.ds, '_kendall_stats')
         nptest.assert_allclose(self.ds._kendall_stats, self.known_kendall_stats, rtol=self.tolerance)
