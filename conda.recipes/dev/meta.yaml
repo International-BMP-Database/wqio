@@ -10,7 +10,7 @@ source:
 
 build:
   script: python setup.py install
-  number: 9
+  number: 10
 
 requirements:
   build:
@@ -38,6 +38,7 @@ test:
   requires:
     - pytest
     - pytest-mpl
+    - ipython
 
   imports:
     - wqio
