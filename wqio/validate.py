@@ -1,6 +1,18 @@
+import os
+
 import numpy
 from matplotlib import pyplot
 import pandas
+
+
+def dataset(fname):
+    valid_names = ['bmpdata', 'cvc', 'nsqd']
+    fname, ext = os.path.splitext(fname)
+    if fname.lower() not in valid_names:
+        msg = "filename '{}' not one of {}"
+        raise ValueError(msg.format(fname, valid_names))
+
+    return fname.lower() + '.zip'
 
 
 def timestamp(datelike):

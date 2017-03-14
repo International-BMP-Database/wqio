@@ -10,6 +10,26 @@ from wqio import validate
 from wqio.tests import helpers
 
 
+@pytest.mark.parametrize(('fname', 'expected', 'error_to_raise'), [
+    ('BMPdata', 'bmpdata.zip', None),
+    ('bmpdata.csv', 'bmpdata.zip', None),
+    ('bmpdata.zip', 'bmpdata.zip', None),
+    ('NSQD', 'nsqd.zip', None),
+    ('NSQD.csv', 'nsqd.zip', None),
+    ('NsqD.zip', 'nsqd.zip', None),
+    ('CvC', 'cvc.zip', None),
+    ('CVC.csv', 'cvc.zip', None),
+    ('cVc.zip', 'cvc.zip', None),
+    ('junk', None, ValueError),
+])
+def test_dataset(fname, expected, error_to_raise):
+    if not expected:
+        with pytest.raises(error_to_raise):
+            validate.dataset(fname)
+    else:
+        assert expected == validate.dataset(fname)
+
+
 @pytest.mark.parametrize(('value', 'expected'), [
     (datetime(2015, 1, 5), pandas.Timestamp('2015-01-05')),
     ('2015-01-05', pandas.Timestamp('2015-01-05')),
