@@ -1,6 +1,8 @@
 from . import bootstrap
 from .ros import ROS, cohn_numbers
 
+from .datasets import download
+
 from .features import (
     Location,
     Dataset,
