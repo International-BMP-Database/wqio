@@ -1,7 +1,9 @@
+from distutils.version import LooseVersion
 from textwrap import dedent
 from io import StringIO
 
 import numpy
+import scipy
 import pandas
 
 from unittest import mock
@@ -11,6 +13,9 @@ from wqio.tests import helpers
 
 from wqio.features import Location, Dataset
 from wqio.datacollections import DataCollection
+
+
+OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion('0.19')
 
 
 def check_stat(expected_csv, result, comp=False):
@@ -435,29 +440,30 @@ def test_wilcoxon(dc):
 
 
 @helpers.seed
+@pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
 def test_kendall(dc):
     known_csv = """\
         ,,kendalltau,kendalltau,kendalltau,pvalue,pvalue,pvalue
         loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
         param,loc_1,,,,,,
-        A,Inflow,,-0.0516608683,-0.007380124,,0.7722642973,0.9670209303
-        A,Outflow,-0.0516608683,,-0.0833333333,0.7722642973,,0.6525480985
-        A,Reference,-0.007380124,-0.0833333333,,0.9670209303,0.6525480985,
-        B,Inflow,,0.4413510128,0.298245614,,0.0105349902,0.1071073491
-        B,Outflow,0.4413510128,,0.5598548065,0.0105349902,,0.0017102581
-        B,Reference,0.298245614,0.5598548065,,0.1071073491,0.0017102581,
-        C,Inflow,,0.2802226672,0.0840060487,,0.0755697234,0.5745825312
-        C,Outflow,0.2802226672,,-0.1417004049,0.0755697234,,0.3437304156
-        C,Reference,0.0840060487,-0.1417004049,,0.5745825312,0.3437304156,
-        D,Inflow,,0.4034688906,0.0952986215,,0.0085867302,0.5934234027
-        D,Outflow,0.4034688906,,0.3183367978,0.0085867302,,0.056850268
-        D,Reference,0.0952986215,0.3183367978,,0.5934234027,0.056850268,
-        E,Inflow,,0.1142857143,0.6407032156,,0.6679640324,0.003735355
-        E,Outflow,0.1142857143,,0.1679438246,0.6679640324,,0.4472078693
-        E,Reference,0.6407032156,0.1679438246,,0.003735355,0.4472078693,
-        F,Inflow,,0.0,0.0723101526,,1.0,0.7434709221
-        F,Outflow,0.0,,0.3888888889,1.0,,0.0433081484
-        F,Reference,0.0723101526,0.3888888889,,0.7434709221,0.0433081484
+        A,Inflow,,-0.051661,-0.00738,,0.772893,0.967114
+        A,Outflow,-0.051661,,-0.083333,0.772893,,0.652548
+        A,Reference,-0.00738,-0.083333,,0.967114,0.652548,
+        B,Inflow,,0.441351,0.298246,,0.015267,0.119265
+        B,Outflow,0.441351,,0.559855,0.015267,,0.004202
+        B,Reference,0.298246,0.559855,,0.119265,0.004202,
+        C,Inflow,,0.280223,0.084006,,0.078682,0.578003
+        C,Outflow,0.280223,,-0.1417,0.078682,,0.352394
+        C,Reference,0.084006,-0.1417,,0.578003,0.352394,
+        D,Inflow,,0.403469,0.095299,,0.020143,0.634826
+        D,Outflow,0.403469,,0.318337,0.020143,,0.094723
+        D,Reference,0.095299,0.318337,,0.634826,0.094723,
+        E,Inflow,,0.114286,0.640703,,0.673337,0.004476
+        E,Outflow,0.114286,,0.167944,0.673337,,0.449603
+        E,Reference,0.640703,0.167944,,0.004476,0.449603,
+        F,Inflow,,0.0,0.07231,,1.0,0.763851
+        F,Outflow,0.0,,0.388889,1.0,,0.063
+        F,Reference,0.07231,0.388889,,0.763851,0.063,
     """
     check_stat(known_csv, dc.kendall, comp=True)
 
