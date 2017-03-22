@@ -28,24 +28,23 @@ def getSeason(date):
     """
 
     date = validate.timestamp(date)
-    if (date.month == 12 and date.day >= 22) or \
-            (date.month in [1, 2]) or \
-            (date.month == 3 and date.day < 22):
-        return 'winter'
-    elif (date.month == 3 and date.day >= 22) or \
-            (date.month in [4, 5]) or \
-            (date.month == 6 and date.day < 22):
-        return 'spring'
-    elif (date.month == 6 and date.day >= 22) or \
-            (date.month in [7, 8]) or \
-            (date.month == 9 and date.day < 22):
-        return 'summer'
-    elif (date.month == 9 and date.day >= 22) or \
-            (date.month in [10, 11]) or \
-            (date.month == 12 and date.day < 22):
-        return 'autumn'
-    else:  # pragma: no cover
-        raise ValueError('could not assign season to  {}'.format(date))
+    day = date.dayofyear
+    leap_year = int(date.is_leap_year)
+
+    spring = numpy.arange(80, 172) + leap_year
+    summer = numpy.arange(172, 264) + leap_year
+    autumn = numpy.arange(264, 355) + leap_year
+
+    if day in spring:
+        season = 'spring'
+    elif day in summer:
+        season = 'summer'
+    elif day in autumn:
+        season = 'autumn'
+    else:
+        season = 'winter'
+
+    return season
 
 
 def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
