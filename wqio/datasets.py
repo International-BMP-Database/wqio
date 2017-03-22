@@ -21,11 +21,11 @@ def download(dataset, year=None, redownload=True, data_dir=None):
         data_dir = os.path.join(os.path.expanduser(base_dir), tag)
         os.makedirs(data_dir, exist_ok=True)
 
-    dst_path = os.path.join(data_dir, os.path.basename(src_url))
+    dst_path = os.path.join(data_dir, fname)
     if not os.path.exists(dst_path) or redownload:
         request.urlretrieve(src_url, dst_path)
 
         with zipfile.ZipFile(dst_path, "r") as zip_ref:
             zip_ref.extractall(data_dir)
 
-    return dst_path
+    return os.path.splitext(dst_path)[0] + '.csv'
