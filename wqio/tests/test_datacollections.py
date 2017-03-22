@@ -76,7 +76,8 @@ def test_tidy(dc):
     assert dc.tidy.shape == (388, 5)
     assert 'G' not in dc.tidy['param'].unique()
     assert 'H' not in dc.tidy['param'].unique()
-    assert dc.tidy.columns.tolist() == ['loc', 'param', 'res', '__censorship', 'ros_res']
+    collist = ['loc', 'param', 'res', '__censorship', 'ros_res']
+    assert dc.tidy.columns.tolist() == collist
 
 
 def test_paired(dc):
@@ -502,13 +503,44 @@ def test_theilslopes(dc):
         _ = dc.theilslopes
 
 
+def test_inventory(dc):
+    known_csv = StringIO(dedent("""\
+    loc,param,Count,Non-Detect
+    Inflow,A,21,3
+    Inflow,B,24,6
+    Inflow,C,24,0
+    Inflow,D,24,11
+    Inflow,E,19,4
+    Inflow,F,21,8
+    Outflow,A,22,1
+    Outflow,B,22,9
+    Outflow,C,24,4
+    Outflow,D,25,12
+    Outflow,E,16,2
+    Outflow,F,24,8
+    Reference,A,20,2
+    Reference,B,19,6
+    Reference,C,25,4
+    Reference,D,21,12
+    Reference,E,20,3
+    Reference,F,17,7
+    """))
+    expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
+    pdtest.assert_frame_equal(expected, dc.inventory.astype(int),
+                              check_names=False,
+                              check_less_precise=True)
+
+
 @helpers.seed
 def test_stat_summary(dc):
     known_csv = StringIO(dedent("""\
     ros_res,loc,A,B,C,D,E,F
-    count,Inflow,21.0,24.0,24.0,24.0,19.0,21.0
-    count,Outflow,22.0,22.0,24.0,25.0,16.0,24.0
-    count,Reference,20.0,19.0,25.0,21.0,20.0,17.0
+    Count,Inflow,21,24,24,24,19,21
+    Count,Outflow,22,22,24,25,16,24
+    Count,Reference,20,19,25,21,20,17
+    Non-Detect,Inflow,3.0,6.0,0.0,11.0,4.0,8.0
+    Non-Detect,Outflow,1.0,9.0,4.0,12.0,2.0,8.0
+    Non-Detect,Reference,2.0,6.0,4.0,12.0,3.0,7.0
     mean,Inflow,2.64668,7.64717,0.51325,3.02124,1.9147,9.8254
     mean,Outflow,5.24928,6.86384,1.00464,2.31881,1.09824,3.45018
     mean,Reference,3.77797,4.50425,0.54196,1.94583,2.28329,2.49171
@@ -541,7 +573,8 @@ def test_stat_summary(dc):
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).T
     pdtest.assert_frame_equal(expected, dc.stat_summary(),
                               check_names=False,
-                              check_less_precise=True)
+                              check_less_precise=True,
+                              check_dtype=False)
 
 
 def test_locations(dc):
@@ -603,4 +636,5 @@ def test_selectDatasets(dc):
         with mock.patch.object(dc, 'datasets', return_value=['A', 'B']) as _ds:
             dc.selectDatasets('Inflow', 'Reference', foo='A', bar='C')
             _ds.assert_called_once_with('Inflow', 'Reference')
-            _fc.assert_called_once_with(['A', 'B'], foo='A', bar='C', squeeze=False)
+            _fc.assert_called_once_with(['A', 'B'], foo='A', bar='C',
+                                        squeeze=False)

@@ -234,6 +234,20 @@ class DataCollection(object):
         return self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
 
     @cache_readonly
+    def inventory(self):
+        return (
+            self.tidy
+                .groupby(by=self.groupcols + [self.cencol])
+                .size()
+                .unstack(level=self.cencol)
+                .fillna(0)
+                .astype(int)
+                .rename_axis(None, axis='columns')
+                .rename(columns={False: 'Detect', True: 'Non-Detect'})
+                .assign(Count=lambda df: df.sum(axis='columns'))
+        )[['Count', 'Non-Detect']]
+
+    @cache_readonly
     def median(self):
         return self.generic_stat(numpy.median, statname='median')
 
@@ -605,6 +619,6 @@ class DataCollection(object):
             self.tidy
                 .groupby(by=groupcols)
                 .apply(lambda g: g[col].describe(percentiles=ptiles).T)
-                .unstack(level=self.stationcol)
+                .drop('count', axis='columns')
         )
-        return summary
+        return self.inventory.join(summary).unstack(level=self.stationcol)
