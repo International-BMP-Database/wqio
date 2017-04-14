@@ -67,7 +67,7 @@ def log_formatter(use_1x=True, threshold=5):
             else:
                 tick = r'$10 ^ {%d}$' % int(numpy.log10(tick))
 
-        return tick
+        return str(tick)
 
     func = partial(_formatter, use_1x=use_1x, threshold=threshold)
     return ticker.FuncFormatter(func)
