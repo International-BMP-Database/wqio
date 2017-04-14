@@ -1073,8 +1073,7 @@ class Dataset(object):
         if log_effl:
             effl = numpy.log(effl)
 
-        if self._paired_stats and \
-           self.influent.fractionND <= 0.5 and \
+        if self.influent.fractionND <= 0.5 and \
            self.effluent.fractionND <= 0.5:
             # we need to make sure that the "y" values are the
             # Location with the greatest NUnique to avoid a
