@@ -235,7 +235,7 @@ class DataCollection(object):
 
     @cache_readonly
     def inventory(self):
-        return (
+        counts = (
             self.tidy
                 .groupby(by=self.groupcols + [self.cencol])
                 .size()
@@ -245,7 +245,11 @@ class DataCollection(object):
                 .rename_axis(None, axis='columns')
                 .rename(columns={False: 'Detect', True: 'Non-Detect'})
                 .assign(Count=lambda df: df.sum(axis='columns'))
-        )[['Count', 'Non-Detect']]
+        )
+        if 'Non-Detect' not in counts.columns:
+            counts['Non-Detect'] = 0
+
+        return counts[['Count', 'Non-Detect']]
 
     @cache_readonly
     def median(self):
@@ -397,6 +401,10 @@ class DataCollection(object):
     @cache_readonly
     def mann_whitney(self):
         return self.comparison_stat(stats.mannwhitneyu, statname='mann_whitney', alternative='two-sided')
+
+    @cache_readonly
+    def ranksums(self):
+        return self.comparison_stat(stats.ranksums, statname='rank_sums')
 
     @cache_readonly
     def t_test(self):

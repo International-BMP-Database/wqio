@@ -49,6 +49,19 @@ def dc():
     return dc
 
 
+@pytest.fixture
+def dc_noNDs():
+    df = helpers.make_dc_data_complex()
+    dc = DataCollection(df, rescol='res', qualcol='qual',
+                        stationcol='loc', paramcol='param',
+                        ndval='junk', othergroups=None,
+                        pairgroups=['state', 'bmp'],
+                        useros=True, filterfxn=remove_g_and_h,
+                        bsiter=10000)
+
+    return dc
+
+
 def test_basic_attr(dc):
     assert dc._raw_rescol == 'res'
     assert isinstance(dc.data, pandas.DataFrame)
@@ -527,6 +540,34 @@ def test_inventory(dc):
     """))
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(expected, dc.inventory.astype(int),
+                              check_names=False,
+                              check_less_precise=True)
+
+
+def test_inventory_noNDs(dc_noNDs):
+    known_csv = StringIO(dedent("""\
+    loc,param,Count,Non-Detect
+    Inflow,A,21,0
+    Inflow,B,24,0
+    Inflow,C,24,0
+    Inflow,D,24,0
+    Inflow,E,19,0
+    Inflow,F,21,0
+    Outflow,A,22,0
+    Outflow,B,22,0
+    Outflow,C,24,0
+    Outflow,D,25,0
+    Outflow,E,16,0
+    Outflow,F,24,0
+    Reference,A,20,0
+    Reference,B,19,0
+    Reference,C,25,0
+    Reference,D,21,0
+    Reference,E,20,0
+    Reference,F,17,0
+    """))
+    expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
+    pdtest.assert_frame_equal(expected, dc_noNDs.inventory.astype(int),
                               check_names=False,
                               check_less_precise=True)
 
