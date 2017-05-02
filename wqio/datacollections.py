@@ -271,7 +271,8 @@ class DataCollection(object):
 
     @cache_readonly
     def logmean(self):
-        return self.generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname='Log-mean')
+        return self.generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis),
+                                 statname='Log-mean')
 
     @cache_readonly
     def logstd_dev(self):
@@ -400,7 +401,8 @@ class DataCollection(object):
 
     @cache_readonly
     def mann_whitney(self):
-        return self.comparison_stat(stats.mannwhitneyu, statname='mann_whitney', alternative='two-sided')
+        return self.comparison_stat(stats.mannwhitneyu, statname='mann_whitney',
+                                    alternative='two-sided')
 
     @cache_readonly
     def ranksums(self):
