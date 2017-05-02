@@ -454,6 +454,34 @@ def test_wilcoxon(dc):
 
 
 @helpers.seed
+def test_ranksums(dc):
+    known_csv = """\
+        ,,pvalue,pvalue,pvalue,rank_sums,rank_sums,rank_sums
+        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+        param,loc_1,,,,,,
+        A,Inflow,,0.2153009,0.4187782,,-1.2391203,-0.8085428
+        A,Outflow,0.2153009,,0.4807102,1.2391203,,0.7051607
+        A,Reference,0.4187782,0.4807102,,0.8085428,-0.7051607,
+        B,Inflow,,0.0748817,0.029513,,1.781188,2.1765661
+        B,Outflow,0.0748817,,0.8547898,-1.781188,,0.1830104
+        B,Reference,0.029513,0.8547898,,-2.1765661,-0.1830104,
+        C,Inflow,,0.9015386,0.6455162,,-0.1237179,0.46
+        C,Outflow,0.9015386,,0.6455162,0.1237179,,0.46
+        C,Reference,0.6455162,0.6455162,,-0.46,-0.46,
+        D,Inflow,,0.7641772,0.8023873,,-0.3,0.2502587
+        D,Outflow,0.7641772,,0.5011969,0.3,,0.6726078
+        D,Reference,0.8023873,0.5011969,,-0.2502587,-0.6726078,
+        E,Inflow,,0.6911022,0.9551863,,0.3973597,-0.0561951
+        E,Outflow,0.6911022,,0.3727144,-0.3973597,,-0.8914004
+        E,Reference,0.9551863,0.3727144,,0.0561951,0.8914004,
+        F,Inflow,,0.2459307,0.8486619,,-1.1602902,-0.190826
+        F,Outflow,0.2459307,,0.3971011,1.1602902,,0.8468098
+        F,Reference,0.8486619,0.3971011,,0.190826,-0.8468098,
+    """
+    check_stat(known_csv, dc.ranksums, comp=True)
+
+
+@helpers.seed
 @pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
 def test_kendall(dc):
     known_csv = """\
