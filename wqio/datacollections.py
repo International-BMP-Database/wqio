@@ -596,7 +596,7 @@ class DataCollection(object):
         )
         return datasets
 
-    def stat_summary(self, groupcols=None, useros=True):
+    def stat_summary(self, percentiles=None, groupcols=None, useros=True):
         """ A generic, high-level summary of the data collection.
 
         Parameters
@@ -624,7 +624,7 @@ class DataCollection(object):
         else:
             groupcols = validate.at_least_empty_list(groupcols)
 
-        ptiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+        ptiles = percentiles or [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
             self.tidy
                 .groupby(by=groupcols)
