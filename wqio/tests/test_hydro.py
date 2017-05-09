@@ -56,8 +56,29 @@ def storms_with_baseflowcol():
     return setup_storms('teststorm_simple.csv', baseflow=2)
 
 
+@pytest.mark.parametrize(('wetcol', 'expected'), [('A', 1), ('B', 0)])
+def test_wet_first_row(wetcol, expected):
+    df = pandas.DataFrame({
+        'A': [True, True, False],
+        'B': [False, False, True],
+        'Z': [0, 0, 0],
+    }).pipe(hydro._wet_first_row, wetcol, 'Z')
+
+    assert df.iloc[0].loc['Z'] == expected
+
+
+def test_wet_window_diff():
+    is_wet = pandas.Series([0, 1, 1, 1, 0, 0, 1, 0, 0, 0])
+    result = hydro._wet_window_diff(is_wet, 3)
+    expected = pandas.Series([numpy.nan, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0])
+    pdtest.assert_series_equal(result, expected)
+
+
 @pytest.mark.parametrize('parsed', [
-    storms_simple(), storms_firstobs(), storms_singular(), storms_with_baseflowcol()
+    storms_simple(),
+    storms_firstobs(),
+    storms_singular(),
+    storms_with_baseflowcol()
 ])
 def test_number_of_storms(parsed):
     last_storm = parsed['storm'].max()

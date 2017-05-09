@@ -11,11 +11,29 @@ from wqio import utils
 from wqio import viz
 from wqio import validate
 
-SEC_PER_MINUTE = 60.
-MIN_PER_HOUR = 60.
-HOUR_PER_DAY = 24.
+SEC_PER_MINUTE = 60.0
+MIN_PER_HOUR = 60.0
+HOUR_PER_DAY = 24.0
 SEC_PER_HOUR = SEC_PER_MINUTE * MIN_PER_HOUR
 SEC_PER_DAY = SEC_PER_HOUR * HOUR_PER_DAY
+
+
+def _wet_first_row(df, wetcol, diffcol):
+    # make sure that if the first record is associated with the first
+    # storm if it's wet
+    firstrow = df.iloc[0]
+    if firstrow[wetcol]:
+        df.loc[firstrow.name, diffcol] = 1
+
+    return df
+
+
+def _wet_window_diff(is_wet, ie_periods):
+    return (
+        is_wet.rolling(int(ie_periods), min_periods=1)
+              .apply(lambda window: window.any())
+              .diff()
+    )
 
 
 def parse_storm_events(data, intereventHours, outputfreqMinutes,
@@ -82,50 +100,45 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
         baseflowcol = 'baseflow'
         data.loc[:, baseflowcol] = False
 
-    freq = pandas.offsets.Minute(outputfreqMinutes)
-    data = data.resample(freq).agg({
+    # bool column where True means there's rain or flow of some kind
+    water_columns = [inflowcol, outflowcol, precipcol]
+    cols_to_use = water_columns + [baseflowcol]
+
+    agg_dict = {
         precipcol: numpy.sum,
         inflowcol: numpy.mean,
         outflowcol: numpy.mean,
         baseflowcol: numpy.any
-    })
+    }
 
+    freq = pandas.offsets.Minute(outputfreqMinutes)
     ie_periods = int(MIN_PER_HOUR / data.index.freq.n * intereventHours)
-
-    # bool column where True means there's rain or flow of some kind
-    water_columns = [inflowcol, outflowcol, precipcol]
-    final_columns = water_columns + [baseflowcol]
-    data = (
-        data.select(lambda c: c in final_columns, axis='columns')
-            .assign(__wet=numpy.any(data[water_columns] > 0, axis=1) & ~data[baseflowcol])
-            .assign(__windiff=lambda df: df['__wet'].rolling(int(ie_periods), min_periods=1).apply(lambda w: w.any()).diff())
-    )
-
-    # make sure that if the first record is associated with the first
-    # storm if it's wet
-    firstrow = data.iloc[0]
-    if firstrow['__wet']:
-        data.loc[firstrow.name, '__windiff'] = 1
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
     # number of storms that have started.
     # Stack Overflow: http://tinyurl.com/lsjkr9x
-    data = (
-        data.assign(__event_start=data['__windiff'] == 1)
-            .assign(__event_end=data['__windiff'].shift(-1 * ie_periods) == -1)
+    res = (
+        data.resample(freq)
+            .agg(agg_dict)
+            .select(lambda c: c in cols_to_use, axis='columns')
+            .assign(__wet=lambda df: numpy.any(df[water_columns] > 0, axis=1) & ~df[baseflowcol])
+            .assign(__windiff=lambda df: _wet_window_diff(df['__wet'], ie_periods))
+            .pipe(_wet_first_row, '__wet', '__windiff')
+            .assign(__event_start=lambda df: df['__windiff'] == 1)
+            .assign(__event_end=lambda df: df['__windiff'].shift(-1 * ie_periods) == -1)
             .assign(__storm=lambda df: df['__event_start'].cumsum())
             .assign(storm=lambda df: numpy.where(
                 df['__storm'] == df['__event_end'].shift(2).cumsum(),
-                0,             # inter-event period
-                df['__storm']   # actual event
+                0,              # inter-event periods marked as zero
+                df['__storm']   # actual events keep their number
             ))
     )
 
     if not debug:
-        data = data.select(lambda c: not c.startswith('__'), axis=1)
+        res = res.select(lambda c: not c.startswith('__'), axis=1)
 
-    return data
+    return res
 
 
 class Storm(object):
