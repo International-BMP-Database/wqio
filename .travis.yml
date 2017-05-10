@@ -5,19 +5,19 @@ matrix:
     - python: 3.4
       env:
         - COVERAGE=false
-        - ARGS="--mpl --verbose"
+        - ARGS=""
     - python: 3.5
       env:
         - COVERAGE=false
-        - ARGS="--mpl --verbose"
+        - ARGS="--mpl"
     - python: 3.6
       env:
         - COVERAGE=false
-        - ARGS="--mpl --verbose"
+        - ARGS="--mpl"
     - python: 3.6
       env:
         - COVERAGE=true
-        - ARGS="--mpl --verbose --pep8"
+        - ARGS="--mpl --pep8"
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
