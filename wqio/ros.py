@@ -41,7 +41,8 @@ def _ros_sort(df, result, censorship):
         warnings.warn(msg)
 
     df_sorted = (
-        df.sort_values(by=[censorship, result], ascending=[False, True])
+        df[[censorship, result]]
+            .sort_values(by=[censorship, result], ascending=[False, True])
             .where(lambda df:
                    (~df[censorship]) |  # uncensored values
                    ((df[result] < max_uncensored) & df[censorship])  # censored values < max_uncen
