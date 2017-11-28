@@ -12,10 +12,6 @@ matrix:
         - ARGS="--mpl"
     - python: 3.6
       env:
-        - COVERAGE=false
-        - ARGS="--mpl"
-    - python: 3.6
-      env:
         - COVERAGE=true
         - ARGS="--mpl --pep8"
 
@@ -27,11 +23,11 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes numpy scipy matplotlib statsmodels seaborn
-  - conda install --yes coverage docopt requests pyyaml pytest pytest-cov
-  - conda install --yes mpl-probscale pytest-mpl pytest-pep8 --channel=conda-forge
+  - conda install --yes --channel=conda-forge numpy scipy matplotlib statsmodels seaborn
+  - conda install --yes --channel=conda-forge coverage docopt requests pyyaml pytest pytest-cov
+  - conda install --yes --channel=conda-forge mpl-probscale pytest-mpl pytest-pep8
   - pip install codecov
   - pip install .
 
