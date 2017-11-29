@@ -130,9 +130,9 @@ def test_gridlines_ylog_noyminor(plot_data):
 
 
 @pytest.fixture
+@helpers.seed
 def jp_data():
     pyplot.rcdefaults()
-    numpy.random.seed(0)
     N = 37
     df = pandas.DataFrame({
         'A': numpy.random.normal(size=N),
@@ -435,8 +435,8 @@ def test_parallel_coordinates():
 
 
 @pytest.fixture
+@helpers.seed
 def cat_hist_data():
-    numpy.random.seed(0)
     N = 100
     years = [2011, 2012, 2013, 2014]
     df = pandas.DataFrame({
