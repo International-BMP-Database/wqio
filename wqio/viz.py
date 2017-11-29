@@ -121,6 +121,15 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
+def one2one(ax, **kwargs):
+    label = kwargs.pop('label', '1:1 Line')
+    axis_limits = [
+        numpy.min([ax.get_xlim(), ax.get_ylim()]),
+        numpy.max([ax.get_xlim(), ax.get_ylim()])
+    ]
+    return ax.plot(axis_limits, axis_limits, label=label, **kwargs)
+
+
 def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
               color=None, zeromin=True, one2one=True):
     """ Plots the joint distribution of two variables via seaborn

@@ -129,6 +129,16 @@ def test_gridlines_ylog_noyminor(plot_data):
     return fig
 
 
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_one2one():
+    fig, ax = pyplot.subplots()
+    ax.set_xlim([-2, 5])
+    ax.set_ylim([-3, 3])
+    viz.one2one(ax, label='Equality', lw=5, ls='--')
+    ax.legend()
+    return fig
+
+
 @pytest.fixture
 @helpers.seed
 def jp_data():
