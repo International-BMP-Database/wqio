@@ -1034,17 +1034,13 @@ class Dataset(object):
 
     @cache_readonly
     def _kendall_stats(self):
-        if self._paired_stats and \
-           self.influent.fractionND <= 0.5 and \
-           self.effluent.fractionND <= 0.5:
+        if self._paired_stats:
             return stats.kendalltau(self.paired_data.inflow.res,
                                     self.paired_data.outflow.res)
 
     @cache_readonly
     def _spearman_stats(self):
-        if self._paired_stats and \
-           self.influent.fractionND <= 0.5 and \
-           self.effluent.fractionND <= 0.5:
+        if self._paired_stats:
             return stats.spearmanr(self.paired_data.inflow.res.values,
                                    self.paired_data.outflow.res.values)
 
