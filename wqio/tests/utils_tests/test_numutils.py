@@ -693,3 +693,11 @@ def test__paired_stat_generator():
         pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
         pandas.concat([result.head(), result.tail()])
     )
+
+
+@helpers.seed
+def test_remove_outliers():
+    expected_shape = (32,)
+    x = numpy.random.normal(0, 4, size=37)
+
+    assert numutils.remove_outliers(x).shape == expected_shape

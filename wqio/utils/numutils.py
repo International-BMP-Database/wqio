@@ -310,24 +310,35 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
 
     # determine the preferred units in the wqdata
     target = df[paramcol].map(targetunit)
-    if napolicy == 'raise' and target.isnull().any():
-        nulls = df[target.isnull()][paramcol].unique()
-        msg = "Some target units could not be mapped to the {} column ({})"
-        raise ValueError(msg.format(paramcol, nulls))
 
     # factors to normialize to standard units
     normalization = df[unitcol].map(unitsmap)
-    if napolicy == 'raise' and normalization.isnull().any():
-        nulls = df[normalization.isnull()][unitcol]
-        msg = "Some normalization factors could not be mapped to the {} column ({})"
-        raise ValueError(msg.format(unitcol, nulls))
 
     # factor to convert to preferred units
     conversion = target.map(unitsmap)
-    if napolicy == 'raise' and conversion.isnull().any():
-        nulls = target[conversion.isnull()]
-        msg = "Some conversion factors could not be mapped to the target units ({})"
-        raise ValueError(msg.format(nulls))
+
+    if napolicy == 'raise':
+        msg = ''
+        if target.isnull().any():
+            nulls = df[target.isnull()][paramcol].unique()
+            msg += "Some target units could not be mapped to the {} column ({})\n".format(
+                paramcol, nulls
+            )
+
+        if normalization.isnull().any():
+            nulls = df[normalization.isnull()][unitcol]
+            msg += "Some normalization factors could not be mapped to the {} column ({})\n".format(
+                unitcol, nulls
+            )
+
+        if conversion.isnull().any():
+            nulls = target[conversion.isnull()]
+            msg += "Some conversion factors could not be mapped to the target units ({})".format(
+                nulls
+            )
+
+        if len(msg) > 0:
+            raise ValueError(msg)
 
     # convert results
     normalized = df.assign(**{
@@ -521,7 +532,7 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
         return test1 or test2 or test3
 
 
-def winsorize_dataframe(dataframe, **limits):
+def winsorize_dataframe(df, **limits):
     """ Winsorizes columns in a dataframe
 
     Parameters
@@ -543,11 +554,44 @@ def winsorize_dataframe(dataframe, **limits):
     scipy.stats.mstats.winsorize
 
     """
-    df = dataframe.copy()
-    for colname, limit in limits.items():
-        df[colname] = stats.mstats.winsorize(df[colname], limits=limit)
+    newcols = {
+        colname: stats.mstats.winsorize(df[colname], limits=limit)
+        for colname, limit in limits.items()
+    }
 
-    return df
+    return df.assign(**newcols)
+
+
+def remove_outliers(x, factor=1.5):
+    """ Removes outliers from an array based on a scaling of the
+    interquartile range (IQR).
+
+    Parameters
+    ----------
+    x : array-like
+    factor : float
+        The scaling factor for the IQR
+
+    Returns
+    -------
+    cleaned : numpy.array
+        Copy of *x* with the outliers removed
+
+    Example
+    -------
+    >>> import numpy
+    >>> from wqio import utils
+    >>> numpy.random.seed(0)
+    >>> x = numpy.random.normal(0, 4, size=37) # shape is (37,)
+    >>> utils.remove_outliers(x).shape
+    (32,)
+
+    """
+    mean = numpy.mean(x)
+    pctl25 = numpy.percentile(x, 25)
+    pctl75 = numpy.percentile(x, 75)
+    IQR = pctl75 - pctl25
+    return x[(x >= mean - 1.5 * IQR) & (x <= mean + 1.5 * IQR)]
 
 
 def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
