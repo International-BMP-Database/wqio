@@ -576,7 +576,7 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
 
     fig = (
         df.assign(display=df[valuecol].apply(classifier)
-          .astype("category", categories=cats, ordered=True))
+                                      .astype("category", categories=cats, ordered=True))
         .drop([valuecol], axis=1)
         .rename(columns={'display': valuecol})
         .rename(columns=lambda c: format_col(c))

@@ -73,8 +73,8 @@ def make_dc_data_complex(dropsome=True):
 
     xtab = (
         pandas.DataFrame(index=index, columns=['res'])
-            .unstack(level='param')
-            .unstack(level='state')
+              .unstack(level='param')
+              .unstack(level='state')
     )
 
     xtab_rows = xtab.shape[0]
