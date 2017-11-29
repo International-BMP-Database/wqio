@@ -159,19 +159,21 @@ def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
 
     """
 
-    if criteria is not None:
-        selection = df.select(criteria)
-    else:
-        selection = df.copy()
+    if criteria is None:
+        def criteria(*args, **kwargs):
+            return True
+
+    redefined = (
+        df.loc[df.index.map(criteria), :]
+          .reset_index()
+          .assign(**{levelname: value})
+          .set_index(df.index.names)
+    )
 
     if dropold:
-        df = df.drop(selection.index)
+        df = df.loc[df.index.map(lambda r: not criteria(r)), :]
 
-    selection.reset_index(inplace=True)
-    selection[levelname] = value
-    selection = selection.set_index(df.index.names)
-
-    return df.append(selection).sort_index()
+    return pandas.concat([df, redefined]).sort_index()
 
 
 def categorize_columns(df, *columns):

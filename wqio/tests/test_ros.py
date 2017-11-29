@@ -184,7 +184,7 @@ def test__ros_sort_baseline(basic_data, expected_sorted):
 
 def test__ros_sort_warning(basic_data, expected_sorted):
     df = basic_data.copy()
-    max_row = df['conc'].argmax()
+    max_row = df['conc'].idxmax()
     df.loc[max_row, 'censored'] = True
     result = ros._ros_sort(df, 'conc', 'censored')
     pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
