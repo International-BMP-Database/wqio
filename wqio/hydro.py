@@ -4,12 +4,15 @@ import numpy
 from matplotlib import pyplot
 from matplotlib import dates
 from matplotlib import gridspec
-import seaborn.apionly as seaborn
+import seaborn
 import pandas
 
 from wqio import utils
 from wqio import viz
 from wqio import validate
+
+import pandas.plotting._converter as pandacnv
+pandacnv.register()
 
 SEC_PER_MINUTE = 60.0
 MIN_PER_HOUR = 60.0

@@ -1,7 +1,6 @@
 import itertools
 from collections import namedtuple
 
-
 import numpy
 from scipy import stats
 import statsmodels.api as sm

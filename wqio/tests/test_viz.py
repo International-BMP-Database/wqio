@@ -4,9 +4,10 @@ import numpy.testing as nptest
 import numpy
 import pandas
 from matplotlib import pyplot
-import seaborn.apionly as seaborn
+import seaborn
 
 from wqio import viz
+from wqio.tests import helpers
 
 
 BASELINE_IMAGES = '_baseline_images/viz_tests'

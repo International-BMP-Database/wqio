@@ -6,7 +6,7 @@ from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import resettable_cache, cache_readonly
-import seaborn.apionly as seaborn
+import seaborn
 
 from wqio import utils
 from wqio import bootstrap
