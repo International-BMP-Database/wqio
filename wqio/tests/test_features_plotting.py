@@ -619,10 +619,9 @@ def test_ds_scatterplot_one2one(ds_NDs):
     return fig10
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_ds_scatterplot_useros(ds_NDs):
-    fig11 = ds_NDs.scatterplot(useros=True)
-    return fig11
+    with pytest.raises(ValueError):
+        fig11 = ds_NDs.scatterplot(useros=True)
 
 
 @pytest.fixture

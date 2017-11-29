@@ -661,7 +661,6 @@ class Location(object):
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
-        fig.tight_layout()
         fig.subplots_adjust(wspace=0.05)
         return fig
 
@@ -811,7 +810,9 @@ class Dataset(object):
         return self._non_paired_stats and self.paired_data.shape[0] > 20
 
     def __repr__(self):
-        x = "<openpybmp Dataset object>\n  N influent  {0}\n  N effluent = {1}".format(self.influent.N, self.effluent.N)
+        x = "<wqio.Dataset>\n  N influent  {0}\n  N effluent = {1}".format(
+            self.influent.N, self.effluent.N
+        )
         if self.definition is not None:
             for k, v in self.definition.items():
                 x = "{0}\n  {1} = {2}".format(x, k.title(), v)
@@ -1324,7 +1325,6 @@ class Dataset(object):
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
-        fig.tight_layout()
         fig.subplots_adjust(wspace=0.05)
         return fig
 
@@ -1423,9 +1423,7 @@ class Dataset(object):
 
         # plot the ROSd'd result, if requested
         if useros:
-            x = self.paired_data.inflow.res
-            y = self.paired_data.outflow.res
-            ax.plot(x, y, marker='o', label="Paired, ROS'd data", alpha=0.3, **markerkwargs)
+            raise ValueError
 
         # plot the raw results, if requested
         else:
@@ -1440,7 +1438,7 @@ class Dataset(object):
                      which='effluent', marker='<', alpha=0.45,
                      markerfacecolor='none', markeredgecolor='black'),
                 dict(label='Both not detected',
-                     which='both', marker='d', alpha=0.25,
+                     which='both', marker='d', alpha=0.45,
                      markerfacecolor='none', markeredgecolor='black'),
             ]
             for pp in plot_params:
@@ -1546,7 +1544,6 @@ class Dataset(object):
             leg.get_frame().set_alpha(0.00)
             leg.get_frame().set_edgecolor('none')
 
-        fig.tight_layout()
         return fig
 
     def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
