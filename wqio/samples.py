@@ -89,7 +89,7 @@ class Parameter(object):
         )
 
 
-class _basic_wq_sample(object):
+class SampleMixin(object):
     def __init__(self, dataframe, starttime, samplefreq=None,
                  endtime=None, storm=None, rescol='res',
                  qualcol='qual', dlcol='DL', unitscol='units'):
@@ -207,7 +207,7 @@ class _basic_wq_sample(object):
         return line
 
 
-class CompositeSample(_basic_wq_sample):
+class CompositeSample(SampleMixin):
     """ Class for composite samples """
     @property
     def label(self):
@@ -247,7 +247,7 @@ class CompositeSample(_basic_wq_sample):
         return self._sample_ts
 
 
-class GrabSample(_basic_wq_sample):
+class GrabSample(SampleMixin):
     """ Class for grab (discrete) samples """
     @property
     def label(self):
@@ -309,6 +309,6 @@ rescol, qualcol, dlcol, unitscol : string, optional
 """
 
 
-_basic_wq_sample.__doc__ = _basic_doc.format("Basic")
+SampleMixin.__doc__ = _basic_doc.format("Basic")
 CompositeSample.__doc__ = _basic_doc.format("Composite")
 GrabSample.__doc__ = _basic_doc.format("Grab")
