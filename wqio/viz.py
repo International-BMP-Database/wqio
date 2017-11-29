@@ -121,12 +121,18 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
 
 
-def one2one(ax, **kwargs):
+def one2one(ax, set_limits=True, set_aspect=True, **kwargs):
     label = kwargs.pop('label', '1:1 Line')
     axis_limits = [
         numpy.min([ax.get_xlim(), ax.get_ylim()]),
         numpy.max([ax.get_xlim(), ax.get_ylim()])
     ]
+    if set_limits:
+        ax.set_xlim(axis_limits)
+        ax.set_ylim(axis_limits)
+    if set_aspect:
+        ax.set_aspect('equal')
+
     return ax.plot(axis_limits, axis_limits, label=label, **kwargs)
 
 

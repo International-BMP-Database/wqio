@@ -7,6 +7,7 @@ from matplotlib import pyplot
 import seaborn
 
 from wqio import viz
+from wqio import utils
 from wqio.tests import helpers
 
 
@@ -325,8 +326,8 @@ class Test_whiskers_and_fliers_ari(base_whiskers_and_fliersMixin):
             ]),
             'whislo': 0.0011100000143051147
         }
-        self.transformin = lambda x: x
-        self.transformout = lambda x: x
+        self.transformin = utils.no_op
+        self.transformout = utils.no_op
 
 
 class Test_whiskers_and_fliers_natlog(base_whiskers_and_fliersMixin):

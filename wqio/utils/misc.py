@@ -392,3 +392,11 @@ def selector(default, *cond_results):
     """
     conditions, results = zip(*cond_results)
     return numpy.select(conditions, results, default)
+
+
+def non_filter(*args, **kwargs):
+    return True
+
+
+def no_op(value):
+    return value

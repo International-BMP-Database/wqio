@@ -115,7 +115,8 @@ def test_redefine_index_level(multiindex_df, criteria, dropold):
                 ('C', 'mg/L'), ('C', 'ug/L')
             ]
 
-    result = misc.redefine_index_level(multiindex_df, 'units', 'ug/L', criteria=criteria, dropold=dropold)
+    result = misc.redefine_index_level(multiindex_df, 'units', 'ug/L',
+                                       criteria=criteria, dropold=dropold)
     expected = pandas.DataFrame(
         data=expected_value,
         index=pandas.MultiIndex.from_tuples(expected_index, names=['loc', 'units']),
@@ -214,3 +215,13 @@ def test_selector():
     expected = numpy.array(list('AAABBBCCZZ'))
     result = misc.selector('Z', (x <= 2, 'A'), (x < 6, 'B'), (x <= 7, 'C'))
     assert all(result == expected)
+
+
+@pytest.mark.parametrize('input_values', ['A', 4, ('this', '5')])
+def test_non_filter(input_values):
+    assert misc.non_filter(input_values)
+
+
+@pytest.mark.parametrize('input_values', ['A', 4, ('this', '5')])
+def test_no_op(input_values):
+    assert misc.no_op(input_values) == input_values
