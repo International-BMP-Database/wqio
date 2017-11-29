@@ -85,7 +85,7 @@ def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
         with pytest.raises(ValueError):
             validate.single_value_in_index(data, 'date')
     else:
-        data = multiindex_df.select(lambda row: row[level] in [expected])
+        data = multiindex_df.loc[multiindex_df.index.map(lambda row: row[level] in [expected]), :]
         test = validate.single_value_in_index(data, 'date')
         assert test == expected
 

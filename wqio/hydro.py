@@ -124,7 +124,7 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
     res = (
         data.resample(freq)
             .agg(agg_dict)
-            .select(lambda c: c in cols_to_use, axis='columns')
+            .loc[:, lambda df: df.columns.isin(cols_to_use)]
             .assign(__wet=lambda df: numpy.any(df[water_columns] > 0, axis=1) & ~df[baseflowcol])
             .assign(__windiff=lambda df: _wet_window_diff(df['__wet'], ie_periods))
             .pipe(_wet_first_row, '__wet', '__windiff')
@@ -139,7 +139,7 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
     )
 
     if not debug:
-        res = res.select(lambda c: not c.startswith('__'), axis=1)
+        res = res.loc[:, res.columns.map(lambda c: not c.startswith('__'))]
 
     return res
 
@@ -515,7 +515,7 @@ class Storm(object):
     def _compute_centroid(self, column):
         # ordinal time index of storm
         time_idx = [
-            dates.date2num(idx.to_datetime())
+            dates.date2num(idx.to_pydatetime())
             for idx in self.data.index.tolist()
         ]
 

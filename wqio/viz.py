@@ -481,13 +481,12 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
 
     # get the (non-hue) columns to plot
     if cols is None:
-        cols = dataframe.select(lambda c: c != hue, axis=1).columns.tolist()
+        cols = dataframe.columns.tolist()
+        cols.remove(hue)
 
     # subset the data, putting the hue column last
     # python 3.5: data = dataframe[[*cols, hue]]
-    final_cols = copy.copy(cols)
-    final_cols.append(hue)
-    data = dataframe[final_cols]
+    data = dataframe[[*cols, hue]]
 
     # these plots look ridiculous in anything other than 'ticks'
     with seaborn.axes_style('ticks'):
