@@ -115,7 +115,7 @@ def parse_storm_events(data, intereventHours, outputfreqMinutes,
     }
 
     freq = pandas.offsets.Minute(outputfreqMinutes)
-    ie_periods = int(MIN_PER_HOUR / data.index.freq.n * intereventHours)
+    ie_periods = int(MIN_PER_HOUR / freq.n * intereventHours)
 
     # periods between storms are where the cumulative number
     # of storms that have ended are equal to the cumulative
