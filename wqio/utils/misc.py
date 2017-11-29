@@ -143,7 +143,7 @@ def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
         but that's life right now.
     value : string or int
         The replacement value for the index level.
-    critera : function/lambda expression or None
+    criteria : function/lambda expression or None
         This should return True/False in a manner consitent with the
         `.select()` method of a pandas dataframe. See that docstring
         for more info. If None, the redifinition will apply to the whole
