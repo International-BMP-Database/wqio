@@ -76,7 +76,7 @@ class DataCollection(object):
         self.othergroups = validate.at_least_empty_list(othergroups)
         self.pairgroups = validate.at_least_empty_list(pairgroups)
         self.useros = useros
-        self.filterfxn = filterfxn or (lambda x: True)
+        self.filterfxn = filterfxn or utils.non_filter
         self.bsiter = bsiter
 
         # column that stores ROS'd values
@@ -101,8 +101,8 @@ class DataCollection(object):
         # the "raw" data with the censorship column added
         self.data = (
             dataframe
-                .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
-                .reset_index()
+            .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
+            .reset_index()
         )
 
     @cache_readonly
@@ -111,8 +111,8 @@ class DataCollection(object):
             def fxn(g):
                 rosdf = (
                     ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
-                        .rename(columns={'final': self.roscol})
-                        [[self._raw_rescol, self.roscol, self.cencol]]
+                    .rename(columns={'final': self.roscol})
+                    [[self._raw_rescol, self.roscol, self.cencol]]
                 )
                 return rosdf
         else:
@@ -123,16 +123,16 @@ class DataCollection(object):
         keep_cols = self.tidy_columns + [self.roscol]
         _tidy = (
             self.data
-                .reset_index()[self.tidy_columns]
-                .groupby(by=self.groupcols)
-                .filter(self.filterfxn)
-                .groupby(by=self.groupcols)
-                .apply(fxn)
-                .reset_index()
-                .sort_values(by=self.groupcols)
-        )[keep_cols]
+            .reset_index()[self.tidy_columns]
+            .groupby(by=self.groupcols)
+            .filter(self.filterfxn)
+            .groupby(by=self.groupcols)
+            .apply(fxn)
+            .reset_index()
+            .sort_values(by=self.groupcols)
+        )
 
-        return _tidy
+        return _tidy[keep_cols]
 
     @cache_readonly
     def paired(self):
@@ -148,7 +148,7 @@ class DataCollection(object):
         return _pairs
 
     def generic_stat(self, statfxn, use_bootstrap=True, statname=None,
-                     has_pvalue=False, **statopts):
+                     has_pvalue=False, filterfxn=None, **statopts):
         """Generic function to estimate a statistic and its CIs.
 
         Parameters
@@ -200,6 +200,9 @@ class DataCollection(object):
         if statname is None:
             statname = 'stat'
 
+        if filterfxn is None:
+            filterfxn = utils.non_filter
+
         def fxn(x):
             data = x[self.rescol].values
             if use_bootstrap:
@@ -220,6 +223,8 @@ class DataCollection(object):
 
         stat = (
             self.tidy
+                .groupby(by=self.groupcols)
+                .filter(filterfxn)
                 .groupby(by=self.groupcols)
                 .apply(fxn)
                 .unstack(level=self.stationcol)
@@ -294,12 +299,14 @@ class DataCollection(object):
     @cache_readonly
     def shapiro(self):
         return self.generic_stat(stats.shapiro, use_bootstrap=False,
-                                 has_pvalue=True, statname='shapiro')
+                                 has_pvalue=True, statname='shapiro',
+                                 filterfxn=lambda x: x.shape[0] > 3)
 
     @cache_readonly
     def shapiro_log(self):
         return self.generic_stat(lambda x: stats.shapiro(numpy.log(x)),
                                  use_bootstrap=False, has_pvalue=True,
+                                 filterfxn=lambda x: x.shape[0] > 3,
                                  statname='log-shapiro')
 
     @cache_readonly
@@ -429,7 +436,7 @@ class DataCollection(object):
         return self.comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
 
     @cache_readonly
-    def theilslopes(self):
+    def theilslopes(self, logs=False):
         raise NotImplementedError
 
     @cache_readonly
@@ -627,8 +634,8 @@ class DataCollection(object):
         ptiles = percentiles or [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
             self.tidy
-                .groupby(by=groupcols)
-                .apply(lambda g: g[col].describe(percentiles=ptiles).T)
-                .drop('count', axis='columns')
+            .groupby(by=groupcols)
+            .apply(lambda g: g[col].describe(percentiles=ptiles).T)
+            .drop('count', axis='columns')
         )
         return self.inventory.join(summary).unstack(level=self.stationcol)
