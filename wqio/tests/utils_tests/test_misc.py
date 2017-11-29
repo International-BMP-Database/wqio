@@ -201,3 +201,16 @@ def test__unique_categories():
     result_categories = misc.unique_categories(classifier, bins)
 
     assert result_categories == known_categories
+
+
+def test_pop_many():
+    some_dict = dict(zip(list('ABCDE'), range(5)))
+    expected = {'C': 2, 'D': 3}
+    assert misc.pop_many(some_dict, 'A', 'B', 'E') == expected
+
+
+def test_selector():
+    x = numpy.arange(10)
+    expected = numpy.array(list('AAABBBCCZZ'))
+    result = misc.selector('Z', (x <= 2, 'A'), (x < 6, 'B'), (x <= 7, 'C'))
+    assert all(result == expected)

@@ -1,4 +1,5 @@
 from io import StringIO
+from copy import copy
 
 import numpy
 import pandas
@@ -122,7 +123,7 @@ def flatten_columns(df, sep='_'):
     flattened : pandas.DataFrame
 
     """
-
+    df = df.copy()
     df.columns = [sep.join(_) for _ in df.columns]
     return df
 
@@ -336,3 +337,58 @@ def unique_categories(classifier, bins):
     midpoints = 0.5 * (bins[:-1] + bins[1:])
     all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
     return [classifier(value) for value in all_bins]
+
+
+def pop_many(some_dict, *args):
+    """ Pop several key-values out of a dictionary and return a copy
+
+    Parameters
+    ----------
+    some_dict : dictionary
+    *keys : hashables
+        All of the keys you would like removed from *some_dict*
+
+    Returns
+    -------
+    popped : dictionary
+
+    Example
+    -------
+    >>> from wqio import utils
+    >>> x = {'A': 1, 'B': 2, 'C': 3, 'D': 4}
+    >>> utils.pop_many(x, 'A', 'D')
+    {'B': 2, 'C': 3}
+
+    """
+
+    popped = copy(some_dict)
+    for v in args:
+        _ = popped.pop(v)
+    return popped
+
+
+def selector(default, *cond_results):
+    """ Thin wrapper around numpy.select with a more convenient API (maybe).
+
+    Parameters
+    ----------
+    default : scalar
+        The default value to be returned when none of the conditions are met.abs
+    *cond_results : tuple
+        Tuples of conditions (bool arrays) and result values (scalar)
+
+    Returns
+    -------
+    selected : numpy.array
+
+    Example
+    -------
+    >>> from wqio import utils
+    >>> import numpy
+    >>> x = numpy.arange(10)
+    >>> utils.selector('Z', (x <= 2, 'A'), (x < 6, 'B'), (x <= 7, 'C'))
+    array(['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'Z', 'Z'],
+          dtype='<U1')
+    """
+    conditions, results = zip(*cond_results)
+    return numpy.select(conditions, results, default)
