@@ -552,9 +552,7 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
         return colname.replace('_', ' ').title()
 
     def process_column(colname):
-        if colname is None:
-            return colname
-        else:
+        if colname is not None:
             return format_col(colname)
 
     if classifier is None:
@@ -569,16 +567,20 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
         row=process_column(factoropts.pop('row', None)),
         col=process_column(factoropts.pop('col', None)),
         hue=process_column(factoropts.pop('hue', None)),
+        kind='count',
+        aspect=aspect,
+        sharex=True
     )
 
-    factoropts.update(processed_opts)
+    final_opts = {**factoropts, **processed_opts}
 
     fig = (
-        df.assign(display=df[valuecol].apply(classifier).astype("category", categories=cats, ordered=True))
+        df.assign(display=df[valuecol].apply(classifier)
+          .astype("category", categories=cats, ordered=True))
         .drop([valuecol], axis=1)
         .rename(columns={'display': valuecol})
         .rename(columns=lambda c: format_col(c))
-        .pipe((seaborn.factorplot, 'data'), x=display_col, kind='count', aspect=aspect, **factoropts)
+        .pipe((seaborn.factorplot, 'data'), x=display_col, **final_opts)
         .set_ylabels("Occurences")
     )
 
