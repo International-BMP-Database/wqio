@@ -1,10 +1,13 @@
 import sys
 
 from matplotlib import pyplot
-import seaborn.apionly as seaborn
+import seaborn
 import pandas
 
 from wqio import utils
+
+import pandas.plotting._converter as pandacnv
+pandacnv.register()
 
 
 class Parameter(object):

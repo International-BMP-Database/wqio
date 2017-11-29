@@ -6,7 +6,7 @@ import matplotlib
 from matplotlib import pyplot
 from matplotlib import ticker
 import scipy.stats as stats
-import seaborn.apionly as seaborn
+import seaborn
 import probscale
 
 from wqio import utils
