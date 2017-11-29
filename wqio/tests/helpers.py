@@ -8,6 +8,7 @@ from functools import wraps
 from pkg_resources import resource_filename
 from io import StringIO
 from collections import namedtuple
+from contextlib import contextmanager
 
 import numpy
 import numpy.testing as nptest
@@ -21,6 +22,20 @@ def seed(func):
         numpy.random.seed(0)
         return func(*args, **kwargs)
     return wrapper
+
+
+def raises(error):
+    """Wrapper around pytest.raises to support None."""
+    if error:
+        return pytest.raises(error)
+    else:
+        @contextmanager
+        def not_raises():
+            try:
+                yield
+            except Exception as e:
+                raise e
+        return not_raises()
 
 
 @seed
