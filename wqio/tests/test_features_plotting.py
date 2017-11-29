@@ -113,9 +113,6 @@ def test_loc_boxplot_with_ylabel(inflow_loc_green, inflow_xlims):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_boxplot_provided_ax(inflow_loc_green, inflow_xlims):
-    with pytest.raises(ValueError):
-        inflow_loc_green.boxplot(ax='junk')
-
     fig10, ax10 = pyplot.subplots()
     fig10 = inflow_loc_green.boxplot(ax=ax10, xlims=inflow_xlims)
     assert isinstance(fig10, pyplot.Figure)
@@ -145,8 +142,6 @@ def test_loc_probplot_provided_ax(inflow_loc_blue):
     fig2, ax2 = pyplot.subplots()
     fig2 = inflow_loc_blue.probplot(ax=ax2)
     assert isinstance(fig2, pyplot.Figure)
-    with pytest.raises(ValueError):
-        inflow_loc_blue.probplot(ax='junk')
     return fig2
 
 
@@ -194,13 +189,15 @@ def test_loc_probplot_no_rotate_xticklabels(inflow_loc_green):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_probplot_plotopts1(inflow_loc_green):
-    fig12 = inflow_loc_green.probplot(markersize=10, linestyle='--', color='blue', markerfacecolor='none', markeredgecolor='green')
+    fig12 = inflow_loc_green.probplot(markersize=10, linestyle='--', color='blue',
+                                      markerfacecolor='none', markeredgecolor='green')
     return fig12
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_loc_probplot_plotopts2(inflow_loc_green):
-    fig13 = inflow_loc_green.probplot(markeredgewidth=2, markerfacecolor='none', markeredgecolor='green')
+    fig13 = inflow_loc_green.probplot(markeredgewidth=2, markerfacecolor='none',
+                                      markeredgecolor='green')
     return fig13
 
 
@@ -276,9 +273,6 @@ def test_loc_vertical_scatter_provided_ax(inflow_loc_blue):
     fig, ax2 = pyplot.subplots()
     fig = inflow_loc_blue.verticalScatter(ax=ax2)
     assert isinstance(fig, pyplot.Figure)
-    with pytest.raises(ValueError):
-        inflow_loc_blue.verticalScatter(ax='junk')
-
     return fig
 
 
@@ -398,8 +392,7 @@ def test_ds_boxplot_provided_ax(ds_basic, inflow_xlims):
     fig10, ax10 = pyplot.subplots()
     fig10 = ds_basic.boxplot(ax=ax10, xlims=inflow_xlims)
     assert isinstance(fig10, pyplot.Figure)
-    with pytest.raises(ValueError):
-        ds_basic.boxplot(ax='junk')
+
     return fig10
 
 
@@ -439,8 +432,6 @@ def test_ds_probplot_provided_ax(ds_basic):
     fig2, ax2 = pyplot.subplots()
     fig2 = ds_basic.probplot(ax=ax2)
     assert isinstance(fig2, pyplot.Figure)
-    with pytest.raises(ValueError):
-        ds_basic.probplot(ax='junk')
     return fig2
 
 
@@ -570,8 +561,6 @@ def test_ds_scatterplot_provided_ax(ds_NDs):
     fig2, ax2 = pyplot.subplots()
     fig2 = ds_NDs.scatterplot(ax=ax2)
     assert isinstance(fig2, pyplot.Figure)
-    with pytest.raises(ValueError):
-        ds_NDs.scatterplot(ax='junk')
 
     return fig2
 
