@@ -89,6 +89,7 @@ wqio/bmp/tex/boxplotlegend.png
 wqio/*/old/*
 wqio/bmp/data/old/*
 docs/*
+temp/*
 
 # Visual Studio stuff #
 #######################

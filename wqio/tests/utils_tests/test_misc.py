@@ -225,3 +225,15 @@ def test_non_filter(input_values):
 @pytest.mark.parametrize('input_values', ['A', 4, ('this', '5')])
 def test_no_op(input_values):
     assert misc.no_op(input_values) == input_values
+
+
+def test_assign_multilevel_column():
+    df = pandas.DataFrame(
+        data=1,
+        index=pandas.MultiIndex.from_product([list('ABCD'), [1, 2, 3, 4]]),
+        columns=pandas.MultiIndex.from_product([list('abc'), [1, 2, 3]]),
+    )
+
+    result = misc.assign_multilevel_column(df, 4, 'd', 1)
+    expected = pandas.Series(4, index=df.index, name=('d', 1))
+    pdtest.assert_series_equal(result[('d', 1)], expected)
