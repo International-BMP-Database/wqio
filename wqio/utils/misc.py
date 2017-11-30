@@ -400,3 +400,32 @@ def non_filter(*args, **kwargs):
 
 def no_op(value):
     return value
+
+
+def assign_multilevel_column(df, val_or_fxn, *collevels):
+    """ Dataframe-pipeable function to assign new multi-level columns
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with a multilevel index along the column axis.
+    val_or_fxn : scalar, array-like or callable
+        If scalar array-like, theses are values that will be assigned directly.
+        If this is a callable, the values returned by ``val_or_fxn(df)`` will be
+        used.
+    *collevels
+        All values needed to specify the levels of the new column.
+
+    Returns
+    -------
+    assigned : pandas.DataFrame
+        Copy of the original dataframe with the new value assigned.
+
+    """
+
+    df = df.copy()
+    if callable(val_or_fxn):
+        df[collevels] = val_or_fxn(df)
+    else:
+        df[collevels] = val_or_fxn
+    return df
