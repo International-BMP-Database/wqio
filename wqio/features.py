@@ -1466,13 +1466,14 @@ class Dataset(object):
 
         # include the line of equality, if requested
         if one2one:
-            ax.plot(axis_limits, axis_limits, linestyle='-', linewidth=1.25,
-                    alpha=0.50, color='black', zorder=5, label='1:1 line')
+            viz.one2one(ax, linestyle='-', linewidth=1.25,
+                        alpha=0.50, color='black',
+                        zorder=5, label='1:1 line')
 
         detects = self.paired_data.loc[
             (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) &
             (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
-        ].xs('res', level='quantity', axis=1)
+        ].xs('res', level=1, axis=1)
 
         if bestfit and detects.shape[0] >= minpoints:
             if xscale == 'log' and yscale == 'log':
