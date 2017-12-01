@@ -28,11 +28,10 @@ install:
   - pip install .
 
 script:
-  - python check_wqio.py ${ARGS}
+  - coverage run --source wqio check_wqio.py ${ARGS}
 
 after_success:
   - if [ ${COVERAGE} = true ]; then
-      coverage run --source wqio check_wqio.py;
       coverage report -m;
       codecov;
     fi
