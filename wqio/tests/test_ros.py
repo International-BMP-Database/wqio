@@ -212,7 +212,7 @@ def test__detection_limit_index_populated(value, expected, basic_cohn):
 
 
 def test__detection_limit_index_out_of_bounds(basic_cohn):
-    with pytest.raises(IndexError):
+    with helpers.raises(IndexError):
         ros._detection_limit_index(0, basic_cohn)
 
 

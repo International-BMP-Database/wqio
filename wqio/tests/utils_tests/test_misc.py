@@ -57,7 +57,7 @@ def test_add_column_level(basic_data):
     assert known_cols.tolist() == newdata.columns.tolist()
 
     # can only add levels to non-MultiIndex columns
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         misc.add_column_level(newdata, 'test2', 'testlevel2')
 
 
@@ -173,7 +173,7 @@ def test_categorize_columns():
     # confirm that all of those objects are gone
     assert object not in df2.dtypes.values
 
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         misc.categorize_columns(df, 'parameter', 'upper')
 
 

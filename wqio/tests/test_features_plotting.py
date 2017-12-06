@@ -620,7 +620,7 @@ def test_ds_scatterplot_one2one(ds_NDs):
 
 
 def test_ds_scatterplot_useros(ds_NDs):
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         fig11 = ds_NDs.scatterplot(useros=True)
 
 

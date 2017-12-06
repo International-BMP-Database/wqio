@@ -28,11 +28,11 @@ class base_sigfigsMixin(object):
         assert numutils.sigFigs(self.x, 8) == self.known_8
 
     def test_sigFigs_zero_n(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             numutils.sigFigs(self.x, 0)
 
     def test_sigFigs_negative_n(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             numutils.sigFigs(self.x, -1)
 
     def test_exp_notex(self):
@@ -100,38 +100,24 @@ class Test_formatResult(object):
         assert numutils.formatResult(self.med_num, '', 3) == '12.5'
 
 
-@pytest.mark.parametrize(('pval', 'expected'), [
-    (None, 'NA'),
-    (0.0005, '<0.001'),
-    (0.005, '0.005'),
-    (0.001, '0.001'),
-    (0.0012, '0.001'),
-    (0.06, '0.060'),
-    (1.01, None),
+@pytest.mark.parametrize(('fxn', 'pval', 'expected', 'error_to_raise'), [
+    (numutils.process_p_vals, None, 'NA', None),
+    (numutils.process_p_vals, 0.0005, '<0.001', None),
+    (numutils.process_p_vals, 0.005, '0.005', None),
+    (numutils.process_p_vals, 0.001, '0.001', None),
+    (numutils.process_p_vals, 0.0012, '0.001', None),
+    (numutils.process_p_vals, 0.06, '0.060', None),
+    (numutils.process_p_vals, 1.01, None, ValueError),
+    (numutils.translate_p_vals, None, 'ಠ_ಠ', None),
+    (numutils.translate_p_vals, 0.005, '¯\(ツ)/¯', None),
+    (numutils.translate_p_vals, 0.03, '¯\_(ツ)_/¯', None),
+    (numutils.translate_p_vals, 0.06, '¯\__(ツ)__/¯', None),
+    (numutils.translate_p_vals, 0.11, '(╯°□°)╯︵ ┻━┻', None),
+    (numutils.translate_p_vals, 1.01, None, ValueError),
 ])
-def test_process_p_vals(pval, expected):
-    if expected is None:
-        with pytest.raises(ValueError):
-            numutils.process_p_vals(pval)
-    else:
-        result = numutils.process_p_vals(pval)
-        assert result == expected
-
-
-@pytest.mark.parametrize(('pval', 'expected'), [
-    (None, 'ಠ_ಠ'),
-    (0.005, '¯\(ツ)/¯'),
-    (0.03, '¯\_(ツ)_/¯'),
-    (0.06, '¯\__(ツ)__/¯'),
-    (0.11, '(╯°□°)╯︵ ┻━┻'),
-    (1.01, None),
-])
-def test_translate_p_vals(pval, expected):
-    if expected is None:
-        with pytest.raises(ValueError):
-            numutils.translate_p_vals(pval)
-    else:
-        result = numutils.translate_p_vals(pval)
+def test_p_values_handlers(fxn, pval, expected, error_to_raise):
+    with helpers.raises(error_to_raise):
+        result = fxn(pval)
         assert result == expected
 
 
@@ -275,7 +261,7 @@ def test_normalize_units_bad_targetunits(units_norm_data):
         "Lead, Total": 'ug/L',
     }
     raw, expected = units_norm_data
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         numutils.normalize_units(raw, unitsmap, targetunits,
                                  paramcol='param', rescol='conc',
                                  unitcol='units', napolicy='raise')
@@ -292,7 +278,7 @@ def test_normalize_units_bad_normalization(units_norm_data):
         "Cadmium, Total": 'mg/L',
     }
     raw, expected = units_norm_data
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         numutils.normalize_units(raw, unitsmap, targetunits,
                                  paramcol='param', rescol='conc',
                                  unitcol='units', napolicy='raise')
@@ -310,7 +296,7 @@ def test_normalize_units_bad_conversion(units_norm_data):
         "Cadmium, Total": 'mg/L',
     }
     raw, expected = units_norm_data
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         numutils.normalize_units(raw, unitsmap, targetunits,
                                  paramcol='param', rescol='conc',
                                  unitcol='units', napolicy='raise')
@@ -325,11 +311,11 @@ class Test_test_pH2concentration(object):
         assert abs(numutils.pH2concentration(self.pH) - self.known_conc) < 0.0001
 
     def test_pH2concentration_raises_high(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             numutils.pH2concentration(14.1)
 
     def test_pH2concentration_raises_low(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             numutils.pH2concentration(-0.1)
 
 
@@ -452,12 +438,12 @@ class Test_fit_line(object):
         assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
 
     def test_bad_fitlogs(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             x, y = self.zscores, self.data
             x_, y_, res = numutils.fit_line(x, y, fitlogs='junk')
 
     def test_bad_fitprobs(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             x, y = self.zscores, self.data
             x_, y_, res = numutils.fit_line(x, y, fitprobs='junk')
 
