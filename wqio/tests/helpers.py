@@ -11,8 +11,10 @@ from collections import namedtuple
 from contextlib import contextmanager
 
 import numpy
-import numpy.testing as nptest
 import pandas
+
+import numpy.testing as nptest
+import pytest
 
 
 def seed(func):
