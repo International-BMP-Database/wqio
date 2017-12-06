@@ -331,13 +331,13 @@ def test_lillifors_log(dc):
 
 @helpers.seed
 def test_anderson_darling(dc):
-    with pytest.raises(NotImplementedError):
+    with helpers.raises(NotImplementedError):
         _ = dc.anderson_darling
 
 
 @helpers.seed
 def test_anderson_darling_log(dc):
-    with pytest.raises(NotImplementedError):
+    with helpers.raises(NotImplementedError):
         _ = dc.anderson_darling_log
 
 
@@ -540,7 +540,7 @@ def test_spearman(dc):
 
 @helpers.seed
 def test_theilslopes(dc):
-    with pytest.raises(NotImplementedError):
+    with helpers.raises(NotImplementedError):
         _ = dc.theilslopes
 
 

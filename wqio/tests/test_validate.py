@@ -23,29 +23,23 @@ from wqio.tests import helpers
     ('junk', None, ValueError),
 ])
 def test_dataset(fname, expected, error_to_raise):
-    if not expected:
-        with pytest.raises(error_to_raise):
-            validate.dataset(fname)
-    else:
+    with helpers.raises(error_to_raise):
         assert expected == validate.dataset(fname)
 
 
-@pytest.mark.parametrize(('value', 'expected'), [
-    (datetime(2015, 1, 5), pandas.Timestamp('2015-01-05')),
-    ('2015-01-05', pandas.Timestamp('2015-01-05')),
-    (pandas.Timestamp('2015-01-05'), pandas.Timestamp('2015-01-05')),
-    ('junk;', None),
+@pytest.mark.parametrize(('value', 'expected', 'error_to_raise'), [
+    (datetime(2015, 1, 5), pandas.Timestamp('2015-01-05'), None),
+    ('2015-01-05', pandas.Timestamp('2015-01-05'), None),
+    (pandas.Timestamp('2015-01-05'), pandas.Timestamp('2015-01-05'), None),
+    ('junk;', None, ValueError),
 ])
-def test_timestamp(value, expected):
-    if expected is None:
-        with pytest.raises(ValueError):
-            validate.timestamp(value)
-    else:
+def test_timestamp(value, expected, error_to_raise):
+    with helpers.raises(error_to_raise):
         assert validate.timestamp(value) == expected
 
 
 def test_axes_invalid():
-    with pytest.raises(ValueError):
+    with helpers.raises(ValueError):
         validate.axes('junk')
 
 
@@ -77,17 +71,16 @@ def multiindex_df():
     return data
 
 
-@pytest.mark.parametrize(('level', 'expected'), [(0, 0), (None, None)])
+@pytest.mark.parametrize(('level', 'expected', 'error_to_raise'), [
+    ('param', 'A', None),
+    ('date', None, ValueError)
+])
 @helpers.seed
-def test_getUniqueDataframeIndexVal(multiindex_df, level, expected):
-    if expected is None:
-        data = multiindex_df.copy()
-        with pytest.raises(ValueError):
-            validate.single_value_in_index(data, 'date')
-    else:
-        data = multiindex_df.loc[multiindex_df.index.map(lambda row: row[level] in [expected]), :]
-        test = validate.single_value_in_index(data, 'date')
-        assert test == expected
+def test_getUniqueDataframeIndexVal(multiindex_df, level, expected, error_to_raise):
+    data = multiindex_df.xs('A', level='param', drop_level=False)
+    with helpers.raises(error_to_raise):
+        result = validate.single_value_in_index(data, level)
+        assert result == expected
 
 
 @pytest.mark.parametrize(('value', 'expected'), [
@@ -103,20 +96,17 @@ def test_at_least_empty_list(value, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize(('value', 'options', 'expected'), [
-    (None, None, {}),
-    ('', None, {}),
-    ({'a': 1, 'b': 'bee'}, None, {'a': 1, 'b': 'bee'}),
-    (None, {'a': 2}, {'a': 2}),
-    ('', {'a': 2}, {'a': 2}),
-    ({'a': 1, 'b': 'bee'}, {'a': 2}, {'a': 2, 'b': 'bee'}),
-    ('a', {'b': 1}, None)
+@pytest.mark.parametrize(('value', 'options', 'expected', 'error_to_raise'), [
+    (None, None, {}, None),
+    ('', None, {}, None),
+    ({'a': 1, 'b': 'bee'}, None, {'a': 1, 'b': 'bee'}, None),
+    (None, {'a': 2}, {'a': 2}, None),
+    ('', {'a': 2}, {'a': 2}, None),
+    ({'a': 1, 'b': 'bee'}, {'a': 2}, {'a': 2, 'b': 'bee'}, None),
+    ('a', {'b': 1}, None, ValueError)
 ])
-def test_at_least_empty_dict(value, options, expected):
-    if expected is None:
-        with pytest.raises(ValueError):
-            validate.at_least_empty_dict(value)
-    else:
+def test_at_least_empty_dict(value, options, expected, error_to_raise):
+    with helpers.raises(error_to_raise):
         if options is None:
             result = validate.at_least_empty_dict(value)
         else:
@@ -125,18 +115,15 @@ def test_at_least_empty_dict(value, options, expected):
         assert result == expected
 
 
-@pytest.mark.parametrize(('value', 'should_error'), [
-    ('x', False),
-    ('y', False),
-    ('both', False),
-    (None, False),
-    ('abc', True),
-    (1, True),
+@pytest.mark.parametrize(('value', 'error_to_raise'), [
+    ('x', None),
+    ('y', None),
+    ('both', None),
+    (None, None),
+    ('abc', ValueError),
+    (1, ValueError),
 ])
-def test_fit_arguments(value, should_error):
-    if should_error:
-        with pytest.raises(ValueError):
-            validate.fit_arguments(value, 'example arg name')
-    else:
+def test_fit_arguments(value, error_to_raise):
+    with helpers.raises(error_to_raise):
         result = validate.fit_arguments(value, 'example arg name')
         assert result == value

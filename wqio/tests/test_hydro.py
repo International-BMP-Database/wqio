@@ -275,11 +275,11 @@ class Test_HydroRecord_Simple(base_HydroRecordMixin):
         assert sn is None
 
     def test_getStormFromTimestamp_bad_date(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             self.hr.getStormFromTimestamp('junk')
 
     def test_getStormFromTimestamp_bad_lookback(self):
-        with pytest.raises(ValueError):
+        with helpers.raises(ValueError):
             sn = self.hr.getStormFromTimestamp(self.gap_date, lookback_hours=-3)
 
 
