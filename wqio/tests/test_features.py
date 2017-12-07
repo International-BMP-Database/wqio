@@ -20,396 +20,190 @@ from wqio.features import (
 OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion('0.19')
 
 
-class _base_LocationMixin(object):
+@pytest.fixture(params=[True, False])
+def location(request):
+    data = helpers.getTestROSData()
+    return Location(data, station_type='inflow', bsiter=1500,
+                    rescol='res', qualcol='qual', useros=request.param)
 
-    def main_setup(self):
 
-        # basic test data
-        self.tolerance = 0.05
-        self.known_bsiter = 1500
-        self.data = helpers.getTestROSData()
+@pytest.mark.parametrize('attr', [
+    'name',
+    'station_type',
+    'analysis_space',
+    'rescol',
+    'qualcol',
+    'plot_marker',
+    'scatter_marker',
+    'hasData',
+    'all_positive',
+    'include',
+    'exclude',
+    'NUnique',
+    'bsiter',
+    'N',
+    'ND',
+])
+def test_locations_strings_ints(location, attr):
+    expected = {
+        'name': 'Influent',
+        'station_type': 'inflow',
+        'analysis_space': 'lognormal',
+        'rescol': 'res',
+        'qualcol': 'qual',
+        'plot_marker': 'o',
+        'scatter_marker': 'v',
+        'hasData': True,
+        'all_positive': True,
+        'exclude': False,
+        'include': True,
+        'NUnique': 30,
+        'bsiter': 1500,
+        'N': 35,
+        'ND': 7,
+    }
+    assert getattr(location, attr) == expected[attr]
 
-        # Location stuff
-        self.known_station_name = 'Influent'
-        self.known_station_type = 'inflow'
-        self.known_plot_marker = 'o'
-        self.known_scatter_marker = 'v'
-        self.known_color = numpy.array((0.32157, 0.45271, 0.66667))
-        self.known_rescol = 'res'
-        self.known_qualcol = 'qual'
-        self.known_all_positive = True
-        self.known_include = True
-        self.known_exclude = False
-        self.known_hasData = True
-        self.known_min_detect = 2.00
-        self.known_min_DL = 5.00
-        self.known_filtered_include = False
 
-    def test_bsiter(self):
-        assert hasattr(self.loc, 'bsiter')
-        assert self.loc.bsiter == self.known_bsiter
+@pytest.mark.parametrize('attr', [
+    'fractionND',
+    'min',
+    'min_DL',
+    'min_detect',
+    'max',
+])
+def test_locations_numbers(location, attr):
+    expected = {
+        'fractionND': 0.2,
+        'min': 2.0,
+        'min_DL': 5.0,
+        'min_detect': 2.0,
+        'max': 22.97,
+    }
+    nptest.assert_approx_equal(getattr(location, attr), expected[attr])
 
-    def test_useros(self):
-        assert hasattr(self.loc, 'useros')
-        assert self.loc.useros == self.known_useros
 
-    def test_name(self):
-        assert hasattr(self.loc, 'name')
-        assert self.loc.name == self.known_station_name
+@pytest.mark.parametrize('attr', [
+    'useros',
+    'cov',
+    'geomean',
+    'geostd',
+    'logmean',
+    'logstd',
+    'mean',
+    'median',
+    'pctl10',
+    'pctl25',
+    'pctl75',
+    'pctl90',
+    'pnorm',
+    'plognorm',
+    'skew',
+    'std',
+])
+@helpers.seed
+def test_location_stats_scalars(location, attr):
+    expected = {
+        'useros': {True: True, False: False},
+        'cov': {True: 0.5887644, False: 0.5280314},
+        'geomean': {True: 8.0779865, False: 8.8140731},
+        'geostd': {True: 1.8116975, False: 1.7094616},
+        'logmean': {True: 2.0891426, False: 2.1763497},
+        'logstd': {True: 0.5942642, False: 0.5361785},
+        'mean': {True: 9.5888515, False: 10.120571},
+        'median': {True: 7.5000000, False: 8.7100000},
+        'pctl10': {True: 4.0460279, False: 5.0000000},
+        'pctl25': {True: 5.6150000, False: 5.8050000},
+        'pctl75': {True: 11.725000, False: 11.725000},
+        'pctl90': {True: 19.178000, False: 19.178000},
+        'pnorm': {True: 0.0017891, False: 0.0032362},
+        'plognorm': {True: 0.5209492, False: 0.3064355},
+        'skew': {True: 0.8692107, False: 0.8537566},
+        'std': {True: 5.6455746, False: 5.3439797},
+    }
+    nptest.assert_approx_equal(
+        getattr(location, attr),
+        expected[attr][location.useros],
+        significant=5
+    )
 
-    def test_N(self):
-        assert hasattr(self.loc, 'N')
-        assert self.loc.N == self.known_N
 
-    def test_hasData(self):
-        assert hasattr(self.loc, 'hasData')
-        assert self.loc.hasData == self.known_hasData
+@pytest.mark.parametrize('attr', [
+    'geomean_conf_interval',
+    'logmean_conf_interval',
+    'mean_conf_interval',
+    'median_conf_interval',
+    'shapiro',
+    'shapiro_log',
+    'lillifors',
+    'lillifors_log',
+    'color',
+])
+def test_location_stats_arrays(location, attr):
+    expected = {
+        'color': {True: [0.32157, 0.45271, 0.66667], False: [0.32157, 0.45271, 0.66667]},
+        'geomean_conf_interval': {True: [6.55572, 9.79677], False: [7.25255, 10.34346]},
+        'logmean_conf_interval': {True: [1.88631, 2.27656], False: [1.97075, 2.34456]},
+        'mean_conf_interval': {True: [7.74564, 11.49393], False: [8.52743, 11.97627]},
+        'median_conf_interval': {True: [5.66000, 8.71000], False: [6.65000, 9.850000]},
+        'shapiro': {True: [0.886889, 0.001789], False: [0.896744, 0.003236]},
+        'shapiro_log': {True: [0.972679, 0.520949], False: [0.964298, 0.306435]},
+        'lillifors': {True: [0.185180, 0.003756], False: [0.160353, 0.023078]},
+        'lillifors_log': {True: [0.091855, 0.635536], False: [0.08148, 0.84545]},
+    }
+    nptest.assert_array_almost_equal(
+        getattr(location, attr),
+        expected[attr][location.useros],
+        decimal=5
+    )
 
-    def test_ND(self):
-        assert hasattr(self.loc, 'ND')
-        assert self.loc.ND == self.known_ND
 
-    def test_fractionND(self):
-        assert hasattr(self.loc, 'fractionND')
-        assert self.loc.fractionND == self.known_fractionND
-
-    def test_NUnique(self):
-        assert hasattr(self.loc, 'NUnique')
-        assert self.loc.NUnique == self.known_NUnique
-
-    def test_analysis_space(self):
-        assert hasattr(self.loc, 'analysis_space')
-        assert self.loc.analysis_space == self.known_analysis_space
-
-    def test_cov(self):
-        assert hasattr(self.loc, 'cov')
-        nptest.assert_allclose(self.loc.cov, self.known_cov, rtol=self.tolerance)
-
-    def test_geomean(self):
-        assert hasattr(self.loc, 'geomean')
-        nptest.assert_allclose(self.loc.geomean, self.known_geomean, rtol=self.tolerance)
-
-    def test_geomean_conf_interval(self):
-        assert hasattr(self.loc, 'geomean_conf_interval')
-        nptest.assert_allclose(
-            self.loc.geomean_conf_interval,
-            self.known_geomean_conf_interval,
-            rtol=self.tolerance
+@pytest.mark.parametrize('attr', ['anderson', 'anderson_log'])
+@pytest.mark.parametrize('index', range(4))
+def test_location_anderson(location, attr, index):
+    expected = {
+        'anderson': {
+            True: (
+                1.54388800,
+                [0.527, 0.6, 0.719, 0.839, 0.998],
+                [15., 10., 5., 2.5, 1.],
+                0.000438139
+            ),
+            False: (
+                1.4392085,
+                [0.527, 0.6, 0.719, 0.839, 0.998],
+                [15., 10., 5., 2.5, 1.],
+                0.00080268
+            )
+        },
+        'anderson_log': {
+            True: (
+                0.30409634,
+                [0.527, 0.6, 0.719, 0.839, 0.998],
+                [15., 10., 5., 2.5, 1.],
+                0.552806894
+            ),
+            False: (
+                0.3684061,
+                [0.527, 0.6, 0.719, 0.839, 0.998],
+                [15., 10., 5., 2.5, 1.],
+                0.41004028
+            )
+        }
+    }
+    result = expected[attr][location.useros][index]
+    if index in [0, 3]:
+        nptest.assert_approx_equal(
+            getattr(location, attr)[index],
+            result,
+            significant=5
         )
-
-    def test_geostd(self):
-        assert hasattr(self.loc, 'geostd')
-        nptest.assert_allclose(
-            self.loc.geostd,
-            self.known_geostd,
-            rtol=self.tolerance
+    else:
+        nptest.assert_array_almost_equal(
+            getattr(location, attr)[index],
+            result,
+            decimal=5
         )
-
-    def test_logmean(self):
-        assert hasattr(self.loc, 'logmean')
-        nptest.assert_allclose(
-            self.loc.logmean,
-            self.known_logmean,
-            rtol=self.tolerance
-        )
-
-    def test_logmean_conf_interval(self):
-        assert hasattr(self.loc, 'logmean_conf_interval')
-        nptest.assert_allclose(self.loc.logmean_conf_interval, self.known_logmean_conf_interval, rtol=self.tolerance)
-
-    def test_logstd(self):
-        assert hasattr(self.loc, 'logstd')
-        nptest.assert_allclose(self.loc.logstd, self.known_logstd, rtol=self.tolerance)
-
-    def test_max(self):
-        assert hasattr(self.loc, 'max')
-        assert self.loc.max == self.known_max
-
-    def test_mean(self):
-        assert hasattr(self.loc, 'mean')
-        nptest.assert_allclose(self.loc.mean, self.known_mean, rtol=self.tolerance)
-
-    def test_mean_conf_interval(self):
-        assert hasattr(self.loc, 'mean_conf_interval')
-        nptest.assert_allclose(self.loc.mean_conf_interval, self.known_mean_conf_interval, rtol=self.tolerance)
-
-    def test_median(self):
-        assert hasattr(self.loc, 'median')
-        nptest.assert_allclose(self.loc.median, self.known_median, rtol=self.tolerance)
-
-    def test_median_conf_interval(self):
-        assert hasattr(self.loc, 'median_conf_interval')
-        nptest.assert_allclose(self.loc.median_conf_interval, self.known_median_conf_interval, rtol=self.tolerance * 1.5)
-
-    def test_min(self):
-        assert hasattr(self.loc, 'min')
-        assert self.loc.min == self.known_min
-
-    def test_min_detect(self):
-        assert hasattr(self.loc, 'min_detect')
-        assert self.loc.min_detect == self.known_min_detect
-
-    def test_min_DL(self):
-        assert hasattr(self.loc, 'min_DL')
-        assert self.loc.min_DL == self.known_min_DL
-
-    def test_pctl10(self):
-        assert hasattr(self.loc, 'pctl10')
-        nptest.assert_allclose(self.loc.pctl10, self.known_pctl10, rtol=self.tolerance)
-
-    def test_pctl25(self):
-        assert hasattr(self.loc, 'pctl25')
-        nptest.assert_allclose(self.loc.pctl25, self.known_pctl25, rtol=self.tolerance)
-
-    def test_pctl75(self):
-        assert hasattr(self.loc, 'pctl75')
-        nptest.assert_allclose(self.loc.pctl75, self.known_pctl75, rtol=self.tolerance)
-
-    def test_pctl90(self):
-        assert hasattr(self.loc, 'pctl90')
-        nptest.assert_allclose(self.loc.pctl90, self.known_pctl90, rtol=self.tolerance)
-
-    def test_pnorm(self):
-        assert hasattr(self.loc, 'pnorm')
-        nptest.assert_allclose(self.loc.pnorm, self.known_pnorm, rtol=self.tolerance)
-
-    def test_plognorm(self):
-        assert hasattr(self.loc, 'plognorm')
-        nptest.assert_allclose(self.loc.plognorm, self.known_plognorm, rtol=self.tolerance)
-
-    def test_shapiro(self):
-        assert hasattr(self.loc, 'shapiro')
-        nptest.assert_allclose(self.loc.shapiro, self.known_shapiro, rtol=self.tolerance)
-
-    def test_shapiro_log(self):
-        assert hasattr(self.loc, 'shapiro_log')
-        nptest.assert_allclose(self.loc.shapiro_log, self.known_shapiro_log, rtol=self.tolerance)
-
-    def test_lillifors(self):
-        assert hasattr(self.loc, 'lillifors')
-        nptest.assert_allclose(self.loc.lillifors, self.known_lillifors, rtol=self.tolerance)
-
-    def test_lillifors_log(self):
-        assert hasattr(self.loc, 'lillifors_log')
-        nptest.assert_allclose(self.loc.lillifors_log, self.known_lillifors_log, rtol=self.tolerance)
-
-    def test_anderson(self):
-        assert hasattr(self.loc, 'anderson')
-
-        # Ad stat
-        assert abs(self.loc.anderson[0] - self.known_anderson[0]) < 0.0001
-
-        # critical values
-        nptest.assert_allclose(self.loc.anderson[1], self.known_anderson[1], rtol=self.tolerance)
-
-        # significance level
-        nptest.assert_allclose(self.loc.anderson[2], self.known_anderson[2], rtol=self.tolerance)
-
-        # p-value
-        assert abs(self.loc.anderson[3] - self.known_anderson[3]) < 0.0000001
-
-    # def test_anderson_log(self):
-    #     assert hasattr(self.loc, 'anderson_log')
-
-    #     # Ad stat
-    #     assert abs(self.loc.anderson_log[0] - self.known_anderson_log[0]) < 0.0001
-
-    #     # critical values
-    #     nptest.assert_allclose(self.loc.anderson_log[1], self.known_anderson_log[1], rtol=self.tolerance)
-
-    #     # significance level
-    #     nptest.assert_allclose(self.loc.anderson_log[2], self.known_anderson_log[2], rtol=self.tolerance)
-
-    #     # p-value
-    #     assert abs(self.loc.anderson_log[3] - self.known_anderson_log[3]) < 0.0000001
-
-    def test_skew(self):
-        assert hasattr(self.loc, 'skew')
-        nptest.assert_allclose(self.loc.skew, self.known_skew, rtol=self.tolerance)
-
-    def test_std(self):
-        assert hasattr(self.loc, 'std')
-        nptest.assert_allclose(self.loc.std, self.known_std, rtol=self.tolerance)
-
-    def test_station_name(self):
-        assert hasattr(self.loc, 'station_name')
-        assert self.loc.station_name == self.known_station_name
-
-    def test_station_type(self):
-        assert hasattr(self.loc, 'station_type')
-        assert self.loc.station_type == self.known_station_type
-
-    def test_symbology_plot_marker(self):
-        assert hasattr(self.loc, 'plot_marker')
-        assert self.loc.plot_marker == self.known_plot_marker
-
-    def test_symbology_scatter_marker(self):
-        assert hasattr(self.loc, 'scatter_marker')
-        assert self.loc.scatter_marker == self.known_scatter_marker
-
-    def test_symbology_color(self):
-        assert hasattr(self.loc, 'color')
-        nptest.assert_almost_equal(
-            numpy.array(self.loc.color),
-            self.known_color,
-            decimal=4
-        )
-
-    def test_data(self):
-        assert hasattr(self.loc, 'data')
-        assert isinstance(self.loc.data, numpy.ndarray)
-
-    def test_full_data(self):
-        assert hasattr(self.loc, 'full_data')
-        assert isinstance(self.loc.full_data, pandas.DataFrame)
-
-    def test_full_data_columns(self):
-        assert 'res' in self.data.columns
-        assert 'qual' in self.data.columns
-
-    def test_all_positive(self):
-        assert hasattr(self.loc, 'all_positive')
-        assert self.loc.all_positive == self.known_all_positive
-
-    def test_include(self):
-        assert hasattr(self.loc, 'include')
-        assert self.loc.include == self.known_include
-
-    def test_exclude(self):
-        assert hasattr(self.loc, 'exclude')
-        assert self.loc.exclude == self.known_exclude
-
-    def test_include_setter(self):
-        self.loc.include = not self.known_include
-        assert self.loc.include == (not self.known_include)
-        assert self.loc.exclude == (not self.known_exclude)
-
-
-class Test_Location_ROS(_base_LocationMixin):
-    def setup(self):
-        self.main_setup()
-        self.loc = Location(self.data, station_type='inflow', bsiter=self.known_bsiter,
-                            rescol='res', qualcol='qual', useros=True)
-
-        # known statistics
-        self.known_N = 35
-        self.known_ND = 7
-        self.known_fractionND = 0.2
-        self.known_NUnique = 30
-        self.known_analysis_space = 'lognormal'
-        self.known_cov = 0.597430584141
-        self.known_geomean = 8.08166947637
-        self.known_geomean_conf_interval = [6.63043647, 9.79058872]
-        self.known_geostd = 1.79152565521
-        self.known_logmean = 2.08959846955
-        self.known_logmean_conf_interval = [1.89167063, 2.28142159]
-        self.known_logstd = 0.583067578178
-        self.known_max = 22.97
-        self.known_mean = 9.59372041292
-        self.known_mean_conf_interval = [7.75516047, 11.45197482]
-        self.known_median = 7.73851689962
-        self.known_median_conf_interval = [5.57,  8.63]
-        self.known_min = 2.0
-        self.known_pctl10 = 4.04355908285
-        self.known_pctl25 = 5.615
-        self.known_pctl75 = 11.725
-        self.known_pctl90 = 19.178
-        self.known_pnorm = 0.00179254170507
-        self.known_plognorm = 0.521462738514
-        self.known_shapiro = [0.886889, 0.001789]
-        self.known_shapiro_log = [0.972679, 0.520949]
-        self.known_lillifors = [0.185180, 0.003756]
-        self.known_lillifors_log = [0.091855, 0.635536]
-        self.known_anderson = (
-            1.54388800,
-            [0.527, 0.6, 0.719, 0.839, 0.998],
-            [15., 10., 5., 2.5, 1.],
-            0.000438139
-        )
-        self.known_anderson_log = (
-            0.30409634,
-            [0.527, 0.6, 0.719, 0.839, 0.998],
-            [15., 10., 5., 2.5, 1.],
-            0.552806894
-        )
-        self.known_skew = 0.869052892573
-        self.known_std = 5.52730949374
-        self.known_useros = True
-        self.known_all_positive = True
-        self.known_filtered_shape = (27, 2)
-        self.known_filtered_data_shape = (27,)
-
-
-class Test_Location_noROS(_base_LocationMixin):
-    def setup(self):
-        self.main_setup()
-
-        # set useros to True, then turn it off later to make sure that everything
-        # propogated correctly
-        self.loc = Location(self.data, station_type='inflow', bsiter=self.known_bsiter,
-                            rescol='res', qualcol='qual', useros=True)
-
-        # turn ROS off
-        self.loc.useros = False
-
-        # known statistics
-        self.known_N = 35
-        self.known_ND = 7
-        self.known_fractionND = 0.2
-        self.known_NUnique = 30
-        self.known_analysis_space = 'lognormal'
-        self.known_cov = 0.534715517405
-        self.known_geomean = 8.82772846655
-        self.known_geomean_conf_interval = [7.37541563, 10.5446939]
-        self.known_geostd = 1.68975502971
-        self.known_logmean = 2.17789772971
-        self.known_logmean_conf_interval = [1.99815226, 2.35562279]
-        self.known_logstd = 0.524583565596
-        self.known_max = 22.97
-        self.known_mean = 10.1399679143
-        self.known_mean_conf_interval = [8.3905866, 11.96703843]
-        self.known_median = 8.671859
-        self.known_median_conf_interval1 = [6.65, 9.85]
-        self.known_median_conf_interval2 = [6.65, 10.82]
-        self.known_min = 2.0
-        self.known_pctl10 = 5.0
-        self.known_pctl25 = 5.805
-        self.known_pctl75 = 11.725
-        self.known_pctl90 = 19.178
-        self.known_pnorm = 0.00323620648123
-        self.known_plognorm = 0.306435495615
-        self.known_shapiro = [0.896744, 0.003236]
-        self.known_shapiro_log = [0.964298, 0.306435]
-        self.known_lillifors = [0.160353, 0.023078]
-        self.known_lillifors_log = [0.08148, 0.84545]
-        self.known_anderson = (
-            1.4392085,
-            [0.527, 0.6, 0.719, 0.839, 0.998],
-            [15., 10., 5., 2.5, 1.],
-            0.00080268
-        )
-        self.known_anderson_log = (
-            0.3684061,
-            [0.527, 0.6, 0.719, 0.839, 0.998],
-            [15., 10., 5., 2.5, 1.],
-            0.41004028
-        )
-        self.known_skew = 0.853756570358
-        self.known_std = 5.24122841148
-        self.known_useros = False
-        self.known_filtered_shape = (30, 2)
-        self.known_filtered_data_shape = (30,)
-
-    def test_median_conf_interval(self):
-        assert hasattr(self.loc, 'median_conf_interval')
-        try:
-            nptest.assert_allclose(self.loc.median_conf_interval,
-                                   self.known_median_conf_interval1,
-                                   rtol=self.tolerance)
-        except AssertionError:
-            nptest.assert_allclose(self.loc.median_conf_interval,
-                                   self.known_median_conf_interval2,
-                                   rtol=self.tolerance)
 
 
 class Test_Dataset(object):
