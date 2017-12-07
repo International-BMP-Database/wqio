@@ -108,6 +108,22 @@ def test_storm_start_end(parsed, sn, idx, known):
     assert storm.index[idx] == pandas.Timestamp(known)
 
 
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+def test_HydroRecord_histogram():
+    stormfile = helpers.test_data_path('teststorm_simple.csv')
+    orig_record = pandas.read_csv(
+        stormfile, index_col='date', parse_dates=True
+    ).resample('5T').asfreq().fillna(0)
+    hr = hydro.HydroRecord(
+        orig_record, precipcol='rain', inflowcol='influent',
+        outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
+        intereventHours=3
+    )
+
+    fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
+    return fig
+
+
 class base_HydroRecordMixin(object):
     known_storm_stats_columns = [
         'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
@@ -173,22 +189,6 @@ class base_HydroRecordMixin(object):
 
     def test_storm_stat_columns(self):
         assert self.known_storm_stats_columns == self.hr.storm_stats.columns.tolist()
-
-
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_HydroRecord_histogram():
-    stormfile = helpers.test_data_path('teststorm_simple.csv')
-    orig_record = pandas.read_csv(
-        stormfile, index_col='date', parse_dates=True
-    ).resample('5T').asfreq().fillna(0)
-    hr = hydro.HydroRecord(
-        orig_record, precipcol='rain', inflowcol='influent',
-        outflowcol=None, outputfreqMinutes=5, minprecip=1.5,
-        intereventHours=3
-    )
-
-    fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
-    return fig
 
 
 class Test_HydroRecord_Simple(base_HydroRecordMixin):
@@ -586,48 +586,34 @@ def test_plot_storm_summary():
     return fig
 
 
-class Test_DrainageArea(object):
-    def setup(self):
-        self.total_area = 100.0
-        self.imp_area = 75.0
-        self.bmp_area = 10.0
-        self.da = hydro.DrainageArea(self.total_area, self.imp_area, self.bmp_area)
-        self.volume_conversion = 5
-        self.known_storm_runoff = 82.5
-        self.known_annual_runoff = 75.25
-        self.storm_depth = 1.0
-        self.storm_volume = self.storm_depth * (self.total_area + self.bmp_area)
-        self.annualFactor = 0.9
+@pytest.fixture
+def drainage_area():
+    return hydro.DrainageArea(100, 75, 10)
 
-    def test_total_area(self):
-        assert hasattr(self.da, 'total_area')
-        assert self.total_area == self.da.total_area
 
-    def test_imp_area(self):
-        assert hasattr(self.da, 'imp_area')
-        assert self.imp_area == self.da.imp_area
+def test_da_total_area(drainage_area):
+    assert drainage_area.total_area == 100
 
-    def test_bmp_area(self):
-        assert hasattr(self.da, 'bmp_area')
-        assert self.bmp_area == self.da.bmp_area
 
-    def test_simple_method_noConversion(self):
-        assert hasattr(self.da, 'simple_method')
-        runoff = self.da.simple_method(1)
-        assert abs(self.known_storm_runoff - runoff) < 0.001
-        assert self.storm_volume > runoff
+def test_da_imp_area(drainage_area):
+    assert drainage_area.imp_area == 75
 
-    def test_simple_method_Conversion(self):
-        assert hasattr(self.da, 'simple_method')
-        runoff = self.da.simple_method(1, volume_conversion=self.volume_conversion)
-        assert abs(self.known_storm_runoff * self.volume_conversion - runoff) < 0.001
-        assert self.storm_volume * self.volume_conversion > runoff
 
-    def test_simple_method_annualFactor(self):
-        assert hasattr(self.da, 'simple_method')
-        runoff = self.da.simple_method(1, annualFactor=self.annualFactor)
-        assert abs(self.known_annual_runoff - runoff) < 0.001
-        assert self.storm_volume > runoff
+def test_da_bmp_area(drainage_area):
+    assert drainage_area.bmp_area == 10
 
-    def teardown(self):
-        pyplot.close('all')
+
+@pytest.mark.parametrize(('conversion', 'factor', 'expected'), [
+    (1.0, 1.0, 82.50),
+    (1.0, 0.9, 75.25),
+    (2.0, 1.0, 165.00),
+    (2.0, 0.9, 150.50)
+])
+def test_simple_method(drainage_area, conversion, factor, expected):
+    depth = 1
+    result = drainage_area.simple_method(depth, annual_factor=factor,
+                                         volume_conversion=conversion)
+    area = (drainage_area.total_area + drainage_area.bmp_area)
+    storm_volume = depth * conversion * factor * area
+    assert abs(expected - result) < 0.001
+    assert storm_volume > result

@@ -68,41 +68,76 @@ def intermediate_data():
 @pytest.fixture
 def advanced_data():
     df = pandas.DataFrame([
-        {'Zprelim': -1.44562021, 'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'plot_pos': 0.07414187, 'rank': 1},
-        {'Zprelim': -1.22010353, 'censored': True, 'conc': 5.0, 'det_limit_index': 1, 'plot_pos': 0.11121281, 'rank': 2},
-        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.5, 'det_limit_index': 2, 'plot_pos': 0.14828375, 'rank': 1},
-        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.75, 'det_limit_index': 3, 'plot_pos': 0.14828375, 'rank': 1},
-        {'Zprelim': -0.81095536, 'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'plot_pos': 0.20869565, 'rank': 1},
-        {'Zprelim': -0.40467790, 'censored': True, 'conc': 9.5, 'det_limit_index': 4, 'plot_pos': 0.34285714, 'rank': 2},
-        {'Zprelim': -0.20857169, 'censored': True, 'conc': 11.0, 'det_limit_index': 5, 'plot_pos': 0.41739130, 'rank': 1},
-        {'Zprelim': -1.59276546, 'censored': False, 'conc': 2.0, 'det_limit_index': 0, 'plot_pos': 0.05560640, 'rank': 1},
-        {'Zprelim': -1.22010353, 'censored': False, 'conc': 4.2, 'det_limit_index': 0, 'plot_pos': 0.11121281, 'rank': 2},
-        {'Zprelim': -0.96681116, 'censored': False, 'conc': 4.62, 'det_limit_index': 0, 'plot_pos': 0.16681922, 'rank': 3},
-        {'Zprelim': -0.68351863, 'censored': False, 'conc': 5.57, 'det_limit_index': 2, 'plot_pos': 0.24713958, 'rank': 1},
-        {'Zprelim': -0.60721672, 'censored': False, 'conc': 5.66, 'det_limit_index': 2, 'plot_pos': 0.27185354, 'rank': 2},
-        {'Zprelim': -0.44953240, 'censored': False, 'conc': 5.86, 'det_limit_index': 3, 'plot_pos': 0.32652381, 'rank': 1},
-        {'Zprelim': -0.36788328, 'censored': False, 'conc': 6.65, 'det_limit_index': 3, 'plot_pos': 0.35648013, 'rank': 2},
-        {'Zprelim': -0.28861907, 'censored': False, 'conc': 6.78, 'det_limit_index': 3, 'plot_pos': 0.38643644, 'rank': 3},
-        {'Zprelim': -0.21113039, 'censored': False, 'conc': 6.79, 'det_limit_index': 3, 'plot_pos': 0.41639276, 'rank': 4},
-        {'Zprelim': -0.13489088, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.44634907, 'rank': 5},
-        {'Zprelim': -0.05942854, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.47630538, 'rank': 6},
-        {'Zprelim': 0.015696403, 'censored': False, 'conc': 7.5, 'det_limit_index': 3, 'plot_pos': 0.50626170, 'rank': 7},
-        {'Zprelim': 0.090910169, 'censored': False, 'conc': 8.63, 'det_limit_index': 3, 'plot_pos': 0.53621801, 'rank': 8},
-        {'Zprelim': 0.166642511, 'censored': False, 'conc': 8.71, 'det_limit_index': 3, 'plot_pos': 0.56617432, 'rank': 9},
-        {'Zprelim': 0.243344267, 'censored': False, 'conc': 8.99, 'det_limit_index': 3, 'plot_pos': 0.59613064, 'rank': 10},
-        {'Zprelim': 0.374443298, 'censored': False, 'conc': 9.85, 'det_limit_index': 4, 'plot_pos': 0.64596273, 'rank': 1},
-        {'Zprelim': 0.428450751, 'censored': False, 'conc': 10.82, 'det_limit_index': 4, 'plot_pos': 0.66583850, 'rank': 2},
-        {'Zprelim': 0.558957865, 'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'plot_pos': 0.71190476, 'rank': 1},
-        {'Zprelim': 0.637484160, 'censored': False, 'conc': 11.25, 'det_limit_index': 5, 'plot_pos': 0.73809523, 'rank': 2},
-        {'Zprelim': 0.720156617, 'censored': False, 'conc': 12.2, 'det_limit_index': 5, 'plot_pos': 0.76428571, 'rank': 3},
-        {'Zprelim': 0.808074633, 'censored': False, 'conc': 14.92, 'det_limit_index': 5, 'plot_pos': 0.79047619, 'rank': 4},
-        {'Zprelim': 0.902734791, 'censored': False, 'conc': 16.77, 'det_limit_index': 5, 'plot_pos': 0.81666666, 'rank': 5},
-        {'Zprelim': 1.006269985, 'censored': False, 'conc': 17.81, 'det_limit_index': 5, 'plot_pos': 0.84285714, 'rank': 6},
-        {'Zprelim': 1.121900467, 'censored': False, 'conc': 19.16, 'det_limit_index': 5, 'plot_pos': 0.86904761, 'rank': 7},
-        {'Zprelim': 1.254875912, 'censored': False, 'conc': 19.19, 'det_limit_index': 5, 'plot_pos': 0.89523809, 'rank': 8},
-        {'Zprelim': 1.414746425, 'censored': False, 'conc': 19.64, 'det_limit_index': 5, 'plot_pos': 0.92142857, 'rank': 9},
-        {'Zprelim': 1.622193585, 'censored': False, 'conc': 20.18, 'det_limit_index': 5, 'plot_pos': 0.94761904, 'rank': 10},
-        {'Zprelim': 1.939989611, 'censored': False, 'conc': 22.97, 'det_limit_index': 5, 'plot_pos': 0.97380952, 'rank': 11}
+        {'Zprelim': -1.44562021, 'censored': True, 'conc': 5.0,
+         'det_limit_index': 1, 'plot_pos': 0.07414187, 'rank': 1},
+        {'Zprelim': -1.22010353, 'censored': True, 'conc': 5.0,
+         'det_limit_index': 1, 'plot_pos': 0.11121281, 'rank': 2},
+        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.5,
+         'det_limit_index': 2, 'plot_pos': 0.14828375, 'rank': 1},
+        {'Zprelim': -1.04382253, 'censored': True, 'conc': 5.75,
+         'det_limit_index': 3, 'plot_pos': 0.14828375, 'rank': 1},
+        {'Zprelim': -0.81095536, 'censored': True, 'conc': 9.5,
+         'det_limit_index': 4, 'plot_pos': 0.20869565, 'rank': 1},
+        {'Zprelim': -0.40467790, 'censored': True, 'conc': 9.5,
+         'det_limit_index': 4, 'plot_pos': 0.34285714, 'rank': 2},
+        {'Zprelim': -0.20857169, 'censored': True, 'conc': 11.0,
+         'det_limit_index': 5, 'plot_pos': 0.41739130, 'rank': 1},
+        {'Zprelim': -1.59276546, 'censored': False, 'conc': 2.0,
+         'det_limit_index': 0, 'plot_pos': 0.05560640, 'rank': 1},
+        {'Zprelim': -1.22010353, 'censored': False, 'conc': 4.2,
+         'det_limit_index': 0, 'plot_pos': 0.11121281, 'rank': 2},
+        {'Zprelim': -0.96681116, 'censored': False, 'conc': 4.62,
+         'det_limit_index': 0, 'plot_pos': 0.16681922, 'rank': 3},
+        {'Zprelim': -0.68351863, 'censored': False, 'conc': 5.57,
+         'det_limit_index': 2, 'plot_pos': 0.24713958, 'rank': 1},
+        {'Zprelim': -0.60721672, 'censored': False, 'conc': 5.66,
+         'det_limit_index': 2, 'plot_pos': 0.27185354, 'rank': 2},
+        {'Zprelim': -0.44953240, 'censored': False, 'conc': 5.86,
+         'det_limit_index': 3, 'plot_pos': 0.32652381, 'rank': 1},
+        {'Zprelim': -0.36788328, 'censored': False, 'conc': 6.65,
+         'det_limit_index': 3, 'plot_pos': 0.35648013, 'rank': 2},
+        {'Zprelim': -0.28861907, 'censored': False, 'conc': 6.78,
+         'det_limit_index': 3, 'plot_pos': 0.38643644, 'rank': 3},
+        {'Zprelim': -0.21113039, 'censored': False, 'conc': 6.79,
+         'det_limit_index': 3, 'plot_pos': 0.41639276, 'rank': 4},
+        {'Zprelim': -0.13489088, 'censored': False, 'conc': 7.5,
+         'det_limit_index': 3, 'plot_pos': 0.44634907, 'rank': 5},
+        {'Zprelim': -0.05942854, 'censored': False, 'conc': 7.5,
+         'det_limit_index': 3, 'plot_pos': 0.47630538, 'rank': 6},
+        {'Zprelim': 0.015696403, 'censored': False, 'conc': 7.5,
+         'det_limit_index': 3, 'plot_pos': 0.50626170, 'rank': 7},
+        {'Zprelim': 0.090910169, 'censored': False, 'conc': 8.63,
+         'det_limit_index': 3, 'plot_pos': 0.53621801, 'rank': 8},
+        {'Zprelim': 0.166642511, 'censored': False, 'conc': 8.71,
+         'det_limit_index': 3, 'plot_pos': 0.56617432, 'rank': 9},
+        {'Zprelim': 0.243344267, 'censored': False, 'conc': 8.99,
+         'det_limit_index': 3, 'plot_pos': 0.59613064, 'rank': 10},
+        {'Zprelim': 0.374443298, 'censored': False, 'conc': 9.85,
+         'det_limit_index': 4, 'plot_pos': 0.64596273, 'rank': 1},
+        {'Zprelim': 0.428450751, 'censored': False, 'conc': 10.82,
+         'det_limit_index': 4, 'plot_pos': 0.66583850, 'rank': 2},
+        {'Zprelim': 0.558957865, 'censored': False, 'conc': 11.25,
+         'det_limit_index': 5, 'plot_pos': 0.71190476, 'rank': 1},
+        {'Zprelim': 0.637484160, 'censored': False, 'conc': 11.25,
+         'det_limit_index': 5, 'plot_pos': 0.73809523, 'rank': 2},
+        {'Zprelim': 0.720156617, 'censored': False, 'conc': 12.2,
+         'det_limit_index': 5, 'plot_pos': 0.76428571, 'rank': 3},
+        {'Zprelim': 0.808074633, 'censored': False, 'conc': 14.92,
+         'det_limit_index': 5, 'plot_pos': 0.79047619, 'rank': 4},
+        {'Zprelim': 0.902734791, 'censored': False, 'conc': 16.77,
+         'det_limit_index': 5, 'plot_pos': 0.81666666, 'rank': 5},
+        {'Zprelim': 1.006269985, 'censored': False, 'conc': 17.81,
+         'det_limit_index': 5, 'plot_pos': 0.84285714, 'rank': 6},
+        {'Zprelim': 1.121900467, 'censored': False, 'conc': 19.16,
+         'det_limit_index': 5, 'plot_pos': 0.86904761, 'rank': 7},
+        {'Zprelim': 1.254875912, 'censored': False, 'conc': 19.19,
+         'det_limit_index': 5, 'plot_pos': 0.89523809, 'rank': 8},
+        {'Zprelim': 1.414746425, 'censored': False, 'conc': 19.64,
+         'det_limit_index': 5, 'plot_pos': 0.92142857, 'rank': 9},
+        {'Zprelim': 1.622193585, 'censored': False, 'conc': 20.18,
+         'det_limit_index': 5, 'plot_pos': 0.94761904, 'rank': 10},
+        {'Zprelim': 1.939989611, 'censored': False, 'conc': 22.97,
+         'det_limit_index': 5, 'plot_pos': 0.97380952, 'rank': 11}
     ])
 
     return df
@@ -158,7 +193,7 @@ def expected_sorted():
 def expected_cohn():
     final_cols = ['lower_dl', 'upper_dl', 'nuncen_above', 'nobs_below',
                   'ncen_equal', 'prob_exceedance']
-    expected_cohn = pandas.DataFrame([
+    cohn = pandas.DataFrame([
         {'lower_dl': 2.0, 'ncen_equal': 0.0, 'nobs_below': 0.0,
          'nuncen_above': 3.0, 'prob_exceedance': 1.0, 'upper_dl': 5.0},
         {'lower_dl': 5.0, 'ncen_equal': 2.0, 'nobs_below': 5.0,
@@ -174,7 +209,7 @@ def expected_cohn():
         {'lower_dl': numpy.nan, 'ncen_equal': numpy.nan, 'nobs_below': numpy.nan,
          'nuncen_above': numpy.nan, 'prob_exceedance': 0.0, 'upper_dl': numpy.nan}
     ])[final_cols]
-    return expected_cohn
+    return cohn
 
 
 def test__ros_sort_baseline(basic_data, expected_sorted):
@@ -294,37 +329,7 @@ def test__do_ros(basic_data):
     nptest.assert_array_almost_equal(result, expected)
 
 
-class CheckROSMixin(object):
-    def test_ros_df(self):
-        result = ros.ROS(self.rescol, self.cencol, df=self.df)
-        nptest.assert_array_almost_equal(
-            sorted(result),
-            sorted(self.expected_final),
-            decimal=self.decimal
-        )
-
-    def test_ros_arrays(self):
-        result = ros.ROS(self.df[self.rescol], self.df[self.cencol], df=None)
-        nptest.assert_array_almost_equal(
-            sorted(result),
-            sorted(self.expected_final),
-            decimal=self.decimal
-        )
-
-    def test_cohn(self):
-        cols = [
-            'nuncen_above', 'nobs_below',
-            'ncen_equal', 'prob_exceedance'
-        ]
-        cohn = ros.cohn_numbers(self.df, self.rescol, self.cencol)
-        pdtest.assert_frame_equal(
-            cohn[cols],
-            self.expected_cohn[cols],
-            check_less_precise=True,
-        )
-
-
-class Test_ROS_HelselAppendixB(CheckROSMixin):
+class HelselAppendixB:
     """
     Appendix B dataset from "Estimation of Descriptive Statists for
     Multiply Censored Water Quality Data", Water Resources Research,
@@ -343,12 +348,12 @@ class Test_ROS_HelselAppendixB(CheckROSMixin):
     rescol = 'obs'
     cencol = 'cen'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([
+    values = numpy.array([
         0.47,  0.85, 1.11, 1.27, 1.76, 2.34, 2.50, 3.00, 3.03,
         4.80, 7.00, 9.00, 12.0, 15.0, 20.0, 27.0, 33.0, 50.0
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([3.0, 6.0, numpy.nan]),
         'nobs_below': numpy.array([6.0, 12.0, numpy.nan]),
         'ncen_equal': numpy.array([6.0, 3.0, numpy.nan]),
@@ -356,7 +361,7 @@ class Test_ROS_HelselAppendixB(CheckROSMixin):
     })
 
 
-class Test_ROS_HelselArsenic(CheckROSMixin):
+class HelselArsenic:
     """
     Oahu arsenic data from Nondetects and Data Analysis by
     Dennis R. Helsel (John Wiley, 2005)
@@ -381,13 +386,13 @@ class Test_ROS_HelselArsenic(CheckROSMixin):
     rescol = 'obs'
     cencol = 'cen'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([
+    values = numpy.array([
         3.20, 2.80, 1.42, 1.14, 0.95, 0.81, 0.68, 0.57,
         0.46, 0.35, 1.70, 1.50, 0.98, 0.76, 0.58, 0.41,
         0.90, 0.61, 0.70, 0.70, 0.60, 0.50, 0.50, 0.50
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([6.0, 1.0, 2.0, 2.0, numpy.nan]),
         'nobs_below': numpy.array([0.0, 7.0, 12.0, 22.0, numpy.nan]),
         'ncen_equal': numpy.array([0.0, 1.0, 4.0, 8.0, numpy.nan]),
@@ -395,7 +400,7 @@ class Test_ROS_HelselArsenic(CheckROSMixin):
     })
 
 
-class Test_ROS_RNADAdata(CheckROSMixin):
+class RNADAdata:
     decimal = 3
     datastring = StringIO(dedent("""\
         res cen
@@ -453,7 +458,7 @@ class Test_ROS_RNADAdata(CheckROSMixin):
     rescol = 'res'
     cencol = 'cen'
     df = pandas.read_csv(datastring, sep='\s+')
-    expected_final = numpy.array([
+    values = numpy.array([
         0.01907990,  0.03826254,  0.06080717,  0.10100000,  0.13600000,
         0.34000000,  0.45700000,  0.51400000,  0.62900000,  0.63800000,
         0.77400000,  0.78800000,  0.08745914,  0.25257575,  0.58544205,
@@ -466,7 +471,7 @@ class Test_ROS_RNADAdata(CheckROSMixin):
         7.21400000, 16.00000000, 17.71600000, 25.00000000, 51.00000000
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([9., 0.0, 18., numpy.nan]),
         'nobs_below': numpy.array([3., 15., 32., numpy.nan]),
         'ncen_equal': numpy.array([3., 3., 17., numpy.nan]),
@@ -474,7 +479,7 @@ class Test_ROS_RNADAdata(CheckROSMixin):
     })
 
 
-class Test_NoOp_ZeroND(CheckROSMixin):
+class NoOp_ZeroND:
     decimal = 2
     numpy.random.seed(0)
     N = 20
@@ -483,13 +488,13 @@ class Test_NoOp_ZeroND(CheckROSMixin):
     rescol = 'obs'
     cencol = 'cen'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([
+    values = numpy.array([
         0.38, 0.43, 0.81, 0.86, 0.90, 1.13, 1.15, 1.37, 1.40,
         1.49, 1.51, 1.56, 2.14, 2.59, 2.66, 4.28, 4.46, 5.84,
         6.47, 9.4
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([]),
         'nobs_below': numpy.array([]),
         'ncen_equal': numpy.array([]),
@@ -497,7 +502,7 @@ class Test_NoOp_ZeroND(CheckROSMixin):
     })
 
 
-class Test_ROS_OneND(CheckROSMixin):
+class OneND:
     decimal = 3
     res = numpy.array([
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
@@ -511,12 +516,12 @@ class Test_ROS_OneND(CheckROSMixin):
     rescol = 'conc'
     cencol = 'cen'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([
+    values = numpy.array([
         0.24, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
         3.00, 7.0, 9.0, 12., 15., 20., 27., 33., 50.
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([17.0, numpy.nan]),
         'nobs_below': numpy.array([1.0, numpy.nan]),
         'ncen_equal': numpy.array([1.0, numpy.nan]),
@@ -524,7 +529,7 @@ class Test_ROS_OneND(CheckROSMixin):
     })
 
 
-class Test_HalfDLs_80pctNDs(CheckROSMixin):
+class HalfDLs_80pctNDs:
     decimal = 3
     res = numpy.array([
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
@@ -538,12 +543,12 @@ class Test_HalfDLs_80pctNDs(CheckROSMixin):
     rescol = 'value'
     cencol = 'qual'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([
+    values = numpy.array([
         0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 5.0, 5.0, 5.0,
         1.5, 3.5, 4.5, 6.0, 7.5, 10., 27., 33., 50.
     ])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([0., 0., 0., 0., 0., 0., 0., 3., numpy.nan]),
         'nobs_below': numpy.array([6., 7., 8., 9., 12., 13., 14., 15., numpy.nan]),
         'ncen_equal': numpy.array([6., 1., 1., 1., 3., 1., 1., 1., numpy.nan]),
@@ -551,16 +556,16 @@ class Test_HalfDLs_80pctNDs(CheckROSMixin):
     })
 
 
-class Test_HaflDLs_OneUncensored(CheckROSMixin):
+class HaflDLs_OneUncensored:
     decimal = 3
     res = numpy.array([1.0, 1.0, 12., 15.0])
     cen = numpy.array([True, True, True, False])
     rescol = 'value'
     cencol = 'qual'
     df = pandas.DataFrame({rescol: res, cencol: cen})
-    expected_final = numpy.array([0.5, 0.5, 6.0, 15.0])
+    values = numpy.array([0.5, 0.5, 6.0, 15.0])
 
-    expected_cohn = pandas.DataFrame({
+    cohn = pandas.DataFrame({
         'nuncen_above': numpy.array([0., 1., numpy.nan]),
         'nobs_below': numpy.array([2., 3., numpy.nan]),
         'ncen_equal': numpy.array([2., 1., numpy.nan]),
@@ -568,7 +573,7 @@ class Test_HaflDLs_OneUncensored(CheckROSMixin):
     })
 
 
-class Test_ROS_MaxCen_GT_MaxUncen(Test_ROS_HelselAppendixB):
+class MaxCen_GT_MaxUncen(HelselAppendixB):
     res = numpy.array([
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 10., 10., 10.,
         3.0, 7.0, 9.0, 12., 15., 20., 27., 33., 50.,
@@ -581,7 +586,7 @@ class Test_ROS_MaxCen_GT_MaxUncen(Test_ROS_HelselAppendixB):
     ])
 
 
-class Test_ROS_OnlyDL_GT_MaxUncen(Test_NoOp_ZeroND):
+class OnlyDL_GT_MaxUncen(NoOp_ZeroND):
     numpy.random.seed(0)
     N = 20
     res = [
@@ -590,3 +595,52 @@ class Test_ROS_OnlyDL_GT_MaxUncen(Test_NoOp_ZeroND):
         6.47, 9.40, 10.0, 10.0
     ]
     cen = ([False] * N) + [True, True]
+
+
+@pytest.mark.parametrize('case', [
+    HelselAppendixB,
+    HelselArsenic,
+    RNADAdata,
+    NoOp_ZeroND,
+    OneND,
+    HalfDLs_80pctNDs,
+    HaflDLs_OneUncensored,
+    MaxCen_GT_MaxUncen,
+    OnlyDL_GT_MaxUncen,
+])
+@pytest.mark.parametrize('as_arrays', [True, False])
+def test_ros_from_literature(as_arrays, case):
+    if as_arrays:
+        result = ros.ROS(case.df[case.rescol], case.df[case.cencol], df=None)
+    else:
+        result = ros.ROS(case.rescol, case.cencol, df=case.df)
+
+    nptest.assert_array_almost_equal(
+        sorted(result),
+        sorted(case.values),
+        decimal=case.decimal
+    )
+
+
+@pytest.mark.parametrize('case', [
+    HelselAppendixB,
+    HelselArsenic,
+    RNADAdata,
+    NoOp_ZeroND,
+    OneND,
+    HalfDLs_80pctNDs,
+    HaflDLs_OneUncensored,
+    MaxCen_GT_MaxUncen,
+    OnlyDL_GT_MaxUncen,
+])
+def test_cohn_from_literature(case):
+    cols = [
+        'nuncen_above', 'nobs_below',
+        'ncen_equal', 'prob_exceedance'
+    ]
+    result = ros.cohn_numbers(case.df, case.rescol, case.cencol)
+    pdtest.assert_frame_equal(
+        result[cols],
+        case.cohn[cols],
+        check_less_precise=True,
+    )

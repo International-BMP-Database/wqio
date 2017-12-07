@@ -960,7 +960,7 @@ class DrainageArea(object):
         self.imp_area = float(imp_area)
         self.bmp_area = float(bmp_area)
 
-    def simple_method(self, storm_depth, volume_conversion=1.0, annualFactor=1.0):
+    def simple_method(self, storm_depth, volume_conversion=1.0, annual_factor=1.0):
         """
         Estimate runoff volume via Bob Pitt's Simple Method.
 
@@ -972,7 +972,7 @@ class DrainageArea(object):
             Conversion factor to go from [area units] * [depth units] to
             the desired [volume units]. If [area] = m^2, [depth] = mm,
             and [volume] = L, then `volume_conversion` = 1.
-        annualFactor : float, optional (default = 1.0)
+        annual_factor : float, optional (default = 1.0)
             The Simple Method's annual correction factor to account for
             small storms that do not produce runoff.
 
@@ -992,5 +992,5 @@ class DrainageArea(object):
         bmp_conversion = self.bmp_area * volume_conversion
 
         # total runoff based on actual storm depth
-        runoff_volume = (drainage_conversion * annualFactor + bmp_conversion) * storm_depth
+        runoff_volume = (drainage_conversion * annual_factor + bmp_conversion) * storm_depth
         return runoff_volume
