@@ -3,6 +3,7 @@ import sys
 import subprocess
 import re
 import os
+import difflib
 from warnings import simplefilter
 from functools import wraps
 from pkg_resources import resource_filename
@@ -230,14 +231,16 @@ def checkdep_tex():  # pragma: no cover
         return None
 
 
-def assert_bigstring_equal(input_string, known_string, input_out, known_out):  # pragma: no cover
-    try:
-        input_string == known_string
-    except:
-        with open(input_out, 'w') as f:
-            f.write(input_string)
+def assert_bigstring_equal(input_string, known_string,
+                           input_out=None, known_out=None):  # pragma: no cover
+    if input_string != known_string:
+        if input_out and known_out:
+            with open(input_out, 'w') as fi:
+                fi.write(input_string)
 
-        with open(known_out, 'w') as f:
-            f.write(known_string)
+            with open(known_out, 'w') as fo:
+                fo.write(known_string)
 
-        raise
+        message = ''.join(difflib.ndiff(input_string.splitlines(True),
+                                        known_string.splitlines(True)))
+        raise AssertionError("Multi-line strings are unequal:\n" + message)
