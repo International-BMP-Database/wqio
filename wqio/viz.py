@@ -6,6 +6,7 @@ import matplotlib
 from matplotlib import pyplot
 from matplotlib import ticker
 import scipy.stats as stats
+from pandas.api.types import CategoricalDtype
 import seaborn
 import probscale
 
@@ -574,6 +575,7 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
         classifier = partial(utils.classifier, bins=bins, units='mm')
 
     cats = utils.unique_categories(classifier, bins)
+    cat_type = CategoricalDtype(cats, ordered=True)
     aspect = factoropts.pop('aspect', 1.6)
 
     display_col = format_col(valuecol)
@@ -590,13 +592,12 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
     final_opts = {**factoropts, **processed_opts}
 
     fig = (
-        df.assign(display=df[valuecol].apply(classifier)
-                                      .astype("category", categories=cats, ordered=True))
-        .drop([valuecol], axis=1)
-        .rename(columns={'display': valuecol})
-        .rename(columns=lambda c: format_col(c))
-        .pipe((seaborn.factorplot, 'data'), x=display_col, **final_opts)
-        .set_ylabels("Occurences")
+        df.assign(display=df[valuecol].apply(classifier).astype(cat_type))
+          .drop([valuecol], axis=1)
+          .rename(columns={'display': valuecol})
+          .rename(columns=lambda c: format_col(c))
+          .pipe((seaborn.factorplot, 'data'), x=display_col, **final_opts)
+          .set_ylabels("Occurences")
     )
 
     return fig
