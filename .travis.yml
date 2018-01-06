@@ -4,10 +4,17 @@ matrix:
   include:
     - python: 3.5
       env:
+        - FREETYPE=""
         - COVERAGE=false
-        - ARGS="--mpl"
+        - ARGS=""
     - python: 3.6
       env:
+        - FREETYPE=""
+        - COVERAGE=true
+        - ARGS=""
+    - python: 3.6
+      env:
+        - FREETYPE="freetype=2.7"
         - COVERAGE=true
         - ARGS="--mpl --pep8"
 
@@ -19,7 +26,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml
+  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml $FREETYPE
   - source activate test
   - pip install codecov
   - pip install .
