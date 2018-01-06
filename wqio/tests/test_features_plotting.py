@@ -552,7 +552,8 @@ def test_ds_scatterplot_best_fit(ds_NDs):
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_ds_scatterplot_best_fit_through_origin(ds_NDs):
-    fig = ds_NDs.scatterplot(bestfit=True, fitopts=dict(through_origin=True))
+    with numpy.errstate(divide="ignore", invalid="ignore"):
+        fig = ds_NDs.scatterplot(bestfit=True, fitopts=dict(through_origin=True))
     return fig
 
 
