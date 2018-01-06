@@ -1,5 +1,6 @@
 from textwrap import dedent
 from io import StringIO
+import warnings
 
 import pytest
 import numpy.testing as nptest
@@ -221,8 +222,9 @@ def test__ros_sort_warning(basic_data, expected_sorted):
     df = basic_data.copy()
     max_row = df['conc'].idxmax()
     df.loc[max_row, 'censored'] = True
-    result = ros._ros_sort(df, 'conc', 'censored')
-    pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
+    with pytest.warns(UserWarning):
+        result = ros._ros_sort(df, 'conc', 'censored')
+        pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
 
 
 def test_cohn_numbers_baseline(basic_data, expected_cohn):
