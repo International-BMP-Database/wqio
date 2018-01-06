@@ -755,10 +755,7 @@ class HydroRecord(object):
             msg = '`hydrodata` must have at least a precip or in/outflow column'
             raise ValueError(msg)
 
-        if stormclass is None:
-            self.stormclass = Storm
-        else:
-            self.stormclass = stormclass
+        self.stormclass = stormclass or Storm
 
         # static input
         self._raw_data = hydrodata
