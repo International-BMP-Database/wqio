@@ -7,6 +7,7 @@ import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import resettable_cache, cache_readonly
 import seaborn
+from probscale.algo import _estimate_from_fit
 
 from wqio import utils
 from wqio import bootstrap
@@ -1101,8 +1102,8 @@ class Dataset(object):
                 }
 
             output['estimated_effluent'] = \
-                utils.estimateFromLineParams(infl, output['medslope'], output['intercept'],
-                                             xlog=log_infl, ylog=log_effl)
+                _estimate_from_fit(infl, output['medslope'], output['intercept'],
+                                   xlog=log_infl, ylog=log_effl)
 
             output['estimate_error'] = self.paired_data.outflow.res.values - output['estimated_effluent']
 
