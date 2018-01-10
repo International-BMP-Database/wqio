@@ -1,11 +1,19 @@
 import itertools
+from textwrap import dedent
 from collections import namedtuple
 
 import numpy
 from scipy import stats
 import statsmodels.api as sm
+from probscale.algo import _estimate_from_fit
 
 from wqio import validate
+
+
+TheilStats = namedtuple(
+    'TheilStats',
+    ('slope', 'intercept', 'low_slope', 'high_slope')
+)
 
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
@@ -383,6 +391,55 @@ def pH2concentration(pH, *args):
     return 10 ** (-1 * pH) * avogadro * proton_mass * kg2g * g2mg
 
 
+def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
+    """ Adapted from stats.mstats.theilslopes
+    https://goo.gl/nxPF54
+    {}
+    """.format(dedent(stats.mstats.theilslopes.__doc__))
+
+    # We copy both x and y so we can use _find_repeats.
+    y = numpy.array(y).flatten()
+    if x is None:
+        x = numpy.arange(len(y), dtype=float)
+    else:
+        x = numpy.array(x, dtype=float).flatten()
+        if len(x) != len(y):
+            raise ValueError("Incompatible lengths (%s != %s)" %
+                             (len(y), len(x)))
+
+    # Compute sorted slopes only when deltax > 0
+    deltax = x[:, numpy.newaxis] - x
+    deltay = y[:, numpy.newaxis] - y
+    slopes = deltay[deltax > 0] / deltax[deltax > 0]
+    slopes.sort()
+    outslope = numpy.percentile(slopes, percentile)
+    outinter = numpy.percentile(y, percentile) - outslope * numpy.median(x)
+    # Now compute confidence intervals
+    if alpha > 0.5:
+        alpha = 1. - alpha
+
+    z = stats.distributions.norm.ppf(alpha / 2.)
+
+    # This implements (2.6) from Sen (1968)
+    _, nxreps = stats.mstats.find_repeats(x)
+    _, nyreps = stats.mstats.find_repeats(y)
+    nt = len(slopes)       # N in Sen (1968)
+    ny = len(y)            # n in Sen (1968)
+
+    # Equation 2.6 in Sen (1968):
+    sigsq = 1 / 18. * (ny * (ny - 1) * (2 * ny + 5) -
+                       numpy.sum(k * (k - 1) * (2 * k + 5) for k in nxreps) -
+                       numpy.sum(k * (k - 1) * (2 * k + 5) for k in nyreps))
+
+    # Find the confidence interval indices in `slopes`
+    sigma = numpy.sqrt(sigsq)
+    Ru = min(int(numpy.round((nt - z * sigma) / 2.)), len(slopes) - 1)
+    Rl = max(int(numpy.round((nt + z * sigma) / 2.)) - 1, 0)
+    delta = slopes[[Rl, Ru]]
+
+    return TheilStats(outslope, outinter, delta[0], delta[1])
+
+
 def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
     """ Fits a line to x-y data in various forms (raw, log, prob scales)
 
@@ -438,6 +495,7 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
 
     if fitlogs in ['x', 'both']:
         x = numpy.log(x)
+
     if fitlogs in ['y', 'both']:
         y = numpy.log(y)
 
@@ -450,9 +508,9 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
         x[:, 0] = 0
 
     results = sm.OLS(y, x).fit()
-    yhat = estimateFromLineParams(xhat, results.params[1], results.params[0],
-                                  xlog=fitlogs in ['x', 'both'],
-                                  ylog=fitlogs in ['y', 'both'])
+    yhat = _estimate_from_fit(xhat, results.params[1], results.params[0],
+                              xlog=fitlogs in ['x', 'both'],
+                              ylog=fitlogs in ['y', 'both'])
 
     if fitprobs in ['y', 'both']:
         yhat = 100. * dist.cdf(yhat)
@@ -460,46 +518,6 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
         xhat = 100. * dist.cdf(xhat)
 
     return xhat, yhat, results
-
-
-def estimateFromLineParams(xdata, slope, intercept, xlog=False, ylog=False):
-    """ Estimate the dependent of a linear fit given x-data and linear
-    parameters.
-
-    Parameters
-    ----------
-    xdata : numpy array or pandas Series/DataFrame
-        The input independent variable of the fit
-    slope : float
-        Slope of the best-fit line
-    intercept : float
-        y-intercept of the best-fit line
-    xlog, ylog : bool (default = False)
-        Toggles whether or not the logs of the x- or y- data should be
-        used to perform the regression.
-
-    Returns
-    -------
-    yhat : same type as xdata
-        Estimate of the dependent variable.
-
-    """
-
-    x = numpy.array(xdata)
-    if ylog:
-        if xlog:
-            yhat = numpy.exp(intercept) * x ** slope
-        else:
-            yhat = numpy.exp(intercept) * numpy.exp(slope) ** x
-
-    else:
-        if xlog:
-            yhat = slope * numpy.log(x) + intercept
-
-        else:
-            yhat = slope * x + intercept
-
-    return yhat
 
 
 def checkIntervalOverlap(interval1, interval2, oneway=False):

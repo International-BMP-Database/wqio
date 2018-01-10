@@ -1,7 +1,13 @@
 import warnings
+from collections import namedtuple
 
 import numpy
 import scipy.stats as stats
+from probscale.algo import _estimate_from_fit
+
+
+fitestimate = namedtuple('BootstrappedFitEstimate',
+                         ['xhat', 'yhat', 'lower', 'upper'])
 
 
 __all__ = ['BCA', 'percentile']
@@ -170,3 +176,105 @@ def percentile(data, statfxn, niter=10000, alpha=0.05):
     CI = numpy.percentile(boot_stats, [alpha * 50, 100 - (alpha * 50)], axis=0)
 
     return CI
+
+
+def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False,
+        **kwargs):
+    """
+    Perform a percentile bootstrap estimate on a linear regression.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Predictor and response variables, respectively.
+    fitfxn : callable
+        The function that performs the linear regression. It must return a
+        sequence (length > 3) where each element is a scalar and the first and
+        second elements are the slope and intercept (in that order). The first
+        two parameters fed to the function must be ``x`` and ``y`` (in that
+        order).
+    niter : int, optional (default = 10000)
+        Number of bootstrap iterations to perform.
+    alpha : float, optional (default = 0.05)
+        The confidence level to estimate the response variable. For example,
+        when alpha = 0.05, the 97.5th and 2.5th perctile estimates will be
+        returned.
+    xlog, ylog : bool, optional (default = False)
+        Toggles performing the fit and estimates in arithmetic or logarithmic
+        space.
+
+    Additional Parameters
+    ---------------------
+    Any additional keyword arguments will be directly passed to ``fitfxn``
+    after ``x`` and ``y``.
+
+    Returns
+    -------
+    BootstrappedFitEstimate : namedtuple of numpy.arrays
+        Names include:
+
+          xhat : the synthetic predictor variable
+          yhat : the estimated response variable
+          lower, upper : the confidence intervals around the estimated respone
+
+    Examples
+    --------
+    >>> import numpy
+    >>> from matplotlib import pyplot
+    >>> from wqio import bootstrap
+    >>> N = 10
+    >>> x = numpy.arange(1, N + 1, dtype=float)
+    >>> y = numpy.array([4.527, 3.519, 9.653, 8.036, 10.805,
+    ...                  14.329, 13.508, 11.822, 13.281, 10.410])
+    >>> bsfit = bootstrap.fit(x, y, numpy.polyfit, niter=2000,
+    ...                       xlog=False, ylog=False,
+    ...                       deg=1, full=False)
+    >>> fig, ax = pyplot.subplots()
+    >>> ax.plot(x, y, 'k.', zorder=2)
+    >>> ax.plot(xhat, yhat, 'b-', zorder=1)
+    >>> ax.fill_between(xhat, yhat_[0], yhat_[1], zorder=0, alpha=0.5)
+    >>> pyplot.show()
+
+    """
+
+    # get the data in order according to the *predictor* variable only
+    sort_index = numpy.argsort(x)
+    x = x[sort_index]
+    y = y[sort_index]
+
+    # apply logs if necessary
+    if xlog:
+        x = numpy.log(x)
+    if ylog:
+        y = numpy.log(y)
+
+    # compute fit on original data
+    main_params = fitfxn(x, y, **kwargs)
+
+    # raw loop to estimate the bootstrapped fit parameters
+    bs_params = numpy.array([
+        fitfxn(x[ii], y[ii], **kwargs)
+        for ii in _make_boot_index(len(x), niter)
+    ])
+
+    # un-log, if necesssary
+    if xlog:
+        x = numpy.exp(x)
+
+    # compute estimate from original data fit
+    yhat = _estimate_from_fit(x, main_params[0], main_params[1],
+                              xlog=xlog, ylog=ylog)
+
+    # full array of estimates
+    bs_estimates = _estimate_from_fit(
+        x[:, None], bs_params[:, 0], bs_params[:, 1],
+        xlog=xlog, ylog=ylog
+    )
+
+    # both alpha alphas
+    percentiles = 100 * numpy.array([alpha * 0.5, 1 - alpha * 0.5])
+
+    # lower, upper bounds
+    bounds = numpy.percentile(bs_estimates, percentiles, axis=1)
+
+    return fitestimate(x, yhat, bounds[0], bounds[1])

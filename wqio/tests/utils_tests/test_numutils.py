@@ -262,9 +262,10 @@ def test_test_pH2concentration(pH, expected, error):
         assert abs(numutils.pH2concentration(pH) - expected) < 0.0001
 
 
-    def test_pH2concentration_raises_low(self):
-        with helpers.raises(ValueError):
-            numutils.pH2concentration(-0.1)
+@helpers.seed
+def test_compute_theilslope_default():
+    y = helpers.getTestROSData()['res'].values
+    assert tuple(numutils.compute_theilslope(y)) == stats.mstats.theilslopes(y)
 
 
 @pytest.fixture
@@ -365,70 +366,8 @@ def test_fit_line_through_origin(fit_data):
 def test_fit_line_with_xhat(fit_data):
     x, y = fit_data['zscores'], fit_data['data']
     x_, y_, res = numutils.fit_line(x, y, xhat=[-2, -1, 0, 1, 2])
-    nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
-
-
-class Test_estimateLineFromParams(object):
-    def setup(self):
-        self.x = numpy.arange(1, 11, 0.5)
-        self.slope = 2
-        self.intercept = 3.5
-
-        self.known_ylinlin = numpy.array([
-            5.50, 6.50, 7.50, 8.50, 9.50, 10.5, 11.5, 12.5, 13.5,
-            14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5, 21.5, 22.5,
-            23.5, 24.5
-        ])
-
-        self.known_yloglin = numpy.array([
-            3.50000000, 4.31093022, 4.88629436, 5.33258146, 5.69722458,
-            6.00552594, 6.27258872, 6.50815479, 6.71887582, 6.90949618,
-            7.08351894, 7.24360435, 7.39182030, 7.52980604, 7.65888308,
-            7.78013233, 7.89444915, 8.00258360, 8.10517019, 8.20275051
-        ])
-
-        self.known_yloglog = numpy.array([
-            33.1154519600, 74.5097669100, 132.461807830, 206.971574740,
-            298.039067630, 405.664286490, 529.847231340, 670.587902160,
-            827.886298970, 1001.74242175, 1192.15627051, 1399.12784525,
-            1622.65714598, 1862.74417268, 2119.38892536, 2392.59140402,
-            2682.35160865, 2988.66953927, 3311.54519587, 3650.97857845
-        ])
-
-        self.known_ylinlog = numpy.array([
-            2.44691932e+02, 6.65141633e+02, 1.80804241e+03,
-            4.91476884e+03, 1.33597268e+04, 3.63155027e+04,
-            9.87157710e+04, 2.68337287e+05, 7.29416370e+05,
-            1.98275926e+06, 5.38969848e+06, 1.46507194e+07,
-            3.98247844e+07, 1.08254988e+08, 2.94267566e+08,
-            7.99902177e+08, 2.17435955e+09, 5.91052206e+09,
-            1.60664647e+10, 4.36731791e+10
-        ])
-
-    def test_linlin(self):
-        ylinlin = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                                  xlog=False, ylog=False)
-        nptest.assert_array_almost_equal(ylinlin, self.known_ylinlin)
-
-    def test_loglin(self):
-        yloglin = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                                  xlog=True, ylog=False)
-        nptest.assert_array_almost_equal(yloglin, self.known_yloglin)
-
-    def test_loglog(self):
-        yloglog = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                                  xlog=True, ylog=True)
-        nptest.assert_array_almost_equal(yloglog, self.known_yloglog)
-
-    def test_linlog(self):
-        ylinlog = numutils.estimateFromLineParams(self.x, self.slope, self.intercept,
-                                                  xlog=False, ylog=True)
-        percent_diff = numpy.abs(ylinlog - self.known_ylinlog) / self.known_ylinlog
-        nptest.assert_array_almost_equal(
-            percent_diff,
-            numpy.zeros(self.x.shape[0]),
-            decimal=5
-        )
+    expected = [-0.566018, 4.774419, 10.114857, 15.455295, 20.795733]
+    nptest.assert_array_almost_equal(y_, expected)
 
 
 def test_checkIntervalOverlap_oneway():
@@ -452,35 +391,35 @@ def test_checkIntervalOverlap_twoway():
 ])
 def test_winsorize_dataframe(opts, expected_key):
     x = numpy.array([
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-        ])
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+    ])
 
     w_05 = numpy.array([
-            1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 17, 18, 19, 19
-        ])
+        1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 19
+    ])
 
     w_10 = numpy.array([
-            2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 17, 18, 18, 18
-        ])
+        2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 18, 18
+    ])
 
     w_20 = numpy.array([
-            4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 16, 16, 16, 16
-        ])
+        4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 16, 16, 16, 16
+    ])
 
     w_05_20 = numpy.array([
-            1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 16, 16, 16, 16
-        ])
+        1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 16, 16, 16, 16
+    ])
 
     df = pandas.DataFrame({'A': x, 'B': x, 'C': x})
-    expected =  {
+    expected = {
         'no-op': df.copy(),
         'one-col': pandas.DataFrame({'A': w_05, 'B': x, 'C': x}),
-        'two-col':  pandas.DataFrame({'A': w_05, 'B': x, 'C': w_10}),
+        'two-col': pandas.DataFrame({'A': w_05, 'B': x, 'C': w_10}),
         'three-col': pandas.DataFrame({'A': w_20, 'B': w_20, 'C': w_10}),
         'tuple-limit': pandas.DataFrame({'A': w_05_20, 'B': w_20, 'C': w_10}),
     }
