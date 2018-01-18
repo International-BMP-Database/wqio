@@ -188,7 +188,7 @@ def test_HydroRecord_histogram():
     )
 
     fig = hr.histogram('Total Precip Depth', [4, 6, 8, 10])
-    return fig
+    return fig.fig
 
 
 def test_HydroRecord_attr(hr_simple):
