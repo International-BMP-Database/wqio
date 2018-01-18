@@ -429,11 +429,11 @@ def test_parallel_coordinates():
 def test_categorical_histogram_simple(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
     fig = viz.categorical_histogram(cat_hist_data, 'depth', bins)
-    return fig
+    return fig.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_categorical_histogram_complex(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
     fig = viz.categorical_histogram(cat_hist_data, 'depth', bins, hue='year', row='has_outflow')
-    return fig
+    return fig.fig
