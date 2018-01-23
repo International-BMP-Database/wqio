@@ -9,10 +9,6 @@ matrix:
     - python: 3.6
       env:
         - COVERAGE=true
-        - ARGS=""
-    - python: 3.6
-      env:
-        - COVERAGE=true
         - ARGS="--mpl --pep8"
 
 before_install:
@@ -36,4 +32,3 @@ after_success:
       coverage report -m;
       codecov;
     fi
-
