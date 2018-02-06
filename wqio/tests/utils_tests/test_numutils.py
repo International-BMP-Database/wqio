@@ -16,88 +16,41 @@ import statsmodels.api as sm
 from wqio.utils import numutils
 
 
-class base_sigfigsMixin(object):
-    def teardown(self):
-        pass
-
-    def test_baseline(self):
-        assert numutils.sigFigs(self.x, 3) == self.known_3
-        assert numutils.sigFigs(self.x, 4) == self.known_4
-
-    def test_trailing_zeros(self):
-        assert numutils.sigFigs(self.x, 8) == self.known_8
-
-    def test_sigFigs_zero_n(self):
-        with helpers.raises(ValueError):
-            numutils.sigFigs(self.x, 0)
-
-    def test_sigFigs_negative_n(self):
-        with helpers.raises(ValueError):
-            numutils.sigFigs(self.x, -1)
-
-    def test_exp_notex(self):
-        assert numutils.sigFigs(self.x * self.factor, 3, tex=False) == self.known_exp3
-
-    def test_exp_tex(self):
-        assert numutils.sigFigs(self.x * self.factor, 3, tex=True) == self.known_exp3_tex
-
-    def test_forceint(self):
-        assert numutils.sigFigs(self.x, 3, forceint=True) == self.known_int
+@pytest.mark.parametrize(('value', 'N', 'tex', 'forceint', 'pval', 'expected', 'error'), [
+    (1234.56, 3, False, False, False, '1,230', None),
+    (1234.56, 4, False, False, False, '1,235', None),
+    (1234.56, 8, False, False, False, '1,234.5600', None),
+    (1234.56, 0, False, False, False, None, ValueError),
+    (1234.56, -1, False, False, False, None, ValueError),
+    (1234.56 * 1e5, 3, False, False, False, '1.23e+08', None),
+    (1234.56 * 1e5, 3, True, False, False, r'$1.23 \times 10 ^ {8}$', None),
+    (1234.56, 3, False, True, False, '1,235', None),
+    (0.123456, 3, False, False, False, '0.123', None),
+    (0.123456, 4, False, False, False, '0.1235', None),
+    (0.123456, 8, False, False, False, '0.12345600', None),
+    (0.123456, -1, False, False, False, None, ValueError),
+    (0.123456, 0, False, False, False, None, ValueError),
+    (0.123456 * 1e-6, 3, False, False, False, '1.23e-07', None),
+    (0.123456 * 1e-6, 3, True, False, False, r'$1.23 \times 10 ^ {-7}$', None),
+    (0.123456, 3, False, True, False, '0', None),
+    (0.001, 1, False, False, True, '0.001', None),
+    (0.0005, 3, False, False, True, '<0.001', None),
+    (0.0005, 3, True, False, True, '$<0.001$', None),
+])
+def test_sigFigs(value, N, tex, forceint, pval, expected, error):
+    with helpers.raises(error):
+        result = numutils.sigFigs(value, N, tex=tex, forceint=forceint, pval=pval)
+        assert result == expected
 
 
-class Test_sigfig_gt1(base_sigfigsMixin):
-    def setup(self):
-        self.x = 1234.56
-        self.known_3 = '1,230'
-        self.known_4 = '1,235'
-        self.known_8 = '1,234.5600'
-        self.known_exp3 = '1.23e+08'
-        self.known_exp3_tex = r'$1.23 \times 10 ^ {8}$'
-        self.known_int = '1,235'
-        self.factor = 10**5
-
-
-class Test_sigfig_lt1(base_sigfigsMixin):
-    def setup(self):
-        self.x = 0.123456
-        self.known_3 = '0.123'
-        self.known_4 = '0.1235'
-        self.known_8 = '0.12345600'
-        self.known_exp3 = '1.23e-07'
-        self.known_exp3_tex = r'$1.23 \times 10 ^ {-7}$'
-        self.known_int = '0'
-        self.factor = 10**-6
-
-    def test_sigFigs_pvals_noop(self):
-        p = 0.001
-        assert numutils.sigFigs(p, 1, pval=True) == '0.001'
-
-    def test_sigFigs_pvals_op(self):
-        p = 0.0005
-        assert numutils.sigFigs(p, 3, pval=True) == '<0.001'
-
-    def test_sigFigs_pvals_op_tex(self):
-        p = 0.0005
-        assert numutils.sigFigs(p, 3, tex=True, pval=True) == '$<0.001$'
-
-
-class Test_formatResult(object):
-    def setup(self):
-        self.big_num = 12498.124
-        self.med_num = 12.540
-        self.small_num = 0.00257
-
-    def test_big_3(self):
-        assert numutils.formatResult(self.big_num, '<', 3) == '<12,500'
-
-    def test_med_6(self):
-        assert numutils.formatResult(self.med_num, '>', 6) == '>12.5400'
-
-    def test_small_2(self):
-        assert numutils.formatResult(self.small_num, '=', 2) == '=0.0026'
-
-    def test_med_no_qual_3(self):
-        assert numutils.formatResult(self.med_num, '', 3) == '12.5'
+@pytest.mark.parametrize(('num', 'qual', 'N', 'expected'), [
+    (12498.124, '<', 3, '<12,500'),
+    (12.540, '>', 6, '>12.5400'),
+    (12.540, '', 3, '12.5'),
+    (0.00257, '=', 2, '=0.0026'),
+])
+def test_formatResult(num, qual, N, expected):
+    assert numutils.formatResult(num, qual, N) == expected
 
 
 @pytest.mark.parametrize(('fxn', 'pval', 'expected', 'error_to_raise'), [
@@ -146,32 +99,29 @@ def test_anderson_darling():
     assert abs(result[3] - known_anderson[3]) < 0.0000001
 
 
-class Test_processAndersonDarlingResults(object):
-    def setup(self):
-        fieldnames = ['statistic', 'critical_values', 'significance_level']
-        AndersonResult = namedtuple('AndersonResult', fieldnames)
-        self.bad = AndersonResult(
+@pytest.mark.parametrize('which', ['good', 'bad'])
+def test_processAndersonDarlingResults(which):
+    fieldnames = ['statistic', 'critical_values', 'significance_level']
+    AndersonResult = namedtuple('AndersonResult', fieldnames)
+    ARs = {
+        'bad': AndersonResult(
             statistic=0.30194681312357829,
             critical_values=numpy.array([0.529, 0.602, 0.722, 0.842, 1.002]),
             significance_level=numpy.array([15., 10., 5., 2.5, 1.])
-        )
-
-        self.good = AndersonResult(
+        ),
+        'good': AndersonResult(
             statistic=numpy.inf,
             critical_values=numpy.array([0.907, 1.061, 1.32, 1.58, 1.926]),
             significance_level=numpy.array([15.0, 10.0, 5.0, 2.50, 1.0])
         )
+    }
 
-        self.known_good = '99.0%'
-        self.known_bad = '<85.0%'
+    expected = {
+        'bad': '<85.0%',
+        'good': '99.0%'
+    }
 
-    def test_good(self):
-        res = numutils.processAndersonDarlingResults(self.good)
-        assert res == self.known_good
-
-    def test_bad(self):
-        res = numutils.processAndersonDarlingResults(self.bad)
-        assert res == self.known_bad
+    assert numutils.processAndersonDarlingResults(ARs[which]) == expected[which]
 
 
 @pytest.mark.parametrize(('AD', 'n_points', 'expected'), [
@@ -302,34 +252,32 @@ def test_normalize_units_bad_conversion(units_norm_data):
                                  unitcol='units', napolicy='raise')
 
 
-class Test_test_pH2concentration(object):
-    def setup(self):
-        self.pH = 4
-        self.known_conc = 0.10072764682551091
+@pytest.mark.parametrize(('pH', 'expected', 'error'), [
+    (4, 0.10072764682551091, None),
+    (14.1, None, ValueError),
+    (-0.1, None, ValueError)
+])
+def test_test_pH2concentration(pH, expected, error):
+    with helpers.raises(error):
+        assert abs(numutils.pH2concentration(pH) - expected) < 0.0001
 
-    def test_pH2concentration_normal(self):
-        assert abs(numutils.pH2concentration(self.pH) - self.known_conc) < 0.0001
-
-    def test_pH2concentration_raises_high(self):
-        with helpers.raises(ValueError):
-            numutils.pH2concentration(14.1)
 
     def test_pH2concentration_raises_low(self):
         with helpers.raises(ValueError):
             numutils.pH2concentration(-0.1)
 
 
-class Test_fit_line(object):
-    def setup(self):
-        self.data = numpy.array([
+@pytest.fixture
+def fit_data():
+    data = {
+        'data': numpy.array([
             2.000, 4.000, 4.620, 5.000, 5.000, 5.500, 5.570, 5.660,
             5.750, 5.860, 6.650, 6.780, 6.790, 7.500, 7.500, 7.500,
             8.630, 8.710, 8.990, 9.500, 9.500, 9.850, 10.82, 11.00,
             11.25, 11.25, 12.20, 14.92, 16.77, 17.81, 19.16, 19.19,
             19.64, 20.18, 22.97
-        ])
-
-        self.zscores = numpy.array([
+        ]),
+        'zscores': numpy.array([
             -2.06188401, -1.66883254, -1.43353970, -1.25837339, -1.11509471,
             -0.99166098, -0.88174260, -0.78156696, -0.68868392, -0.60139747,
             -0.51847288, -0.43897250, -0.36215721, -0.28742406, -0.21426459,
@@ -337,11 +285,8 @@ class Test_fit_line(object):
             0.21426459, 0.28742406, 0.36215721, 0.43897250, 0.51847288,
             0.60139747, 0.68868392, 0.78156696, 0.88174260, 0.99166098,
             1.11509471, 1.25837339, 1.43353970, 1.66883254, 2.06188401
-        ])
-
-        self.probs = stats.norm.cdf(self.zscores) * 100.
-
-        self.y = numpy.array([
+        ]),
+        'y': numpy.array([
             0.07323274, 0.12319301, 0.16771455, 0.17796950, 0.21840761,
             0.25757016, 0.27402650, 0.40868106, 0.44872637, 0.53673530,
             0.55169933, 0.56211726, 0.62375442, 0.66631353, 0.68454978,
@@ -350,107 +295,77 @@ class Test_fit_line(object):
             1.76381932, 1.98832275, 2.09275652, 2.66552831, 2.86453334,
             3.23039631, 4.23953492, 4.25892247, 4.58347660, 6.53100725
         ])
+    }
+    z2, _y = stats.probplot(data['y'], fit=False)
+    data['probs'] = stats.norm.cdf(data['zscores']) * 100.
+    data['p2'] = stats.norm.cdf(z2) * 100
+    return data
 
-        self.known_y_linlin = numpy.array([-0.89650596, 21.12622025])
-        self.known_y_linlog = numpy.array([2.80190754, 27.64958934])
-        self.known_y_linprob = numpy.array([8.48666156, 98.51899616])
-        self.known_y_loglin = numpy.array([-2.57620461, 1.66767934])
-        self.known_y_loglog = numpy.array([0.04681540, 5.73261406])
-        self.known_y_logprob = numpy.array([0.49945757, 95.23103009])
-        self.known_y_problin = numpy.array([-0.89650596, 21.12622025])
-        self.known_y_problog = numpy.array([2.80190754, 27.64958934])
-        self.known_y_probprob = numpy.array([1.96093902, 98.03906098])
 
-        self.custom_xhat = [-2, -1, 0, 1, 2]
-        self.known_custom_yhat = numpy.array([-0.56601826, 4.77441944, 10.11485714,
-                                              15.45529485, 20.79573255])
+@pytest.mark.parametrize(('fitlogs', 'fitprobs', 'error'), [
+    (None, None, None),
+    (None, None, None),
+    ('y', None, None),
+    (None, 'y', None),
+    ('x', None, None),
+    ('both', None, None),
+    ('x', 'y', None),
+    (None, 'x', None),
+    ('y', 'x', None),
+    (None, 'both', None),
+    ('junk', None, ValueError),
+    (None, 'junk', ValueError),
+])
+def test_fit_line(fit_data, fitlogs, fitprobs, error):
+    xy = {
+        (None, None): (fit_data['zscores'], fit_data['data']),
+        ('y', None): (fit_data['zscores'], fit_data['data']),
+        (None, 'y'): (fit_data['data'], fit_data['probs']),
+        ('x', None): (fit_data['data'], fit_data['zscores']),
+        ('both', None): (fit_data['data'], fit_data['y']),
+        ('x', 'y'): (fit_data['data'], fit_data['probs']),
+        (None, 'x'): (fit_data['probs'], fit_data['data']),
+        ('y', 'x'): (fit_data['probs'], fit_data['data']),
+        (None, 'both'): (fit_data['probs'], fit_data['p2']),
+        ('junk', None): (fit_data['zscores'], fit_data['data']),
+        (None, 'junk'): (fit_data['zscores'], fit_data['data']),
+    }
 
-    def test_xlinear_ylinear(self):
-        scales = {'fitlogs': None, 'fitprobs': None}
-        x, y = self.zscores, self.data
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_linlin)
+    expected = {
+        (None, None): numpy.array([-0.89650596, 21.12622025]),
+        ('y', None): numpy.array([2.80190754, 27.64958934]),
+        (None, 'y'): numpy.array([8.48666156, 98.51899616]),
+        ('x', None): numpy.array([-2.57620461, 1.66767934]),
+        ('both', None): numpy.array([0.04681540, 5.73261406]),
+        ('x', 'y'): numpy.array([0.49945757, 95.23103009]),
+        (None, 'x'): numpy.array([-0.89650596, 21.12622025]),
+        ('y', 'x'): numpy.array([2.80190754, 27.64958934]),
+        (None, 'both'): numpy.array([1.96093902, 98.03906098]),
+        ('junk', None): None,
+        (None, 'junk'): None,
+    }
+
+    with helpers.raises(error):
+        x_, y_, res = numutils.fit_line(
+            xy[(fitlogs, fitprobs)][0],
+            xy[(fitlogs, fitprobs)][1],
+            fitlogs=fitlogs,
+            fitprobs=fitprobs
+        )
+        nptest.assert_array_almost_equal(y_, expected[(fitlogs, fitprobs)])
         assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
 
-    def test_xlinear_ylinear_through_origin(self):
-        scales = {'fitlogs': None, 'fitprobs': None}
-        x, y = self.zscores, self.data
-        x_, y_, res = numutils.fit_line(x, y, through_origin=True, **scales)
-        assert res.params[0] == 0
 
-    def test_xlinear_ylog(self):
-        scales = {'fitlogs': 'y', 'fitprobs': None}
-        x, y = self.zscores, self.data
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_linlog)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
+def test_fit_line_through_origin(fit_data):
+    x, y = fit_data['zscores'], fit_data['data']
+    x_, y_, res = numutils.fit_line(x, y, through_origin=True)
+    assert res.params[0] == 0
 
-    def test_xlinear_yprob(self):
-        scales = {'fitlogs': None, 'fitprobs': 'y'}
-        x, y = self.data, self.probs
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_linprob)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
 
-    def test_xlog_ylinear(self):
-        scales = {'fitlogs': 'x', 'fitprobs': None}
-        x, y = self.data, self.zscores
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_loglin)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_xlog_ylog(self):
-        scales = {'fitlogs': 'both', 'fitprobs': None}
-        x, y = self.data, self.y
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_loglog)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_xlog_yprob(self):
-        scales = {'fitlogs': 'x', 'fitprobs': 'y'}
-        x, y = self.data, self.probs
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_logprob)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_xprob_ylinear(self):
-        scales = {'fitlogs': None, 'fitprobs': 'x'}
-        x, y = self.probs, self.data
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_problin)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_xprob_ylog(self):
-        scales = {'fitlogs': 'y', 'fitprobs': 'x'}
-        x, y = self.probs, self.data
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_problog)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_xprob_yprob(self):
-        z2, _y = stats.probplot(self.y, fit=False)
-        p2 = stats.norm.cdf(z2) * 100
-
-        scales = {'fitlogs': None, 'fitprobs': 'both'}
-        x, y = self.probs, p2,
-        x_, y_, res = numutils.fit_line(x, y, **scales)
-        nptest.assert_array_almost_equal(y_, self.known_y_probprob)
-        assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
-
-    def test_bad_fitlogs(self):
-        with helpers.raises(ValueError):
-            x, y = self.zscores, self.data
-            x_, y_, res = numutils.fit_line(x, y, fitlogs='junk')
-
-    def test_bad_fitprobs(self):
-        with helpers.raises(ValueError):
-            x, y = self.zscores, self.data
-            x_, y_, res = numutils.fit_line(x, y, fitprobs='junk')
-
-    def test_custom_xhat(self):
-        x, y = self.zscores, self.data
-        x_, y_, res = numutils.fit_line(x, y, xhat=self.custom_xhat)
-        nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
+def test_fit_line_with_xhat(fit_data):
+    x, y = fit_data['zscores'], fit_data['data']
+    x_, y_, res = numutils.fit_line(x, y, xhat=[-2, -1, 0, 1, 2])
+    nptest.assert_array_almost_equal(y_, self.known_custom_yhat)
 
 
 class Test_estimateLineFromParams(object):
@@ -528,59 +443,50 @@ def test_checkIntervalOverlap_twoway():
     assert numutils.checkIntervalOverlap([1, 3], [2, 4], oneway=False)
 
 
-class Test_winsorize_dataframe(object):
-    def setup(self):
-        self.x = numpy.array([
+@pytest.mark.parametrize(('opts', 'expected_key'), [
+    (dict(), 'no-op'),
+    (dict(A=0.05), 'one-col'),
+    (dict(A=0.05, C=0.10), 'two-col'),
+    (dict(A=0.20, B=0.20, C=0.10), 'three-col'),
+    (dict(A=(0.05, 0.20), B=0.20, C=0.10), 'tuple-limit'),
+])
+def test_winsorize_dataframe(opts, expected_key):
+    x = numpy.array([
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
         ])
 
-        self.w_05 = numpy.array([
+    w_05 = numpy.array([
             1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 19
         ])
 
-        self.w_10 = numpy.array([
+    w_10 = numpy.array([
             2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 18, 18
         ])
 
-        self.w_20 = numpy.array([
+    w_20 = numpy.array([
             4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 16, 16, 16, 16
         ])
 
-        self.w_05_20 = numpy.array([
+    w_05_20 = numpy.array([
             1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 16, 16, 16, 16
         ])
 
-        self.df = pandas.DataFrame({'A': self.x, 'B': self.x, 'C': self.x})
+    df = pandas.DataFrame({'A': x, 'B': x, 'C': x})
+    expected =  {
+        'no-op': df.copy(),
+        'one-col': pandas.DataFrame({'A': w_05, 'B': x, 'C': x}),
+        'two-col':  pandas.DataFrame({'A': w_05, 'B': x, 'C': w_10}),
+        'three-col': pandas.DataFrame({'A': w_20, 'B': w_20, 'C': w_10}),
+        'tuple-limit': pandas.DataFrame({'A': w_05_20, 'B': w_20, 'C': w_10}),
+    }
 
-    def test_no_op(self):
-        w = numutils.winsorize_dataframe(self.df)
-        expected = self.df.copy()
-        pdtest.assert_frame_equal(w, expected)
-
-    def test_one_col(self):
-        w = numutils.winsorize_dataframe(self.df, A=0.05)
-        expected = pandas.DataFrame({'A': self.w_05, 'B': self.x, 'C': self.x})
-        pdtest.assert_frame_equal(w, expected)
-
-    def test_two_col(self):
-        w = numutils.winsorize_dataframe(self.df, A=0.05, C=0.10)
-        expected = pandas.DataFrame({'A': self.w_05, 'B': self.x, 'C': self.w_10})
-        pdtest.assert_frame_equal(w, expected)
-
-    def test_three_col(self):
-        w = numutils.winsorize_dataframe(self.df, A=0.20, C=0.10, B=0.20)
-        expected = pandas.DataFrame({'A': self.w_20, 'B': self.w_20, 'C': self.w_10})
-        pdtest.assert_frame_equal(w, expected)
-
-    def test_tuple_limit(self):
-        w = numutils.winsorize_dataframe(self.df, A=(0.05, 0.20), C=0.10, B=0.20)
-        expected = pandas.DataFrame({'A': self.w_05_20, 'B': self.w_20, 'C': self.w_10})
-        pdtest.assert_frame_equal(w, expected)
+    result = numutils.winsorize_dataframe(df, **opts)
+    pdtest.assert_frame_equal(result, expected[expected_key])
 
 
 def test__comp_stat_generator():
