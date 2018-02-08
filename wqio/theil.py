@@ -10,7 +10,7 @@ from wqio import utils
 
 
 class TheilSenFit(object):
-    def __init__(self, infl, effl, log_infl=False, log_effl=False):
+    def __init__(self, infl, effl, log_infl=False, log_effl=False, **theil_opts):
         """ Theil-Sen Fit object
 
         Parameters
@@ -31,29 +31,39 @@ class TheilSenFit(object):
         self.log_infl = log_infl
         self.log_effl = log_effl
 
+        if self.log_infl:
+            self._infl_trans_in = numpy.log
+            self._infl_trans_out = numpy.exp
+        else:
+            self._infl_trans_in = utils.no_op
+            self._infl_trans_out = utils.no_op
+
+        if self.log_effl:
+            self._effl_trans_in = numpy.log
+            self._effl_trans_out = numpy.exp
+        else:
+            self._effl_trans_in = utils.no_op
+            self._effl_trans_out = utils.no_op
+
+        self.theil_opts = theil_opts
         self._theil_stats = None
 
     @property
     def infl(self):
-        if self.log_infl:
-            return numpy.log(self.influent_data)
-        else:
-            return self.influent_data
+        return self._infl_trans_in(self.influent_data)
 
     @property
     def effl(self):
-        if self.log_effl:
-            return numpy.log(self.effluent_data)
-        else:
-            return self.effluent_data
+        return self._effl_trans_in(self.effluent_data)
 
     @property
     def theil_stats(self):
         if self._theil_stats is None:
-            try:
-                self._theil_stats = utils.compute_theilslope(self.effl, x=self.infl)
-            except:
-                self._theil_stats = utils.TheilStats(None, None, None, None)
+            self._theil_stats = utils.compute_theilslope(
+                y=self.effl,
+                x=self.infl,
+                **self.theil_opts
+            )
 
         return self._theil_stats
 
@@ -89,27 +99,18 @@ class TheilSenFit(object):
 
     @property
     def errors(self):
-        if self.log_effl:
-            return numpy.log(self.effluent_data) - numpy.log(self.med_estimate)
-        else:
-            return self.effluent_data - self.med_estimate
+        return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(self.med_estimate)
 
     @property
     def MAD(self):
-        if self.log_effl:
-            return numpy.median(numpy.exp(numpy.abs(self.errors)))
-        else:
-            return numpy.median(numpy.abs(self.errors))
+        return numpy.median(self._effl_trans_out(numpy.abs(self.errors)))
 
     @property
     def BCF(self):
-        if self.log_effl:
-            return numpy.mean(numpy.exp(utils.remove_outliers(self.errors)))
-        else:
-            return numpy.mean(utils.remove_outliers(self.errors))
+        return numpy.mean(self._effl_trans_out(utils.remove_outliers(self.errors)))
 
 
-def all_theil(infl, effl):
+def all_theil(infl, effl, **theil_opts):
     """
     Convenience function to create the relevant TheilSenFits objects
     for a dataset in various log/linear spaces. The case with linear
@@ -130,9 +131,9 @@ def all_theil(infl, effl):
     """
 
     all_tsf = [
-        TheilSenFit(infl, effl, log_infl=False, log_effl=False),
-        TheilSenFit(infl, effl, log_infl=True, log_effl=False),
-        TheilSenFit(infl, effl, log_infl=True, log_effl=True),
+        TheilSenFit(infl, effl, log_infl=False, log_effl=False, **theil_opts),
+        TheilSenFit(infl, effl, log_infl=True, log_effl=False, **theil_opts),
+        TheilSenFit(infl, effl, log_infl=True, log_effl=True, **theil_opts),
     ]
     best_tsf = min(all_tsf, key=lambda tr: tr.MAD)
     return all_tsf, best_tsf
