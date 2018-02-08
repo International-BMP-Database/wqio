@@ -68,3 +68,5 @@ def test_fit(uselog):
     nptest.assert_array_almost_equal(bsfit.yhat, expected[uselog]['yhat'], decimal=3)
     nptest.assert_array_almost_equal(bsfit.lower, expected[uselog]['lower'], decimal=3)
     nptest.assert_array_almost_equal(bsfit.upper, expected[uselog]['upper'], decimal=3)
+    assert bsfit.xlog == uselog
+    assert bsfit.ylog == uselog
