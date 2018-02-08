@@ -7,7 +7,7 @@ from probscale.algo import _estimate_from_fit
 
 
 fitestimate = namedtuple('BootstrappedFitEstimate',
-                         ['xhat', 'yhat', 'lower', 'upper'])
+                         ['xhat', 'yhat', 'lower', 'upper', 'xlog', 'ylog'])
 
 
 __all__ = ['BCA', 'percentile']
@@ -277,4 +277,4 @@ def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False,
     # lower, upper bounds
     bounds = numpy.percentile(bs_estimates, percentiles, axis=1)
 
-    return fitestimate(x, yhat, bounds[0], bounds[1])
+    return fitestimate(x, yhat, bounds[0], bounds[1], xlog, ylog)
