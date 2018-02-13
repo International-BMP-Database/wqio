@@ -130,7 +130,7 @@ def test_TheilSenFit_MAD(ts):
 
 def test_TheilSenFit_BCF(ts):
     expected = {
-        (True, True): 0.9813344113984404,
+        (True, True): 0.9607687777606599,
         (True, False): -0.11897181057076929,
         (False, False): -0.4913199674999998,
         (False, True): 0.9567477081643322
