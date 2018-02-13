@@ -602,14 +602,14 @@ def remove_outliers(x, factor=1.5):
     >>> numpy.random.seed(0)
     >>> x = numpy.random.normal(0, 4, size=37) # shape is (37,)
     >>> utils.remove_outliers(x).shape
-    (32,)
+    (35,)
 
     """
     mean = numpy.mean(x)
     pctl25 = numpy.percentile(x, 25)
     pctl75 = numpy.percentile(x, 75)
     IQR = pctl75 - pctl25
-    return x[(x >= mean - 1.5 * IQR) & (x <= mean + 1.5 * IQR)]
+    return x[(x >= pctl25 - (factor * IQR)) & (x <= pctl75 + (factor * IQR))]
 
 
 def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,

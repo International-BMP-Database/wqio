@@ -528,7 +528,7 @@ def test__paired_stat_generator():
 
 @helpers.seed
 def test_remove_outliers():
-    expected_shape = (32,)
+    expected_shape = (35,)
     x = numpy.random.normal(0, 4, size=37)
 
     assert numutils.remove_outliers(x).shape == expected_shape
