@@ -519,7 +519,6 @@ class Location(object):
         ax.set_yscale(yscale)
         if yscale == 'log':
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=True, threshold=6))
-        viz.gridlines(ax, yminor=False)
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -536,7 +535,7 @@ class Location(object):
         return fig
 
     def probplot(self, ax=None, yscale='log', axtype='prob',
-                 ylabel=None, clearYLabels=False, managegrid=True,
+                 ylabel=None, clearYLabels=False,
                  rotateticklabels=True, bestfit=False, **plotopts):
         """ Draws a probability plot on a matplotlib figure
 
@@ -557,8 +556,6 @@ class Location(object):
             'linear'.
         clearYLabels : bool, optional (default is False)
             If True, removed y-*tick* labels from teh Axes.
-        managegrid : bool, optional (default is True)
-            If True, typical gridlines will be added to the Axes.
         rotateticklabels : bool, optional (default is True)
             If True, the tick labels of the probability axes will be
             rotated.
@@ -587,9 +584,6 @@ class Location(object):
 
         if yscale == 'log':
             pass
-
-        if managegrid:
-            viz.gridlines(ax, yminor=True)
 
         if clearYLabels:
             ax.set_yticklabels([])
@@ -1177,7 +1171,6 @@ class Dataset(object):
         ax.set_yscale(yscale)
         if y_log:
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
-        viz.gridlines(ax, yminor=True)
 
         if ylabel:
             ax.set_ylabel(ylabel)
@@ -1200,13 +1193,11 @@ class Dataset(object):
             else:
                 ax.set_xticklabels([''])
 
-        ax.xaxis.grid(False, which='major')
-
         return fig
 
     def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
                  clearYLabels=False, rotateticklabels=True,
-                 managegrid=True, bestfit=False):
+                 bestfit=False):
         """ Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1229,8 +1220,6 @@ class Dataset(object):
         rotateticklabels : bool, optional (default is True)
             If True, the tick labels of the probability axes will be
             rotated.
-        managegrid : bool, optional (default is True)
-            If True, typical gridlines will be added to the Axes.
         bestfit : bool, optional (default is False)
             Specifies whether a best-fit line should be added to the
             plot.
@@ -1246,7 +1235,7 @@ class Dataset(object):
         for loc in [self.influent, self.effluent]:
             if loc.include:
                 loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
-                             yscale=yscale, managegrid=managegrid, bestfit=bestfit,
+                             yscale=yscale, bestfit=bestfit,
                              rotateticklabels=rotateticklabels)
 
         xlabels = {
@@ -1263,9 +1252,6 @@ class Dataset(object):
 
         if rotateticklabels:
             viz.rotateTickLabels(ax, 45, 'x')
-
-        if managegrid:
-            viz.gridlines(ax, yminor=True)
 
         return fig
 
@@ -1372,7 +1358,7 @@ class Dataset(object):
     def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
                     xlabel=None, ylabel=None, one2one=False, useros=False,
                     bestfit=False, minpoints=3, eqn_pos='lower right',
-                    equal_scales=True, fitopts=None):
+                    equal_scales=True, fitopts=None, **markeropts):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1411,7 +1397,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
 
         # common symbology
-        markerkwargs = dict(
+        commonopts = dict(
             linestyle='none',
             markeredgewidth=0.5,
             markersize=6,
@@ -1439,9 +1425,8 @@ class Dataset(object):
                      markerfacecolor='none', markeredgecolor='black'),
             ]
             for pp in plot_params:
-                options = markerkwargs.copy()
-                options.update(pp)
-                self._plot_nds(ax, **options)
+                kwargs = {**commonopts, **pp, **markeropts}
+                self._plot_nds(ax, **kwargs)
 
         if xscale == 'linear':
             ax.set_xlim(left=0)
@@ -1533,8 +1518,8 @@ class Dataset(object):
         if ylabel is None:
             ylabel = 'Effluent'
 
-        # create major/minor gridlines and apply the axes labels
-        viz.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         # show legend, if requested
         if showlegend:

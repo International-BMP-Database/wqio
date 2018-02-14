@@ -176,8 +176,8 @@ def test_loc_probplot_clear_yticks(inflow_loc_red):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_loc_probplot_no_managegrid(inflow_loc_red):
-    fig8 = inflow_loc_red.probplot(managegrid=False)
+def test_loc_probplot(inflow_loc_red):
+    fig8 = inflow_loc_red.probplot()
     return fig8
 
 
@@ -466,8 +466,8 @@ def test_ds_probplot_clear_yticks(ds_basic):
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_probplot_no_managegrid(ds_basic):
-    fig8 = ds_basic.probplot(managegrid=False)
+def test_ds_probplot(ds_basic):
+    fig8 = ds_basic.probplot()
     return fig8
 
 
