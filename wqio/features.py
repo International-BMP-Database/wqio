@@ -1372,7 +1372,7 @@ class Dataset(object):
     def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
                     xlabel=None, ylabel=None, one2one=False, useros=False,
                     bestfit=False, minpoints=3, eqn_pos='lower right',
-                    equal_scales=True, fitopts=None):
+                    equal_scales=True, fitopts=None, **markeropts):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1411,7 +1411,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
 
         # common symbology
-        markerkwargs = dict(
+        commonopts = dict(
             linestyle='none',
             markeredgewidth=0.5,
             markersize=6,
@@ -1439,9 +1439,8 @@ class Dataset(object):
                      markerfacecolor='none', markeredgecolor='black'),
             ]
             for pp in plot_params:
-                options = markerkwargs.copy()
-                options.update(pp)
-                self._plot_nds(ax, **options)
+                kwargs = {**commonopts, **pp, **markeropts}
+                self._plot_nds(ax, **kwargs)
 
         if xscale == 'linear':
             ax.set_xlim(left=0)
@@ -1533,8 +1532,11 @@ class Dataset(object):
         if ylabel is None:
             ylabel = 'Effluent'
 
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         # create major/minor gridlines and apply the axes labels
-        viz.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
+        # viz.gridlines(ax, xlabel=xlabel, ylabel=ylabel)
 
         # show legend, if requested
         if showlegend:
