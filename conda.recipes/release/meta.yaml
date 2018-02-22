@@ -11,7 +11,7 @@ source:
 
 build:
   script: python setup.py install
-  number: 2
+  number: 1
 
 requirements:
   build:
