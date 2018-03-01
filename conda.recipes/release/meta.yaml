@@ -10,7 +10,7 @@ source:
    # - fix.patch
 
 build:
-  script: python setup.py install
+  script: python setup.py install --single-version-externally-managed --record record.txt
   number: 1
 
 requirements:
@@ -36,17 +36,9 @@ requirements:
     - mpl-probscale
 
 test:
-  requires:
-    - pytest
-    - pytest-cov
-    - pytest-mpl
-
   imports:
     - wqio
     - wqio.utils
-
-  commands:
-    - python -c "import sys, wqio; sys.exit(wqio.test())"
 
 about:
   home: https://github.com/Geosyntec/wqio.git
