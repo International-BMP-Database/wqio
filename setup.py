@@ -25,6 +25,7 @@ CLASSIFIERS = [
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
 ]
 INSTALL_REQUIRES = [
     'numpy',
