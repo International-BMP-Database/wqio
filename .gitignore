@@ -73,6 +73,7 @@ wqio/*/tests/*.csv
 wqio/*/tests/*.tex
 wqio/*/tests/*.xlsx
 .cache
+.pytest_cache
 .noseids
 .coverage
 wqio.egg-info
