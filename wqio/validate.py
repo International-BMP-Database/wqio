@@ -109,10 +109,10 @@ def single_value_in_index(df, index_level):
 def at_least_empty_list(value):
     if isinstance(value, numpy.ndarray):
         value = value.tolist()
+    elif numpy.isscalar(value) and value != '':
+        value = [value]
     elif not value:
         value = []
-    elif numpy.isscalar(value):
-        value = [value]
 
     return value
 
