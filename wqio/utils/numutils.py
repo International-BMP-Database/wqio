@@ -334,7 +334,7 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
             )
 
         if normalization.isnull().any():
-            nulls = df[normalization.isnull()][unitcol]
+            nulls = df[normalization.isnull()][unitcol].unique()
             msg += "Some normalization factors could not be mapped to the {} column ({})\n".format(
                 unitcol, nulls
             )
