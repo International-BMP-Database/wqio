@@ -313,7 +313,7 @@ def test__ros_estimate(advanced_data):
     nptest.assert_array_almost_equal(result, expected)
 
 
-def test__do_ros(basic_data):
+def test__do_ros_basic(basic_data):
     expected = numpy.array([
         3.11279729,   3.60634338,   4.04602788,   4.04602788,
         4.71008116,   6.14010906,   6.97841457,   2.00000000,
@@ -328,6 +328,15 @@ def test__do_ros(basic_data):
 
     df = basic_data.pipe(ros._do_ros, 'conc', 'censored', numpy.log, numpy.exp)
     result = df['final'].values
+    nptest.assert_array_almost_equal(result, expected)
+
+
+def test__do_ros_all_equal_some_cen():
+    expected = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4]
+    result = pandas.DataFrame({
+        'res': numpy.array(expected),
+        'cen': numpy.array([True, True, True, True, True, False, True, False])
+    }).pipe(ros._do_ros, 'res', 'cen', numpy.log, numpy.exp)['final'].values
     nptest.assert_array_almost_equal(result, expected)
 
 

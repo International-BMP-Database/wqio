@@ -45,7 +45,7 @@ def _ros_sort(df, result, censorship):
             .sort_values(by=[censorship, result], ascending=[False, True])
             .where(lambda df:
                    (~df[censorship]) |  # uncensored values
-                   ((df[result] < max_uncensored) & df[censorship])  # censored values < max_uncen
+                   ((df[result] <= max_uncensored) & df[censorship])  # censored values < max_uncen
                    )
             .dropna(how='all')
             .reset_index(drop=True)
