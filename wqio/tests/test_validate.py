@@ -89,7 +89,8 @@ def test_getUniqueDataframeIndexVal(multiindex_df, level, expected, error_to_rai
     (1, [1]),
     ('abc', ['abc']),
     (numpy.array([1, 2, 3]), [1, 2, 3]),
-    ([1, 2, 3], [1, 2, 3])
+    ([1, 2, 3], [1, 2, 3]),
+    (0, [0])
 ])
 def test_at_least_empty_list(value, expected):
     result = validate.at_least_empty_list(value)
