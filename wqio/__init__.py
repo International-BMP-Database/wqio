@@ -25,4 +25,4 @@ from . hydro import (
 
 from . import utils
 
-from .tests import test
+from .tests import test, teststrict

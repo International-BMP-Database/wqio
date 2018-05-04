@@ -9,7 +9,7 @@ matrix:
     - python: 3.6
       env:
         - COVERAGE=true
-        - ARGS="--mpl --pep8"
+        - ARGS="--strict"
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
