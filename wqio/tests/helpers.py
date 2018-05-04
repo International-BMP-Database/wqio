@@ -41,6 +41,18 @@ def raises(error):
         return not_raises()
 
 
+def requires(module, modulename):
+    def outer_wrapper(function):
+        @wraps(function)
+        def inner_wrapper(*args, **kwargs):
+            if module is None:
+                raise RuntimeError("{} required for `{}`".format(modulename, function.__name__))
+            else:
+                return function(*args, **kwargs)
+        return inner_wrapper
+    return outer_wrapper
+
+
 @seed
 def make_dc_data(ndval='ND', rescol='res', qualcol='qual'):
     dl_map = {
