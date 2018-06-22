@@ -208,7 +208,7 @@ def test_classifier(value, units, expected):
     assert numpy.isnan(misc.classifier(numpy.nan, bins, units=units))
 
 
-def test__unique_categories():
+def test_unique_categories():
     bins = [5, 10, 15]
     classifier = partial(misc.classifier, bins=bins, units='mm')
 

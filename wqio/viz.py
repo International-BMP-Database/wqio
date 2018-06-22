@@ -228,7 +228,7 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
         q1 = numpy.percentile(x, 25)
 
     if q3 is None:
-        q1 = numpy.percentile(x, 75)
+        q3 = numpy.percentile(x, 75)
 
     iqr = q3 - q1
     # get low extreme

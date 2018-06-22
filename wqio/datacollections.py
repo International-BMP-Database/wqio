@@ -187,12 +187,12 @@ class DataCollection(object):
         >>> dc = DataCollection(df, rescol='res', qualcol='qual',
         ...                     stationcol='loc', paramcol='param',
         ...                     ndval='<')
-        >>> dc.generic_stat(numpy.mean, statname='Arith. Mean')
+        >>> means = dc.generic_stat(numpy.mean, statname='Arith. Mean')
 
         You can also use ``lambda`` objects
 
-        >>> dc.generic_stat(lambda x: numpy.percentile(x, 35),
-        ....                statname='35th Percentile')
+        >>> pctl35 = dc.generic_stat(lambda x: numpy.percentile(x, 35),
+        ...                          statname='pctl35', use_bootstrap=False)
 
         """
 
@@ -370,14 +370,9 @@ class DataCollection(object):
         >>> dc = DataCollection(df, rescol='res', qualcol='qual',
         ...                     stationcol='loc', paramcol='param',
         ...                     ndval='<')
-        >>> dc.comparison_stat(stats.mannwhitneyu,
-        ...                    statname='mann_whitney',
-        ...                    alternative='two-sided')
-
-        And with paired statistics
-
-        >>> dc.comparison_stat(stats.wilcoxon, statname='wilcoxon',
-        ...                    paired=True)
+        >>> mwht = dc.comparison_stat(stats.mannwhitneyu,
+        ...                           statname='mann_whitney',
+        ...                           alternative='two-sided')
 
         """
 
@@ -542,7 +537,7 @@ class DataCollection(object):
 
         Example
         -------
-        >>> from wqio.tests import make_dc_data_complex
+        >>> from wqio.tests.helpers import make_dc_data_complex
         >>> import wqio
         >>> df = make_dc_data_complex()
         >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
@@ -550,7 +545,11 @@ class DataCollection(object):
         ...                          ndval='<', othergroups=None,
         ...                          pairgroups=['state', 'bmp'],
         ...                          useros=True, bsiter=10000)
-        >>> dc.selectLocations(param='A', loc=['Inflow', 'Reference'])
+        >>> locs = dc.selectLocations(param=['A', 'B'], loc=['Inflow', 'Reference'])
+        >>> len(locs)
+        4
+        >>> locs[0].definition
+        {'loc': 'Inflow', 'param': 'A'}
 
         """
 
@@ -584,7 +583,7 @@ class DataCollection(object):
 
         Example
         -------
-        >>> from wqio.tests import make_dc_data_complex
+        >>> from wqio.tests.helpers import make_dc_data_complex
         >>> import wqio
         >>> df = make_dc_data_complex()
         >>> dc = wqio.DataCollection(df, rescol='res', qualcol='qual',
@@ -592,9 +591,12 @@ class DataCollection(object):
         ...                          ndval='<', othergroups=None,
         ...                          pairgroups=['state', 'bmp'],
         ...                          useros=True, bsiter=10000)
-        >>> dc.selectDatasets('Inflow', 'Outflow', param='A',
-        ...                   state=['OR', 'CA'])
-
+        >>> dsets = dc.selectDatasets('Inflow', 'Outflow', squeeze=False,
+        ... param=['A', 'B'])
+        >>> len(dsets)
+        2
+        >>> dsets[0].definition
+        {'param': 'A'}
         """
 
         datasets = self._filter_collection(

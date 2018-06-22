@@ -31,13 +31,14 @@ def add_column_level(df, levelvalue, levelname):
     >>> df = pandas.DataFrame(columns=['res', 'qual'], index=range(3))
     >>> df.columns
     Index(['res', 'qual'], dtype='object')
-    >>> df2 = utils.add_column_level(df, 'Infl', 'location')
+    >>> df2 = add_column_level(df, 'Infl', 'location')
     >>> df2.columns
     MultiIndex(levels=[['Infl'], ['qual', 'res']],
                labels=[[0, 0], [1, 0]],
-               names=['loc', 'quantity'])
+               names=['location', 'quantity'])
 
     """
+
     if isinstance(df.columns, pandas.MultiIndex):
         raise ValueError('Dataframe already has MultiIndex on columns')
 
@@ -73,21 +74,18 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     ... )
     >>> data = numpy.arange(len(columns) * 3).reshape((3, len(columns)))
     >>> df = pandas.DataFrame(data, columns=columns)
-    >>> print(df)
-    loc      A         B
-    value  res  cen  res  cen
-    units mg/L mg/L mg/L mg/L
-    0        0    1    2    3
-    1        4    5    6    7
-    2        8    9   10   11
+    >>> df.columns
+    MultiIndex(levels=[['A', 'B'], ['cen', 'res'], ['mg/L']],
+               labels=[[0, 0, 1, 1], [1, 0, 1, 0], [0, 0, 0, 0]],
+               names=['loc', 'value', 'units'])
 
-    >>> print(wqio.utils.swap_column_levels(df, 'units', 'loc'))
-    units mg/L
-    value  cen     res
-    loc      A   B   A   B
-    0        1   3   0   2
-    1        5   7   4   6
-    2        9  11   8  10
+
+    >>> swapped = wqio.utils.swap_column_levels(df, 'units', 'loc')
+    >>> swapped.columns
+    MultiIndex(levels=[['mg/L'], ['cen', 'res'], ['A', 'B']],
+               labels=[[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 0, 1]],
+               names=['units', 'value', 'loc'])
+
 
     """
 
@@ -141,12 +139,12 @@ def expand_columns(df, names, sep='_'):
     >>> from wqio import utils
     >>> x = numpy.arange(12).reshape(3, 4)
     >>> df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
-    >>> utils.expand_columns(df, ['top', 'bottom'], sep='_')
-    top     A      B
-    bottom  a  b   a   c
-    0       0  1   2   3
-    1       4  5   6   7
-    2       8  9  10  11
+    >>> expanded = utils.expand_columns(df, ['top', 'bottom'], sep='_')
+    >>> expanded.columns
+    MultiIndex(levels=[['A', 'B'], ['a', 'b', 'c']],
+               labels=[[0, 0, 1, 1], [0, 1, 0, 2]],
+               names=['top', 'bottom'])
+
 
     """
 
@@ -234,7 +232,13 @@ def nested_getattr(baseobject, attribute):
 
     Examples
     --------
-    >>> nested_getattr(dataset, 'influent.mean')
+    >>> class Level_1:
+    ...     a = 1
+    >>> class Level_2:
+    ...     b = Level_1()
+    >>> x = Level_2()
+    >>> nested_getattr(x, 'b.a')
+    1
 
     """
 
@@ -265,10 +269,9 @@ def stringify(value, fmt, attribute=None):
     --------
     >>> stringify(None, '%s')
     '--'
+
     >>> stringify(1.2, '%0.3f')
     '1.200'
-    >>> stringify(dataset, '%d', 'influent.N')
-    '4'
 
     """
 
@@ -303,12 +306,14 @@ def classifier(value, bins, units=None):
     Examples
     --------
     >>> bins = [5, 10, 15, 20, 25]
-    >>> _classifier(3, bins)
-    "<5"
-    >>> _classifier(12, bins, units='feet')
-    "10 - 15 feet"
-    >>> _classifier(48, bins, units='mm')
-    ">25 mm"
+    >>> classifier(3, bins)
+    '<5'
+
+    >>> classifier(12, bins, units='feet')
+    '10 - 15 feet'
+
+    >>> classifier(48, bins, units='mm')
+    '>25 mm'
 
     """
 
@@ -356,12 +361,15 @@ def unique_categories(classifier, bins):
 
     Examples
     --------
-    >>> from pycvc import viz
+    >>> from functools import partial
+    >>> from wqio import utils
     >>> bins = [5, 10, 15]
-    >>> viz._unique_categories(_viz._classifier, bins)
-    ['<5', '5 - 10', '10 - 15', '>15']
+    >>> classifier = partial(utils.classifier, bins=bins, units='mm')
+    >>> utils.unique_categories(classifier, bins)
+    ['<5 mm', '5 - 10 mm', '10 - 15 mm', '>15 mm']
 
     """
+
     bins = numpy.asarray(bins)
     midpoints = 0.5 * (bins[:-1] + bins[1:])
     all_bins = [min(bins) * 0.5] + list(midpoints) + [max(bins) * 2]
@@ -416,8 +424,7 @@ def selector(default, *cond_results):
     >>> import numpy
     >>> x = numpy.arange(10)
     >>> utils.selector('Z', (x <= 2, 'A'), (x < 6, 'B'), (x <= 7, 'C'))
-    array(['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'Z', 'Z'],
-          dtype='<U1')
+    array(['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'Z', 'Z'], dtype='<U1')
     """
     conditions, results = zip(*cond_results)
     return numpy.select(conditions, results, default)
