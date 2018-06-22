@@ -90,8 +90,8 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     2        9  11   8  10
 
     """
-    df2 = df.copy()
-    df2.columns = df2.columns.swaplevel(level_1, level_2)
+
+    df2 = df.swaplevel(level_1, level_2, axis='columns')
     if sort:
         df2 = df2.sort_index(axis='columns')
 
@@ -114,9 +114,8 @@ def flatten_columns(df, sep='_'):
     flattened : pandas.DataFrame
 
     """
-    df = df.copy()
-    df.columns = [sep.join(_) for _ in df.columns]
-    return df
+    newcols = [sep.join(_) for _ in df.columns]
+    return df.set_axis(newcols, axis='columns', inplace=False)
 
 
 def expand_columns(df, names, sep='_'):

@@ -90,7 +90,7 @@ def test_flatten_columns(df, expected):
 
 def test_expand_columns():
     x = numpy.arange(12).reshape(3, 4)
-    df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
+    df = pandas.DataFrame(x, columns=('A_a', 'A_b', 'B_a', 'B_c'))
 
     res_cols = pandas.MultiIndex(
         levels=[['A', 'B'], ['a', 'b', 'c']],
