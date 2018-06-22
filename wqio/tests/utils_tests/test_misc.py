@@ -88,6 +88,20 @@ def test_flatten_columns(df, expected):
     assert flat.columns.tolist() == expected
 
 
+def test_expand_columns():
+    x = numpy.arange(12).reshape(3, 4)
+    df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
+
+    res_cols = pandas.MultiIndex(
+        levels=[['A', 'B'], ['a', 'b', 'c']],
+        labels=[[0, 0, 1, 1], [0, 1, 0, 2]],
+        names=['top', 'bottom']
+    )
+    expected = pandas.DataFrame(x, columns=res_cols)
+    result = misc.expand_columns(df, ['top', 'bottom'])
+    pdtest.assert_frame_equal(result, expected)
+
+
 @pytest.mark.parametrize('criteria', [None, lambda row: row[0] in ['A', 'B']])
 @pytest.mark.parametrize('dropold', [True, False])
 def test_redefine_index_level(multiindex_df, criteria, dropold):

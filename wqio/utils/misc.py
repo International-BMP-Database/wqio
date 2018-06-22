@@ -128,6 +128,45 @@ def flatten_columns(df, sep='_'):
     return df
 
 
+def expand_columns(df, names, sep='_'):
+    """
+    Expands a dataframe's columns into a multi-level index
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    names : list of string
+        The names for the new column levels.
+    sep : str (default = '_')
+        Character(s) on which the column labels will be split
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    Example
+    -------
+    >>> import pandas
+    >>> import numpy
+    >>> from wqio import utils
+    >>> x = numpy.arange(12).reshape(3, 4)
+    >>> df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
+    >>> utils.expand_columns(df, ['top', 'bottom'], sep='_')
+    top     A      B
+    bottom  a  b   a   c
+    0       0  1   2   3
+    1       4  5   6   7
+    2       8  9  10  11
+
+    """
+
+    newcols = df.columns.str.split(sep, expand=True)
+    return (
+        df.set_axis(newcols, axis='columns', inplace=False)
+          .rename_axis(names, axis='columns')
+    )
+
+
 def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     """ Redefine a index values in a dataframe.
 
