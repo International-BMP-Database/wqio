@@ -20,7 +20,7 @@ def test(*args):
 def teststrict(*args):
     options = [
         resource_filename('wqio', ''),
-        '--pep8', '--mpl',
+        '--pep8', '--mpl', '--doctest-modules',
         *list(args)
     ]
     options = list(set(options))

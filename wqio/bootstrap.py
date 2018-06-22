@@ -90,7 +90,7 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
     >>> # generate fake data and bootstrap it
     >>> data = numpy.random.normal(loc=2, scale=1.75, size=37)
     >>> wqio.bootstrap.BCA(data, numpy.mean, niter=1000, alpha=0.05)
-    array([ 1.89528037,  3.16395883])
+    array([1.89528037, 3.16395883])
 
     """
 
@@ -166,7 +166,7 @@ def percentile(data, statfxn, niter=10000, alpha=0.05):
     >>> # generate fake data and bootstrap it
     >>> data = numpy.random.normal(loc=2, scale=1.75, size=37)
     >>> wqio.bootstrap.percentile(data, numpy.median, niter=1000, alpha=0.05)
-    array([ 2.20960993,  3.33181602])
+    array([2.20960993, 3.33181602])
     """
 
     index = _make_boot_index(data.shape[0], niter)
@@ -230,10 +230,10 @@ def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False,
     ...                       xlog=False, ylog=False,
     ...                       deg=1, full=False)
     >>> fig, ax = pyplot.subplots()
-    >>> ax.plot(x, y, 'k.', zorder=2)
-    >>> ax.plot(xhat, yhat, 'b-', zorder=1)
-    >>> ax.fill_between(xhat, yhat_[0], yhat_[1], zorder=0, alpha=0.5)
-    >>> pyplot.show()
+    >>> _pnts = ax.plot(x, y, 'k.', zorder=2)
+    >>> _line = ax.plot(bsfit.xhat, bsfit.yhat, 'b-', zorder=1)
+    >>> _ci = ax.fill_between(bsfit.xhat, bsfit.lower, bsfit.upper,
+    ...                       zorder=0, alpha=0.5)
 
     """
 

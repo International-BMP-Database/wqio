@@ -45,9 +45,10 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     Examples
     --------
     >>> print(sigFigs(1247.15, 3))
-           1250
+    1,250
+
     >>> print(sigFigs(1247.15, 7))
-           1247.150
+    1,247.150
 
     """
 
@@ -122,8 +123,8 @@ def formatResult(result, qualifier, sigfigs=3):
 
     Example
     -------
-    >>> wqio.formatResult(1.23, '<', sigfigs=4)
-    "<1.230"
+    >>> formatResult(1.23, '<', sigfigs=4)
+    '<1.230'
 
     """
 

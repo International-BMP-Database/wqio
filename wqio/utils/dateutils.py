@@ -123,7 +123,7 @@ def getWaterYear(date):
     >>> import wqio
     >>> x = datetime.datetime(2005, 11, 2)
     >>> print(wqio.utils.getWaterYear(x))
-        '2005/2006'
+    2005/2006
 
     """
 
