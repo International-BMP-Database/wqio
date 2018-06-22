@@ -41,20 +41,11 @@ def add_column_level(df, levelvalue, levelname):
     if isinstance(df.columns, pandas.MultiIndex):
         raise ValueError('Dataframe already has MultiIndex on columns')
 
-    origlevel = 'quantity'
-    if df.columns.names[0] is not None:
-        origlevel = df.columns.names[0]
-
-    # define the index
-    colarray = [[levelvalue] * len(df.columns), df.columns]
-    colindex = pandas.MultiIndex.from_arrays(colarray)
-
-    # copy the dataframe and redefine the columns
-    newdf = df.copy()
-    newdf.columns = colindex
-    newdf.columns.names = [levelname, origlevel]
-
-    return newdf
+    origlevel = df.columns.names[0] or 'quantity'
+    return (
+        df.add_prefix(levelvalue + '_____')
+          .pipe(expand_columns, [levelname, origlevel], sep='_____')
+    )
 
 
 def swap_column_levels(df, level_1, level_2, sort=True):
@@ -99,8 +90,8 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     2        9  11   8  10
 
     """
-    df2 = df.copy()
-    df2.columns = df2.columns.swaplevel(level_1, level_2)
+
+    df2 = df.swaplevel(level_1, level_2, axis='columns')
     if sort:
         df2 = df2.sort_index(axis='columns')
 
@@ -123,9 +114,47 @@ def flatten_columns(df, sep='_'):
     flattened : pandas.DataFrame
 
     """
-    df = df.copy()
-    df.columns = [sep.join(_) for _ in df.columns]
-    return df
+    newcols = [sep.join(_) for _ in df.columns]
+    return df.set_axis(newcols, axis='columns', inplace=False)
+
+
+def expand_columns(df, names, sep='_'):
+    """
+    Expands a dataframe's columns into a multi-level index
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    names : list of string
+        The names for the new column levels.
+    sep : str (default = '_')
+        Character(s) on which the column labels will be split
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    Example
+    -------
+    >>> import pandas
+    >>> import numpy
+    >>> from wqio import utils
+    >>> x = numpy.arange(12).reshape(3, 4)
+    >>> df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
+    >>> utils.expand_columns(df, ['top', 'bottom'], sep='_')
+    top     A      B
+    bottom  a  b   a   c
+    0       0  1   2   3
+    1       4  5   6   7
+    2       8  9  10  11
+
+    """
+
+    newcols = df.columns.str.split(sep, expand=True)
+    return (
+        df.set_axis(newcols, axis='columns', inplace=False)
+          .rename_axis(names, axis='columns')
+    )
 
 
 def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
