@@ -2,17 +2,15 @@ import sys
 import matplotlib
 from matplotlib import style
 
-
 matplotlib.use('agg')
 style.use('classic')
 
 import wqio
 
-
 if '--strict' in sys.argv:
     sys.argv.remove('--strict')
-    status = wqio.teststrict(*sys.argv[1:])
+    tester = wqio.teststrict
 else:
-    status = wqio.test(*sys.argv[1:])
+    tester = wqio.test
 
-sys.exit(status)
+sys.exit(tester(*sys.argv[1:]))

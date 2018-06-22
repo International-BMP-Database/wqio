@@ -19,7 +19,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml
+  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy pandas=0.22 matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml
   - source activate test
   - pip install codecov
   - pip install .
