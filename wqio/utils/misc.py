@@ -41,20 +41,11 @@ def add_column_level(df, levelvalue, levelname):
     if isinstance(df.columns, pandas.MultiIndex):
         raise ValueError('Dataframe already has MultiIndex on columns')
 
-    origlevel = 'quantity'
-    if df.columns.names[0] is not None:
-        origlevel = df.columns.names[0]
-
-    # define the index
-    colarray = [[levelvalue] * len(df.columns), df.columns]
-    colindex = pandas.MultiIndex.from_arrays(colarray)
-
-    # copy the dataframe and redefine the columns
-    newdf = df.copy()
-    newdf.columns = colindex
-    newdf.columns.names = [levelname, origlevel]
-
-    return newdf
+    origlevel = df.columns.names[0] or 'quantity'
+    return (
+        df.add_prefix(levelvalue + '_____')
+          .pipe(expand_columns, [levelname, origlevel], sep='_____')
+    )
 
 
 def swap_column_levels(df, level_1, level_2, sort=True):
