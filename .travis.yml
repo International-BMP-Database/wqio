@@ -19,10 +19,11 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy pandas=0.22 matplotlib statsmodels=0.8 seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml
+  - conda create --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy pandas matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml --channel=conda-forge --yes
   - source activate test
   - pip install codecov
   - pip install .
+  - conda list
 
 script:
   - coverage run --source wqio check_wqio.py --verbose ${ARGS}
