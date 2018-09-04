@@ -73,6 +73,7 @@ def test_plot_grabsample_noStorm_notFocus(grab_sample, xlims):
     return fig
 
 
+@pytest.mark.xfail
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_grabsample_noStorm_notFocus_asRug(grab_sample, xlims):
     fig, ax = pyplot.subplots()
@@ -89,6 +90,7 @@ def test_plot_grabsample_noStorm_asFocus(grab_sample, xlims):
     return fig
 
 
+@pytest.mark.xfail
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_grabsample_noStorm_Focus_asRug(grab_sample, xlims):
     fig, ax = pyplot.subplots()
@@ -105,6 +107,7 @@ def test_plot_compsample_noStorm_notFocus(composite_sample, xlims):
     return fig
 
 
+@pytest.mark.xfail
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_compsample_noStorm_notFocus_asRug(composite_sample, xlims):
     fig, ax = pyplot.subplots()
@@ -121,6 +124,7 @@ def test_plot_compsample_noStorm_Focus(composite_sample, xlims):
     return fig
 
 
+@pytest.mark.xfail
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_plot_compsample_noStorm_Focus_asRug(composite_sample, xlims):
     fig, ax = pyplot.subplots()

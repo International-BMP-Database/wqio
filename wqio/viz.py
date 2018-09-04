@@ -596,7 +596,7 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
           .drop([valuecol], axis=1)
           .rename(columns={'display': valuecol})
           .rename(columns=lambda c: format_col(c))
-          .pipe((seaborn.factorplot, 'data'), x=display_col, **final_opts)
+          .pipe((seaborn.catplot, 'data'), x=display_col, **final_opts)
           .set_ylabels("Occurences")
     )
 

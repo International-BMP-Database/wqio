@@ -455,8 +455,8 @@ def test__comp_stat_generator():
         ],
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]),
-        pandas.concat([result.head(), result.tail()])
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]).sort_index(axis='columns'),
+        pandas.concat([result.head(), result.tail()]).sort_index(axis='columns')
     )
 
 
@@ -486,8 +486,8 @@ def test__comp_stat_generator_single_group_col():
         ]
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
-        pandas.concat([result.head(), result.tail()])
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]).sort_index(axis='columns'),
+        pandas.concat([result.head(), result.tail()]).sort_index(axis='columns')
     )
 
 
