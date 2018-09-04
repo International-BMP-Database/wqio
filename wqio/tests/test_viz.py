@@ -258,40 +258,52 @@ def test_one2one():
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_defaultlabels(jp_data):
+    seaborn.set(style='ticks')
     jg1 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='b')
+    seaborn.despine()
     return jg1.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_xlabeled(jp_data):
+    seaborn.set(style='ticks')
     jg2 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g',
                         xlabel='Quantity B')
+    seaborn.despine()
     return jg2.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_ylabeled(jp_data):
+    seaborn.set(style='ticks')
     jg3 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r',
                         ylabel='Quantity C')
+    seaborn.despine()
     return jg3.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_bothlabeled(jp_data):
+    seaborn.set(style='ticks')
     jg4 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='k',
                         xlabel='Quantity B', ylabel='Quantity C')
+    seaborn.despine()
     return jg4.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_zerominFalse(jp_data):
+    seaborn.set(style='ticks')
     jg1 = viz.jointplot(x='A', y='C', data=jp_data, zeromin=False, one2one=False)
+    seaborn.despine()
     return jg1.fig
 
 
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_one2one(jp_data):
+    seaborn.set(style='ticks')
     jg1 = viz.jointplot(x='B', y='C', data=jp_data, one2one=True)
+    seaborn.despine()
     return jg1.fig
 
 
