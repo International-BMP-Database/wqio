@@ -269,18 +269,6 @@ class Location(object):
         return self.ND / self.N
 
     @cache_readonly
-    @numpy.deprecate
-    def pnorm(self):
-        if self.hasData:
-            return stats.shapiro(self.data)[1]
-
-    @cache_readonly
-    @numpy.deprecate
-    def plognorm(self):
-        if self.hasData:
-            return stats.shapiro(numpy.log(self.data))[1]
-
-    @cache_readonly
     def shapiro(self):
         if self.hasData:
             return stats.shapiro(self.data)
@@ -312,7 +300,7 @@ class Location(object):
 
     @cache_readonly
     def analysis_space(self):
-        if self.plognorm >= self.pnorm and self.plognorm > 0.1:
+        if self.shapiro_log[1] >= self.shapiro[1] and self.shapiro_log[1] > 0.1:
             return 'lognormal'
         else:
             return 'normal'
