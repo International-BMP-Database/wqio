@@ -17,7 +17,6 @@ class fakeStormSublcass(hydro.Storm):
     is_subclassed = True
 
 
-@pytest.fixture
 def hr_simple():
     storm_file = helpers.test_data_path('teststorm_simple.csv')
     orig_record = (
@@ -34,7 +33,11 @@ def hr_simple():
     )
 
 
-@pytest.fixture
+@pytest.fixture()
+def hr_simple_fixture():
+    return hr_simple()
+
+
 def hr_singular():
     storm_file = helpers.test_data_path('teststorm_singular.csv')
     orig_record = (
@@ -50,7 +53,6 @@ def hr_singular():
     )
 
 
-@pytest.fixture
 def hr_first_obs():
     storm_file = helpers.test_data_path('teststorm_firstobs.csv')
     orig_record = (
@@ -66,7 +68,6 @@ def hr_first_obs():
     )
 
 
-@pytest.fixture
 def hr_diff_storm_class():
     storm_file = helpers.test_data_path('teststorm_simple.csv')
     orig_record = (
@@ -102,22 +103,18 @@ def setup_storms(filename, baseflow=None):
     return parsed
 
 
-@pytest.fixture
 def storms_simple():
     return setup_storms('teststorm_simple.csv')
 
 
-@pytest.fixture
 def storms_firstobs():
     return setup_storms('teststorm_firstobs.csv')
 
 
-@pytest.fixture
 def storms_singular():
     return setup_storms('teststorm_singular.csv')
 
 
-@pytest.fixture
 def storms_with_baseflowcol():
     return setup_storms('teststorm_simple.csv', baseflow=2)
 
@@ -140,36 +137,38 @@ def test_wet_window_diff():
     pdtest.assert_series_equal(result, expected)
 
 
-@pytest.mark.parametrize('parsed', [
-    storms_simple(),
-    storms_firstobs(),
-    storms_singular(),
-    storms_with_baseflowcol()
+@pytest.mark.parametrize(('stormfile', 'baseflow'), [
+    ('teststorm_simple.csv', None),
+    ('teststorm_firstobs.csv', None),
+    ('teststorm_singular.csv', None),
+    ('teststorm_simple.csv', 2)
 ])
-def test_number_of_storms(parsed):
+def test_number_of_storms(stormfile, baseflow):
+    parsed = setup_storms(stormfile, baseflow=baseflow)
     last_storm = parsed['storm'].max()
     assert last_storm == 5
 
 
-@pytest.mark.parametrize(('parsed', 'sn', 'idx', 'known'), [
-    (storms_simple(), 1, 0, '2013-05-18 13:40:00'),
-    (storms_simple(), 1, -1, '2013-05-19 01:45:00'),
-    (storms_simple(), 2, 0, '2013-05-19 06:10'),
-    (storms_simple(), 2, -1, '2013-05-19 11:35'),
-    (storms_with_baseflowcol(), 1, 0, '2013-05-18 14:05:00'),
-    (storms_with_baseflowcol(), 1, -1, '2013-05-19 01:40:00'),
-    (storms_with_baseflowcol(), 2, 0, '2013-05-19 06:35'),
-    (storms_with_baseflowcol(), 2, -1, '2013-05-19 11:30'),
-    (storms_singular(), 1, 0, '2013-05-18 13:40:00'),
-    (storms_singular(), 1, -1, '2013-05-19 01:45:00'),
-    (storms_singular(), 2, 0, '2013-05-19 07:00'),
-    (storms_singular(), 2, -1, '2013-05-19 07:05'),
-    (storms_firstobs(), 1, 0, '2013-05-18 12:05'),
-    (storms_firstobs(), 1, -1, '2013-05-19 01:45:00'),
-    (storms_firstobs(), 2, 0, '2013-05-19 06:10'),
-    (storms_firstobs(), 2, -1, '2013-05-19 11:35'),
+@pytest.mark.parametrize(('stormfile', 'baseflow', 'sn', 'idx', 'known'), [
+    ('teststorm_simple.csv', None, 1, 0, '2013-05-18 13:40:00'),
+    ('teststorm_simple.csv', None, 1, -1, '2013-05-19 01:45:00'),
+    ('teststorm_simple.csv', None, 2, 0, '2013-05-19 06:10'),
+    ('teststorm_simple.csv', None, 2, -1, '2013-05-19 11:35'),
+    ('teststorm_simple.csv', 2, 1, 0, '2013-05-18 14:05:00'),
+    ('teststorm_simple.csv', 2, 1, -1, '2013-05-19 01:40:00'),
+    ('teststorm_simple.csv', 2, 2, 0, '2013-05-19 06:35'),
+    ('teststorm_simple.csv', 2, 2, -1, '2013-05-19 11:30'),
+    ('teststorm_singular.csv', None, 1, 0, '2013-05-18 13:40:00'),
+    ('teststorm_singular.csv', None, 1, -1, '2013-05-19 01:45:00'),
+    ('teststorm_singular.csv', None, 2, 0, '2013-05-19 07:00'),
+    ('teststorm_singular.csv', None, 2, -1, '2013-05-19 07:05'),
+    ('teststorm_firstobs.csv', None, 1, 0, '2013-05-18 12:05'),
+    ('teststorm_firstobs.csv', None, 1, -1, '2013-05-19 01:45:00'),
+    ('teststorm_firstobs.csv', None, 2, 0, '2013-05-19 06:10'),
+    ('teststorm_firstobs.csv', None, 2, -1, '2013-05-19 11:35'),
 ])
-def test_storm_start_end(parsed, sn, idx, known):
+def test_storm_start_end(stormfile, baseflow, sn, idx, known):
+    parsed = setup_storms(stormfile, baseflow=baseflow)
     storm = parsed[parsed['storm'] == sn]
     ts = pandas.Timestamp(known)
     assert storm.index[idx].strftime('%X %x') == ts.strftime('%X %x')
@@ -191,19 +190,19 @@ def test_HydroRecord_histogram():
     return fig.fig
 
 
-def test_HydroRecord_attr(hr_simple):
+def test_HydroRecord_attr(hr_simple_fixture):
     expected_std_columns = ['baseflow', 'rain', 'influent', 'effluent', 'storm']
-    assert isinstance(hr_simple._raw_data, pandas.DataFrame)
+    assert isinstance(hr_simple_fixture._raw_data, pandas.DataFrame)
 
-    assert isinstance(hr_simple.data, pandas.DataFrame)
-    assert isinstance(hr_simple.data.index, pandas.DatetimeIndex)
-    assert sorted(hr_simple.data.columns.tolist()) == sorted(expected_std_columns)
+    assert isinstance(hr_simple_fixture.data, pandas.DataFrame)
+    assert isinstance(hr_simple_fixture.data.index, pandas.DatetimeIndex)
+    assert sorted(hr_simple_fixture.data.columns.tolist()) == sorted(expected_std_columns)
 
-    assert isinstance(hr_simple.all_storms, dict)
+    assert isinstance(hr_simple_fixture.all_storms, dict)
 
-    assert isinstance(hr_simple.storms, dict)
+    assert isinstance(hr_simple_fixture.storms, dict)
 
-    assert isinstance(hr_simple.storm_stats, pandas.DataFrame)
+    assert isinstance(hr_simple_fixture.storm_stats, pandas.DataFrame)
 
 
 @pytest.mark.parametrize(('hr', 'expected'), [
@@ -260,27 +259,27 @@ def test_HydroRecord_second_storm_end(hr, expected):
     assert storm2.index[-1] == expected
 
 
-def test_HydroRecord_interevent_stuff(hr_simple):
-    assert hr_simple.intereventPeriods == 36
-    assert hr_simple.intereventHours == 3
+def test_HydroRecord_interevent_stuff(hr_simple_fixture):
+    assert hr_simple_fixture.intereventPeriods == 36
+    assert hr_simple_fixture.intereventHours == 3
 
 
-def test_HydroRecord_storm_stat_columns(hr_simple):
+def test_HydroRecord_storm_stat_columns(hr_simple_fixture):
     expected = [
         'Storm Number', 'Antecedent Days', 'Season', 'Start Date', 'End Date',
         'Duration Hours', 'Peak Precip Intensity', 'Total Precip Depth',
         'Total Inflow Volume', 'Peak Inflow', 'Total Outflow Volume',
         'Peak Outflow', 'Peak Lag Hours', 'Centroid Lag Hours'
     ]
-    assert hr_simple.storm_stats.columns.tolist() == expected
+    assert hr_simple_fixture.storm_stats.columns.tolist() == expected
 
 
-def test_HydroRecord_storm_attr_lengths(hr_simple):
-    assert len(hr_simple.storms) == 2
-    assert len(hr_simple.all_storms) == 5
+def test_HydroRecord_storm_attr_lengths(hr_simple_fixture):
+    assert len(hr_simple_fixture.storms) == 2
+    assert len(hr_simple_fixture.all_storms) == 5
 
 
-def test_HydroRecord_storm_stats(hr_simple):
+def test_HydroRecord_storm_stats(hr_simple_fixture):
     cols = [
         'Storm Number',
         'Antecedent Days',
@@ -294,7 +293,7 @@ def test_HydroRecord_storm_stats(hr_simple):
         'Peak Precip Intensity': [1.200, 1.200],
         'Total Precip Depth': [2.76, 4.14],
     })
-    pdtest.assert_frame_equal(hr_simple.storm_stats[cols], expected[cols])
+    pdtest.assert_frame_equal(hr_simple_fixture.storm_stats[cols], expected[cols])
 
 
 @pytest.mark.parametrize(('value', 'error'), [
@@ -304,9 +303,9 @@ def test_HydroRecord_storm_stats(hr_simple):
     ('junk', ValueError),
 ])
 @pytest.mark.parametrize('smallstorms', [True, False])
-def test_getStormFromTimestamp_(hr_simple, value, smallstorms, error):
+def test_getStormFromTimestamp_(hr_simple_fixture, value, smallstorms, error):
     with helpers.raises(error):
-        sn, storm = hr_simple.getStormFromTimestamp(value, smallstorms=smallstorms)
+        sn, storm = hr_simple_fixture.getStormFromTimestamp(value, smallstorms=smallstorms)
         assert sn == 2
         if not smallstorms:
             assert storm is None
@@ -314,9 +313,9 @@ def test_getStormFromTimestamp_(hr_simple, value, smallstorms, error):
             assert isinstance(storm, hydro.Storm)
 
 
-def test_getStormFromTimestame_big(hr_simple):
+def test_getStormFromTimestame_big(hr_simple_fixture):
     ts = pandas.Timestamp('2013-05-18 13:40:00')
-    sn, storm = hr_simple.getStormFromTimestamp(ts)
+    sn, storm = hr_simple_fixture.getStormFromTimestamp(ts)
     assert sn == 1
     assert isinstance(storm, hydro.Storm)
 
@@ -324,28 +323,30 @@ def test_getStormFromTimestame_big(hr_simple):
 @pytest.mark.parametrize(('lbh', 'expected', 'error'), [
     (6, 2, None), (2, None, None), (-3, None, ValueError)
 ])
-def test_getStormFromTimestamp_lookback(hr_simple, lbh, expected, error):
+def test_getStormFromTimestamp_lookback(hr_simple_fixture, lbh, expected, error):
     with helpers.raises(error):
         ts = pandas.Timestamp('2013-05-19 14:42')
-        sn, storm = hr_simple.getStormFromTimestamp(ts, lookback_hours=lbh)
+        sn, storm = hr_simple_fixture.getStormFromTimestamp(ts, lookback_hours=lbh)
         if expected:
             assert sn == expected
         else:
             assert sn is None
 
 
-def test_HydroRecord_subclassed_storms(hr_diff_storm_class):
+def test_HydroRecord_subclassed_storms():
+    hr = hr_diff_storm_class()
     assert all([
-        hr_diff_storm_class.all_storms[sn].is_subclassed
-        for sn in hr_diff_storm_class.all_storms
+        hr.all_storms[sn].is_subclassed
+        for sn in hr.all_storms
     ])
 
 
 @pytest.fixture
-def basic_storm(hr_simple):
-    storm = hydro.Storm(hr_simple.data, 2, precipcol=hr_simple.precipcol,
-                        inflowcol=hr_simple.inflowcol, outflowcol=hr_simple.outflowcol,
-                        freqMinutes=hr_simple.outputfreq.n)
+def basic_storm():
+    hr = hr_simple()
+    storm = hydro.Storm(hr.data, 2, precipcol=hr.precipcol,
+                        inflowcol=hr.inflowcol, outflowcol=hr.outflowcol,
+                        freqMinutes=hr.outputfreq.n)
     return storm
 
 
