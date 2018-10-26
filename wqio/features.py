@@ -119,8 +119,8 @@ class Location(object):
     .plognorm : float
         Results of the Shapiro-Wilks test for normality on
         log-transormed data (so really a test for lognormalily).
-    .lillifors+ : list of floats
-        Lillifors statistic and p-value.
+    .lilliefors+ : list of floats
+        Lilliefors statistic and p-value.
     .shapiro+ : list of floats
         Shapiro-Wilks statistic and p-value.
     .anderson+ : tuple
@@ -135,8 +135,8 @@ class Location(object):
     * Indicates that there's an accompyaning tuple of confidence
       interval. For example, self.mean and self.mean_conf_interval
     + Indicatates that there's a equivalent stat for log-transormed
-      data. For example, self.mean and self.logmean or self.lillifors
-      and self.lillifors_log (subject to the absense of negitive
+      data. For example, self.mean and self.logmean or self.lilliefors
+      and self.lilliefors_log (subject to the absense of negitive
       results).
     ^ Indicatates that there's a equivalent stat in geometric space.
       For example, self.mean and self.geomean.
@@ -291,14 +291,14 @@ class Location(object):
             return stats.shapiro(numpy.log(self.data))
 
     @cache_readonly
-    def lillifors(self):
+    def lilliefors(self):
         if self.hasData:
-            return sm.stats.lillifors(self.data)
+            return sm.stats.lilliefors(self.data)
 
     @cache_readonly
-    def lillifors_log(self):
+    def lilliefors_log(self):
         if self.hasData:
-            return sm.stats.lillifors(numpy.log(self.data))
+            return sm.stats.lilliefors(numpy.log(self.data))
 
     @cache_readonly
     def anderson(self):

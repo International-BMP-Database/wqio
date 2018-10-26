@@ -309,15 +309,15 @@ class DataCollection(object):
                                  statname='log-shapiro')
 
     @cache_readonly
-    def lillifors(self):
-        return self.generic_stat(sm.stats.lillifors, use_bootstrap=False,
-                                 has_pvalue=True, statname='lillifors')
+    def lilliefors(self):
+        return self.generic_stat(sm.stats.lilliefors, use_bootstrap=False,
+                                 has_pvalue=True, statname='lilliefors')
 
     @cache_readonly
-    def lillifors_log(self):
-        return self.generic_stat(lambda x: sm.stats.lillifors(numpy.log(x)),
+    def lilliefors_log(self):
+        return self.generic_stat(lambda x: sm.stats.lilliefors(numpy.log(x)),
                                  use_bootstrap=False, has_pvalue=True,
-                                 statname='log-lillifors')
+                                 statname='log-lilliefors')
 
     @cache_readonly
     def anderson_darling(self):
