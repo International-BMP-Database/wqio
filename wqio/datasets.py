@@ -1,6 +1,7 @@
 import os
-import zipfile
+from zipfile import ZipFile
 from urllib import request
+from pathlib import Path
 
 from wqio import validate
 
@@ -25,7 +26,7 @@ def download(dataset, year=None, redownload=True, data_dir=None):
     if not os.path.exists(dst_path) or redownload:
         request.urlretrieve(src_url, dst_path)
 
-        with zipfile.ZipFile(dst_path, "r") as zip_ref:
+        with ZipFile(dst_path, "r") as zip_ref:
             zip_ref.extractall(data_dir)
 
-    return os.path.splitext(dst_path)[0] + '.csv'
+    return Path(os.path.splitext(dst_path)[0] + '.csv')
