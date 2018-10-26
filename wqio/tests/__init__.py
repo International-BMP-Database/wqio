@@ -1,4 +1,5 @@
 from pkg_resources import resource_filename
+import warnings
 
 import wqio
 from .helpers import requires
@@ -19,9 +20,14 @@ def test(*args):
 @requires(pytest, 'pytest')
 def teststrict(*args):
     options = [
-        resource_filename('wqio', ''),
         '--pep8', '--mpl', '--doctest-modules',
         *list(args)
     ]
-    options = list(set(options))
-    return pytest.main(options)
+    return test(*list(set(options)))
+
+
+@requires(pytest, 'pytest')
+def test_nowarnings(*args):
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        return teststrict(*args)
