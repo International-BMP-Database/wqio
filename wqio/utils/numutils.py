@@ -173,15 +173,15 @@ def translate_p_vals(pval):
     """
 
     if pval is None:
-        emoji = 'ಠ_ಠ'
+        emoji = r'ಠ_ಠ'
     elif pval <= 0.01:
-        emoji = '¯\(ツ)/¯'
+        emoji = r'¯\(ツ)/¯'
     elif 0.01 < pval <= 0.05:
-        emoji = '¯\_(ツ)_/¯'
+        emoji = r'¯\_(ツ)_/¯'
     elif 0.05 < pval <= 0.1:
-        emoji = '¯\__(ツ)__/¯'
+        emoji = r'¯\__(ツ)__/¯'
     elif 0.1 < pval <= 1:
-        emoji = '(╯°□°)╯︵ ┻━┻'
+        emoji = r'(╯°□°)╯︵ ┻━┻'
     else:
         raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
 
