@@ -123,7 +123,7 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
         new_alpha = stats.norm.cdf(zTotal) * 100.0
 
         # confidence intervals from the new alphas
-        CI = stats.scoreatpercentile(boot_stats, new_alpha)
+        CI = numpy.percentile(boot_stats, new_alpha)
 
         # fall back to the standard percentile method if the results
         # don't make any sense

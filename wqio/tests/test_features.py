@@ -96,8 +96,6 @@ def test_locations_numbers(location, attr):
     'pctl25',
     'pctl75',
     'pctl90',
-    'pnorm',
-    'plognorm',
     'skew',
     'std',
 ])
@@ -116,8 +114,6 @@ def test_location_stats_scalars(location, attr):
         'pctl25': {True: 5.6150000, False: 5.8050000},
         'pctl75': {True: 11.725000, False: 11.725000},
         'pctl90': {True: 19.178000, False: 19.178000},
-        'pnorm': {True: 0.0017891, False: 0.0032362},
-        'plognorm': {True: 0.5209492, False: 0.3064355},
         'skew': {True: 0.8692107, False: 0.8537566},
         'std': {True: 5.6455746, False: 5.3439797},
     }
@@ -135,8 +131,8 @@ def test_location_stats_scalars(location, attr):
     'median_conf_interval',
     'shapiro',
     'shapiro_log',
-    'lillifors',
-    'lillifors_log',
+    'lilliefors',
+    'lilliefors_log',
     'color',
 ])
 def test_location_stats_arrays(location, attr):
@@ -148,8 +144,8 @@ def test_location_stats_arrays(location, attr):
         'median_conf_interval': {True: [5.66000, 8.71000], False: [6.65000, 9.850000]},
         'shapiro': {True: [0.886889, 0.001789], False: [0.896744, 0.003236]},
         'shapiro_log': {True: [0.972679, 0.520949], False: [0.964298, 0.306435]},
-        'lillifors': {True: [0.185180, 0.003756], False: [0.160353, 0.023078]},
-        'lillifors_log': {True: [0.091855, 0.635536], False: [0.08148, 0.84545]},
+        'lilliefors': {True: [0.185180, 0.003756], False: [0.160353, 0.023078]},
+        'lilliefors_log': {True: [0.091855, 0.2], False: [0.08148, 0.2]},
     }
     nptest.assert_array_almost_equal(
         getattr(location, attr),

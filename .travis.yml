@@ -2,7 +2,10 @@ language: python
 
 matrix:
   include:
-    - python: 3.5
+    - python: 3.7
+      language: python
+      sudo: required
+      dist: xenial
       env:
         - COVERAGE=false
         - ARGS=""
@@ -12,17 +15,19 @@ matrix:
         - ARGS="--strict"
 
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda update --yes conda
 
 install:
-  - conda create --yes --channel=conda-forge --name=test python=$TRAVIS_PYTHON_VERSION numpy scipy pandas=0.22 matplotlib statsmodels=0.8 seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml
+  - conda create --name=test python=$TRAVIS_PYTHON_VERSION nomkl --channel=conda-forge --yes
   - source activate test
+  - conda install numpy scipy pandas matplotlib statsmodels seaborn mpl-probscale pytest pytest-cov pytest-mpl pytest-pep8 coverage docopt requests pyyaml --channel=conda-forge --yes
   - pip install codecov
   - pip install .
+  - conda list
 
 script:
   - coverage run --source wqio check_wqio.py --verbose ${ARGS}

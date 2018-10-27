@@ -298,10 +298,10 @@ def test_shapiro_log(dc):
 
 
 @helpers.seed
-def test_lillifors(dc):
+def test_lilliefors(dc):
     known_csv = """\
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
-        result,lillifors,pvalue,lillifors,pvalue,lillifors,pvalue
+        result,lilliefors,pvalue,lilliefors,pvalue,lilliefors,pvalue
         param,,,,,,
         A,0.3081305983,1.42209e-05,0.3405937884,3.324e-07,0.3644530472,1.337e-07
         B,0.3676403629,3.3e-09,0.4203432704,0.0,0.4171653285,1.2e-09
@@ -310,23 +310,23 @@ def test_lillifors(dc):
         E,0.3413982663,2.6564e-06,0.2393138433,0.0148623981,0.2337732366,0.005474318
         F,0.419545454,1e-10,0.3313152839,2.197e-07,0.2842488753,0.0007414141
     """
-    check_stat(known_csv, dc.lillifors)
+    check_stat(known_csv, dc.lilliefors)
 
 
 @helpers.seed
-def test_lillifors_log(dc):
+def test_lilliefors_log(dc):
     known_csv = """\
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
-        result,log-lillifors,pvalue,log-lillifors,pvalue,log-lillifors,pvalue
+        result,log-lilliefors,pvalue,log-lilliefors,pvalue,log-lilliefors,pvalue
         param,,,,,,
-        A,0.0854810908,1.2224517667,0.1544394307,0.1864662398,0.2014138865,0.0326873688
-        B,0.1616283923,0.105046439,0.1244790187,0.509572695,0.1593433434,0.232181211
-        C,0.1695727779,0.0724891545,0.1238817404,0.4427931135,0.117466422,0.4999577134
-        D,0.0688554854,1.3825869916,0.0606735557,1.4636046313,0.1340195402,0.4203260216
-        E,0.1350657651,0.4926307578,0.1455234065,0.5101195969,0.091648756,1.1600717068
-        F,0.1442079426,0.3040411253,0.0846326712,1.1205112067,0.0858693334,1.3971403427
+        A,0.08548109,0.2,0.15443943,0.18686121,0.20141389,0.03268737
+        B,0.16162839,0.10419352,0.12447902,0.2,0.15934334,0.2
+        C,0.16957278,0.07248915,0.12388174,0.2,0.11746642,0.2
+        D,0.06885549,0.2,0.06067356,0.2,0.13401954,0.2
+        E,0.13506577,0.2,0.14552341,0.2,0.09164876,0.2
+        F,0.14420794,0.2,0.08463267,0.2,0.08586933,0.2
     """
-    check_stat(known_csv, dc.lillifors_log)
+    check_stat(known_csv, dc.lilliefors_log)
 
 
 @helpers.seed

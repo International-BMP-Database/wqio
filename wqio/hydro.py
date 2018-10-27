@@ -34,7 +34,7 @@ def _wet_first_row(df, wetcol, diffcol):
 def _wet_window_diff(is_wet, ie_periods):
     return (
         is_wet.rolling(int(ie_periods), min_periods=1)
-              .apply(lambda window: window.any())
+              .apply(lambda window: window.any(), raw=False)
               .diff()
     )
 

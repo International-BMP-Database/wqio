@@ -173,15 +173,15 @@ def translate_p_vals(pval):
     """
 
     if pval is None:
-        emoji = 'ಠ_ಠ'
+        emoji = r'ಠ_ಠ'
     elif pval <= 0.01:
-        emoji = '¯\(ツ)/¯'
+        emoji = r'¯\(ツ)/¯'
     elif 0.01 < pval <= 0.05:
-        emoji = '¯\_(ツ)_/¯'
+        emoji = r'¯\_(ツ)_/¯'
     elif 0.05 < pval <= 0.1:
-        emoji = '¯\__(ツ)__/¯'
+        emoji = r'¯\__(ツ)__/¯'
     elif 0.1 < pval <= 1:
-        emoji = '(╯°□°)╯︵ ┻━┻'
+        emoji = r'(╯°□°)╯︵ ┻━┻'
     else:
         raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
 
@@ -429,8 +429,8 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
 
     # Equation 2.6 in Sen (1968):
     sigsq = 1 / 18. * (ny * (ny - 1) * (2 * ny + 5) -
-                       numpy.sum(k * (k - 1) * (2 * k + 5) for k in nxreps) -
-                       numpy.sum(k * (k - 1) * (2 * k + 5) for k in nyreps))
+                       numpy.sum([k * (k - 1) * (2 * k + 5) for k in nxreps]) -
+                       numpy.sum([k * (k - 1) * (2 * k + 5) for k in nyreps]))
 
     # Find the confidence interval indices in `slopes`
     sigma = numpy.sqrt(sigsq)

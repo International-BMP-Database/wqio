@@ -1,6 +1,6 @@
 import sys
 import os
-
+from pathlib import Path
 
 TEMPLATE = """\
 {{
@@ -42,10 +42,11 @@ TEMPLATE = """\
 
 
 if __name__ == '__main__':
-    dirname = ".vscode"
-    filename = "tasks.json"
+    configdir = Path(".vscode")
+    configdir.mkdirs(exists_ok=True, parents=True)
+    configpath = configdir / "tasks.json"
 
-    filepath = os.path.join(dirname, filename)
+    configpath = os.path.join(dirname, filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
@@ -54,8 +55,8 @@ if __name__ == '__main__':
     else:
         name = sys.argv[1]
 
-    python = '/'.join(sys.executable.split(os.path.sep))
+    python = str(Path(sys.executable))
     config = TEMPLATE.format(pyexec=python, modulename=name)
 
-    with open(filepath, 'w') as configfile:
+    with configpath.open('w') as configfile:
         configfile.write(config)

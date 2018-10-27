@@ -178,12 +178,13 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
         jg.ax_joint.set_ylim(bottom=0)
 
     if one2one:
+        ax_limit_min = numpy.min([jg.ax_joint.get_xlim(), jg.ax_joint.get_ylim()])
         ax_limit_max = numpy.max([jg.ax_joint.get_xlim(), jg.ax_joint.get_ylim()])
-        jg.ax_joint.set_xlim(left=0, right=ax_limit_max)
-        jg.ax_joint.set_ylim(bottom=0, top=ax_limit_max)
-        jg.ax_joint.plot([0, ax_limit_max], [0, ax_limit_max], marker='None',
-                         linestyle='-', linewidth=1.75, color=color or 'k',
-                         alpha=0.45, label='1:1 line')
+        jg.ax_joint.set_xlim(left=ax_limit_min, right=ax_limit_max)
+        jg.ax_joint.set_ylim(bottom=ax_limit_min, top=ax_limit_max)
+        jg.ax_joint.plot([ax_limit_min, ax_limit_max], [ax_limit_min, ax_limit_max],
+                         marker='None', linestyle='-', linewidth=1.75,
+                         color=color or 'k', alpha=0.45, label='1:1 line')
 
         jg.ax_joint.legend(frameon=False, loc='upper left')
 
@@ -596,7 +597,7 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
           .drop([valuecol], axis=1)
           .rename(columns={'display': valuecol})
           .rename(columns=lambda c: format_col(c))
-          .pipe((seaborn.factorplot, 'data'), x=display_col, **final_opts)
+          .pipe((seaborn.catplot, 'data'), x=display_col, **final_opts)
           .set_ylabels("Occurences")
     )
 

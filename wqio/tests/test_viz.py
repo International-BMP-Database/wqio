@@ -12,6 +12,7 @@ from wqio.tests import helpers
 
 
 BASELINE_IMAGES = '_baseline_images/viz_tests'
+seaborn.set(style='ticks')
 
 
 @pytest.fixture
@@ -256,42 +257,55 @@ def test_one2one():
     return fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_defaultlabels(jp_data):
     jg1 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='b')
+    assert jg1.ax_joint.get_xlabel() == 'B'
+    assert jg1.ax_joint.get_ylabel() == 'C'
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 17])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 23])
     return jg1.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_xlabeled(jp_data):
     jg2 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='g',
                         xlabel='Quantity B')
+    assert jg2.ax_joint.get_xlabel() == 'Quantity B'
     return jg2.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_ylabeled(jp_data):
     jg3 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='r',
                         ylabel='Quantity C')
+    assert jg3.ax_joint.get_ylabel() == 'Quantity C'
     return jg3.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_bothlabeled(jp_data):
     jg4 = viz.jointplot(x='B', y='C', data=jp_data, one2one=False, color='k',
                         xlabel='Quantity B', ylabel='Quantity C')
+    assert jg4.ax_joint.get_xlabel() == 'Quantity B'
+    assert jg4.ax_joint.get_ylabel() == 'Quantity C'
     return jg4.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_zerominFalse(jp_data):
     jg1 = viz.jointplot(x='A', y='C', data=jp_data, zeromin=False, one2one=False)
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-4, 4])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [-7, 23])
     return jg1.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_jointplot_one2one(jp_data):
     jg1 = viz.jointplot(x='B', y='C', data=jp_data, one2one=True)
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 23])
+    return jg1.fig
+
+
+def test_jointplot_one2one_zerominFalse(jp_data):
+    jg1 = viz.jointplot(x='A', y='C', data=jp_data, one2one=True, zeromin=False)
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-7, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [-7, 23])
     return jg1.fig
 
 

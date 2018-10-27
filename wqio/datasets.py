@@ -1,6 +1,7 @@
 import os
-import zipfile
+from zipfile import ZipFile
 from urllib import request
+from pathlib import Path
 
 from wqio import validate
 
@@ -17,15 +18,17 @@ def download(dataset, year=None, redownload=True, data_dir=None):
     src_url = url_template.format(tag=tag, fname=fname)
 
     if data_dir is None:
-        base_dir = os.environ.get('WQ_DATA', os.path.join('~', '.wq-data'))
-        data_dir = os.path.join(os.path.expanduser(base_dir), tag)
-        os.makedirs(data_dir, exist_ok=True)
+        base_dir = Path(os.environ.get('WQ_DATA', '~/.wq-data'))
+        data_dir = base_dir.expanduser().absolute() / tag
+    else:
+        data_dir = Path(data_dir)
 
-    dst_path = os.path.join(data_dir, fname)
-    if not os.path.exists(dst_path) or redownload:
+    data_dir.mkdir(exist_ok=True, parents=True)
+    dst_path = data_dir / fname
+    if not dst_path.exists() or redownload:
         request.urlretrieve(src_url, dst_path)
 
-        with zipfile.ZipFile(dst_path, "r") as zip_ref:
+        with ZipFile(dst_path, "r") as zip_ref:
             zip_ref.extractall(data_dir)
 
-    return os.path.splitext(dst_path)[0] + '.csv'
+    return dst_path.parent / "{}.csv".format(dst_path.stem)

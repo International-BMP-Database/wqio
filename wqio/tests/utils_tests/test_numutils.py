@@ -61,11 +61,11 @@ def test_formatResult(num, qual, N, expected):
     (numutils.process_p_vals, 0.0012, '0.001', None),
     (numutils.process_p_vals, 0.06, '0.060', None),
     (numutils.process_p_vals, 1.01, None, ValueError),
-    (numutils.translate_p_vals, None, 'ಠ_ಠ', None),
-    (numutils.translate_p_vals, 0.005, '¯\(ツ)/¯', None),
-    (numutils.translate_p_vals, 0.03, '¯\_(ツ)_/¯', None),
-    (numutils.translate_p_vals, 0.06, '¯\__(ツ)__/¯', None),
-    (numutils.translate_p_vals, 0.11, '(╯°□°)╯︵ ┻━┻', None),
+    (numutils.translate_p_vals, None, r'ಠ_ಠ', None),
+    (numutils.translate_p_vals, 0.005, r'¯\(ツ)/¯', None),
+    (numutils.translate_p_vals, 0.03, r'¯\_(ツ)_/¯', None),
+    (numutils.translate_p_vals, 0.06, r'¯\__(ツ)__/¯', None),
+    (numutils.translate_p_vals, 0.11, r'(╯°□°)╯︵ ┻━┻', None),
     (numutils.translate_p_vals, 1.01, None, ValueError),
 ])
 def test_p_values_handlers(fxn, pval, expected, error_to_raise):
@@ -455,8 +455,8 @@ def test__comp_stat_generator():
         ],
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]),
-        pandas.concat([result.head(), result.tail()])
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]).sort_index(axis='columns'),
+        pandas.concat([result.head(), result.tail()]).sort_index(axis='columns')
     )
 
 
@@ -486,8 +486,8 @@ def test__comp_stat_generator_single_group_col():
         ]
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
-        pandas.concat([result.head(), result.tail()])
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]).sort_index(axis='columns'),
+        pandas.concat([result.head(), result.tail()]).sort_index(axis='columns')
     )
 
 
