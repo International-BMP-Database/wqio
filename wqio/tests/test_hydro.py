@@ -103,22 +103,6 @@ def setup_storms(filename, baseflow=None):
     return parsed
 
 
-def storms_simple():
-    return setup_storms('teststorm_simple.csv')
-
-
-def storms_firstobs():
-    return setup_storms('teststorm_firstobs.csv')
-
-
-def storms_singular():
-    return setup_storms('teststorm_singular.csv')
-
-
-def storms_with_baseflowcol():
-    return setup_storms('teststorm_simple.csv', baseflow=2)
-
-
 @pytest.mark.parametrize(('wetcol', 'expected'), [('A', 1), ('B', 0)])
 def test_wet_first_row(wetcol, expected):
     df = pandas.DataFrame({
