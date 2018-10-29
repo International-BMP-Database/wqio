@@ -84,7 +84,10 @@ def test_data(dc):
     assert 'H' in dc.data['param'].unique()
 
 
-def test_tidy(dc):
+@pytest.mark.parametrize('showpbar', [True, False])
+@pytest.mark.parametrize('useros', [True, False])
+def test_tidy(dc, showpbar, useros):
+    dc.showpbar = showpbar
     assert isinstance(dc.tidy, pandas.DataFrame)
     assert dc.tidy.shape == (388, 5)
     assert 'G' not in dc.tidy['param'].unique()

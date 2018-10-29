@@ -3,7 +3,15 @@ from scipy import stats
 from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
-from statsmodels.tools.decorators import resettable_cache, cache_readonly
+from statsmodels.tools.decorators import (
+    resettable_cache,
+    cache_readonly,
+    cache_writable
+)
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover
+    tqdm = None
 
 from wqio import utils
 from wqio import bootstrap
@@ -51,6 +59,9 @@ class DataCollection(object):
     bsiter : int
         Number of iterations the bootstrapper should use when estimating
         confidence intervals around a statistic.
+    showpbar : bool (True)
+        When True and the `tqdm` module is available, this will toggle the
+        appears of progress bars in long-running group by-apply operations.
 
     """
 
@@ -60,7 +71,7 @@ class DataCollection(object):
     def __init__(self, dataframe, rescol='res', qualcol='qual',
                  stationcol='station', paramcol='parameter', ndval='ND',
                  othergroups=None, pairgroups=None, useros=True,
-                 filterfxn=None, bsiter=10000):
+                 filterfxn=None, bsiter=10000, showpbar=True):
 
         # cache for all of the properties
         self._cache = resettable_cache()
@@ -77,6 +88,7 @@ class DataCollection(object):
         self.useros = useros
         self.filterfxn = filterfxn or utils.non_filter
         self.bsiter = bsiter
+        self.showpbar = showpbar
 
         # column that stores ROS'd values
         self.roscol = 'ros_' + rescol
@@ -104,6 +116,10 @@ class DataCollection(object):
             .reset_index()
         )
 
+    @cache_writable
+    def showpbar(self):
+        return self.showpbar
+
     @cache_readonly
     def tidy(self):
         if self.useros:
@@ -119,14 +135,21 @@ class DataCollection(object):
                 g[self.roscol] = numpy.nan
                 return g
 
+        if tqdm and self.showpbar:
+            def make_tidy(df):
+                tqdm.pandas(desc="Tidying the DataCollection")
+                return df.groupby(self.groupcols).progress_apply(fxn)
+        else:
+            def make_tidy(df):
+                return df.groupby(self.groupcols).apply(fxn)
+
         keep_cols = self.tidy_columns + [self.roscol]
         _tidy = (
             self.data
             .reset_index()[self.tidy_columns]
             .groupby(by=self.groupcols)
             .filter(self.filterfxn)
-            .groupby(by=self.groupcols)
-            .apply(fxn)
+            .pipe(make_tidy)
             .reset_index()
             .sort_values(by=self.groupcols)
         )
