@@ -521,7 +521,7 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
     return xhat, yhat, results
 
 
-def checkIntervalOverlap(interval1, interval2, oneway=False):
+def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
     """ Checks if two numeric intervals overlaps.
 
     Parameters
@@ -539,16 +539,21 @@ def checkIntervalOverlap(interval1, interval2, oneway=False):
 
     """
 
-    test1 = numpy.min(interval2) <= numpy.max(interval1) <= numpy.max(interval2)
-    test2 = numpy.min(interval2) <= numpy.min(interval1) <= numpy.max(interval2)
-
-    # TODO: try test1 or test2 or (not oneway and test3)
+    first_check = numpy.bitwise_or(
+        numpy.bitwise_and(
+            numpy.min(interval2, axis=axis) <= numpy.max(interval1, axis=axis),
+            numpy.max(interval1, axis=axis) <= numpy.max(interval2, axis=axis)
+        ),
+        numpy.bitwise_and(
+            numpy.min(interval2, axis=axis) <= numpy.min(interval1, axis=axis),
+            numpy.min(interval1, axis=axis) <= numpy.max(interval2, axis=axis)
+        )
+    )
 
     if oneway:
-        return test1 or test2
+        return first_check
     else:
-        test3 = checkIntervalOverlap(interval2, interval1, oneway=True)
-        return test1 or test2 or test3
+        return first_check | checkIntervalOverlap(interval2, interval1, oneway=True, axis=axis)
 
 
 def winsorize_dataframe(df, **limits):

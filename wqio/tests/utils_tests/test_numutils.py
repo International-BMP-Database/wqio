@@ -370,16 +370,30 @@ def test_fit_line_with_xhat(fit_data):
     nptest.assert_array_almost_equal(y_, expected)
 
 
-def test_checkIntervalOverlap_oneway():
-    assert not numutils.checkIntervalOverlap([1, 2], [3, 4], oneway=True)
-    assert not numutils.checkIntervalOverlap([1, 4], [2, 3], oneway=True)
-    assert numutils.checkIntervalOverlap([1, 3], [2, 4], oneway=True)
+@pytest.mark.parametrize(('oneway', 'expected'), [
+    (True, [False, False, True]),
+    (False, [False, True, True]),
+])
+def test_checkIntervalOverlap_single(oneway, expected):
+    result = [
+        numutils.checkIntervalOverlap([1, 2], [3, 4], oneway=oneway),
+        numutils.checkIntervalOverlap([1, 4], [2, 3], oneway=oneway),
+        numutils.checkIntervalOverlap([1, 3], [2, 4], oneway=oneway),
+    ]
+    assert result == expected
 
 
-def test_checkIntervalOverlap_twoway():
-    assert not numutils.checkIntervalOverlap([1, 2], [3, 4], oneway=False)
-    assert numutils.checkIntervalOverlap([1, 4], [2, 3], oneway=False)
-    assert numutils.checkIntervalOverlap([1, 3], [2, 4], oneway=False)
+@pytest.mark.parametrize(('oneway', 'expected'), [
+    (True, [0, 0, 1]),
+    (False, [0, 1, 1]),
+])
+def test_checkIntervalOverlap(oneway, expected):
+    x = numpy.array([[1, 2], [1, 4], [1, 3]])
+    y = numpy.array([[3, 4], [2, 3], [2, 4]])
+    nptest.assert_array_equal(
+        numutils.checkIntervalOverlap(x, y, oneway=oneway, axis=1),
+        numpy.array(expected, dtype=bool)
+    )
 
 
 @pytest.mark.parametrize(('opts', 'expected_key'), [
