@@ -258,7 +258,11 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
+        return (
+            self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
+                .fillna(0)
+                .astype(int)
+        )
 
     @cache_readonly
     def inventory(self):
@@ -626,6 +630,19 @@ class DataCollection(object):
             self.datasets(loc1, loc2), squeeze=squeeze, **conditions
         )
         return datasets
+
+    def n_unique(self, column):
+        return (
+            self.data
+                .loc[:, self.groupcols + [column]]
+                .drop_duplicates()
+                .groupby(self.groupcols)
+                .size()
+                .unstack(level=self.stationcol)
+                .pipe(utils.add_column_level, column, 'result')
+                .swaplevel(axis='columns')
+                .fillna(0).astype(int)
+        )
 
     def stat_summary(self, percentiles=None, groupcols=None, useros=True):
         """ A generic, high-level summary of the data collection.

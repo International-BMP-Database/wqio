@@ -124,6 +124,23 @@ def test_count(dc):
     check_stat(known_csv, dc.count)
 
 
+def test_n_unique(dc):
+    known_csv = """\
+        loc,Inflow,Outflow,Reference
+        result,bmp,bmp,bmp
+        param,,,
+        A,7,7,7
+        B,7,7,7
+        C,7,7,7
+        D,7,7,7
+        E,7,7,7
+        F,7,7,7
+        G,7,7,7
+        H,7,7,7
+    """
+    check_stat(known_csv, dc.n_unique('bmp'))
+
+
 @helpers.seed
 def test_median(dc):
     known_csv = """\
