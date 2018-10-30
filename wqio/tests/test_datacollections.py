@@ -124,6 +124,23 @@ def test_count(dc):
     check_stat(known_csv, dc.count)
 
 
+def test_n_unique(dc):
+    known_csv = """\
+        loc,Inflow,Outflow,Reference
+        result,bmp,bmp,bmp
+        param,,,
+        A,7,7,7
+        B,7,7,7
+        C,7,7,7
+        D,7,7,7
+        E,7,7,7
+        F,7,7,7
+        G,7,7,7
+        H,7,7,7
+    """
+    check_stat(known_csv, dc.n_unique('bmp'))
+
+
 @helpers.seed
 def test_median(dc):
     known_csv = """\
@@ -672,13 +689,10 @@ def test_datasets(dc):
 def test_selectLocations(dc):
     locs = dc.selectLocations(param='A', loc=['Inflow', 'Outflow'])
     assert len(locs) == 2
-    for n, loc in enumerate(locs):
+    for n, (loc, loctype) in enumerate(zip(locs, ['Inflow', 'Outflow'])):
         assert isinstance(loc, Location)
         assert loc.definition['param'] == 'A'
-        if n == 0:
-            assert loc.definition['loc'] == 'Inflow'
-        elif n == 1:
-            assert loc.definition['loc'] == 'Outflow'
+        assert loc.definition['loc'] == loctype
 
 
 def test_selectLocations_squeeze_False(dc):

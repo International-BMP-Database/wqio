@@ -1,3 +1,5 @@
+import warnings
+
 import numpy
 from scipy import stats
 from matplotlib import pyplot
@@ -124,11 +126,13 @@ class DataCollection(object):
     def tidy(self):
         if self.useros:
             def fxn(g):
-                rosdf = (
-                    ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
-                    .rename(columns={'final': self.roscol})
-                    [[self._raw_rescol, self.roscol, self.cencol]]
-                )
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore')
+                    rosdf = (
+                        ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
+                        .rename(columns={'final': self.roscol})
+                        .loc[:, [self._raw_rescol, self.roscol, self.cencol]]
+                    )
                 return rosdf
         else:
             def fxn(g):
@@ -144,15 +148,17 @@ class DataCollection(object):
                 return df.groupby(self.groupcols).apply(fxn)
 
         keep_cols = self.tidy_columns + [self.roscol]
-        _tidy = (
-            self.data
-            .reset_index()[self.tidy_columns]
-            .groupby(by=self.groupcols)
-            .filter(self.filterfxn)
-            .pipe(make_tidy)
-            .reset_index()
-            .sort_values(by=self.groupcols)
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter('once')
+            _tidy = (
+                self.data
+                .reset_index()[self.tidy_columns]
+                .groupby(by=self.groupcols)
+                .filter(self.filterfxn)
+                .pipe(make_tidy)
+                .reset_index()
+                .sort_values(by=self.groupcols)
+            )
 
         return _tidy[keep_cols]
 
@@ -258,7 +264,11 @@ class DataCollection(object):
 
     @cache_readonly
     def count(self):
-        return self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
+        return (
+            self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
+                .fillna(0)
+                .astype(int)
+        )
 
     @cache_readonly
     def inventory(self):
@@ -626,6 +636,19 @@ class DataCollection(object):
             self.datasets(loc1, loc2), squeeze=squeeze, **conditions
         )
         return datasets
+
+    def n_unique(self, column):
+        return (
+            self.data
+                .loc[:, self.groupcols + [column]]
+                .drop_duplicates()
+                .groupby(self.groupcols)
+                .size()
+                .unstack(level=self.stationcol)
+                .pipe(utils.add_column_level, column, 'result')
+                .swaplevel(axis='columns')
+                .fillna(0).astype(int)
+        )
 
     def stat_summary(self, percentiles=None, groupcols=None, useros=True):
         """ A generic, high-level summary of the data collection.
