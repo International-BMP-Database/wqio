@@ -1,3 +1,5 @@
+import warnings
+
 import numpy
 from scipy import stats
 from matplotlib import pyplot
@@ -124,11 +126,13 @@ class DataCollection(object):
     def tidy(self):
         if self.useros:
             def fxn(g):
-                rosdf = (
-                    ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
-                    .rename(columns={'final': self.roscol})
-                    [[self._raw_rescol, self.roscol, self.cencol]]
-                )
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore')
+                    rosdf = (
+                        ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
+                        .rename(columns={'final': self.roscol})
+                        .loc[:, [self._raw_rescol, self.roscol, self.cencol]]
+                    )
                 return rosdf
         else:
             def fxn(g):
@@ -144,15 +148,17 @@ class DataCollection(object):
                 return df.groupby(self.groupcols).apply(fxn)
 
         keep_cols = self.tidy_columns + [self.roscol]
-        _tidy = (
-            self.data
-            .reset_index()[self.tidy_columns]
-            .groupby(by=self.groupcols)
-            .filter(self.filterfxn)
-            .pipe(make_tidy)
-            .reset_index()
-            .sort_values(by=self.groupcols)
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter('once')
+            _tidy = (
+                self.data
+                .reset_index()[self.tidy_columns]
+                .groupby(by=self.groupcols)
+                .filter(self.filterfxn)
+                .pipe(make_tidy)
+                .reset_index()
+                .sort_values(by=self.groupcols)
+            )
 
         return _tidy[keep_cols]
 
