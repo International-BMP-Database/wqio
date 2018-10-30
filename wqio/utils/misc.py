@@ -465,3 +465,56 @@ def assign_multilevel_column(df, val_or_fxn, *collevels):
     else:
         df[collevels] = val_or_fxn
     return df
+
+
+def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None,
+                    join_char=None):
+    """ Symbolize boolean values in a dataframe with strings
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A dataframe of boolean values
+    true_symbol, false_symbol : str
+        Strings used to symbolize True and False values, respectively
+    other_symbol : str, optional
+        String used to symbolized values other than True or False. If omitted,
+        *false_symbol* is used.
+    join_char : str, optional
+        If provided, this character is used to join all of the columns in the
+        dataframe into a single series. Otherwise, a dataframe is returned
+
+    Returns
+    -------
+    symbolized : pandas.DataFrame or pandas.Series
+
+    Examples
+    --------
+    >>> from numpy import nan
+    >>> from pandas import DataFrame
+    >>> from wqio.utils import symbolize_bools
+    >>> df = DataFrame({
+    ...     'A': [True, False, False],
+    ...     'B': [False, True, True],
+    ...     'C': [False, True, nan]
+    ... })
+    >>> symbolize_bools(df, true_symbol='◆', false_symbol='◇',
+    ...                 other_symbol='✖', join_char='-')
+    0    ◆-◇-◇
+    1    ◇-◆-◆
+    2    ◇-◆-✖
+    dtype: object
+
+    """
+
+    if other_symbol is None:
+        other_symbol = false_symbol
+
+    mapper = {
+        True: true_symbol,
+        False: false_symbol,
+    }
+    symbolized = df.applymap(lambda x: mapper.get(x, other_symbol))
+    if join_char is None:
+        return symbolized
+    return symbolized.apply(lambda r: join_char.join(r), axis=1)
