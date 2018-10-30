@@ -250,3 +250,25 @@ def test_assign_multilevel_column(value):
     result = misc.assign_multilevel_column(df, value, 'd', 1)
     expected = pandas.Series(4, index=df.index, name=('d', 1))
     pdtest.assert_series_equal(result[('d', 1)], expected)
+
+
+@pytest.mark.parametrize('join_char', [None, '-'])
+def test_symbolize_bools(join_char):
+    df = pandas.DataFrame({
+        'A': [True, False, False],
+        'B': [False, True, True],
+        'C': [False, True, numpy.nan]
+    })
+
+    result = misc.symbolize_bools(df, true_symbol='◆', false_symbol='◇',
+                                  other_symbol='✖', join_char=join_char)
+    if not join_char:
+        expected = pandas.DataFrame({
+            'A': {0: '◆', 1: '◇', 2: '◇'},
+            'B': {0: '◇', 1: '◆', 2: '◆'},
+            'C': {0: '◇', 1: '◆', 2: '✖'}
+        })
+        pdtest.assert_frame_equal(result, expected)
+    else:
+        expected = pandas.Series(['◆-◇-◇', '◇-◆-◆', '◇-◆-✖'])
+        pdtest.assert_series_equal(result, expected)
