@@ -68,10 +68,25 @@ def test_formatResult(num, qual, N, expected):
     (numutils.translate_p_vals, 0.11, r'(╯°□°)╯︵ ┻━┻', None),
     (numutils.translate_p_vals, 1.01, None, ValueError),
 ])
-def test_p_values_handlers(fxn, pval, expected, error_to_raise):
+def test_process_p_vals(fxn, pval, expected, error_to_raise):
     with helpers.raises(error_to_raise):
         result = fxn(pval)
         assert result == expected
+
+
+@pytest.mark.parametrize('as_emoji', [False, True])
+@pytest.mark.parametrize(('pval', 'expected', 'error_to_raise'), [
+    (None, ('NA', r'ಠ_ಠ'), None),
+    (0.005, ('maybe', r'¯\(ツ)/¯'), None),
+    (0.03, ('maybe (weak)', r'¯\_(ツ)_/¯'), None),
+    (0.06, ('maybe (very weak)', r'¯\__(ツ)__/¯'), None),
+    (0.11, ('nope', r'(╯°□°)╯︵ ┻━┻'), None),
+    (1.01, (None, None), ValueError),
+])
+def test_process_p_vals(pval, expected, as_emoji, error_to_raise):
+    with helpers.raises(error_to_raise):
+        result = numutils.translate_p_vals(pval, as_emoji=as_emoji)
+        assert result == expected[as_emoji]
 
 
 def test_anderson_darling():

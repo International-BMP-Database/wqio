@@ -159,33 +159,35 @@ def process_p_vals(pval):
     return out
 
 
-def translate_p_vals(pval):
+def translate_p_vals(pval, as_emoji=True):
     """ Translates ambiguous p-values into more meaningful emoji.
 
     Parameters
     ----------
     pval : float
+    as_emoji : bool (default = True)
+        Represent the p-vals as emoji. Otherwise, words will be used.
 
     Returns
     -------
-    emoji : string
+    interpreted : string
 
     """
 
     if pval is None:
-        emoji = r'ಠ_ಠ'
+        interpreted = r'ಠ_ಠ' if as_emoji else 'NA'
     elif pval <= 0.01:
-        emoji = r'¯\(ツ)/¯'
+        interpreted = r'¯\(ツ)/¯' if as_emoji else 'maybe'
     elif 0.01 < pval <= 0.05:
-        emoji = r'¯\_(ツ)_/¯'
+        interpreted = r'¯\_(ツ)_/¯' if as_emoji else 'maybe (weak)'
     elif 0.05 < pval <= 0.1:
-        emoji = r'¯\__(ツ)__/¯'
+        interpreted = r'¯\__(ツ)__/¯' if as_emoji else 'maybe (very weak)'
     elif 0.1 < pval <= 1:
-        emoji = r'(╯°□°)╯︵ ┻━┻'
+        interpreted = r'(╯°□°)╯︵ ┻━┻' if as_emoji else 'nope'
     else:
         raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
 
-    return emoji
+    return interpreted
 
 
 def anderson_darling(data):
