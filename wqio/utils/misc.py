@@ -34,7 +34,7 @@ def add_column_level(df, levelvalue, levelname):
     >>> df2 = add_column_level(df, 'Infl', 'location')
     >>> df2.columns
     MultiIndex(levels=[['Infl'], ['qual', 'res']],
-               labels=[[0, 0], [1, 0]],
+               codes=[[0, 0], [1, 0]],
                names=['location', 'quantity'])
 
     """
@@ -76,14 +76,14 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     >>> df = pandas.DataFrame(data, columns=columns)
     >>> df.columns
     MultiIndex(levels=[['A', 'B'], ['cen', 'res'], ['mg/L']],
-               labels=[[0, 0, 1, 1], [1, 0, 1, 0], [0, 0, 0, 0]],
+               codes=[[0, 0, 1, 1], [1, 0, 1, 0], [0, 0, 0, 0]],
                names=['loc', 'value', 'units'])
 
 
     >>> swapped = wqio.utils.swap_column_levels(df, 'units', 'loc')
     >>> swapped.columns
     MultiIndex(levels=[['mg/L'], ['cen', 'res'], ['A', 'B']],
-               labels=[[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 0, 1]],
+               codes=[[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 0, 1]],
                names=['units', 'value', 'loc'])
 
 
@@ -142,7 +142,7 @@ def expand_columns(df, names, sep='_'):
     >>> expanded = utils.expand_columns(df, ['top', 'bottom'], sep='_')
     >>> expanded.columns
     MultiIndex(levels=[['A', 'B'], ['a', 'b', 'c']],
-               labels=[[0, 0, 1, 1], [0, 1, 0, 2]],
+               codes=[[0, 0, 1, 1], [0, 1, 0, 2]],
                names=['top', 'bottom'])
 
 
