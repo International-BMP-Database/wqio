@@ -5,11 +5,7 @@ from scipy import stats
 from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
-from statsmodels.tools.decorators import (
-    resettable_cache,
-    cache_readonly,
-    cache_writable
-)
+from statsmodels.tools.decorators import cache_readonly
 try:
     from tqdm import tqdm
 except ImportError:  # pragma: no cover
@@ -76,7 +72,7 @@ class DataCollection(object):
                  filterfxn=None, bsiter=10000, showpbar=True):
 
         # cache for all of the properties
-        self._cache = resettable_cache()
+        self._cache = {}
 
         # basic input
         self.raw_data = dataframe
@@ -117,10 +113,6 @@ class DataCollection(object):
             .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
             .reset_index()
         )
-
-    @cache_writable
-    def showpbar(self):
-        return self.showpbar
 
     @cache_readonly
     def tidy(self):
