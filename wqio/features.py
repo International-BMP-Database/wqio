@@ -5,7 +5,7 @@ from scipy import stats
 from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
-from statsmodels.tools.decorators import resettable_cache, cache_readonly
+from statsmodels.tools.decorators import cache_readonly
 import seaborn
 from probscale.algo import _estimate_from_fit
 
@@ -166,7 +166,7 @@ class Location(object):
         self._definition = {}
 
         # parameters of the stats analysis
-        self._cache = resettable_cache()
+        self._cache = {}
 
         # properties of the dataframe and analysis
         self.bsiter = bsiter
@@ -751,7 +751,7 @@ class Dataset(object):
         self._include = None
         self.useros = useros
         self._definition = {}
-        self._cache = resettable_cache()
+        self._cache = {}
 
     @cache_readonly
     def data(self):

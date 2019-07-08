@@ -43,15 +43,11 @@ TEMPLATE = """\
 
 if __name__ == '__main__':
     configdir = Path(".vscode")
-    configdir.mkdirs(exists_ok=True, parents=True)
+    configdir.mkdir(exists_ok=True, parents=True)
     configpath = configdir / "tasks.json"
 
-    configpath = os.path.join(dirname, filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
     if len(sys.argv) < 2:
-        name = os.path.split(os.getcwd())[-1]
+        name = Path.cwd().name
     else:
         name = sys.argv[1]
 

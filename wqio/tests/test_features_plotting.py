@@ -680,25 +680,25 @@ def _do_jointplots(ds, hist=False, kde=False, rug=False):
     return jg.fig
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_joint_hist(ds_NDs):
-    fig1 = _do_jointplots(ds_NDs, hist=True)
-    return fig1
+def test_ds_joint_hist_smoke(ds_NDs):
+    with seaborn.axes_style('ticks'):
+        fig1 = _do_jointplots(ds_NDs, hist=True)
+        return fig1
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_joint_kde(ds_NDs):
-    fig2 = _do_jointplots(ds_NDs, kde=True)
-    return fig2
+def test_ds_joint_kde_smoke(ds_NDs):
+    with seaborn.axes_style('ticks'):
+        fig2 = _do_jointplots(ds_NDs, kde=True)
+        return fig2
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_joint_rug(ds_NDs):
-    fig3 = _do_jointplots(ds_NDs, rug=True)
-    return fig3
+def test_ds_joint_rug_smoke(ds_NDs):
+    with seaborn.axes_style('ticks'):
+        fig3 = _do_jointplots(ds_NDs, rug=True)
+        return fig3
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
-def test_ds_joint_kde_rug_hist(ds_NDs):
-    fig4 = _do_jointplots(ds_NDs, hist=True, kde=True, rug=True)
-    return fig4
+def test_ds_joint_kde_rug_hist_smoke(ds_NDs):
+    with seaborn.axes_style('ticks'):
+        fig4 = _do_jointplots(ds_NDs, hist=True, kde=True, rug=True)
+        return fig4
