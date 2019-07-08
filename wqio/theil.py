@@ -60,9 +60,7 @@ class TheilSenFit(object):
     def theil_stats(self):
         if self._theil_stats is None:
             self._theil_stats = utils.compute_theilslope(
-                y=self.effl,
-                x=self.infl,
-                **self.theil_opts
+                y=self.effl, x=self.infl, **self.theil_opts
             )
 
         return self._theil_stats
@@ -94,12 +92,19 @@ class TheilSenFit(object):
 
     @property
     def med_estimate(self):
-        return _estimate_from_fit(self.influent_data, self.med_slope, self.intercept,
-                                  xlog=self.log_infl, ylog=self.log_effl)
+        return _estimate_from_fit(
+            self.influent_data,
+            self.med_slope,
+            self.intercept,
+            xlog=self.log_infl,
+            ylog=self.log_effl,
+        )
 
     @property
     def errors(self):
-        return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(self.med_estimate)
+        return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(
+            self.med_estimate
+        )
 
     @property
     def MAD(self):

@@ -14,7 +14,7 @@ from wqio import utils
 from wqio import validate
 
 
-def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
+def rotateTickLabels(ax, rotation, which, rotation_mode="anchor", ha="right"):
     """ Rotates the ticklabels of a matplotlib Axes
 
     Parameters
@@ -39,14 +39,14 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
 
     """
 
-    if which == 'both':
-        rotateTickLabels(ax, rotation, 'x', rotation_mode=rotation_mode, ha=ha)
-        rotateTickLabels(ax, rotation, 'y', rotation_mode=rotation_mode, ha=ha)
+    if which == "both":
+        rotateTickLabels(ax, rotation, "x", rotation_mode=rotation_mode, ha=ha)
+        rotateTickLabels(ax, rotation, "y", rotation_mode=rotation_mode, ha=ha)
     else:
-        if which == 'x':
+        if which == "x":
             axis = ax.xaxis
 
-        elif which == 'y':
+        elif which == "y":
             axis = ax.yaxis
 
         for t in axis.get_ticklabels():
@@ -56,17 +56,16 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='right'):
 
 
 def log_formatter(use_1x=True, threshold=5):
-
     def _formatter(tick, pos=None, use_1x=True, threshold=3):
         """ Formats log axes as `1 x 10^N` when N > 4 or N < -4. """
 
-        if 10**threshold >= tick > 1:
-            tick = '{:,d}'.format(int(tick))
-        elif tick > 10**threshold or tick < 10**(-1 * threshold):
+        if 10 ** threshold >= tick > 1:
+            tick = "{:,d}".format(int(tick))
+        elif tick > 10 ** threshold or tick < 10 ** (-1 * threshold):
             if use_1x:
-                tick = r'$1 \times 10 ^ {%d}$' % int(numpy.log10(tick))
+                tick = r"$1 \times 10 ^ {%d}$" % int(numpy.log10(tick))
             else:
-                tick = r'$10 ^ {%d}$' % int(numpy.log10(tick))
+                tick = r"$10 ^ {%d}$" % int(numpy.log10(tick))
 
         return str(tick)
 
@@ -74,8 +73,9 @@ def log_formatter(use_1x=True, threshold=5):
     return ticker.FuncFormatter(func)
 
 
-def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
-              xminor=True, yminor=True):
+def gridlines(
+    ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=True, yminor=True
+):
     """ Standard formatting for gridlines on a matplotlib Axes
 
     Parameters
@@ -111,34 +111,42 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None,
         ax.set_ylabel(ylabel)
 
     # major grids
-    ax.yaxis.grid(True, which='major', ls='-', alpha=0.35)
-    ax.xaxis.grid(True, which='major', ls='-', alpha=0.35)
+    ax.yaxis.grid(True, which="major", ls="-", alpha=0.35)
+    ax.xaxis.grid(True, which="major", ls="-", alpha=0.35)
 
     # minor grids
     if xminor:
-        ax.xaxis.grid(True, which='minor', ls='-', alpha=0.17)
+        ax.xaxis.grid(True, which="minor", ls="-", alpha=0.17)
 
     if yminor:
-        ax.yaxis.grid(True, which='minor', ls='-', alpha=0.17)
+        ax.yaxis.grid(True, which="minor", ls="-", alpha=0.17)
 
 
 def one2one(ax, set_limits=True, set_aspect=True, **kwargs):
-    label = kwargs.pop('label', '1:1 Line')
+    label = kwargs.pop("label", "1:1 Line")
     axis_limits = [
         numpy.min([ax.get_xlim(), ax.get_ylim()]),
-        numpy.max([ax.get_xlim(), ax.get_ylim()])
+        numpy.max([ax.get_xlim(), ax.get_ylim()]),
     ]
     if set_limits:
         ax.set_xlim(axis_limits)
         ax.set_ylim(axis_limits)
     if set_aspect:
-        ax.set_aspect('equal')
+        ax.set_aspect("equal")
 
     return ax.plot(axis_limits, axis_limits, label=label, **kwargs)
 
 
-def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
-              color=None, zeromin=True, one2one=True):
+def jointplot(
+    x=None,
+    y=None,
+    data=None,
+    xlabel=None,
+    ylabel=None,
+    color=None,
+    zeromin=True,
+    one2one=True,
+):
     """ Plots the joint distribution of two variables via seaborn
 
     Parameters
@@ -162,8 +170,9 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
     jg : seaborn.JointGrid
 
     """
-    jg = seaborn.jointplot(x=x, y=y, color=color, data=data,
-                           marginal_kws=dict(rug=True, kde=True))
+    jg = seaborn.jointplot(
+        x=x, y=y, color=color, data=data, marginal_kws=dict(rug=True, kde=True)
+    )
 
     if xlabel is None:
         xlabel = jg.ax_joint.get_xlabel()
@@ -182,11 +191,18 @@ def jointplot(x=None, y=None, data=None, xlabel=None, ylabel=None,
         ax_limit_max = numpy.max([jg.ax_joint.get_xlim(), jg.ax_joint.get_ylim()])
         jg.ax_joint.set_xlim(left=ax_limit_min, right=ax_limit_max)
         jg.ax_joint.set_ylim(bottom=ax_limit_min, top=ax_limit_max)
-        jg.ax_joint.plot([ax_limit_min, ax_limit_max], [ax_limit_min, ax_limit_max],
-                         marker='None', linestyle='-', linewidth=1.75,
-                         color=color or 'k', alpha=0.45, label='1:1 line')
+        jg.ax_joint.plot(
+            [ax_limit_min, ax_limit_max],
+            [ax_limit_min, ax_limit_max],
+            marker="None",
+            linestyle="-",
+            linewidth=1.75,
+            color=color or "k",
+            alpha=0.45,
+            label="1:1 line",
+        )
 
-        jg.ax_joint.legend(frameon=False, loc='upper left')
+        jg.ax_joint.legend(frameon=False, loc="upper left")
 
     return jg
 
@@ -222,6 +238,7 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     """
     wnf = {}
     if transformout is None:
+
         def transformout(x):
             return x
 
@@ -248,18 +265,29 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     else:
         whishi = numpy.max(whishi)
 
-    wnf['fliers'] = numpy.hstack([
-        transformout(numpy.compress(x < whislo, x)),
-        transformout(numpy.compress(x > whishi, x))
-    ])
-    wnf['whishi'] = transformout(whishi)
-    wnf['whislo'] = transformout(whislo)
+    wnf["fliers"] = numpy.hstack(
+        [
+            transformout(numpy.compress(x < whislo, x)),
+            transformout(numpy.compress(x > whishi, x)),
+        ]
+    )
+    wnf["whishi"] = transformout(whishi)
+    wnf["whislo"] = transformout(whislo)
 
     return wnf
 
 
-def boxplot(boxplot_stats, ax=None, position=None, width=0.8, shownotches=True,
-            color='b', marker='o', patch_artist=True, showmean=False):
+def boxplot(
+    boxplot_stats,
+    ax=None,
+    position=None,
+    width=0.8,
+    shownotches=True,
+    color="b",
+    marker="o",
+    patch_artist=True,
+    showmean=False,
+):
 
     """
     Draws a boxplot on an axes
@@ -304,56 +332,30 @@ def boxplot(boxplot_stats, ax=None, position=None, width=0.8, shownotches=True,
         position = [position]
 
     meanprops = dict(
-        marker=marker,
-        markersize=6,
-        markerfacecolor=color,
-        markeredgecolor='Black'
+        marker=marker, markersize=6, markerfacecolor=color, markeredgecolor="Black"
     )
 
     flierprops = dict(
         marker=marker,
         markersize=4,
         zorder=4,
-        markerfacecolor='none',
+        markerfacecolor="none",
         markeredgecolor=color,
         alpha=1,
     )
 
-    whiskerprops = dict(
-        linestyle='-',
-        color='k',
-        linewidth=0.75,
-        zorder=4,
-    )
+    whiskerprops = dict(linestyle="-", color="k", linewidth=0.75, zorder=4)
 
     if patch_artist:
-        medianprops = dict(
-            linewidth=1.00,
-            color='k',
-            linestyle='-',
-            zorder=5,
-        )
+        medianprops = dict(linewidth=1.00, color="k", linestyle="-", zorder=5)
 
         boxprops = dict(
-            edgecolor='k',
-            facecolor=color,
-            linewidth=0.75,
-            zorder=4,
-            alpha=0.5,
+            edgecolor="k", facecolor=color, linewidth=0.75, zorder=4, alpha=0.5
         )
     else:
-        medianprops = dict(
-            linewidth=1.00,
-            color=color,
-            linestyle='-',
-            zorder=3,
-        )
+        medianprops = dict(linewidth=1.00, color=color, linestyle="-", zorder=3)
 
-        boxprops = dict(
-            color='k',
-            linewidth=0.75,
-            zorder=4,
-        )
+        boxprops = dict(color="k", linewidth=0.75, zorder=4)
 
     bp = ax.bxp(
         boxplot_stats,
@@ -374,9 +376,18 @@ def boxplot(boxplot_stats, ax=None, position=None, width=0.8, shownotches=True,
     return bp
 
 
-def probplot(data, ax=None, axtype='prob', yscale='log',
-             xlabel=None, ylabel=None, bestfit=False,
-             scatter_kws=None, line_kws=None, return_results=False):
+def probplot(
+    data,
+    ax=None,
+    axtype="prob",
+    yscale="log",
+    xlabel=None,
+    ylabel=None,
+    bestfit=False,
+    scatter_kws=None,
+    line_kws=None,
+    return_results=False,
+):
     """ Probability, percentile, and quantile plots.
 
     Parameters
@@ -417,14 +428,22 @@ def probplot(data, ax=None, axtype='prob', yscale='log',
 
     """
     output = probscale.viz.probplot(
-        data, ax=ax, plottype=axtype, probax='x',
-        datalabel=ylabel, problabel=xlabel, datascale=yscale,
-        scatter_kws=scatter_kws, line_kws=line_kws,
-        bestfit=bestfit, return_best_fit_results=return_results)
+        data,
+        ax=ax,
+        plottype=axtype,
+        probax="x",
+        datalabel=ylabel,
+        problabel=xlabel,
+        datascale=yscale,
+        scatter_kws=scatter_kws,
+        line_kws=line_kws,
+        bestfit=bestfit,
+        return_best_fit_results=return_results,
+    )
     return output
 
 
-def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **line_kwds):
+def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **line_kwds):
     """ Connects the y-spines between two Axes
 
     Parameters
@@ -450,7 +469,9 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **lin
     import mpl_toolkits.axes_grid1.inset_locator as inset
 
     left_trans = mtrans.blended_transform_factory(left_ax.transData, left_ax.transAxes)
-    right_trans = mtrans.blended_transform_factory(right_ax.transData, right_ax.transAxes)
+    right_trans = mtrans.blended_transform_factory(
+        right_ax.transData, right_ax.transAxes
+    )
 
     left_data_trans = left_ax.transScale + left_ax.transLimits
     right_data_trans = right_ax.transScale + right_ax.transLimits
@@ -463,15 +484,18 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle='solid', **lin
     left_bbox = mtrans.TransformedBbox(bbox, left_trans)
 
     # deal with the linestyle
-    connector = inset.BboxConnector(left_bbox, right_bbox, loc1=3, loc2=2,
-                                    linestyle=linestyle, **line_kwds)
+    connector = inset.BboxConnector(
+        left_bbox, right_bbox, loc1=3, loc2=2, linestyle=linestyle, **line_kwds
+    )
     connector.set_clip_on(False)
     left_ax.add_line(connector)
 
     return connector
 
 
-def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws):
+def parallel_coordinates(
+    dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws
+):
     """ Produce a parallel coordinates plot from a dataframe.
 
     Parameters
@@ -506,14 +530,14 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
     data = dataframe[[*cols, hue]]
 
     # these plots look ridiculous in anything other than 'ticks'
-    with seaborn.axes_style('ticks'):
+    with seaborn.axes_style("ticks"):
         fig, axes = pyplot.subplots(ncols=len(cols), **subplot_kws)
         hue_vals = dataframe[hue].unique()
         colors = seaborn.color_palette(palette=palette, n_colors=len(hue_vals))
         color_dict = {}
         lines = []
         for h, c in zip(hue_vals, colors):
-            lines.append(pyplot.Line2D([0], [0], linestyle='-', color=c, label=h))
+            lines.append(pyplot.Line2D([0], [0], linestyle="-", color=c, label=h))
             color_dict[h] = c
 
         for col, ax in zip(cols, axes):
@@ -521,13 +545,15 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
             ax.set_xticks([0])
             ax.update_datalim(data_limits)
             ax.set_xticklabels([col])
-            ax.autoscale(axis='y')
-            ax.tick_params(axis='y', direction='inout')
-            ax.tick_params(axis='x', direction='in')
+            ax.autoscale(axis="y")
+            ax.tick_params(axis="y", direction="inout")
+            ax.tick_params(axis="x", direction="in")
 
         for row in data.values:
             for n, (ax1, ax2) in enumerate(zip(axes[:-1], axes[1:])):
-                line = _connect_spines(ax1, ax2, row[n], row[n + 1], color=color_dict[row[-1]])
+                line = _connect_spines(
+                    ax1, ax2, row[n], row[n + 1], color=color_dict[row[-1]]
+                )
 
     if showlegend:
         fig.legend(lines, hue_vals)
@@ -566,39 +592,39 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
     """
 
     def format_col(colname):
-        return colname.replace('_', ' ').title()
+        return colname.replace("_", " ").title()
 
     def process_column(colname):
         if colname is not None:
             return format_col(colname)
 
     if classifier is None:
-        classifier = partial(utils.classifier, bins=bins, units='mm')
+        classifier = partial(utils.classifier, bins=bins, units="mm")
 
     cats = utils.unique_categories(classifier, bins)
     cat_type = CategoricalDtype(cats, ordered=True)
-    aspect = factoropts.pop('aspect', 1.6)
+    aspect = factoropts.pop("aspect", 1.6)
 
     display_col = format_col(valuecol)
 
     processed_opts = dict(
-        row=process_column(factoropts.pop('row', None)),
-        col=process_column(factoropts.pop('col', None)),
-        hue=process_column(factoropts.pop('hue', None)),
-        kind='count',
+        row=process_column(factoropts.pop("row", None)),
+        col=process_column(factoropts.pop("col", None)),
+        hue=process_column(factoropts.pop("hue", None)),
+        kind="count",
         aspect=aspect,
-        sharex=True
+        sharex=True,
     )
 
     final_opts = {**factoropts, **processed_opts}
 
     fig = (
         df.assign(display=df[valuecol].apply(classifier).astype(cat_type))
-          .drop([valuecol], axis=1)
-          .rename(columns={'display': valuecol})
-          .rename(columns=lambda c: format_col(c))
-          .pipe((seaborn.catplot, 'data'), x=display_col, **final_opts)
-          .set_ylabels("Occurences")
+        .drop([valuecol], axis=1)
+        .rename(columns={"display": valuecol})
+        .rename(columns=lambda c: format_col(c))
+        .pipe((seaborn.catplot, "data"), x=display_col, **final_opts)
+        .set_ylabels("Occurences")
     )
 
     return fig

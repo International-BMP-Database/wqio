@@ -7,6 +7,7 @@ import pandas
 from wqio import utils
 
 import pandas.plotting._converter as pandacnv
+
 pandacnv.register()
 
 
@@ -69,9 +70,9 @@ class Parameter(object):
         """
 
         if usecomma:
-            paramunit = '{0}, {1}'
+            paramunit = "{0}, {1}"
         else:
-            paramunit = '{0} ({1})'
+            paramunit = "{0} ({1})"
 
         n = self.name
         u = self.units
@@ -79,20 +80,25 @@ class Parameter(object):
         return paramunit.format(n, u)
 
     def __repr__(self):
-        return "<wqio Parameter object> ({})".format(
-            self.paramunit(usecomma=False)
-        )
+        return "<wqio Parameter object> ({})".format(self.paramunit(usecomma=False))
 
     def __str__(self):
-        return "<wqio Parameter object> ({})".format(
-            self.paramunit(usecomma=False)
-        )
+        return "<wqio Parameter object> ({})".format(self.paramunit(usecomma=False))
 
 
 class SampleMixin(object):
-    def __init__(self, dataframe, starttime, samplefreq=None,
-                 endtime=None, storm=None, rescol='res',
-                 qualcol='qual', dlcol='DL', unitscol='units'):
+    def __init__(
+        self,
+        dataframe,
+        starttime,
+        samplefreq=None,
+        endtime=None,
+        storm=None,
+        rescol="res",
+        qualcol="qual",
+        dlcol="DL",
+        unitscol="units",
+    ):
 
         self._wqdata = dataframe
         self._startime = pandas.Timestamp(starttime)
@@ -152,7 +158,7 @@ class SampleMixin(object):
     @property
     def linestyle(self):
         if self._linestyle is None:
-            self._linestyle = 'none'
+            self._linestyle = "none"
         return self._linestyle
 
     @linestyle.setter
@@ -192,27 +198,49 @@ class SampleMixin(object):
         timeseries = pandas.Series(yposition, index=self.sample_ts)
 
         if asrug:
-            seaborn.rugplot(self.sample_ts, ax=ax, color='black', alpha=alpha, mew=0.75)
-            line = pyplot.Line2D([0, 0], [0, 0], marker='|', mew=0.75,
-                                 color='black', alpha=alpha, linestyle='none')
+            seaborn.rugplot(self.sample_ts, ax=ax, color="black", alpha=alpha, mew=0.75)
+            line = pyplot.Line2D(
+                [0, 0],
+                [0, 0],
+                marker="|",
+                mew=0.75,
+                color="black",
+                alpha=alpha,
+                linestyle="none",
+            )
 
         else:
-            timeseries.plot(ax=ax, marker=self.marker, markersize=4,
-                            linestyle=self.linestyle, color='Black',
-                            zorder=10, label='_nolegend', alpha=alpha,
-                            mew=0.75)
-            line = pyplot.Line2D([0, 0], [0, 0], marker=self.marker, mew=0.75,
-                                 color='black', alpha=alpha, linestyle='none')
+            timeseries.plot(
+                ax=ax,
+                marker=self.marker,
+                markersize=4,
+                linestyle=self.linestyle,
+                color="Black",
+                zorder=10,
+                label="_nolegend",
+                alpha=alpha,
+                mew=0.75,
+            )
+            line = pyplot.Line2D(
+                [0, 0],
+                [0, 0],
+                marker=self.marker,
+                mew=0.75,
+                color="black",
+                alpha=alpha,
+                linestyle="none",
+            )
 
         return line
 
 
 class CompositeSample(SampleMixin):
     """ Class for composite samples """
+
     @property
     def label(self):
         if self._label is None:
-            self._label = 'Composite Sample'
+            self._label = "Composite Sample"
         return self._label
 
     @label.setter
@@ -222,7 +250,7 @@ class CompositeSample(SampleMixin):
     @property
     def marker(self):
         if self._marker is None:
-            self._marker = 'x'
+            self._marker = "x"
         return self._marker
 
     @marker.setter
@@ -234,25 +262,24 @@ class CompositeSample(SampleMixin):
         if self.starttime is not None and self.endtime is not None:
             if self.samplefreq is not None:
                 self._sample_ts = pandas.DatetimeIndex(
-                    start=self.starttime,
-                    end=self.endtime,
-                    freq=self.samplefreq
+                    start=self.starttime, end=self.endtime, freq=self.samplefreq
                 )
             else:
                 self._sample_ts = pandas.DatetimeIndex(
                     start=self.starttime,
                     end=self.endtime,
-                    freq=self.endtime - self.starttime
+                    freq=self.endtime - self.starttime,
                 )
         return self._sample_ts
 
 
 class GrabSample(SampleMixin):
     """ Class for grab (discrete) samples """
+
     @property
     def label(self):
         if self._label is None:
-            self._label = 'Grab Sample'
+            self._label = "Grab Sample"
         return self._label
 
     @label.setter
@@ -262,7 +289,7 @@ class GrabSample(SampleMixin):
     @property
     def marker(self):
         if self._marker is None:
-            self._marker = '+'
+            self._marker = "+"
         return self._marker
 
     @marker.setter
@@ -278,7 +305,7 @@ class GrabSample(SampleMixin):
                 self._sample_ts = pandas.DatetimeIndex(
                     start=self.starttime,
                     end=self.endtime,
-                    freq=self.endtime - self.starttime
+                    freq=self.endtime - self.starttime,
                 )
         return self._sample_ts
 

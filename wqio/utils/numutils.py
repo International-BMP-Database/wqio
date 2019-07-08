@@ -10,10 +10,7 @@ from probscale.algo import _estimate_from_fit
 from wqio import validate
 
 
-TheilStats = namedtuple(
-    'TheilStats',
-    ('slope', 'intercept', 'low_slope', 'high_slope')
-)
+TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_slope"))
 
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
@@ -66,10 +63,10 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
         elif pval and x < 0.001:
             out = "<0.001"
             if tex:
-                out = '${}$'.format(out)
+                out = "${}$".format(out)
 
         elif forceint:
-            out = '{:,.0f}'.format(x)
+            out = "{:,.0f}".format(x)
 
         # logic to do all of the rounding
         elif x != 0.0:
@@ -79,19 +76,19 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
                 decimal_places = int(n - 1 - order)
 
                 if decimal_places <= 0:
-                    out = '{0:,.0f}'.format(round(x, decimal_places))
+                    out = "{0:,.0f}".format(round(x, decimal_places))
 
                 else:
-                    fmt = '{0:,.%df}' % decimal_places
+                    fmt = "{0:,.%df}" % decimal_places
                     out = fmt.format(x)
 
             else:
                 decimal_places = n - 1
                 if tex:
-                    fmt = r'$%%0.%df \times 10 ^ {%d}$' % (decimal_places, order)
+                    fmt = r"$%%0.%df \times 10 ^ {%d}$" % (decimal_places, order)
                     out = fmt % round(x / 10 ** order, decimal_places)
                 else:
-                    fmt = '{0:.%de}' % decimal_places
+                    fmt = "{0:.%de}" % decimal_places
                     out = fmt.format(x)
 
         else:
@@ -99,7 +96,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
     # with NAs and INFs, just return 'NA'
     else:
-        out = 'NA'
+        out = "NA"
 
     return out
 
@@ -128,7 +125,7 @@ def formatResult(result, qualifier, sigfigs=3):
 
     """
 
-    return '{}{}'.format(qualifier, sigFigs(result, sigfigs))
+    return "{}{}".format(qualifier, sigFigs(result, sigfigs))
 
 
 def process_p_vals(pval):
@@ -148,13 +145,13 @@ def process_p_vals(pval):
 
     """
     if pval is None:
-        out = 'NA'
+        out = "NA"
     elif 0 < pval < 0.001:
-        out = formatResult(0.001, '<', sigfigs=1)
+        out = formatResult(0.001, "<", sigfigs=1)
     elif pval > 1 or pval < 0:
-        raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
+        raise ValueError("p-values must be between 0 and 1 (not {})".format(pval))
     else:
-        out = '%0.3f' % pval
+        out = "%0.3f" % pval
 
     return out
 
@@ -175,17 +172,17 @@ def translate_p_vals(pval, as_emoji=True):
     """
 
     if pval is None:
-        interpreted = r'ಠ_ಠ' if as_emoji else 'NA'
+        interpreted = r"ಠ_ಠ" if as_emoji else "NA"
     elif pval <= 0.01:
-        interpreted = r'¯\(ツ)/¯' if as_emoji else 'maybe'
+        interpreted = r"¯\(ツ)/¯" if as_emoji else "maybe"
     elif 0.01 < pval <= 0.05:
-        interpreted = r'¯\_(ツ)_/¯' if as_emoji else 'maybe (weak)'
+        interpreted = r"¯\_(ツ)_/¯" if as_emoji else "maybe (weak)"
     elif 0.05 < pval <= 0.1:
-        interpreted = r'¯\__(ツ)__/¯' if as_emoji else 'maybe (very weak)'
+        interpreted = r"¯\__(ツ)__/¯" if as_emoji else "maybe (very weak)"
     elif 0.1 < pval <= 1:
-        interpreted = r'(╯°□°)╯︵ ┻━┻' if as_emoji else 'nope'
+        interpreted = r"(╯°□°)╯︵ ┻━┻" if as_emoji else "nope"
     else:
-        raise ValueError('p-values must be between 0 and 1 (not {})'.format(pval))
+        raise ValueError("p-values must be between 0 and 1 (not {})".format(pval))
 
     return interpreted
 
@@ -215,13 +212,13 @@ def anderson_darling(data):
 
     """
     AD = stats.anderson(data)
-    field_names = list(AD._fields) + ['pvalue']
+    field_names = list(AD._fields) + ["pvalue"]
 
     p = _anderson_darling_p_vals(AD, len(data))
     values = AD._asdict()
-    values['pvalue'] = p
+    values["pvalue"] = p
 
-    ADResult = namedtuple('ADResult', field_names)
+    ADResult = namedtuple("ADResult", field_names)
     return ADResult(**values)
 
 
@@ -243,10 +240,10 @@ def processAndersonDarlingResults(ad_results):
     AD, crit, sig = ad_results
     try:
         ci = 100 - sig[AD > crit][-1]
-        return '%0.1f%%' % (ci,)
+        return "%0.1f%%" % (ci,)
     except IndexError:
         ci = 100 - sig[0]
-        return '<%0.1f%%' % (ci,)
+        return "<%0.1f%%" % (ci,)
 
 
 def _anderson_darling_p_vals(ad_results, n_points):
@@ -272,21 +269,28 @@ def _anderson_darling_p_vals(ad_results, n_points):
     """
 
     AD, crit, sig = ad_results
-    AD_star = AD * (1 + 0.75 / n_points + 2.25 / n_points**2)
+    AD_star = AD * (1 + 0.75 / n_points + 2.25 / n_points ** 2)
     if AD_star >= 0.6:
-        p = numpy.exp(1.2397 - (5.709 * AD_star) + (0.0186 * AD_star**2))
+        p = numpy.exp(1.2397 - (5.709 * AD_star) + (0.0186 * AD_star ** 2))
     elif 0.34 <= AD_star < 0.6:
-        p = numpy.exp(0.9177 - (4.279 * AD_star) - (1.38 * AD_star**2))
+        p = numpy.exp(0.9177 - (4.279 * AD_star) - (1.38 * AD_star ** 2))
     elif 0.2 < AD_star < 0.34:
-        p = 1 - numpy.exp(-8.318 + (42.796 * AD_star) - (59.938 * AD_star**2))
+        p = 1 - numpy.exp(-8.318 + (42.796 * AD_star) - (59.938 * AD_star ** 2))
     else:
-        p = 1 - numpy.exp(-13.436 + (101.14 * AD_star) - (223.73 * AD_star**2))
+        p = 1 - numpy.exp(-13.436 + (101.14 * AD_star) - (223.73 * AD_star ** 2))
 
     return p
 
 
-def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
-                    rescol='res', unitcol='units', napolicy='ignore'):
+def normalize_units(
+    df,
+    unitsmap,
+    targetunit,
+    paramcol="parameter",
+    rescol="res",
+    unitcol="units",
+    napolicy="ignore",
+):
     """
     Normalize units of measure in a dataframe.
 
@@ -328,8 +332,8 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
     # factor to convert to preferred units
     conversion = target.map(unitsmap)
 
-    if napolicy == 'raise':
-        msg = ''
+    if napolicy == "raise":
+        msg = ""
         if target.isnull().any():
             nulls = df[target.isnull()][paramcol].unique()
             msg += "Some target units could not be mapped to the {} column ({})\n".format(
@@ -352,10 +356,9 @@ def normalize_units(df, unitsmap, targetunit, paramcol='parameter',
             raise ValueError(msg)
 
     # convert results
-    normalized = df.assign(**{
-        rescol: df[rescol] * normalization / conversion,
-        unitcol: target,
-    })
+    normalized = df.assign(
+        **{rescol: df[rescol] * normalization / conversion, unitcol: target}
+    )
 
     return normalized
 
@@ -377,10 +380,10 @@ def pH2concentration(pH, *args):
 
     # check that we recieved a valid input:
     if pH < 0 or pH > 14:
-        raise ValueError('pH = %f but must be between 0 and 14' % pH)
+        raise ValueError("pH = %f but must be between 0 and 14" % pH)
 
     # avogadro's number (items/mole)
-    avogadro = 6.0221413e+23
+    avogadro = 6.0221413e23
 
     # mass of a proton (kg)
     proton_mass = 1.672621777e-27
@@ -398,7 +401,9 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     """ Adapted from stats.mstats.theilslopes
     https://goo.gl/nxPF54
     {}
-    """.format(dedent(stats.mstats.theilslopes.__doc__))
+    """.format(
+        dedent(stats.mstats.theilslopes.__doc__)
+    )
 
     # We copy both x and y so we can use _find_repeats.
     y = numpy.array(y).flatten()
@@ -407,8 +412,7 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     else:
         x = numpy.array(x, dtype=float).flatten()
         if len(x) != len(y):
-            raise ValueError("Incompatible lengths (%s != %s)" %
-                             (len(y), len(x)))
+            raise ValueError("Incompatible lengths (%s != %s)" % (len(y), len(x)))
 
     # Compute sorted slopes only when deltax > 0
     deltax = x[:, numpy.newaxis] - x
@@ -419,31 +423,39 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     outinter = numpy.percentile(y, percentile) - outslope * numpy.median(x)
     # Now compute confidence intervals
     if alpha > 0.5:
-        alpha = 1. - alpha
+        alpha = 1.0 - alpha
 
-    z = stats.distributions.norm.ppf(alpha / 2.)
+    z = stats.distributions.norm.ppf(alpha / 2.0)
 
     # This implements (2.6) from Sen (1968)
     _, nxreps = stats.mstats.find_repeats(x)
     _, nyreps = stats.mstats.find_repeats(y)
-    nt = len(slopes)       # N in Sen (1968)
-    ny = len(y)            # n in Sen (1968)
+    nt = len(slopes)  # N in Sen (1968)
+    ny = len(y)  # n in Sen (1968)
 
     # Equation 2.6 in Sen (1968):
-    sigsq = 1 / 18. * (ny * (ny - 1) * (2 * ny + 5) -
-                       numpy.sum([k * (k - 1) * (2 * k + 5) for k in nxreps]) -
-                       numpy.sum([k * (k - 1) * (2 * k + 5) for k in nyreps]))
+    sigsq = (
+        1
+        / 18.0
+        * (
+            ny * (ny - 1) * (2 * ny + 5)
+            - numpy.sum([k * (k - 1) * (2 * k + 5) for k in nxreps])
+            - numpy.sum([k * (k - 1) * (2 * k + 5) for k in nyreps])
+        )
+    )
 
     # Find the confidence interval indices in `slopes`
     sigma = numpy.sqrt(sigsq)
-    Ru = min(int(numpy.round((nt - z * sigma) / 2.)), len(slopes) - 1)
-    Rl = max(int(numpy.round((nt + z * sigma) / 2.)) - 1, 0)
+    Ru = min(int(numpy.round((nt - z * sigma) / 2.0)), len(slopes) - 1)
+    Rl = max(int(numpy.round((nt + z * sigma) / 2.0)) - 1, 0)
     delta = slopes[[Rl, Ru]]
 
     return TheilStats(outslope, outinter, delta[0], delta[1])
 
 
-def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
+def fit_line(
+    x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False
+):
     """ Fits a line to x-y data in various forms (raw, log, prob scales)
 
     Parameters
@@ -489,17 +501,17 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
     if dist is None:
         dist = stats.norm
 
-    if fitprobs in ['x', 'both']:
-        x = dist.ppf(x / 100.)
-        xhat = dist.ppf(numpy.array(xhat) / 100.)
+    if fitprobs in ["x", "both"]:
+        x = dist.ppf(x / 100.0)
+        xhat = dist.ppf(numpy.array(xhat) / 100.0)
 
-    if fitprobs in ['y', 'both']:
-        y = dist.ppf(y / 100.)
+    if fitprobs in ["y", "both"]:
+        y = dist.ppf(y / 100.0)
 
-    if fitlogs in ['x', 'both']:
+    if fitlogs in ["x", "both"]:
         x = numpy.log(x)
 
-    if fitlogs in ['y', 'both']:
+    if fitlogs in ["y", "both"]:
         y = numpy.log(y)
 
     x = sm.add_constant(x)
@@ -511,14 +523,18 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
         x[:, 0] = 0
 
     results = sm.OLS(y, x).fit()
-    yhat = _estimate_from_fit(xhat, results.params[1], results.params[0],
-                              xlog=fitlogs in ['x', 'both'],
-                              ylog=fitlogs in ['y', 'both'])
+    yhat = _estimate_from_fit(
+        xhat,
+        results.params[1],
+        results.params[0],
+        xlog=fitlogs in ["x", "both"],
+        ylog=fitlogs in ["y", "both"],
+    )
 
-    if fitprobs in ['y', 'both']:
-        yhat = 100. * dist.cdf(yhat)
-    if fitprobs in ['x', 'both']:
-        xhat = 100. * dist.cdf(xhat)
+    if fitprobs in ["y", "both"]:
+        yhat = 100.0 * dist.cdf(yhat)
+    if fitprobs in ["x", "both"]:
+        xhat = 100.0 * dist.cdf(xhat)
 
     return xhat, yhat, results
 
@@ -544,18 +560,20 @@ def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
     first_check = numpy.bitwise_or(
         numpy.bitwise_and(
             numpy.min(interval2, axis=axis) <= numpy.max(interval1, axis=axis),
-            numpy.max(interval1, axis=axis) <= numpy.max(interval2, axis=axis)
+            numpy.max(interval1, axis=axis) <= numpy.max(interval2, axis=axis),
         ),
         numpy.bitwise_and(
             numpy.min(interval2, axis=axis) <= numpy.min(interval1, axis=axis),
-            numpy.min(interval1, axis=axis) <= numpy.max(interval2, axis=axis)
-        )
+            numpy.min(interval1, axis=axis) <= numpy.max(interval2, axis=axis),
+        ),
     )
 
     if oneway:
         return first_check
     else:
-        return first_check | checkIntervalOverlap(interval2, interval1, oneway=True, axis=axis)
+        return first_check | checkIntervalOverlap(
+            interval2, interval1, oneway=True, axis=axis
+        )
 
 
 def winsorize_dataframe(df, **limits):
@@ -620,8 +638,9 @@ def remove_outliers(x, factor=1.5):
     return x[(x >= pctl25 - (factor * IQR)) & (x <= pctl75 + (factor * IQR))]
 
 
-def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
-                         statname=None, **statopts):
+def _comp_stat_generator(
+    df, groupcols, pivotcol, rescol, statfxn, statname=None, **statopts
+):
     """ Generator of records containing results of comparitive
     statistical functions.
 
@@ -655,7 +674,7 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
-        statname = 'stat'
+        statname = "stat"
 
     groups = df.groupby(by=groupcols)
     for name, g in groups:
@@ -664,22 +683,20 @@ def _comp_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
         for _x, _y in itertools.permutations(stations, 2):
             row = dict(zip(groupcols, name))
 
-            station_columns = [pivotcol + '_1', pivotcol + '_2']
+            station_columns = [pivotcol + "_1", pivotcol + "_2"]
             row.update(dict(zip(station_columns, [_x, _y])))
 
             x = g.loc[g[pivotcol] == _x, rescol].values
             y = g.loc[g[pivotcol] == _y, rescol].values
 
             stat = statfxn(x, y, **statopts)
-            row.update({
-                statname: stat[0],
-                'pvalue': stat.pvalue,
-            })
+            row.update({statname: stat[0], "pvalue": stat.pvalue})
             yield row
 
 
-def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
-                           statname=None, **statopts):
+def _paired_stat_generator(
+    df, groupcols, pivotcol, rescol, statfxn, statname=None, **statopts
+):
     """ Generator of records containing results of comparitive
     statistical functions specifically for paired data.
 
@@ -713,7 +730,7 @@ def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
-        statname = 'stat'
+        statname = "stat"
 
     groups = df.groupby(level=groupcols)[rescol]
     for name, g in groups:
@@ -722,7 +739,7 @@ def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
         for _x, _y in itertools.permutations(stations, 2):
             row = dict(zip(groupcols, name))
 
-            station_columns = [pivotcol + '_1', pivotcol + '_2']
+            station_columns = [pivotcol + "_1", pivotcol + "_2"]
             row.update(dict(zip(station_columns, [_x, _y])))
 
             _df = g[[_x, _y]].dropna()
@@ -731,8 +748,5 @@ def _paired_stat_generator(df, groupcols, pivotcol, rescol, statfxn,
             y = _df[_y].values
 
             stat = statfxn(x, y, **statopts)
-            row.update({
-                statname: stat[0],
-                'pvalue': stat.pvalue,
-            })
+            row.update({statname: stat[0], "pvalue": stat.pvalue})
             yield row

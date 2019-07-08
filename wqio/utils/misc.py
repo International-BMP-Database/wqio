@@ -40,12 +40,11 @@ def add_column_level(df, levelvalue, levelname):
     """
 
     if isinstance(df.columns, pandas.MultiIndex):
-        raise ValueError('Dataframe already has MultiIndex on columns')
+        raise ValueError("Dataframe already has MultiIndex on columns")
 
-    origlevel = df.columns.names[0] or 'quantity'
-    return (
-        df.add_prefix(levelvalue + '_____')
-          .pipe(expand_columns, [levelname, origlevel], sep='_____')
+    origlevel = df.columns.names[0] or "quantity"
+    return df.add_prefix(levelvalue + "_____").pipe(
+        expand_columns, [levelname, origlevel], sep="_____"
     )
 
 
@@ -89,14 +88,14 @@ def swap_column_levels(df, level_1, level_2, sort=True):
 
     """
 
-    df2 = df.swaplevel(level_1, level_2, axis='columns')
+    df2 = df.swaplevel(level_1, level_2, axis="columns")
     if sort:
-        df2 = df2.sort_index(axis='columns')
+        df2 = df2.sort_index(axis="columns")
 
     return df2
 
 
-def flatten_columns(df, sep='_'):
+def flatten_columns(df, sep="_"):
     """ Completely flattens a multi-level column index
 
     Parameters
@@ -113,10 +112,10 @@ def flatten_columns(df, sep='_'):
 
     """
     newcols = [sep.join(_) for _ in df.columns]
-    return df.set_axis(newcols, axis='columns', inplace=False)
+    return df.set_axis(newcols, axis="columns", inplace=False)
 
 
-def expand_columns(df, names, sep='_'):
+def expand_columns(df, names, sep="_"):
     """
     Expands a dataframe's columns into a multi-level index
 
@@ -149,9 +148,8 @@ def expand_columns(df, names, sep='_'):
     """
 
     newcols = df.columns.str.split(sep, expand=True)
-    return (
-        df.set_axis(newcols, axis='columns', inplace=False)
-          .rename_axis(names, axis='columns')
+    return df.set_axis(newcols, axis="columns", inplace=False).rename_axis(
+        names, axis="columns"
     )
 
 
@@ -188,14 +186,15 @@ def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     """
 
     if criteria is None:
+
         def criteria(*args, **kwargs):
             return True
 
     redefined = (
         df.loc[df.index.map(criteria), :]
-          .reset_index()
-          .assign(**{levelname: value})
-          .set_index(df.index.names)
+        .reset_index()
+        .assign(**{levelname: value})
+        .set_index(df.index.names)
     )
 
     if dropold:
@@ -209,7 +208,7 @@ def categorize_columns(df, *columns):
     for c in columns:
         if newdf[c].dtype != object:
             raise ValueError("column {} is not an object type".format(c))
-        newdf[c] = newdf[c].astype('category')
+        newdf[c] = newdf[c].astype("category")
 
     return newdf
 
@@ -242,7 +241,7 @@ def nested_getattr(baseobject, attribute):
 
     """
 
-    for attr in attribute.split('.'):
+    for attr in attribute.split("."):
         baseobject = getattr(baseobject, attr)
     return baseobject
 
@@ -281,7 +280,7 @@ def stringify(value, fmt, attribute=None):
         quantity = value
 
     if quantity is None:
-        return '--'
+        return "--"
     else:
         return fmt % quantity
 
@@ -317,28 +316,28 @@ def classifier(value, bins, units=None):
 
     """
 
-    units = units or ''
+    units = units or ""
 
     if numpy.isnan(value):
         return numpy.nan
 
     # below the lower edge
     elif value <= min(bins):
-        output = '<{}'.format(min(bins))
+        output = "<{}".format(min(bins))
 
     # above the upper edge
     elif value > max(bins):
-        output = '>{}'.format(max(bins))
+        output = ">{}".format(max(bins))
 
     # everything else with the range of bins
     else:
         for left, right in zip(bins[:-1], bins[1:]):
             if left < value <= right:
-                output = '{} - {}'.format(left, right)
+                output = "{} - {}".format(left, right)
                 break
 
     # add the units (or don't)
-    return '{} {}'.format(output, units or '').strip()
+    return "{} {}".format(output, units or "").strip()
 
 
 def unique_categories(classifier, bins):
@@ -467,8 +466,7 @@ def assign_multilevel_column(df, val_or_fxn, *collevels):
     return df
 
 
-def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None,
-                    join_char=None):
+def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=None):
     """ Symbolize boolean values in a dataframe with strings
 
     Parameters
@@ -510,10 +508,7 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None,
     if other_symbol is None:
         other_symbol = false_symbol
 
-    mapper = {
-        True: true_symbol,
-        False: false_symbol,
-    }
+    mapper = {True: true_symbol, False: false_symbol}
     symbolized = df.applymap(lambda x: mapper.get(x, other_symbol))
     if join_char is None:
         return symbolized

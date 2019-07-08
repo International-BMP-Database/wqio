@@ -6,11 +6,12 @@ import scipy.stats as stats
 from probscale.algo import _estimate_from_fit
 
 
-fitestimate = namedtuple('BootstrappedFitEstimate',
-                         ['xhat', 'yhat', 'lower', 'upper', 'xlog', 'ylog'])
+fitestimate = namedtuple(
+    "BootstrappedFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"]
+)
 
 
-__all__ = ['BCA', 'percentile']
+__all__ = ["BCA", "percentile"]
 
 
 def _acceleration(data):
@@ -29,13 +30,13 @@ def _acceleration(data):
     """
 
     # intermediate values
-    sumcube_resids = ((data.mean() - data)**3).sum()
+    sumcube_resids = ((data.mean() - data) ** 3).sum()
 
     # dodge the ZeroDivision error
-    sumsqr_resids = max(((data.mean() - data)**2).sum(), 1e-12)
+    sumsqr_resids = max(((data.mean() - data) ** 2).sum(), 1e-12)
 
     # compute and return the acceleration
-    return sumcube_resids / (6 * sumsqr_resids**1.5)
+    return sumcube_resids / (6 * sumsqr_resids ** 1.5)
 
 
 def _make_boot_index(elements, niter):
@@ -119,7 +120,7 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
         z = stats.norm.ppf([0.5 * alpha, 1 - (0.5 * alpha)])
 
         # refine the confidence limits (alphas)
-        zTotal = (z0 + (z0 + z) / (1 - a_hat * (z0 + z)))
+        zTotal = z0 + (z0 + z) / (1 - a_hat * (z0 + z))
         new_alpha = stats.norm.cdf(zTotal) * 100.0
 
         # confidence intervals from the new alphas
@@ -178,8 +179,7 @@ def percentile(data, statfxn, niter=10000, alpha=0.05):
     return CI
 
 
-def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False,
-        **kwargs):
+def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False, **kwargs):
     """
     Perform a percentile bootstrap estimate on a linear regression.
 
@@ -252,23 +252,20 @@ def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False,
     main_params = fitfxn(x, y, **kwargs)
 
     # raw loop to estimate the bootstrapped fit parameters
-    bs_params = numpy.array([
-        fitfxn(x[ii], y[ii], **kwargs)
-        for ii in _make_boot_index(len(x), niter)
-    ])
+    bs_params = numpy.array(
+        [fitfxn(x[ii], y[ii], **kwargs) for ii in _make_boot_index(len(x), niter)]
+    )
 
     # un-log, if necesssary
     if xlog:
         x = numpy.exp(x)
 
     # compute estimate from original data fit
-    yhat = _estimate_from_fit(x, main_params[0], main_params[1],
-                              xlog=xlog, ylog=ylog)
+    yhat = _estimate_from_fit(x, main_params[0], main_params[1], xlog=xlog, ylog=ylog)
 
     # full array of estimates
     bs_estimates = _estimate_from_fit(
-        x[:, None], bs_params[:, 0], bs_params[:, 1],
-        xlog=xlog, ylog=ylog
+        x[:, None], bs_params[:, 0], bs_params[:, 1], xlog=xlog, ylog=ylog
     )
 
     # both alpha alphas

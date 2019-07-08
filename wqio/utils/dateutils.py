@@ -36,19 +36,18 @@ def getSeason(date):
     autumn = numpy.arange(264, 355) + leap_year
 
     if day in spring:
-        season = 'spring'
+        season = "spring"
     elif day in summer:
-        season = 'summer'
+        season = "summer"
     elif day in autumn:
-        season = 'autumn'
+        season = "autumn"
     else:
-        season = 'winter'
+        season = "winter"
 
     return season
 
 
-def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
-                  issuewarnings=False):
+def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings=False):
     """ Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
@@ -68,7 +67,7 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
 
     """
 
-    fallback_datetime = pandas.Timestamp('1901-01-01 00:00')
+    fallback_datetime = pandas.Timestamp("1901-01-01 00:00")
 
     if row[datecol] is None or pandas.isnull(row[datecol]):
         fb_date = True
@@ -98,7 +97,7 @@ def makeTimestamp(row, datecol='sampledate', timecol='sampletime',
         if issuewarnings:
             warnings.warn("Using fallback time from {}".format(row[timecol]))
 
-    dtstring = '{} {}'.format(date, time)
+    dtstring = "{} {}".format(date, time)
     tstamp = pandas.Timestamp(dtstring)
 
     return tstamp
@@ -128,7 +127,7 @@ def getWaterYear(date):
     """
 
     year = date.year
-    yearstring = '{}/{}'
+    yearstring = "{}/{}"
     if date.month >= 10:
         return yearstring.format(year, year + 1)
     else:
