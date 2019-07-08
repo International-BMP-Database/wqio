@@ -7,33 +7,35 @@ from matplotlib import pyplot
 from wqio import samples
 
 
-BASELINE_IMAGES = '_baseline_images/samples_tests'
+BASELINE_IMAGES = "_baseline_images/samples_tests"
 
 
 @pytest.fixture
 def sample_data():
-    datafile = helpers.test_data_path('test_wqsample_data.csv')
+    datafile = helpers.test_data_path("test_wqsample_data.csv")
     rawdata = pandas.read_csv(datafile, index_col=[0, 1, 2, 3, 4, 5, 6, 11, 12])
     return rawdata
 
 
 @pytest.fixture
 def xlims():
-    xlims = (pandas.Timestamp('2013-02-24 16:45').to_pydatetime(),
-             pandas.Timestamp('2013-02-25 03:30').to_pydatetime())
+    xlims = (
+        pandas.Timestamp("2013-02-24 16:45").to_pydatetime(),
+        pandas.Timestamp("2013-02-25 03:30").to_pydatetime(),
+    )
     return xlims
 
 
 @pytest.fixture
 def grab_sample(sample_data):
-    starttime = '2013-02-24 16:54'
-    endtime = '2013-02-24 16:59'
+    starttime = "2013-02-24 16:54"
+    endtime = "2013-02-24 16:59"
     freq = None
 
-    wqs = samples.GrabSample(sample_data, starttime,
-                             endtime=endtime, samplefreq=freq,
-                             storm=None)
-    wqs.marker = 'D'
+    wqs = samples.GrabSample(
+        sample_data, starttime, endtime=endtime, samplefreq=freq, storm=None
+    )
+    wqs.marker = "D"
     wqs.markersize = 8
 
     return wqs
@@ -41,25 +43,28 @@ def grab_sample(sample_data):
 
 @pytest.fixture
 def composite_sample(sample_data):
-    starttime = '2013-02-24 16:59'
-    endtime = '2013-02-25 02:59'
+    starttime = "2013-02-24 16:59"
+    endtime = "2013-02-25 02:59"
     freq = pandas.offsets.Minute(20)
 
-    wqs = samples.CompositeSample(sample_data, starttime,
-                                  endtime=endtime, samplefreq=freq,
-                                  storm=None)
-    wqs.marker = 'D'
+    wqs = samples.CompositeSample(
+        sample_data, starttime, endtime=endtime, samplefreq=freq, storm=None
+    )
+    wqs.marker = "D"
     wqs.markersize = 8
 
     return wqs
 
 
-@pytest.mark.parametrize(('param', 'unit', 'comma', 'expected'), [
-    ('Copper', 'ug/L', False, 'Copper (ug/L)'),
-    ('Copper', 'ug/L', True, 'Copper, ug/L'),
-    ('Nitrate & Nitrite', 'mg/L', False, 'Nitrate & Nitrite (mg/L)'),
-    ('Nitrate & Nitrite', 'mg/L', True, 'Nitrate & Nitrite, mg/L'),
-])
+@pytest.mark.parametrize(
+    ("param", "unit", "comma", "expected"),
+    [
+        ("Copper", "ug/L", False, "Copper (ug/L)"),
+        ("Copper", "ug/L", True, "Copper, ug/L"),
+        ("Nitrate & Nitrite", "mg/L", False, "Nitrate & Nitrite (mg/L)"),
+        ("Nitrate & Nitrite", "mg/L", True, "Nitrate & Nitrite, mg/L"),
+    ],
+)
 def test_parameter_unit(param, unit, comma, expected):
     parameter = samples.Parameter(name=param, units=unit)
     assert parameter.paramunit(usecomma=comma) == expected

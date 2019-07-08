@@ -15,7 +15,7 @@ from wqio.features import Location, Dataset
 from wqio.datacollections import DataCollection
 
 
-OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion('0.19')
+OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
 
 
 def check_stat(expected_csv, result, comp=False):
@@ -33,18 +33,25 @@ def check_stat(expected_csv, result, comp=False):
 
 
 def remove_g_and_h(group):
-    return group.name[1] not in ['G', 'H']
+    return group.name[1] not in ["G", "H"]
 
 
 @pytest.fixture
 def dc():
     df = helpers.make_dc_data_complex()
-    dc = DataCollection(df, rescol='res', qualcol='qual',
-                        stationcol='loc', paramcol='param',
-                        ndval='<', othergroups=None,
-                        pairgroups=['state', 'bmp'],
-                        useros=True, filterfxn=remove_g_and_h,
-                        bsiter=10000)
+    dc = DataCollection(
+        df,
+        rescol="res",
+        qualcol="qual",
+        stationcol="loc",
+        paramcol="param",
+        ndval="<",
+        othergroups=None,
+        pairgroups=["state", "bmp"],
+        useros=True,
+        filterfxn=remove_g_and_h,
+        bsiter=10000,
+    )
 
     return dc
 
@@ -52,59 +59,68 @@ def dc():
 @pytest.fixture
 def dc_noNDs():
     df = helpers.make_dc_data_complex()
-    dc = DataCollection(df, rescol='res', qualcol='qual',
-                        stationcol='loc', paramcol='param',
-                        ndval='junk', othergroups=None,
-                        pairgroups=['state', 'bmp'],
-                        useros=True, filterfxn=remove_g_and_h,
-                        bsiter=10000)
+    dc = DataCollection(
+        df,
+        rescol="res",
+        qualcol="qual",
+        stationcol="loc",
+        paramcol="param",
+        ndval="junk",
+        othergroups=None,
+        pairgroups=["state", "bmp"],
+        useros=True,
+        filterfxn=remove_g_and_h,
+        bsiter=10000,
+    )
 
     return dc
 
 
 def test_basic_attr(dc):
-    assert dc._raw_rescol == 'res'
+    assert dc._raw_rescol == "res"
     assert isinstance(dc.data, pandas.DataFrame)
-    assert dc.roscol == 'ros_res'
-    assert dc.rescol == 'ros_res'
-    assert dc.qualcol == 'qual'
-    assert dc.stationcol == 'loc'
-    assert dc.paramcol == 'param'
-    assert dc.ndval == ['<']
+    assert dc.roscol == "ros_res"
+    assert dc.rescol == "ros_res"
+    assert dc.qualcol == "qual"
+    assert dc.stationcol == "loc"
+    assert dc.paramcol == "param"
+    assert dc.ndval == ["<"]
     assert dc.bsiter == 10000
-    assert dc.groupcols == ['loc', 'param']
-    assert dc.tidy_columns == ['loc', 'param', 'res', '__censorship']
-    assert hasattr(dc, 'filterfxn')
+    assert dc.groupcols == ["loc", "param"]
+    assert dc.tidy_columns == ["loc", "param", "res", "__censorship"]
+    assert hasattr(dc, "filterfxn")
 
 
 def test_data(dc):
     assert isinstance(dc.data, pandas.DataFrame)
     assert dc.data.shape == (519, 8)
-    assert 'G' in dc.data['param'].unique()
-    assert 'H' in dc.data['param'].unique()
+    assert "G" in dc.data["param"].unique()
+    assert "H" in dc.data["param"].unique()
 
 
-@pytest.mark.parametrize('useros', [True, False])
+@pytest.mark.parametrize("useros", [True, False])
 def test_tidy(dc, useros):
     assert isinstance(dc.tidy, pandas.DataFrame)
     assert dc.tidy.shape == (388, 5)
-    assert 'G' not in dc.tidy['param'].unique()
-    assert 'H' not in dc.tidy['param'].unique()
-    collist = ['loc', 'param', 'res', '__censorship', 'ros_res']
+    assert "G" not in dc.tidy["param"].unique()
+    assert "H" not in dc.tidy["param"].unique()
+    collist = ["loc", "param", "res", "__censorship", "ros_res"]
     assert dc.tidy.columns.tolist() == collist
 
 
 def test_paired(dc):
     assert isinstance(dc.paired, pandas.DataFrame)
     assert dc.paired.shape == (164, 6)
-    assert 'G' not in dc.paired.index.get_level_values('param').unique()
-    assert 'H' not in dc.paired.index.get_level_values('param').unique()
-    dc.paired.columns.tolist() == [('res', 'Inflow'),
-                                   ('res', 'Outflow'),
-                                   ('res', 'Reference'),
-                                   ('__censorship', 'Inflow'),
-                                   ('__censorship', 'Outflow'),
-                                   ('__censorship', 'Reference')]
+    assert "G" not in dc.paired.index.get_level_values("param").unique()
+    assert "H" not in dc.paired.index.get_level_values("param").unique()
+    dc.paired.columns.tolist() == [
+        ("res", "Inflow"),
+        ("res", "Outflow"),
+        ("res", "Reference"),
+        ("__censorship", "Inflow"),
+        ("__censorship", "Outflow"),
+        ("__censorship", "Reference"),
+    ]
 
 
 def test_count(dc):
@@ -136,7 +152,7 @@ def test_n_unique(dc):
         G,7,7,7
         H,7,7,7
     """
-    check_stat(known_csv, dc.n_unique('bmp'))
+    check_stat(known_csv, dc.n_unique("bmp"))
 
 
 @helpers.seed
@@ -501,7 +517,7 @@ def test_ranksums(dc):
 
 
 @helpers.seed
-@pytest.mark.xfail(OLD_SCIPY, reason='Scipy < 0.19')
+@pytest.mark.xfail(OLD_SCIPY, reason="Scipy < 0.19")
 def test_kendall(dc):
     known_csv = """\
         ,,kendalltau,kendalltau,kendalltau,pvalue,pvalue,pvalue
@@ -564,7 +580,9 @@ def test_theilslopes(dc):
 
 
 def test_inventory(dc):
-    known_csv = StringIO(dedent("""\
+    known_csv = StringIO(
+        dedent(
+            """\
     loc,param,Count,Non-Detect
     Inflow,A,21,3
     Inflow,B,24,6
@@ -584,15 +602,19 @@ def test_inventory(dc):
     Reference,D,21,12
     Reference,E,20,3
     Reference,F,17,7
-    """))
+    """
+        )
+    )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
-    pdtest.assert_frame_equal(expected, dc.inventory.astype(int),
-                              check_names=False,
-                              check_less_precise=True)
+    pdtest.assert_frame_equal(
+        expected, dc.inventory.astype(int), check_names=False, check_less_precise=True
+    )
 
 
 def test_inventory_noNDs(dc_noNDs):
-    known_csv = StringIO(dedent("""\
+    known_csv = StringIO(
+        dedent(
+            """\
     loc,param,Count,Non-Detect
     Inflow,A,21,0
     Inflow,B,24,0
@@ -612,16 +634,23 @@ def test_inventory_noNDs(dc_noNDs):
     Reference,D,21,0
     Reference,E,20,0
     Reference,F,17,0
-    """))
+    """
+        )
+    )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
-    pdtest.assert_frame_equal(expected, dc_noNDs.inventory.astype(int),
-                              check_names=False,
-                              check_less_precise=True)
+    pdtest.assert_frame_equal(
+        expected,
+        dc_noNDs.inventory.astype(int),
+        check_names=False,
+        check_less_precise=True,
+    )
 
 
 @helpers.seed
 def test_stat_summary(dc):
-    known_csv = StringIO(dedent("""\
+    known_csv = StringIO(
+        dedent(
+            """\
     ros_res,loc,A,B,C,D,E,F
     Count,Inflow,21,24,24,24,19,21
     Count,Outflow,22,22,24,25,16,24
@@ -656,70 +685,74 @@ def test_stat_summary(dc):
     max,Inflow,13.87664,45.97893,1.26657,21.75505,8.88365,163.01001
     max,Outflow,36.58941,47.49381,8.04948,12.39894,4.19118,23.29367
     max,Reference,21.22363,48.23615,1.94442,7.67751,8.75609,10.5095
-    """))
+    """
+        )
+    )
 
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).T
-    pdtest.assert_frame_equal(expected, dc.stat_summary(),
-                              check_names=False,
-                              check_less_precise=True,
-                              check_dtype=False)
+    pdtest.assert_frame_equal(
+        expected,
+        dc.stat_summary(),
+        check_names=False,
+        check_less_precise=True,
+        check_dtype=False,
+    )
 
 
 def test_locations(dc):
     for l in dc.locations:
         assert isinstance(l, Location)
     assert len(dc.locations) == 18
-    assert dc.locations[0].definition == {'loc': 'Inflow', 'param': 'A'}
-    assert dc.locations[1].definition == {'loc': 'Inflow', 'param': 'B'}
+    assert dc.locations[0].definition == {"loc": "Inflow", "param": "A"}
+    assert dc.locations[1].definition == {"loc": "Inflow", "param": "B"}
 
 
 def test_datasets(dc):
     _ds = []
-    for d in dc.datasets('Inflow', 'Outflow'):
+    for d in dc.datasets("Inflow", "Outflow"):
         assert isinstance(d, Dataset)
         _ds.append(d)
     assert len(_ds) == 6
-    assert _ds[0].definition == {'param': 'A'}
-    assert _ds[1].definition == {'param': 'B'}
+    assert _ds[0].definition == {"param": "A"}
+    assert _ds[1].definition == {"param": "B"}
 
 
 # this sufficiently tests dc._filter_collection
 def test_selectLocations(dc):
-    locs = dc.selectLocations(param='A', loc=['Inflow', 'Outflow'])
+    locs = dc.selectLocations(param="A", loc=["Inflow", "Outflow"])
     assert len(locs) == 2
-    for n, (loc, loctype) in enumerate(zip(locs, ['Inflow', 'Outflow'])):
+    for n, (loc, loctype) in enumerate(zip(locs, ["Inflow", "Outflow"])):
         assert isinstance(loc, Location)
-        assert loc.definition['param'] == 'A'
-        assert loc.definition['loc'] == loctype
+        assert loc.definition["param"] == "A"
+        assert loc.definition["loc"] == loctype
 
 
 def test_selectLocations_squeeze_False(dc):
-    locs = dc.selectLocations(param='A', loc=['Inflow'], squeeze=False)
+    locs = dc.selectLocations(param="A", loc=["Inflow"], squeeze=False)
     assert len(locs) == 1
     for n, loc in enumerate(locs):
         assert isinstance(loc, Location)
-        assert loc.definition['param'] == 'A'
-        assert loc.definition['loc'] == 'Inflow'
+        assert loc.definition["param"] == "A"
+        assert loc.definition["loc"] == "Inflow"
 
 
 def test_selectLocations_squeeze_True(dc):
-    loc = dc.selectLocations(param='A', loc=['Inflow'], squeeze=True)
+    loc = dc.selectLocations(param="A", loc=["Inflow"], squeeze=True)
     assert isinstance(loc, Location)
-    assert loc.definition['param'] == 'A'
-    assert loc.definition['loc'] == 'Inflow'
+    assert loc.definition["param"] == "A"
+    assert loc.definition["loc"] == "Inflow"
 
 
 def test_selectLocations_squeeze_True_None(dc):
-    loc = dc.selectLocations(param='A', loc=['Junk'], squeeze=True)
+    loc = dc.selectLocations(param="A", loc=["Junk"], squeeze=True)
     assert loc is None
 
 
 # since the test_selectLocations* tests stress _filter_collection
 # enough, we'll mock it out for datasets:
 def test_selectDatasets(dc):
-    with mock.patch.object(dc, '_filter_collection') as _fc:
-        with mock.patch.object(dc, 'datasets', return_value=['A', 'B']) as _ds:
-            dc.selectDatasets('Inflow', 'Reference', foo='A', bar='C')
-            _ds.assert_called_once_with('Inflow', 'Reference')
-            _fc.assert_called_once_with(['A', 'B'], foo='A', bar='C',
-                                        squeeze=False)
+    with mock.patch.object(dc, "_filter_collection") as _fc:
+        with mock.patch.object(dc, "datasets", return_value=["A", "B"]) as _ds:
+            dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
+            _ds.assert_called_once_with("Inflow", "Reference")
+            _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)

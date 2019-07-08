@@ -6,6 +6,7 @@ from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import cache_readonly
+
 try:
     from tqdm import tqdm
 except ImportError:  # pragma: no cover
@@ -64,12 +65,23 @@ class DataCollection(object):
     """
 
     # column that stores the censorsip status of an observation
-    cencol = '__censorship'
+    cencol = "__censorship"
 
-    def __init__(self, dataframe, rescol='res', qualcol='qual',
-                 stationcol='station', paramcol='parameter', ndval='ND',
-                 othergroups=None, pairgroups=None, useros=True,
-                 filterfxn=None, bsiter=10000, showpbar=True):
+    def __init__(
+        self,
+        dataframe,
+        rescol="res",
+        qualcol="qual",
+        stationcol="station",
+        paramcol="parameter",
+        ndval="ND",
+        othergroups=None,
+        pairgroups=None,
+        useros=True,
+        filterfxn=None,
+        bsiter=10000,
+        showpbar=True,
+    ):
 
         # cache for all of the properties
         self._cache = {}
@@ -89,7 +101,7 @@ class DataCollection(object):
         self.showpbar = showpbar
 
         # column that stores ROS'd values
-        self.roscol = 'ros_' + rescol
+        self.roscol = "ros_" + rescol
 
         # column stators "final" values
         if self.useros:
@@ -108,43 +120,51 @@ class DataCollection(object):
         self.tidy_columns = self.groupcols + [self._raw_rescol, self.cencol]
 
         # the "raw" data with the censorship column added
-        self.data = (
-            dataframe
-            .assign(**{self.cencol: dataframe[self.qualcol].isin(self.ndval)})
-            .reset_index()
-        )
+        self.data = dataframe.assign(
+            **{self.cencol: dataframe[self.qualcol].isin(self.ndval)}
+        ).reset_index()
 
     @cache_readonly
     def tidy(self):
         if self.useros:
+
             def fxn(g):
                 with warnings.catch_warnings():
-                    warnings.simplefilter('ignore')
+                    warnings.simplefilter("ignore")
                     rosdf = (
-                        ROS(df=g, result=self._raw_rescol, censorship=self.cencol, as_array=False)
-                        .rename(columns={'final': self.roscol})
+                        ROS(
+                            df=g,
+                            result=self._raw_rescol,
+                            censorship=self.cencol,
+                            as_array=False,
+                        )
+                        .rename(columns={"final": self.roscol})
                         .loc[:, [self._raw_rescol, self.roscol, self.cencol]]
                     )
                 return rosdf
+
         else:
+
             def fxn(g):
                 g[self.roscol] = numpy.nan
                 return g
 
         if tqdm and self.showpbar:
+
             def make_tidy(df):
                 tqdm.pandas(desc="Tidying the DataCollection")
                 return df.groupby(self.groupcols).progress_apply(fxn)
+
         else:
+
             def make_tidy(df):
                 return df.groupby(self.groupcols).apply(fxn)
 
         keep_cols = self.tidy_columns + [self.roscol]
         with warnings.catch_warnings():
-            warnings.simplefilter('once')
+            warnings.simplefilter("once")
             _tidy = (
-                self.data
-                .reset_index()[self.tidy_columns]
+                self.data.reset_index()[self.tidy_columns]
                 .groupby(by=self.groupcols)
                 .filter(self.filterfxn)
                 .pipe(make_tidy)
@@ -157,18 +177,24 @@ class DataCollection(object):
     @cache_readonly
     def paired(self):
         _pairs = (
-            self.data
-                .reset_index()
-                .groupby(by=self.groupcols)
-                .filter(self.filterfxn)
-                .set_index(self.pairgroups)
-                .unstack(level=self.stationcol)
-                .rename_axis(['value', self.stationcol], axis='columns')
+            self.data.reset_index()
+            .groupby(by=self.groupcols)
+            .filter(self.filterfxn)
+            .set_index(self.pairgroups)
+            .unstack(level=self.stationcol)
+            .rename_axis(["value", self.stationcol], axis="columns")
         )[[self._raw_rescol, self.cencol]]
         return _pairs
 
-    def generic_stat(self, statfxn, use_bootstrap=True, statname=None,
-                     has_pvalue=False, filterfxn=None, **statopts):
+    def generic_stat(
+        self,
+        statfxn,
+        use_bootstrap=True,
+        statname=None,
+        has_pvalue=False,
+        filterfxn=None,
+        **statopts
+    ):
         """Generic function to estimate a statistic and its CIs.
 
         Parameters
@@ -218,7 +244,7 @@ class DataCollection(object):
         """
 
         if statname is None:
-            statname = 'stat'
+            statname = "stat"
 
         if filterfxn is None:
             filterfxn = utils.non_filter
@@ -229,27 +255,26 @@ class DataCollection(object):
                 stat = statfxn(data)
                 lci, uci = bootstrap.BCA(data, statfxn=statfxn)
                 values = [lci, stat, uci]
-                statnames = ['lower', statname, 'upper']
+                statnames = ["lower", statname, "upper"]
             else:
                 values = validate.at_least_empty_list(statfxn(data, **statopts))
-                if hasattr(values, '_fields'):  # nametuple
+                if hasattr(values, "_fields"):  # nametuple
                     statnames = values._fields
                 else:  # tuple
                     statnames = [statname]
                     if has_pvalue:
-                        statnames.append('pvalue')
+                        statnames.append("pvalue")
 
             return pandas.Series(values, index=statnames)
 
         stat = (
-            self.tidy
-                .groupby(by=self.groupcols)
-                .filter(filterfxn)
-                .groupby(by=self.groupcols)
-                .apply(fxn)
-                .unstack(level=self.stationcol)
-                .pipe(utils.swap_column_levels, 0, 1)
-                .rename_axis(['station', 'result'], axis='columns')
+            self.tidy.groupby(by=self.groupcols)
+            .filter(filterfxn)
+            .groupby(by=self.groupcols)
+            .apply(fxn)
+            .unstack(level=self.stationcol)
+            .pipe(utils.swap_column_levels, 0, 1)
+            .rename_axis(["station", "result"], axis="columns")
         )
 
         return stat
@@ -257,105 +282,133 @@ class DataCollection(object):
     @cache_readonly
     def count(self):
         return (
-            self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname='Count')
-                .fillna(0)
-                .astype(int)
+            self.generic_stat(
+                lambda x: x.shape[0], use_bootstrap=False, statname="Count"
+            )
+            .fillna(0)
+            .astype(int)
         )
 
     @cache_readonly
     def inventory(self):
         counts = (
-            self.tidy
-                .groupby(by=self.groupcols + [self.cencol])
-                .size()
-                .unstack(level=self.cencol)
-                .fillna(0)
-                .astype(int)
-                .rename_axis(None, axis='columns')
-                .rename(columns={False: 'Detect', True: 'Non-Detect'})
-                .assign(Count=lambda df: df.sum(axis='columns'))
+            self.tidy.groupby(by=self.groupcols + [self.cencol])
+            .size()
+            .unstack(level=self.cencol)
+            .fillna(0)
+            .astype(int)
+            .rename_axis(None, axis="columns")
+            .rename(columns={False: "Detect", True: "Non-Detect"})
+            .assign(Count=lambda df: df.sum(axis="columns"))
         )
-        if 'Non-Detect' not in counts.columns:
-            counts['Non-Detect'] = 0
+        if "Non-Detect" not in counts.columns:
+            counts["Non-Detect"] = 0
 
-        return counts[['Count', 'Non-Detect']]
+        return counts[["Count", "Non-Detect"]]
 
     @cache_readonly
     def median(self):
-        return self.generic_stat(numpy.median, statname='median')
+        return self.generic_stat(numpy.median, statname="median")
 
     @cache_readonly
     def mean(self):
-        return self.generic_stat(numpy.mean, statname='mean')
+        return self.generic_stat(numpy.mean, statname="mean")
 
     @cache_readonly
     def std_dev(self):
-        return self.generic_stat(numpy.std, statname='std. dev.', use_bootstrap=False, )
+        return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False)
 
     def percentile(self, percentile):
         """Return the percentiles (0 - 100) for the data."""
-        return self.generic_stat(lambda x: numpy.percentile(x, percentile),
-                                 statname='pctl {}'.format(percentile),
-                                 use_bootstrap=False)
+        return self.generic_stat(
+            lambda x: numpy.percentile(x, percentile),
+            statname="pctl {}".format(percentile),
+            use_bootstrap=False,
+        )
 
     @cache_readonly
     def logmean(self):
-        return self.generic_stat(lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis),
-                                 statname='Log-mean')
+        return self.generic_stat(
+            lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname="Log-mean"
+        )
 
     @cache_readonly
     def logstd_dev(self):
-        return self.generic_stat(lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
-                                 use_bootstrap=False, statname='Log-std. dev.')
+        return self.generic_stat(
+            lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+            use_bootstrap=False,
+            statname="Log-std. dev.",
+        )
 
     @cache_readonly
     def geomean(self):
         geomean = numpy.exp(self.logmean)
-        geomean.columns.names = ['station', 'Geo-mean']
+        geomean.columns.names = ["station", "Geo-mean"]
         return geomean
 
     @cache_readonly
     def geostd_dev(self):
         geostd = numpy.exp(self.logstd_dev)
-        geostd.columns.names = ['station', 'Geo-std. dev.']
+        geostd.columns.names = ["station", "Geo-std. dev."]
         return geostd
 
     @cache_readonly
     def shapiro(self):
-        return self.generic_stat(stats.shapiro, use_bootstrap=False,
-                                 has_pvalue=True, statname='shapiro',
-                                 filterfxn=lambda x: x.shape[0] > 3)
+        return self.generic_stat(
+            stats.shapiro,
+            use_bootstrap=False,
+            has_pvalue=True,
+            statname="shapiro",
+            filterfxn=lambda x: x.shape[0] > 3,
+        )
 
     @cache_readonly
     def shapiro_log(self):
-        return self.generic_stat(lambda x: stats.shapiro(numpy.log(x)),
-                                 use_bootstrap=False, has_pvalue=True,
-                                 filterfxn=lambda x: x.shape[0] > 3,
-                                 statname='log-shapiro')
+        return self.generic_stat(
+            lambda x: stats.shapiro(numpy.log(x)),
+            use_bootstrap=False,
+            has_pvalue=True,
+            filterfxn=lambda x: x.shape[0] > 3,
+            statname="log-shapiro",
+        )
 
     @cache_readonly
     def lilliefors(self):
-        return self.generic_stat(sm.stats.lilliefors, use_bootstrap=False,
-                                 has_pvalue=True, statname='lilliefors')
+        return self.generic_stat(
+            sm.stats.lilliefors,
+            use_bootstrap=False,
+            has_pvalue=True,
+            statname="lilliefors",
+        )
 
     @cache_readonly
     def lilliefors_log(self):
-        return self.generic_stat(lambda x: sm.stats.lilliefors(numpy.log(x)),
-                                 use_bootstrap=False, has_pvalue=True,
-                                 statname='log-lilliefors')
+        return self.generic_stat(
+            lambda x: sm.stats.lilliefors(numpy.log(x)),
+            use_bootstrap=False,
+            has_pvalue=True,
+            statname="log-lilliefors",
+        )
 
     @cache_readonly
     def anderson_darling(self):
         raise NotImplementedError
-        return self.generic_stat(utils.anderson_darling, use_bootstrap=False,
-                                 has_pvalue=True, statname='anderson-darling')
+        return self.generic_stat(
+            utils.anderson_darling,
+            use_bootstrap=False,
+            has_pvalue=True,
+            statname="anderson-darling",
+        )
 
     @cache_readonly
     def anderson_darling_log(self):
         raise NotImplementedError
-        return self.generic_stat(lambda x: utils.anderson_darling(numpy.log(x)),
-                                 use_bootstrap=False, has_pvalue=True,
-                                 statname='log-anderson-darling')
+        return self.generic_stat(
+            lambda x: utils.anderson_darling(numpy.log(x)),
+            use_bootstrap=False,
+            has_pvalue=True,
+            statname="log-anderson-darling",
+        )
 
     def comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
         """Generic function to apply comparative hypothesis tests to
@@ -410,7 +463,7 @@ class DataCollection(object):
             generator = utils.numutils._comp_stat_generator
             rescol = self.rescol
 
-        station_columns = [self.stationcol + '_1', self.stationcol + '_2']
+        station_columns = [self.stationcol + "_1", self.stationcol + "_2"]
         meta_columns = self.groupcols_comparison
         index_cols = meta_columns + station_columns
 
@@ -427,32 +480,37 @@ class DataCollection(object):
 
     @cache_readonly
     def mann_whitney(self):
-        return self.comparison_stat(stats.mannwhitneyu, statname='mann_whitney',
-                                    alternative='two-sided')
+        return self.comparison_stat(
+            stats.mannwhitneyu, statname="mann_whitney", alternative="two-sided"
+        )
 
     @cache_readonly
     def ranksums(self):
-        return self.comparison_stat(stats.ranksums, statname='rank_sums')
+        return self.comparison_stat(stats.ranksums, statname="rank_sums")
 
     @cache_readonly
     def t_test(self):
-        return self.comparison_stat(stats.ttest_ind, statname='t_test', equal_var=False)
+        return self.comparison_stat(stats.ttest_ind, statname="t_test", equal_var=False)
 
     @cache_readonly
     def levene(self):
-        return self.comparison_stat(stats.levene, statname='levene', center='median')
+        return self.comparison_stat(stats.levene, statname="levene", center="median")
 
     @cache_readonly
     def wilcoxon(self):
-        return self.comparison_stat(stats.wilcoxon, statname='wilcoxon', paired=True)
+        return self.comparison_stat(stats.wilcoxon, statname="wilcoxon", paired=True)
 
     @cache_readonly
     def kendall(self):
-        return self.comparison_stat(stats.kendalltau, statname='kendalltau', paired=True)
+        return self.comparison_stat(
+            stats.kendalltau, statname="kendalltau", paired=True
+        )
 
     @cache_readonly
     def spearman(self):
-        return self.comparison_stat(stats.spearmanr, statname='spearmanrho', paired=True)
+        return self.comparison_stat(
+            stats.spearmanr, statname="spearmanrho", paired=True
+        )
 
     @cache_readonly
     def theilslopes(self, logs=False):
@@ -462,20 +520,25 @@ class DataCollection(object):
     def locations(self):
         _locations = []
         groups = (
-            self.data
-                .groupby(by=self.groupcols)
-                .filter(self.filterfxn)
-                .groupby(by=self.groupcols)
+            self.data.groupby(by=self.groupcols)
+            .filter(self.filterfxn)
+            .groupby(by=self.groupcols)
         )
         cols = [self._raw_rescol, self.qualcol]
         for names, data in groups:
             loc_dict = dict(zip(self.groupcols, names))
             loc = (
                 data.set_index(self.pairgroups)[cols]
-                    .reset_index(level=self.stationcol, drop=True)
-                    .pipe(Location, station_type=loc_dict[self.stationcol].lower(),
-                          rescol=self._raw_rescol, qualcol=self.qualcol,
-                          ndval=self.ndval, bsiter=self.bsiter, useros=self.useros)
+                .reset_index(level=self.stationcol, drop=True)
+                .pipe(
+                    Location,
+                    station_type=loc_dict[self.stationcol].lower(),
+                    rescol=self._raw_rescol,
+                    qualcol=self.qualcol,
+                    ndval=self.ndval,
+                    bsiter=self.bsiter,
+                    useros=self.useros,
+                )
             )
 
             loc.definition = loc_dict
@@ -517,7 +580,7 @@ class DataCollection(object):
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
-            dsname = '_'.join(names).replace(', ', '')
+            dsname = "_".join(names).replace(", ", "")
 
             if effl:
                 ds = Dataset(infl, effl, useros=self.useros, name=dsname)
@@ -631,15 +694,15 @@ class DataCollection(object):
 
     def n_unique(self, column):
         return (
-            self.data
-                .loc[:, self.groupcols + [column]]
-                .drop_duplicates()
-                .groupby(self.groupcols)
-                .size()
-                .unstack(level=self.stationcol)
-                .pipe(utils.add_column_level, column, 'result')
-                .swaplevel(axis='columns')
-                .fillna(0).astype(int)
+            self.data.loc[:, self.groupcols + [column]]
+            .drop_duplicates()
+            .groupby(self.groupcols)
+            .size()
+            .unstack(level=self.stationcol)
+            .pipe(utils.add_column_level, column, "result")
+            .swaplevel(axis="columns")
+            .fillna(0)
+            .astype(int)
         )
 
     def stat_summary(self, percentiles=None, groupcols=None, useros=True):
@@ -672,9 +735,8 @@ class DataCollection(object):
 
         ptiles = percentiles or [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
-            self.tidy
-            .groupby(by=groupcols)
+            self.tidy.groupby(by=groupcols)
             .apply(lambda g: g[col].describe(percentiles=ptiles).T)
-            .drop('count', axis='columns')
+            .drop("count", axis="columns")
         )
         return self.inventory.join(summary).unstack(level=self.stationcol)

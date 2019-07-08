@@ -6,13 +6,13 @@ import pandas
 
 
 def dataset(fname):
-    valid_names = ['bmpdata', 'cvc', 'nsqd']
+    valid_names = ["bmpdata", "cvc", "nsqd"]
     fname, ext = os.path.splitext(fname)
     if fname.lower() not in valid_names:
         msg = "filename '{}' not one of {}"
         raise ValueError(msg.format(fname, valid_names))
 
-    return fname.lower() + '.zip'
+    return fname.lower() + ".zip"
 
 
 def timestamp(datelike):
@@ -33,13 +33,13 @@ def timestamp(datelike):
     try:
         tstamp = pandas.Timestamp(datelike)
     except:
-        msg = '{} could not be coerced into a pandas.Timestamp'.format(datelike)
+        msg = "{} could not be coerced into a pandas.Timestamp".format(datelike)
         raise ValueError(msg)
 
     return tstamp
 
 
-def axes(ax, fallback='new'):
+def axes(ax, fallback="new"):
     """ Checks if a value if an Axes. If None, a new one is created or
     the 'current' one is found.
 
@@ -60,9 +60,9 @@ def axes(ax, fallback='new'):
     """
 
     if ax is None:
-        if fallback == 'new':
+        if fallback == "new":
             fig, ax = pyplot.subplots()
-        elif fallback == 'current':
+        elif fallback == "current":
             ax = pyplot.gca()
             fig = ax.figure
         else:
@@ -109,7 +109,7 @@ def single_value_in_index(df, index_level):
 def at_least_empty_list(value):
     if isinstance(value, numpy.ndarray):
         value = value.tolist()
-    elif numpy.isscalar(value) and value != '':
+    elif numpy.isscalar(value) and value != "":
         value = [value]
     elif not value:
         value = []
@@ -118,10 +118,10 @@ def at_least_empty_list(value):
 
 
 def at_least_empty_dict(value, **kwargs):
-    if value is None or value == '':
+    if value is None or value == "":
         value = {}
     elif not isinstance(value, dict):
-        raise ValueError('{} cannot be a dictionary'.format(value))
+        raise ValueError("{} cannot be a dictionary".format(value))
     else:
         value = value.copy()
 
@@ -131,9 +131,9 @@ def at_least_empty_dict(value, **kwargs):
 
 
 def fit_arguments(arg, argname):
-    valid_args = ['x', 'y', 'both', None]
+    valid_args = ["x", "y", "both", None]
     if arg not in valid_args:
-        msg = 'Valid value for {} ({}). Must be on of {}'
+        msg = "Valid value for {} ({}). Must be on of {}"
         raise ValueError(msg.format(argname, arg, valid_args))
 
     return arg

@@ -18,23 +18,15 @@ from wqio import viz
 
 # meta data mappings based on station
 station_names = {
-    'inflow': 'Influent',
-    'outflow': 'Effluent',
-    'reference': 'Reference Flow',
+    "inflow": "Influent",
+    "outflow": "Effluent",
+    "reference": "Reference Flow",
 }
 
-markers = {
-    'Influent': ['o', 'v'],
-    'Effluent': ['s', '<'],
-    'Reference Flow': ['D', 'd'],
-}
+markers = {"Influent": ["o", "v"], "Effluent": ["s", "<"], "Reference Flow": ["D", "d"]}
 
-palette = seaborn.color_palette(palette='deep', n_colors=3, desat=0.88)
-colors = {
-    'Influent': palette[0],
-    'Effluent': palette[1],
-    'Reference Flow': palette[2],
-}
+palette = seaborn.color_palette(palette="deep", n_colors=3, desat=0.88)
+colors = {"Influent": palette[0], "Effluent": palette[1], "Reference Flow": palette[2]}
 
 
 class Location(object):
@@ -150,9 +142,18 @@ class Location(object):
 
     """
 
-    def __init__(self, dataframe, rescol='res', qualcol='qual', ndval='ND',
-                 station_type='inflow', useros=True, cencol='cen',
-                 bsiter=10000, include=True):
+    def __init__(
+        self,
+        dataframe,
+        rescol="res",
+        qualcol="qual",
+        ndval="ND",
+        station_type="inflow",
+        useros=True,
+        cencol="cen",
+        bsiter=10000,
+        include=True,
+    ):
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -189,13 +190,14 @@ class Location(object):
     @property
     def dataframe(self):
         if self.raw_data.shape[0] > 0 and self._dataframe is None:
-            df = (
-                self.raw_data
-                    .assign(**{self.cencol: lambda df: df[self.qualcol].isin(self.ndvals)})
+            df = self.raw_data.assign(
+                **{self.cencol: lambda df: df[self.qualcol].isin(self.ndvals)}
             )
             if self.useros:
-                ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
-                self._dataframe = ros[['final', self.cencol]]
+                ros = ROS(
+                    df=df, result=self.rescol, censorship=self.cencol, as_array=False
+                )
+                self._dataframe = ros[["final", self.cencol]]
             else:
                 self._dataframe = df[[self.rescol, self.cencol]]
         return self._dataframe
@@ -209,7 +211,7 @@ class Location(object):
     def data(self):
         if self.hasData:
             if self.useros:
-                output = self.dataframe['final'].values
+                output = self.dataframe["final"].values
             else:
                 output = self.dataframe[self.rescol].values
 
@@ -301,9 +303,9 @@ class Location(object):
     @cache_readonly
     def analysis_space(self):
         if self.shapiro_log[1] >= self.shapiro[1] and self.shapiro_log[1] > 0.1:
-            return 'lognormal'
+            return "lognormal"
         else:
-            return 'normal'
+            return "normal"
 
     @cache_readonly
     def cov(self):
@@ -318,12 +320,16 @@ class Location(object):
     @cache_readonly
     def min_detect(self):
         if self.hasData:
-            return self.raw_data[self.rescol][~self.raw_data[self.qualcol].isin(self.ndvals)].min()
+            return self.raw_data[self.rescol][
+                ~self.raw_data[self.qualcol].isin(self.ndvals)
+            ].min()
 
     @cache_readonly
     def min_DL(self):
         if self.hasData:
-            return self.raw_data[self.rescol][self.raw_data[self.qualcol].isin(self.ndvals)].min()
+            return self.raw_data[self.rescol][
+                self.raw_data[self.qualcol].isin(self.ndvals)
+            ].min()
 
     @cache_readonly
     def max(self):
@@ -389,6 +395,7 @@ class Location(object):
     @cache_readonly
     def logmean_conf_interval(self):
         if self.all_positive and self.hasData:
+
             def fxn(x, **kwds):
                 return numpy.mean(numpy.log(x), **kwds)
 
@@ -416,13 +423,13 @@ class Location(object):
 
     def boxplot_stats(self, log=True, bacteria=False):
         bxpstats = {
-            'label': self.name,
-            'mean': self.geomean if bacteria else self.mean,
-            'med': self.median,
-            'q1': self.pctl25,
-            'q3': self.pctl75,
-            'cilo': self.median_conf_interval[0],
-            'cihi': self.median_conf_interval[1],
+            "label": self.name,
+            "mean": self.geomean if bacteria else self.mean,
+            "med": self.median,
+            "q1": self.pctl25,
+            "q3": self.pctl75,
+            "cilo": self.median_conf_interval[0],
+            "cihi": self.median_conf_interval[1],
         }
 
         if log:
@@ -430,23 +437,31 @@ class Location(object):
                 numpy.log(self.data),
                 numpy.log(self.pctl25),
                 numpy.log(self.pctl75),
-                transformout=numpy.exp
+                transformout=numpy.exp,
             )
         else:
             wnf = viz.whiskers_and_fliers(
-                self.data,
-                self.pctl25,
-                self.pctl75,
-                transformout=None
+                self.data, self.pctl25, self.pctl75, transformout=None
             )
 
         bxpstats.update(wnf)
         return [bxpstats]
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', shownotches=True, showmean=True,
-                width=0.8, bacteria=False, ylabel=None, xlabel=None,
-                patch_artist=False, xlims=None):
+    def boxplot(
+        self,
+        ax=None,
+        pos=1,
+        yscale="log",
+        shownotches=True,
+        showmean=True,
+        width=0.8,
+        bacteria=False,
+        ylabel=None,
+        xlabel=None,
+        patch_artist=False,
+        xlims=None,
+    ):
         """ Draws a boxplot and whisker on a matplotlib figure
 
         Parameters
@@ -487,10 +502,10 @@ class Location(object):
         """
 
         fig, ax = validate.axes(ax)
-        y_log = (yscale == 'log')
+        y_log = yscale == "log"
         bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
         if xlabel is not None:
-            bxpstats[0]['label'] = xlabel
+            bxpstats[0]["label"] = xlabel
 
         bp = viz.boxplot(
             bxpstats,
@@ -505,7 +520,7 @@ class Location(object):
         )
 
         ax.set_yscale(yscale)
-        if yscale == 'log':
+        if yscale == "log":
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=True, threshold=6))
 
         if ylabel:
@@ -522,9 +537,17 @@ class Location(object):
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', axtype='prob',
-                 ylabel=None, clearYLabels=False,
-                 rotateticklabels=True, bestfit=False, **plotopts):
+    def probplot(
+        self,
+        ax=None,
+        yscale="log",
+        axtype="prob",
+        ylabel=None,
+        clearYLabels=False,
+        rotateticklabels=True,
+        bestfit=False,
+        **plotopts
+    ):
         """ Draws a probability plot on a matplotlib figure
 
         Parameters
@@ -563,30 +586,47 @@ class Location(object):
         fig, ax = validate.axes(ax)
 
         scatter_kws = plotopts.copy()
-        scatter_kws['color'] = plotopts.get('color', self.color)
-        scatter_kws['label'] = plotopts.get('label', self.name)
-        scatter_kws['marker'] = plotopts.get('marker', self.plot_marker)
-        scatter_kws['linestyle'] = plotopts.get('linestyle', 'none')
-        fig = viz.probplot(self.data, ax=ax, axtype=axtype, yscale=yscale,
-                           bestfit=bestfit, scatter_kws=scatter_kws)
+        scatter_kws["color"] = plotopts.get("color", self.color)
+        scatter_kws["label"] = plotopts.get("label", self.name)
+        scatter_kws["marker"] = plotopts.get("marker", self.plot_marker)
+        scatter_kws["linestyle"] = plotopts.get("linestyle", "none")
+        fig = viz.probplot(
+            self.data,
+            ax=ax,
+            axtype=axtype,
+            yscale=yscale,
+            bestfit=bestfit,
+            scatter_kws=scatter_kws,
+        )
 
-        if yscale == 'log':
+        if yscale == "log":
             pass
 
         if clearYLabels:
             ax.set_yticklabels([])
 
         if rotateticklabels:
-            viz.rotateTickLabels(ax, 45, 'x', ha='right')
+            viz.rotateTickLabels(ax, 45, "x", ha="right")
 
         if bestfit:
             utils.fit_line()
 
         return fig
 
-    def statplot(self, pos=1, yscale='log', shownotches=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, xlabel=None,
-                 axtype='prob', patch_artist=False, **plotopts):
+    def statplot(
+        self,
+        pos=1,
+        yscale="log",
+        shownotches=True,
+        showmean=True,
+        width=0.8,
+        bacteria=False,
+        ylabel=None,
+        xlabel=None,
+        axtype="prob",
+        patch_artist=False,
+        **plotopts
+    ):
         """ Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
@@ -629,26 +669,41 @@ class Location(object):
         """
 
         # setup the figure and axes
-        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor='none',
-                            edgecolor='none')
+        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor="none", edgecolor="none")
         ax1 = pyplot.subplot2grid((1, 4), (0, 0))
         ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
-        self.boxplot(ax=ax1, pos=pos, yscale=yscale, shownotches=shownotches,
-                     showmean=showmean, width=width, bacteria=bacteria,
-                     ylabel=ylabel, xlabel=xlabel, patch_artist=patch_artist,
-                     xlims={'left': pos - (0.6 * width), 'right': pos + (0.6 * width)})
+        self.boxplot(
+            ax=ax1,
+            pos=pos,
+            yscale=yscale,
+            shownotches=shownotches,
+            showmean=showmean,
+            width=width,
+            bacteria=bacteria,
+            ylabel=ylabel,
+            xlabel=xlabel,
+            patch_artist=patch_artist,
+            xlims={"left": pos - (0.6 * width), "right": pos + (0.6 * width)},
+        )
 
-        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
-                      ylabel=None, clearYLabels=True, **plotopts)
+        self.probplot(
+            ax=ax2,
+            yscale=yscale,
+            axtype=axtype,
+            ylabel=None,
+            clearYLabels=True,
+            **plotopts
+        )
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def verticalScatter(self, ax=None, pos=1, ylabel=None, yscale='log',
-                        ignoreROS=True, markersize=6):
+    def verticalScatter(
+        self, ax=None, pos=1, ylabel=None, yscale="log", ignoreROS=True, markersize=6
+    ):
         """ Draws a clustered & jittered scatter plot of the data
 
         Parameters
@@ -684,13 +739,13 @@ class Location(object):
         fig, ax = validate.axes(ax)
 
         if not ignoreROS and self.useros:
-            rescol = 'final'
+            rescol = "final"
             hue_column = None
             hue_order = None
             df = self.dataframe.copy()
         else:
             rescol = self.rescol
-            hue_column = 'Censored'
+            hue_column = "Censored"
             hue_order = [True, False]
             df = self.raw_data.copy()
 
@@ -699,15 +754,15 @@ class Location(object):
             .assign(Result=lambda df: df[rescol])
             .assign(Censored=lambda df: df[self.cencol])
             .pipe(
-                (seaborn.swarmplot, 'data'),
-                y='Result',
-                x='pos',
+                (seaborn.swarmplot, "data"),
+                y="Result",
+                x="pos",
                 hue=hue_column,
                 hue_order=hue_order,
                 size=markersize,
                 marker=self.plot_marker,
                 color=self.color,
-                edgecolor='k',
+                edgecolor="k",
                 linewidth=1.25,
             )
         )
@@ -765,12 +820,12 @@ class Dataset(object):
         else:
             infl = pandas.DataFrame(
                 index=self.effluent.raw_data.index,
-                columns=self.effluent.raw_data.columns
+                columns=self.effluent.raw_data.columns,
             )
 
-        infl = utils.add_column_level(infl, 'inflow', 'station')
-        effl = utils.add_column_level(effl, 'outflow', 'station')
-        return infl.join(effl, how='outer')
+        infl = utils.add_column_level(infl, "inflow", "station")
+        effl = utils.add_column_level(effl, "outflow", "station")
+        return infl.join(effl, how="outer")
 
     @cache_readonly
     def paired_data(self):
@@ -839,7 +894,7 @@ class Dataset(object):
             overlap = utils.checkIntervalOverlap(
                 self.influent.median_conf_interval,
                 self.effluent.median_conf_interval,
-                oneway=False
+                oneway=False,
             )
         return overlap
 
@@ -988,44 +1043,49 @@ class Dataset(object):
 
     @cache_readonly
     def theil_medslope(self):
-        return self._theil_stats['medslope']
+        return self._theil_stats["medslope"]
 
     @cache_readonly
     def theil_intercept(self):
-        return self._theil_stats['intercept']
+        return self._theil_stats["intercept"]
 
     @cache_readonly
     def theil_loslope(self):
-        return self._theil_stats['loslope']
+        return self._theil_stats["loslope"]
 
     @cache_readonly
     def theil_hislope(self):
-        return self._theil_stats['hislope']
+        return self._theil_stats["hislope"]
 
     # helper objects for the stats
     @cache_readonly
     def _wilcoxon_stats(self):
         if self._paired_stats:
-            return stats.wilcoxon(numpy.log(self.paired_data.inflow.res),
-                                  numpy.log(self.paired_data.outflow.res))
+            return stats.wilcoxon(
+                numpy.log(self.paired_data.inflow.res),
+                numpy.log(self.paired_data.outflow.res),
+            )
 
     @cache_readonly
     def _mannwhitney_stats(self):
         if self._non_paired_stats:
-            return stats.mannwhitneyu(self.influent.data, self.effluent.data,
-                                      alternative='two-sided')
+            return stats.mannwhitneyu(
+                self.influent.data, self.effluent.data, alternative="two-sided"
+            )
 
     @cache_readonly
     def _kendall_stats(self):
         if self._paired_stats:
-            return stats.kendalltau(self.paired_data.inflow.res,
-                                    self.paired_data.outflow.res)
+            return stats.kendalltau(
+                self.paired_data.inflow.res, self.paired_data.outflow.res
+            )
 
     @cache_readonly
     def _spearman_stats(self):
         if self._paired_stats:
-            return stats.spearmanr(self.paired_data.inflow.res.values,
-                                   self.paired_data.outflow.res.values)
+            return stats.spearmanr(
+                self.paired_data.inflow.res.values, self.paired_data.outflow.res.values
+            )
 
     @cache_readonly
     def _ttest_stats(self):
@@ -1035,7 +1095,7 @@ class Dataset(object):
     @cache_readonly
     def _levene_stats(self):
         if self._non_paired_stats:
-            return stats.levene(self.influent.data, self.effluent.data, center='median')
+            return stats.levene(self.influent.data, self.effluent.data, center="median")
 
     @cache_readonly
     def _theil_stats(self):
@@ -1053,8 +1113,7 @@ class Dataset(object):
         if log_effl:
             effl = numpy.log(effl)
 
-        if self.influent.fractionND <= 0.5 and \
-           self.effluent.fractionND <= 0.5:
+        if self.influent.fractionND <= 0.5 and self.effluent.fractionND <= 0.5:
             # we need to make sure that the "y" values are the
             # Location with the greatest NUnique to avoid a
             # slope of zero if possible
@@ -1068,34 +1127,51 @@ class Dataset(object):
             # stuff things into a dictionary
             if not inverted:
                 output = {
-                    'medslope': theilstats[0],
-                    'intercept': theilstats[1],
-                    'loslope': theilstats[2],
-                    'hislope': theilstats[3],
-                    'is_inverted': inverted
+                    "medslope": theilstats[0],
+                    "intercept": theilstats[1],
+                    "loslope": theilstats[2],
+                    "hislope": theilstats[3],
+                    "is_inverted": inverted,
                 }
             else:
                 output = {
-                    'medslope': 1 / theilstats[0],
-                    'intercept': -1 * theilstats[1] / theilstats[0],
-                    'loslope': 1 / theilstats[2],
-                    'hislope': 1 / theilstats[3],
-                    'is_inverted': inverted
+                    "medslope": 1 / theilstats[0],
+                    "intercept": -1 * theilstats[1] / theilstats[0],
+                    "loslope": 1 / theilstats[2],
+                    "hislope": 1 / theilstats[3],
+                    "is_inverted": inverted,
                 }
 
-            output['estimated_effluent'] = \
-                _estimate_from_fit(infl, output['medslope'], output['intercept'],
-                                   xlog=log_infl, ylog=log_effl)
+            output["estimated_effluent"] = _estimate_from_fit(
+                infl,
+                output["medslope"],
+                output["intercept"],
+                xlog=log_infl,
+                ylog=log_effl,
+            )
 
-            output['estimate_error'] = self.paired_data.outflow.res.values - output['estimated_effluent']
+            output["estimate_error"] = (
+                self.paired_data.outflow.res.values - output["estimated_effluent"]
+            )
 
         return output
 
     # plotting methods
-    def boxplot(self, ax=None, pos=1, yscale='log', shownotches=True,
-                showmean=True, width=0.8, bacteria=False, ylabel=None,
-                xlims=None, bothTicks=True, offset=0.5,
-                patch_artist=False):
+    def boxplot(
+        self,
+        ax=None,
+        pos=1,
+        yscale="log",
+        shownotches=True,
+        showmean=True,
+        width=0.8,
+        bacteria=False,
+        ylabel=None,
+        xlims=None,
+        bothTicks=True,
+        offset=0.5,
+        patch_artist=False,
+    ):
         """ Adds a boxplot to a matplotlib figure
 
         Parameters
@@ -1142,7 +1218,7 @@ class Dataset(object):
 
         for loc, offset in zip([self.influent, self.effluent], [-1 * offset, offset]):
             if loc is not None:
-                y_log = (yscale == 'log')
+                y_log = yscale == "log"
                 bxpstats = loc.boxplot_stats(log=y_log, bacteria=bacteria)
                 bp = viz.boxplot(
                     bxpstats,
@@ -1179,13 +1255,20 @@ class Dataset(object):
             if self.name is not None:
                 ax.set_xticklabels([self.name])
             else:
-                ax.set_xticklabels([''])
+                ax.set_xticklabels([""])
 
         return fig
 
-    def probplot(self, ax=None, yscale='log', axtype='prob', ylabel=None,
-                 clearYLabels=False, rotateticklabels=True,
-                 bestfit=False):
+    def probplot(
+        self,
+        ax=None,
+        yscale="log",
+        axtype="prob",
+        ylabel=None,
+        clearYLabels=False,
+        rotateticklabels=True,
+        bestfit=False,
+    ):
         """ Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1222,30 +1305,44 @@ class Dataset(object):
 
         for loc in [self.influent, self.effluent]:
             if loc.include:
-                loc.probplot(ax=ax, clearYLabels=clearYLabels, axtype=axtype,
-                             yscale=yscale, bestfit=bestfit,
-                             rotateticklabels=rotateticklabels)
+                loc.probplot(
+                    ax=ax,
+                    clearYLabels=clearYLabels,
+                    axtype=axtype,
+                    yscale=yscale,
+                    bestfit=bestfit,
+                    rotateticklabels=rotateticklabels,
+                )
 
         xlabels = {
-            'pp': 'Theoretical percentiles',
-            'qq': 'Theoretical quantiles',
-            'prob': 'Non-exceedance probability (\%)'
+            "pp": "Theoretical percentiles",
+            "qq": "Theoretical quantiles",
+            "prob": "Non-exceedance probability (\%)",
         }
 
         ax.set_xlabel(xlabels[axtype])
-        ax.legend(loc='lower right', frameon=True)
+        ax.legend(loc="lower right", frameon=True)
 
         if ylabel is not None:
             ax.set_ylabel(ylabel)
 
         if rotateticklabels:
-            viz.rotateTickLabels(ax, 45, 'x')
+            viz.rotateTickLabels(ax, 45, "x")
 
         return fig
 
-    def statplot(self, pos=1, yscale='log', shownotches=True, showmean=True,
-                 width=0.8, bacteria=False, ylabel=None, axtype='qq',
-                 patch_artist=False):
+    def statplot(
+        self,
+        pos=1,
+        yscale="log",
+        shownotches=True,
+        showmean=True,
+        width=0.8,
+        bacteria=False,
+        ylabel=None,
+        axtype="qq",
+        patch_artist=False,
+    ):
         """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
@@ -1281,18 +1378,30 @@ class Dataset(object):
         """
 
         # setup the figure and axes
-        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor='none',
-                            edgecolor='none')
+        fig = pyplot.figure(figsize=(6.40, 3.00), facecolor="none", edgecolor="none")
         ax1 = pyplot.subplot2grid((1, 4), (0, 0))
         ax2 = pyplot.subplot2grid((1, 4), (0, 1), colspan=3)
 
-        self.boxplot(ax=ax1, pos=pos, yscale=yscale, shownotches=shownotches,
-                     showmean=showmean, width=width, bacteria=bacteria,
-                     ylabel=ylabel, patch_artist=patch_artist)
+        self.boxplot(
+            ax=ax1,
+            pos=pos,
+            yscale=yscale,
+            shownotches=shownotches,
+            showmean=showmean,
+            width=width,
+            bacteria=bacteria,
+            ylabel=ylabel,
+            patch_artist=patch_artist,
+        )
 
-        self.probplot(ax=ax2, yscale=yscale, axtype=axtype,
-                      ylabel=None, clearYLabels=True,
-                      rotateticklabels=True)
+        self.probplot(
+            ax=ax2,
+            yscale=yscale,
+            axtype=axtype,
+            ylabel=None,
+            clearYLabels=True,
+            rotateticklabels=True,
+        )
 
         ax1.yaxis.tick_left()
         ax2.yaxis.tick_right()
@@ -1326,27 +1435,40 @@ class Dataset(object):
 
         """
 
-        showlegend = scatter_kws.pop('showlegend', True)
-        _ = scatter_kws.pop('ax', None)
+        showlegend = scatter_kws.pop("showlegend", True)
+        _ = scatter_kws.pop("ax", None)
 
         if self.paired_data is not None:
-            data = self.paired_data.xs('res', level='quantity', axis=1)
-            jg = seaborn.JointGrid(x='inflow', y='outflow', data=data)
+            data = self.paired_data.xs("res", level="quantity", axis=1)
+            jg = seaborn.JointGrid(x="inflow", y="outflow", data=data)
             self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter_kws)
             jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
 
-            jg.ax_marg_x.set_xscale(scatter_kws.pop('xscale', 'log'))
-            jg.ax_marg_y.set_yscale(scatter_kws.pop('yscale', 'log'))
+            jg.ax_marg_x.set_xscale(scatter_kws.pop("xscale", "log"))
+            jg.ax_marg_y.set_yscale(scatter_kws.pop("yscale", "log"))
 
             if showlegend:
-                jg.ax_joint.legend(loc='upper left')
+                jg.ax_joint.legend(loc="upper left")
 
         return jg
 
-    def scatterplot(self, ax=None, xscale='log', yscale='log', showlegend=True,
-                    xlabel=None, ylabel=None, one2one=False, useros=False,
-                    bestfit=False, minpoints=3, eqn_pos='lower right',
-                    equal_scales=True, fitopts=None, **markeropts):
+    def scatterplot(
+        self,
+        ax=None,
+        xscale="log",
+        yscale="log",
+        showlegend=True,
+        xlabel=None,
+        ylabel=None,
+        one2one=False,
+        useros=False,
+        bestfit=False,
+        minpoints=3,
+        eqn_pos="lower right",
+        equal_scales=True,
+        fitopts=None,
+        **markeropts
+    ):
         """ Creates an influent/effluent scatter plot
 
         Parameters
@@ -1386,10 +1508,7 @@ class Dataset(object):
 
         # common symbology
         commonopts = dict(
-            linestyle='none',
-            markeredgewidth=0.5,
-            markersize=6,
-            zorder=10,
+            linestyle="none", markeredgewidth=0.5, markersize=6, zorder=10
         )
 
         # plot the ROSd'd result, if requested
@@ -1399,112 +1518,140 @@ class Dataset(object):
         # plot the raw results, if requested
         else:
             plot_params = [
-                dict(label='Detected data pairs',
-                     which='neither', marker='o', alpha=0.8,
-                     markerfacecolor='black', markeredgecolor='white'),
-                dict(label='Influent not detected',
-                     which='influent', marker='v', alpha=0.45,
-                     markerfacecolor='none', markeredgecolor='black'),
-                dict(label='Effluent not detected',
-                     which='effluent', marker='<', alpha=0.45,
-                     markerfacecolor='none', markeredgecolor='black'),
-                dict(label='Both not detected',
-                     which='both', marker='d', alpha=0.45,
-                     markerfacecolor='none', markeredgecolor='black'),
+                dict(
+                    label="Detected data pairs",
+                    which="neither",
+                    marker="o",
+                    alpha=0.8,
+                    markerfacecolor="black",
+                    markeredgecolor="white",
+                ),
+                dict(
+                    label="Influent not detected",
+                    which="influent",
+                    marker="v",
+                    alpha=0.45,
+                    markerfacecolor="none",
+                    markeredgecolor="black",
+                ),
+                dict(
+                    label="Effluent not detected",
+                    which="effluent",
+                    marker="<",
+                    alpha=0.45,
+                    markerfacecolor="none",
+                    markeredgecolor="black",
+                ),
+                dict(
+                    label="Both not detected",
+                    which="both",
+                    marker="d",
+                    alpha=0.45,
+                    markerfacecolor="none",
+                    markeredgecolor="black",
+                ),
             ]
             for pp in plot_params:
                 kwargs = {**commonopts, **pp, **markeropts}
                 self._plot_nds(ax, **kwargs)
 
-        if xscale == 'linear':
+        if xscale == "linear":
             ax.set_xlim(left=0)
 
-        if yscale == 'linear':
+        if yscale == "linear":
             ax.set_ylim(bottom=0)
 
         # unify the axes limits
         if xscale == yscale and equal_scales:
-            ax.set_aspect('equal')
+            ax.set_aspect("equal")
             axis_limits = [
                 numpy.min([ax.get_xlim(), ax.get_ylim()]),
-                numpy.max([ax.get_xlim(), ax.get_ylim()])
+                numpy.max([ax.get_xlim(), ax.get_ylim()]),
             ]
             ax.set_ylim(axis_limits)
             ax.set_xlim(axis_limits)
 
-        elif yscale == 'linear' or xscale == 'linear':
+        elif yscale == "linear" or xscale == "linear":
             axis_limits = [
                 numpy.min([numpy.min(ax.get_xlim()), numpy.min(ax.get_ylim())]),
-                numpy.max([ax.get_xlim(), ax.get_ylim()])
+                numpy.max([ax.get_xlim(), ax.get_ylim()]),
             ]
 
         # include the line of equality, if requested
         if one2one:
-            viz.one2one(ax, linestyle='-', linewidth=1.25,
-                        alpha=0.50, color='black',
-                        zorder=5, label='1:1 line')
+            viz.one2one(
+                ax,
+                linestyle="-",
+                linewidth=1.25,
+                alpha=0.50,
+                color="black",
+                zorder=5,
+                label="1:1 line",
+            )
 
         detects = self.paired_data.loc[
-            (~self.paired_data[('inflow', 'qual')].isin(self.influent.ndvals)) &
-            (~self.paired_data[('outflow', 'qual')].isin(self.effluent.ndvals))
-        ].xs('res', level=1, axis=1)
+            (~self.paired_data[("inflow", "qual")].isin(self.influent.ndvals))
+            & (~self.paired_data[("outflow", "qual")].isin(self.effluent.ndvals))
+        ].xs("res", level=1, axis=1)
 
         if bestfit and detects.shape[0] >= minpoints:
-            if xscale == 'log' and yscale == 'log':
-                fitlogs = 'both'
-            elif xscale == 'log':
-                fitlogs = 'x'
-            elif yscale == 'log':
-                fitlogs = 'y'
+            if xscale == "log" and yscale == "log":
+                fitlogs = "both"
+            elif xscale == "log":
+                fitlogs = "x"
+            elif yscale == "log":
+                fitlogs = "y"
             else:
                 fitlogs = None
 
-            x = detects['inflow']
-            y = detects['outflow']
+            x = detects["inflow"]
+            y = detects["outflow"]
 
             fitopts = validate.at_least_empty_dict(fitopts, fitlogs=fitlogs)
             xhat, yhat, modelres = utils.fit_line(x, y, **fitopts)
 
-            ax.plot(xhat, yhat, 'k--', alpha=0.75, label='Best-fit')
+            ax.plot(xhat, yhat, "k--", alpha=0.75, label="Best-fit")
 
             if eqn_pos is not None:
                 positions = {
-                    'lower left': (0.05, 0.15),
-                    'lower right': (0.59, 0.15),
-                    'upper left': (0.05, 0.95),
-                    'upper right': (0.59, 0.95)
+                    "lower left": (0.05, 0.15),
+                    "lower right": (0.59, 0.15),
+                    "upper left": (0.05, 0.95),
+                    "upper right": (0.59, 0.95),
                 }
                 vert_offset = 0.1
                 try:
                     txt_x, txt_y = positions.get(eqn_pos.lower())
                 except KeyError:
-                    raise ValueError("`eqn_pos` must be on of ".format(list.positions.keys()))
+                    raise ValueError(
+                        "`eqn_pos` must be on of ".format(list.positions.keys())
+                    )
                 # annotate axes with stats
 
                 ax.annotate(
-                    r'$\log(y) = {} \, \log(x) + {}$'.format(
+                    r"$\log(y) = {} \, \log(x) + {}$".format(
                         utils.sigFigs(modelres.params[1], n=3),
-                        utils.sigFigs(modelres.params[0], n=3)
+                        utils.sigFigs(modelres.params[0], n=3),
                     ),
                     (txt_x, txt_y),
-                    xycoords='axes fraction'
+                    xycoords="axes fraction",
                 )
 
                 ax.annotate(
-                    'Slope p-value: {}\nIntercept p-value: {}'.format(
+                    "Slope p-value: {}\nIntercept p-value: {}".format(
                         utils.process_p_vals(modelres.pvalues[1]),
-                        utils.process_p_vals(modelres.pvalues[0])
+                        utils.process_p_vals(modelres.pvalues[0]),
                     ),
                     (txt_x, txt_y - vert_offset),
-                    xycoords='axes fraction'
+                    xycoords="axes fraction",
                 )
 
         # setup the axes labels
         if xlabel is None:
-            xlabel = 'Influent'
+            xlabel = "Influent"
 
         if ylabel is None:
-            ylabel = 'Effluent'
+            ylabel = "Effluent"
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -1513,35 +1660,34 @@ class Dataset(object):
         if showlegend:
             leg = ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.00)
             leg.get_frame().set_alpha(0.00)
-            leg.get_frame().set_edgecolor('none')
+            leg.get_frame().set_edgecolor("none")
 
         return fig
 
-    def _plot_nds(self, ax, which='both', label='_no_legend', **markerkwargs):
+    def _plot_nds(self, ax, which="both", label="_no_legend", **markerkwargs):
         """
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
         """
-        i_nondetect = self.paired_data[('inflow', 'cen')]
-        o_nondetect = self.paired_data[('outflow', 'cen')]
+        i_nondetect = self.paired_data[("inflow", "cen")]
+        o_nondetect = self.paired_data[("outflow", "cen")]
 
-        i_detect = ~self.paired_data[('inflow', 'cen')]
-        o_detect = ~self.paired_data[('outflow', 'cen')]
+        i_detect = ~self.paired_data[("inflow", "cen")]
+        o_detect = ~self.paired_data[("outflow", "cen")]
 
         index_combos = {
-            'both': i_nondetect & o_nondetect,
-            'influent': i_nondetect & o_detect,
-            'effluent': i_detect & o_nondetect,
-            'neither': i_detect & o_detect,
+            "both": i_nondetect & o_nondetect,
+            "influent": i_nondetect & o_detect,
+            "effluent": i_detect & o_nondetect,
+            "neither": i_detect & o_detect,
         }
 
         try:
             index = index_combos[which]
         except KeyError:
-            msg = '`which` must be "both", "influent", ' \
-                  '"effluent", or "neighter"'
+            msg = '`which` must be "both", "influent", ' '"effluent", or "neighter"'
             raise ValueError(msg)
 
-        x = self.paired_data.loc[index][('inflow', 'res')]
-        y = self.paired_data.loc[index][('outflow', 'res')]
+        x = self.paired_data.loc[index][("inflow", "res")]
+        y = self.paired_data.loc[index][("outflow", "res")]
         return ax.plot(x, y, label=label, **markerkwargs)
