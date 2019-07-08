@@ -7,12 +7,12 @@ matrix:
       sudo: required
       dist: xenial
       env:
-        - COVERAGE=false
-        - ARGS=""
-    - python: 3.6
-      env:
         - COVERAGE=true
         - ARGS="--strict"
+    - python: 3.6
+      env:
+        - COVERAGE=false
+        - ARGS=""
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
