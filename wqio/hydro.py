@@ -11,9 +11,9 @@ from wqio import utils
 from wqio import viz
 from wqio import validate
 
-import pandas.plotting._converter as pandacnv
+from pandas.plotting import register_matplotlib_converters
 
-pandacnv.register()
+register_matplotlib_converters()
 
 SEC_PER_MINUTE = 60.0
 MIN_PER_HOUR = 60.0
