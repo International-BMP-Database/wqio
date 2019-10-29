@@ -1,5 +1,6 @@
 from io import StringIO
 from copy import copy
+from functools import wraps
 
 import numpy
 import pandas
@@ -513,3 +514,18 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=
     if join_char is None:
         return symbolized
     return symbolized.apply(lambda r: join_char.join(r), axis=1)
+
+
+def log_df_shape(logger):  # pragma: no cover
+    """ Decorator to log the shape of a dataframe before and after a function.
+    """
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            shape_init = args[0].shape
+            new_df = func(*args, **kwargs)
+            shape_final = new_df.shape
+            logger.debug(f'{func.__name__}: dataframe shape = {shape_init} -> {shape_final}.')
+            return new_df
+        return wrapper
+    return decorate
