@@ -6,9 +6,9 @@ import pandas
 
 from wqio import utils
 
-import pandas.plotting._converter as pandacnv
+from pandas.plotting import register_matplotlib_converters
 
-pandacnv.register()
+register_matplotlib_converters()
 
 
 class Parameter(object):

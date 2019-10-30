@@ -1,5 +1,6 @@
 from io import StringIO
 from copy import copy
+from functools import wraps
 
 import numpy
 import pandas
@@ -33,8 +34,8 @@ def add_column_level(df, levelvalue, levelname):
     Index(['res', 'qual'], dtype='object')
     >>> df2 = add_column_level(df, 'Infl', 'location')
     >>> df2.columns
-    MultiIndex(levels=[['Infl'], ['qual', 'res']],
-               codes=[[0, 0], [1, 0]],
+    MultiIndex([('Infl',  'res'),
+                ('Infl', 'qual')],
                names=['location', 'quantity'])
 
     """
@@ -74,15 +75,19 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     >>> data = numpy.arange(len(columns) * 3).reshape((3, len(columns)))
     >>> df = pandas.DataFrame(data, columns=columns)
     >>> df.columns
-    MultiIndex(levels=[['A', 'B'], ['cen', 'res'], ['mg/L']],
-               codes=[[0, 0, 1, 1], [1, 0, 1, 0], [0, 0, 0, 0]],
+    MultiIndex([('A', 'res', 'mg/L'),
+                ('A', 'cen', 'mg/L'),
+                ('B', 'res', 'mg/L'),
+                ('B', 'cen', 'mg/L')],
                names=['loc', 'value', 'units'])
 
 
     >>> swapped = wqio.utils.swap_column_levels(df, 'units', 'loc')
     >>> swapped.columns
-    MultiIndex(levels=[['mg/L'], ['cen', 'res'], ['A', 'B']],
-               codes=[[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 0, 1]],
+    MultiIndex([('mg/L', 'cen', 'A'),
+                ('mg/L', 'cen', 'B'),
+                ('mg/L', 'res', 'A'),
+                ('mg/L', 'res', 'B')],
                names=['units', 'value', 'loc'])
 
 
@@ -140,8 +145,10 @@ def expand_columns(df, names, sep="_"):
     >>> df = pandas.DataFrame(x, columns=('A_a','A_b', 'B_a', 'B_c'))
     >>> expanded = utils.expand_columns(df, ['top', 'bottom'], sep='_')
     >>> expanded.columns
-    MultiIndex(levels=[['A', 'B'], ['a', 'b', 'c']],
-               codes=[[0, 0, 1, 1], [0, 1, 0, 2]],
+    MultiIndex([('A', 'a'),
+                ('A', 'b'),
+                ('B', 'a'),
+                ('B', 'c')],
                names=['top', 'bottom'])
 
 
@@ -513,3 +520,18 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=
     if join_char is None:
         return symbolized
     return symbolized.apply(lambda r: join_char.join(r), axis=1)
+
+
+def log_df_shape(logger):  # pragma: no cover
+    """ Decorator to log the shape of a dataframe before and after a function.
+    """
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            shape_init = args[0].shape
+            new_df = func(*args, **kwargs)
+            shape_final = new_df.shape
+            logger.debug(f'{func.__name__}: dataframe shape = {shape_init} -> {shape_final}.')
+            return new_df
+        return wrapper
+    return decorate

@@ -702,9 +702,9 @@ def test__paired_stat_generator():
         df, ["param"], "loc", "res", helpers.comp_statfxn
     )
     assert isinstance(gen, types.GeneratorType)
-    result = pandas.DataFrame(gen)
+    result = pandas.DataFrame(gen).sort_index(axis='columns')
 
-    expected = {
+    expected = pandas.DataFrame({
         "loc_1": [
             "Inflow",
             "Inflow",
@@ -754,10 +754,10 @@ def test__paired_stat_generator():
             11.204302,
             11.204302,
         ],
-    }
+    }, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]).sort_index(axis='columns')
 
     pdtest.assert_frame_equal(
-        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]),
+        expected,
         pandas.concat([result.head(), result.tail()]),
     )
 

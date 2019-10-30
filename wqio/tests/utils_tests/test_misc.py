@@ -1,3 +1,4 @@
+from pathlib import Path
 from functools import partial
 from textwrap import dedent
 from io import StringIO
