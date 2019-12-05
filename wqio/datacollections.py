@@ -1,4 +1,5 @@
 import warnings
+from collections import namedtuple
 
 import numpy
 from scipy import stats
@@ -17,6 +18,9 @@ from wqio import bootstrap
 from wqio.ros import ROS
 from wqio import validate
 from wqio.features import Location, Dataset
+
+
+_Stat = namedtuple('_stat', ['stat', 'pvalue'])
 
 
 class DataCollection(object):
@@ -480,9 +484,12 @@ class DataCollection(object):
 
     @cache_readonly
     def mann_whitney(self):
-        return self.comparison_stat(
-            stats.mannwhitneyu, statname="mann_whitney", alternative="two-sided"
-        )
+        def _mannwhit(x, y):
+            if (numpy.all(x == y)):
+                return _Stat(numpy.nan, numpy.nan)
+            return stats.mannwhitneyu(x, y, alternative="two-sided")
+
+        return self.comparison_stat(_mannwhit, statname="mann_whitney")
 
     @cache_readonly
     def ranksums(self):
@@ -498,7 +505,11 @@ class DataCollection(object):
 
     @cache_readonly
     def wilcoxon(self):
-        return self.comparison_stat(stats.wilcoxon, statname="wilcoxon", paired=True)
+        def _wilcoxon(x, y):
+            if (numpy.all(x == y)):
+                return _Stat(numpy.nan, numpy.nan)
+            return stats.wilcoxon(x, y, alternative="two-sided")
+        return self.comparison_stat(_wilcoxon, statname="wilcoxon", paired=True)
 
     @cache_readonly
     def kendall(self):
