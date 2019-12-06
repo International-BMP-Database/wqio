@@ -369,7 +369,7 @@ def boxplot(
         boxprops=boxprops,
         shownotches=shownotches,
         showcaps=False,
-        manage_xticks=False,
+        manage_ticks=False,
         patch_artist=patch_artist,
     )
 

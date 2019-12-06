@@ -96,7 +96,7 @@ def test_expand_columns():
 
     res_cols = pandas.MultiIndex(
         levels=[["A", "B"], ["a", "b", "c"]],
-        labels=[[0, 0, 1, 1], [0, 1, 0, 2]],
+        codes=[[0, 0, 1, 1], [0, 1, 0, 2]],
         names=["top", "bottom"],
     )
     expected = pandas.DataFrame(x, columns=res_cols)

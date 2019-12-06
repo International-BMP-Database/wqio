@@ -4,6 +4,7 @@ from io import StringIO
 
 import numpy
 import scipy
+from scipy import stats
 import pandas
 
 from unittest import mock
@@ -12,7 +13,7 @@ import pandas.util.testing as pdtest
 from wqio.tests import helpers
 
 from wqio.features import Location, Dataset
-from wqio.datacollections import DataCollection
+from wqio.datacollections import DataCollection, _dist_compare
 
 
 OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
@@ -760,3 +761,21 @@ def test_selectDatasets(dc):
             dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
             _ds.assert_called_once_with("Inflow", "Reference")
             _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
+
+
+@pytest.mark.parametrize('func', [stats.mannwhitneyu, stats.wilcoxon])
+@pytest.mark.parametrize(('x', 'all_same'), [
+    ([5, 5, 5, 5, 5], True),
+    ([5, 6, 7, 7, 8], False)
+])
+def test_dist_compare_wrapper(x, all_same, func):
+    y = [5, 5, 5, 5, 5]
+    with mock.patch.object(stats, func.__name__) as _test:
+        result = _dist_compare(x, y, _test)
+        if all_same:
+            assert numpy.isnan(result.stat)
+            assert numpy.isnan(result.pvalue)
+            assert _test.call_count == 0
+        else:
+            # assert result == (0, 0)
+            _test.assert_called_once_with(x, y, alternative='two-sided')
