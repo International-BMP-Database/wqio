@@ -260,18 +260,12 @@ class CompositeSample(SampleMixin):
     @property
     def sample_ts(self):
         if self.starttime is not None and self.endtime is not None:
-            if self.samplefreq is not None:
-                self._sample_ts = pandas.date_range(
-                    start=self.starttime,
-                    end=self.endtime,
-                    freq=self.samplefreq
-                )
-            else:
-                self._sample_ts = pandas.date_range(
-                    start=self.starttime,
-                    end=self.endtime,
-                    freq=self.endtime - self.starttime,
-                )
+            _sampfreq = self.samplefreq or self.endtime - self.starttime
+            self._sample_ts = pandas.date_range(
+                start=self.starttime,
+                end=self.endtime,
+                freq=_sampfreq,
+            )
         return self._sample_ts
 
 
