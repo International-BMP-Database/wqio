@@ -1,5 +1,6 @@
 import warnings
 from collections import namedtuple
+from functools import partial
 
 import numpy
 from scipy import stats
@@ -21,6 +22,12 @@ from wqio.features import Location, Dataset
 
 
 _Stat = namedtuple('_stat', ['stat', 'pvalue'])
+
+
+def _dist_compare(x, y, stat_comp_func):
+    if (numpy.all(x == y)):
+        return _Stat(numpy.nan, numpy.nan)
+    return stat_comp_func(x, y, alternative="two-sided")
 
 
 class DataCollection(object):
@@ -484,12 +491,10 @@ class DataCollection(object):
 
     @cache_readonly
     def mann_whitney(self):
-        def _mannwhit(x, y):
-            if (numpy.all(x == y)):
-                return _Stat(numpy.nan, numpy.nan)
-            return stats.mannwhitneyu(x, y, alternative="two-sided")
-
-        return self.comparison_stat(_mannwhit, statname="mann_whitney")
+        return self.comparison_stat(
+            partial(_dist_compare, stat_comp_func=stats.mannwhitneyu),
+            statname="mann_whitney"
+        )
 
     @cache_readonly
     def ranksums(self):
@@ -505,11 +510,11 @@ class DataCollection(object):
 
     @cache_readonly
     def wilcoxon(self):
-        def _wilcoxon(x, y):
-            if (numpy.all(x == y)):
-                return _Stat(numpy.nan, numpy.nan)
-            return stats.wilcoxon(x, y, alternative="two-sided")
-        return self.comparison_stat(_wilcoxon, statname="wilcoxon", paired=True)
+        return self.comparison_stat(
+            partial(_dist_compare, stat_comp_func=stats.wilcoxon),
+            statname="wilcoxon",
+            paired=True
+        )
 
     @cache_readonly
     def kendall(self):
