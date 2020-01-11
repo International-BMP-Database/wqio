@@ -8,6 +8,7 @@ import statsmodels.api as sm
 from probscale.algo import _estimate_from_fit
 
 from wqio import validate
+from wqio.utils import misc
 
 
 TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_slope"))
@@ -639,7 +640,7 @@ def remove_outliers(x, factor=1.5):
 
 
 def _comp_stat_generator(
-    df, groupcols, pivotcol, rescol, statfxn, statname=None, **statopts
+    df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
 ):
     """ Generator of records containing results of comparitive
     statistical functions.
@@ -671,16 +672,18 @@ def _comp_stat_generator(
     comp_stats : pandas.DataFrame
 
     """
+    if not pbarfxn:
+        pbarfxn = misc.no_op
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
         statname = "stat"
 
     groups = df.groupby(by=groupcols)
-    for name, g in groups:
+    for name, g in pbarfxn(groups):
         stations = g[pivotcol].unique()
         name = validate.at_least_empty_list(name)
-        for _x, _y in itertools.permutations(stations, 2):
+        for _x, _y in pbarfxn(itertools.permutations(stations, 2)):
             row = dict(zip(groupcols, name))
 
             station_columns = [pivotcol + "_1", pivotcol + "_2"]
@@ -695,7 +698,7 @@ def _comp_stat_generator(
 
 
 def _paired_stat_generator(
-    df, groupcols, pivotcol, rescol, statfxn, statname=None, **statopts
+    df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
 ):
     """ Generator of records containing results of comparitive
     statistical functions specifically for paired data.
@@ -727,16 +730,18 @@ def _paired_stat_generator(
     comp_stats : pandsa.DataFrame
 
     """
+    if not pbarfxn:
+        pbarfxn = misc.no_op
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
         statname = "stat"
 
     groups = df.groupby(level=groupcols)[rescol]
-    for name, g in groups:
+    for name, g in pbarfxn(groups):
         stations = g.columns.tolist()
         name = validate.at_least_empty_list(name)
-        for _x, _y in itertools.permutations(stations, 2):
+        for _x, _y in pbarfxn(itertools.permutations(stations, 2)):
             row = dict(zip(groupcols, name))
 
             station_columns = [pivotcol + "_1", pivotcol + "_2"]
