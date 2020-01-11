@@ -25,7 +25,7 @@ _Stat = namedtuple('_stat', ['stat', 'pvalue'])
 
 
 def _dist_compare(x, y, stat_comp_func):
-    if (numpy.all(x == y)):
+    if (len(x) == len(y)) and numpy.equal(x, y).all():
         return _Stat(numpy.nan, numpy.nan)
     return stat_comp_func(x, y, alternative="two-sided")
 
@@ -155,19 +155,16 @@ class DataCollection(object):
                 return rosdf
 
         else:
-
             def fxn(g):
                 g[self.roscol] = numpy.nan
                 return g
 
         if tqdm and self.showpbar:
-
             def make_tidy(df):
                 tqdm.pandas(desc="Tidying the DataCollection")
                 return df.groupby(self.groupcols).progress_apply(fxn)
 
         else:
-
             def make_tidy(df):
                 return df.groupby(self.groupcols).apply(fxn)
 
@@ -278,17 +275,24 @@ class DataCollection(object):
 
             return pandas.Series(values, index=statnames)
 
-        stat = (
+        groups = (
             self.tidy.groupby(by=self.groupcols)
             .filter(filterfxn)
             .groupby(by=self.groupcols)
-            .apply(fxn)
-            .unstack(level=self.stationcol)
+        )
+
+        if tqdm and self.showpbar:
+            tqdm.pandas(desc="Computing stats")
+            vals = groups.progress_apply(fxn)
+        else:
+            vals = groups.apply(fxn)
+
+        results = (
+            vals.unstack(level=self.stationcol)
             .pipe(utils.swap_column_levels, 0, 1)
             .rename_axis(["station", "result"], axis="columns")
         )
-
-        return stat
+        return results
 
     @cache_readonly
     def count(self):
