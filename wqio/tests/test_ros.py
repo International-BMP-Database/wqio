@@ -550,7 +550,7 @@ def test__ros_sort_warning(basic_data, expected_sorted):
     max_row = df["conc"].idxmax()
     df.loc[max_row, "censored"] = True
     with pytest.warns(UserWarning):
-        result = ros._ros_sort(df, "conc", "censored")
+        result = ros._ros_sort(df, "conc", "censored", warn=True)
         pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
 
 

@@ -1,11 +1,17 @@
 import warnings
+import logging
 
 import numpy
 from scipy import stats
 import pandas
 
+from wqio import utils
 
-def _ros_sort(df, result, censorship):
+
+_logger = logging.getLogger(__name__)
+
+
+def _ros_sort(df, result, censorship, log=True, warn=False):
     """
     This function prepares a dataframe for ROS. It sorts ascending with
     left-censored observations on top. Censored results larger than the
@@ -34,8 +40,12 @@ def _ros_sort(df, result, censorship):
     # separate uncensored data from censored data
     max_uncensored = df.loc[~df[censorship], result].max()
     if (df.loc[df[censorship], result] > max_uncensored).any():
-        msg = "Dropping censored results greater than " "the max uncensored result."
-        warnings.warn(msg)
+        msg = "Dropping censored results greater than the max uncensored result."
+        utils.log_or_warn(
+            msg,
+            warning=UserWarning if warn else None,
+            logger=_logger.debug if log else None
+        )
 
     df_sorted = (
         df[[censorship, result]]
@@ -404,7 +414,7 @@ def _ros_estimate(df, result, censorship, transform_in, transform_out):
     return df
 
 
-def _do_ros(df, result, censorship, transform_in, transform_out):
+def _do_ros(df, result, censorship, transform_in, transform_out, log=True, warn=False):
     """
     Prepares a dataframe for, and then esimates the values of a censored
     dataset using Regression on Order Statistics
@@ -441,7 +451,7 @@ def _do_ros(df, result, censorship, transform_in, transform_out):
     with warnings.catch_warnings():
         warnings.simplefilter("once")
         modeled = (
-            df.pipe(_ros_sort, result=result, censorship=censorship)
+            df.pipe(_ros_sort, result=result, censorship=censorship, log=log, warn=warn)
             .assign(
                 det_limit_index=lambda df: df[result].apply(
                     _detection_limit_index, args=(cohn,)
@@ -456,6 +466,24 @@ def _do_ros(df, result, censorship, transform_in, transform_out):
     return modeled
 
 
+def is_valid_to_ros(df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False):
+    # basic counts/metrics of the dataset
+    N_observations = df.shape[0]
+    N_censored = df[censorship].astype(int).sum()
+    N_uncensored = N_observations - N_censored
+    fraction_censored = N_censored / N_observations
+
+    enough_uncensored = (N_uncensored >= min_uncensored)
+    not_too_many_censored = (fraction_censored <= max_fraction_censored)
+
+    if as_obj:
+        return {
+            'enough_uncensored': enough_uncensored,
+            'not_too_many_censored': not_too_many_censored
+        }
+    return enough_uncensored and not_too_many_censored
+
+
 def ROS(
     result,
     censorship,
@@ -466,6 +494,8 @@ def ROS(
     transform_in=numpy.log,
     transform_out=numpy.exp,
     as_array=True,
+    log=True,
+    warn=False,
 ):
     """
     Impute censored dataset using Regression on Order Statistics (ROS)
@@ -533,27 +563,22 @@ def ROS(
         result = "res"
         censorship = "cen"
 
-    # basic counts/metrics of the dataset
-    N_observations = df.shape[0]
-    N_censored = df[censorship].astype(int).sum()
-    N_uncensored = N_observations - N_censored
-    fraction_censored = N_censored / N_observations
-
     # add plotting positions if there are no censored values
-    if N_censored == 0:
+    if df[censorship].astype(int).sum() == 0:
         output = df[[result, censorship]].assign(final=df[result])
+
+     # normal ROS stuff
+    elif is_valid_to_ros(df, censorship, as_obj=False):
+        output = _do_ros(df, result, censorship, transform_in, transform_out,
+                         log=log, warn=warn)
 
     # substitute w/ fraction of the DLs if there's insufficient
     # uncensored data
-    elif (N_uncensored < min_uncensored) or (fraction_censored > max_fraction_censored):
+    else:
         final = numpy.where(
             df[censorship], df[result] * substitution_fraction, df[result]
         )
         output = df.assign(final=final)[[result, censorship, "final"]]
-
-    # normal ROS stuff
-    else:
-        output = _do_ros(df, result, censorship, transform_in, transform_out)
 
     # convert to an array if necessary
     if as_array:
