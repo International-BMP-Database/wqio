@@ -1025,7 +1025,7 @@ class RNADAdata:
     )
     rescol = "res"
     cencol = "cen"
-    df = pandas.read_csv(datastring, sep="\s+")
+    df = pandas.read_csv(datastring, sep=r"\s+")
     values = numpy.array(
         [
             0.01907990,
