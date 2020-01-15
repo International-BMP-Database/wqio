@@ -78,6 +78,7 @@ wqio/*/tests/*.xlsx
 .coverage
 wqio.egg-info
 result_images
+cov.xml
 
 # scratch files #
 #################
