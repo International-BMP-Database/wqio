@@ -5,6 +5,7 @@ import pytest
 import pandas
 
 from wqio.utils import dateutils
+from wqio.tests import helpers
 
 
 @pytest.mark.parametrize(
@@ -26,16 +27,19 @@ def test_getSeason(datemaker, datestring, expected):
 
 
 @pytest.mark.parametrize(
-    ("row", "expected"),
+    ("row", "expected", "error"),
     [
-        ({"sampledate": "2012-05-25", "sampletime": "16:54"}, "2012-05-25 16:54"),
-        ({"sampledate": None, "sampletime": "16:54"}, "1901-01-01 16:54"),
-        ({"sampledate": "2012-05-25", "sampletime": None}, "2012-05-25 00:00"),
-        ({"sampledate": None, "sampletime": None}, "1901-01-01 00:00"),
+        ({"sampledate": "2012-05-25", "sampletime": "16:54"}, "2012-05-25 16:54", None),
+        ({"sampledate": None, "sampletime": "16:54"}, "1901-01-01 16:54", None),
+        ({"sampledate": "2012-05-25", "sampletime": None}, "2012-05-25 00:00", None),
+        ({"sampledate": None, "sampletime": None}, "1901-01-01 00:00", None),
+        ({"sampledate": "garbage", "sampletime": "16:54"}, "1901-01-01 16:54", None),
+        ({"sampledate": "2012-05-25", "sampletime": "garbage"}, "2012-05-25 00:00", None),
+        ({"sampledate": "garbage", "sampletime": "garbage"}, "1901-01-01 00:00", None),
     ],
 )
-def test_makeTimestamp_basic(row, expected):
-    with warnings.catch_warnings():
+def test_makeTimestamp_basic(row, expected, error):
+    with warnings.catch_warnings(), helpers.raises(error):
         warnings.simplefilter("always")
         tstamp = dateutils.makeTimestamp(row)
         assert tstamp == pandas.Timestamp(expected)

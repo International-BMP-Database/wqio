@@ -49,17 +49,16 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     1,247.150
 
     """
+    # return a string value unaltered
+    if isinstance(x, str):
+        out = x
 
     # check on the number provided
-    if x is not None and not numpy.isinf(x) and not numpy.isnan(x):
+    elif x is not None and not numpy.isinf(x) and not numpy.isnan(x):
 
         # check on the sigFigs
         if n < 1:
             raise ValueError("number of sig figs must be greater than zero!")
-
-        # return a string value unaltered
-        if isinstance(x, str):
-            out = x
 
         elif pval and x < 0.001:
             out = "<0.001"
@@ -399,7 +398,8 @@ def pH2concentration(pH, *args):
 
 
 def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
-    """ Adapted from stats.mstats.theilslopes
+    """ Adapted from stats.mstats.theilslopes so that we can tweak the
+    `percentile` parameter.
     https://goo.gl/nxPF54
     {}
     """.format(

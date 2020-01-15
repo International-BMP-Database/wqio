@@ -38,6 +38,10 @@ from wqio.utils import numutils
         (0.001, 1, False, False, True, "0.001", None),
         (0.0005, 3, False, False, True, "<0.001", None),
         (0.0005, 3, True, False, True, "$<0.001$", None),
+        ("1234", 3, False, False, False, "1234", None),
+        (numpy.nan, 3, False, False, False, "NA", None),
+        (numpy.inf, 3, False, False, False, "NA", None),
+        (numpy.inf * -1, 3, False, False, False, "NA", None),
     ],
 )
 def test_sigFigs(value, N, tex, forceint, pval, expected, error):
@@ -293,9 +297,12 @@ def test_test_pH2concentration(pH, expected, error):
 
 
 @helpers.seed
-def test_compute_theilslope_default():
-    y = helpers.getTestROSData()["res"].values
-    assert tuple(numutils.compute_theilslope(y)) == stats.mstats.theilslopes(y)
+@pytest.mark.parametrize('error', [None, ValueError])
+def test_compute_theilslope_default(error):
+    with helpers.raises(error):
+        y = helpers.getTestROSData()["res"].values
+        x = numpy.arange(len(y) - 1) if error else None
+        assert tuple(numutils.compute_theilslope(y, x)) == stats.mstats.theilslopes(y, x)
 
 
 @pytest.fixture

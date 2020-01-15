@@ -1,9 +1,13 @@
-import warnings
+import logging
 
 import numpy
 import pandas
 
 from wqio import validate
+from wqio.utils import misc
+
+
+_logger = logging.getLogger(__name__)
 
 
 def getSeason(date):
@@ -80,8 +84,12 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
 
     if fb_date:
         date = fallback_datetime.date()
-        if issuewarnings:
-            warnings.warn("Using fallback date from {}".format(row[datecol]))
+        if issuewarnings:  # pragma: no cover
+            misc.log_or_warn(
+                "Using fallback date from {}".format(row[datecol]),
+                UserWarning if issuewarnings else None,
+                logger=_logger
+            )
 
     if row[timecol] is None or pandas.isnull(row[timecol]):
         fb_time = True
@@ -94,8 +102,12 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
 
     if fb_time:
         time = fallback_datetime.time()
-        if issuewarnings:
-            warnings.warn("Using fallback time from {}".format(row[timecol]))
+        if issuewarnings:  # pragma: no cover
+            misc.log_or_warn(
+                "Using fallback time from {}".format(row[timecol]),
+                UserWarning if issuewarnings else None,
+                logger=_logger
+            )
 
     dtstring = "{} {}".format(date, time)
     tstamp = pandas.Timestamp(dtstring)
