@@ -31,10 +31,10 @@ def check_stat(expected_csv, result, comp=False):
         expected = expected.stack(level=-1)
 
     pdtest.assert_frame_equal(
-        expected.sort_index(axis='columns'),
-        result.sort_index(axis='columns').round(6),
-        check_less_precise=True
-        )
+        expected.sort_index(axis="columns"),
+        result.sort_index(axis="columns").round(6),
+        check_less_precise=True,
+    )
 
 
 def remove_g_and_h(group):
@@ -763,11 +763,10 @@ def test_selectDatasets(dc):
             _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
 
 
-@pytest.mark.parametrize('func', [stats.mannwhitneyu, stats.wilcoxon])
-@pytest.mark.parametrize(('x', 'all_same'), [
-    ([5, 5, 5, 5, 5], True),
-    ([5, 6, 7, 7, 8], False)
-])
+@pytest.mark.parametrize("func", [stats.mannwhitneyu, stats.wilcoxon])
+@pytest.mark.parametrize(
+    ("x", "all_same"), [([5, 5, 5, 5, 5], True), ([5, 6, 7, 7, 8], False)]
+)
 def test_dist_compare_wrapper(x, all_same, func):
     y = [5, 5, 5, 5, 5]
     with mock.patch.object(stats, func.__name__) as _test:
@@ -778,4 +777,4 @@ def test_dist_compare_wrapper(x, all_same, func):
             assert _test.call_count == 0
         else:
             # assert result == (0, 0)
-            _test.assert_called_once_with(x, y, alternative='two-sided')
+            _test.assert_called_once_with(x, y, alternative="two-sided")

@@ -21,7 +21,7 @@ from wqio import validate
 from wqio.features import Location, Dataset
 
 
-_Stat = namedtuple('_stat', ['stat', 'pvalue'])
+_Stat = namedtuple("_stat", ["stat", "pvalue"])
 
 
 def _dist_compare(x, y, stat_comp_func):
@@ -155,16 +155,19 @@ class DataCollection(object):
                 return rosdf
 
         else:
+
             def fxn(g):
                 g[self.roscol] = numpy.nan
                 return g
 
         if tqdm and self.showpbar:
+
             def make_tidy(df):
                 tqdm.pandas(desc="Tidying the DataCollection")
                 return df.groupby(self.groupcols).progress_apply(fxn)
 
         else:
+
             def make_tidy(df):
                 return df.groupby(self.groupcols).apply(fxn)
 
@@ -497,7 +500,7 @@ class DataCollection(object):
     def mann_whitney(self):
         return self.comparison_stat(
             partial(_dist_compare, stat_comp_func=stats.mannwhitneyu),
-            statname="mann_whitney"
+            statname="mann_whitney",
         )
 
     @cache_readonly
@@ -517,7 +520,7 @@ class DataCollection(object):
         return self.comparison_stat(
             partial(_dist_compare, stat_comp_func=stats.wilcoxon),
             statname="wilcoxon",
-            paired=True
+            paired=True,
         )
 
     @cache_readonly

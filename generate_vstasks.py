@@ -12,6 +12,16 @@ TEMPLATE = """\
     "suppressTaskName": false,
     "tasks": [
         {{
+            "label": "format-code",
+            "type": "shell",
+            "command": "black",
+            "args": [
+                "*.py",
+                "{modulename:s}/*.py",
+                "{modulename:s}/*/*.py",
+            ],
+        }}
+        {{
             "taskName": "test",
             "command": "{pyexec:s}",
             "args": [
@@ -41,7 +51,7 @@ TEMPLATE = """\
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     configdir = Path(".vscode")
     configdir.mkdir(exists_ok=True, parents=True)
     configpath = configdir / "tasks.json"
@@ -54,5 +64,5 @@ if __name__ == '__main__':
     python = str(Path(sys.executable))
     config = TEMPLATE.format(pyexec=python, modulename=name)
 
-    with configpath.open('w') as configfile:
+    with configpath.open("w") as configfile:
         configfile.write(config)
