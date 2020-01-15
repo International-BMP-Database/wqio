@@ -118,7 +118,7 @@ def BCA(data, statfxn, niter=10000, alpha=0.05, log=True, warn=False):
         utils.log_or_warn(
             "All results below primary_result",
             warning=UserWarning if warn else None,
-            logger=_logger.debug if log else None
+            logger=_logger.debug if log else None,
         )
 
     # z-stats on the % of `NumBelow` and the confidence limits
@@ -139,7 +139,7 @@ def BCA(data, statfxn, niter=10000, alpha=0.05, log=True, warn=False):
             utils.log_or_warn(
                 "Secondary result outside of CI",
                 warning=UserWarning if warn else None,
-                logger=_logger.debug if log else None
+                logger=_logger.debug if log else None,
             )
             CI = percentile(data, statfxn, niter, alpha=alpha)
 

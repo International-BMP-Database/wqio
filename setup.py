@@ -6,42 +6,42 @@ import os
 from setuptools import setup, find_packages
 
 
-DESCRIPTION = 'wqio: Water Quality Inflow/Outflow'
+DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
-NAME = 'wqio'
-VERSION = '0.4.x'
-AUTHOR = 'Paul Hobson (Geosyntec Consultants)'
-AUTHOR_EMAIL = 'phobson@geosyntec.com'
-URL = 'https://github.com/Geosyntec/wqio'
-DOWNLOAD_URL = 'https://github.com/Geosyntec/wqio/archive/master.zip'
-LICENSE = 'BSD 3-clause'
+NAME = "wqio"
+VERSION = "0.4.x"
+AUTHOR = "Paul Hobson (Geosyntec Consultants)"
+AUTHOR_EMAIL = "phobson@geosyntec.com"
+URL = "https://github.com/Geosyntec/wqio"
+DOWNLOAD_URL = "https://github.com/Geosyntec/wqio/archive/master.zip"
+LICENSE = "BSD 3-clause"
 PACKAGES = find_packages()
-PLATFORMS = 'Python 3.4 and later.'
+PLATFORMS = "Python 3.4 and later."
 CLASSIFIERS = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Intended Audience :: Science/Research',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
 ]
 INSTALL_REQUIRES = [
-    'numpy',
-    'scipy',
-    'matplotlib',
-    'pandas',
-    'statsmodels',
-    'seaborn',
-    'probscale',
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "statsmodels",
+    "seaborn",
+    "probscale",
 ]
 PACKAGE_DATA = {
-    'wqio.tests._data': ['*.csv', '*.tex', 'matplotlibrc'],
-    'wqio.tests._baseline_images.features_tests': ['*png'],
-    'wqio.tests._baseline_images.hydro_tests': ['*png'],
-    'wqio.tests._baseline_images.samples_tests': ['*png'],
-    'wqio.tests._baseline_images.utils_tests.figutils_tests': ['*png'],
+    "wqio.tests._data": ["*.csv", "*.tex", "matplotlibrc"],
+    "wqio.tests._baseline_images.features_tests": ["*png"],
+    "wqio.tests._baseline_images.hydro_tests": ["*png"],
+    "wqio.tests._baseline_images.samples_tests": ["*png"],
+    "wqio.tests._baseline_images.utils_tests.figutils_tests": ["*png"],
 }
 
 setup(

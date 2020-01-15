@@ -88,7 +88,7 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
             misc.log_or_warn(
                 "Using fallback date from {}".format(row[datecol]),
                 UserWarning if issuewarnings else None,
-                logger=_logger
+                logger=_logger,
             )
 
     if row[timecol] is None or pandas.isnull(row[timecol]):
@@ -106,7 +106,7 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
             misc.log_or_warn(
                 "Using fallback time from {}".format(row[timecol]),
                 UserWarning if issuewarnings else None,
-                logger=_logger
+                logger=_logger,
             )
 
     dtstring = "{} {}".format(date, time)

@@ -766,10 +766,10 @@ def test__do_ros_all_equal_some_cen():
     nptest.assert_array_almost_equal(result, expected)
 
 
-@pytest.mark.parametrize(['as_obj', 'expected'], [
-    (True, {'enough_uncensored': True, 'not_too_many_censored': True}),
-    (False, True),
-])
+@pytest.mark.parametrize(
+    ["as_obj", "expected"],
+    [(True, {"enough_uncensored": True, "not_too_many_censored": True}), (False, True)],
+)
 def test_is_valid_to_ros(basic_data, as_obj, expected):
     result = ros.is_valid_to_ros(basic_data, "censored", as_obj=as_obj)
     assert result == expected

@@ -44,7 +44,7 @@ def _ros_sort(df, result, censorship, log=True, warn=False):
         utils.log_or_warn(
             msg,
             warning=UserWarning if warn else None,
-            logger=_logger.debug if log else None
+            logger=_logger.debug if log else None,
         )
 
     df_sorted = (
@@ -466,20 +466,22 @@ def _do_ros(df, result, censorship, transform_in, transform_out, log=True, warn=
     return modeled
 
 
-def is_valid_to_ros(df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False):
+def is_valid_to_ros(
+    df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False
+):
     # basic counts/metrics of the dataset
     N_observations = df.shape[0]
     N_censored = df[censorship].astype(int).sum()
     N_uncensored = N_observations - N_censored
     fraction_censored = N_censored / N_observations
 
-    enough_uncensored = (N_uncensored >= min_uncensored)
-    not_too_many_censored = (fraction_censored <= max_fraction_censored)
+    enough_uncensored = N_uncensored >= min_uncensored
+    not_too_many_censored = fraction_censored <= max_fraction_censored
 
     if as_obj:
         return {
-            'enough_uncensored': enough_uncensored,
-            'not_too_many_censored': not_too_many_censored
+            "enough_uncensored": enough_uncensored,
+            "not_too_many_censored": not_too_many_censored,
         }
     return enough_uncensored and not_too_many_censored
 
@@ -567,10 +569,11 @@ def ROS(
     if df[censorship].astype(int).sum() == 0:
         output = df[[result, censorship]].assign(final=df[result])
 
-     # normal ROS stuff
+    # normal ROS stuff
     elif is_valid_to_ros(df, censorship, as_obj=False):
-        output = _do_ros(df, result, censorship, transform_in, transform_out,
-                         log=log, warn=warn)
+        output = _do_ros(
+            df, result, censorship, transform_in, transform_out, log=log, warn=warn
+        )
 
     # substitute w/ fraction of the DLs if there's insufficient
     # uncensored data
