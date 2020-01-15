@@ -550,7 +550,7 @@ def test__ros_sort_warning(basic_data, expected_sorted):
     max_row = df["conc"].idxmax()
     df.loc[max_row, "censored"] = True
     with pytest.warns(UserWarning):
-        result = ros._ros_sort(df, "conc", "censored")
+        result = ros._ros_sort(df, "conc", "censored", warn=True)
         pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
 
 
@@ -764,6 +764,15 @@ def test__do_ros_all_equal_some_cen():
         .values
     )
     nptest.assert_array_almost_equal(result, expected)
+
+
+@pytest.mark.parametrize(['as_obj', 'expected'], [
+    (True, {'enough_uncensored': True, 'not_too_many_censored': True}),
+    (False, True),
+])
+def test_is_valid_to_ros(basic_data, as_obj, expected):
+    result = ros.is_valid_to_ros(basic_data, "censored", as_obj=as_obj)
+    assert result == expected
 
 
 class HelselAppendixB:
@@ -1025,7 +1034,7 @@ class RNADAdata:
     )
     rescol = "res"
     cencol = "cen"
-    df = pandas.read_csv(datastring, sep="\s+")
+    df = pandas.read_csv(datastring, sep=r"\s+")
     values = numpy.array(
         [
             0.01907990,

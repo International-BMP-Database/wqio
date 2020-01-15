@@ -1,6 +1,7 @@
 from io import StringIO
 from copy import copy
 from functools import wraps
+import warnings
 
 import numpy
 import pandas
@@ -535,3 +536,11 @@ def log_df_shape(logger):  # pragma: no cover
             return new_df
         return wrapper
     return decorate
+
+
+def log_or_warn(msg, warning=None, logger=None):
+    if warning:
+        warnings.warn(msg, warning)
+
+    if logger:
+        logger(msg)

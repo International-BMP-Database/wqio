@@ -1,15 +1,19 @@
 import warnings
+import logging
 from collections import namedtuple
 
 import numpy
 import scipy.stats as stats
 from probscale.algo import _estimate_from_fit
 
+from wqio import utils
+
+
+_logger = logging.getLogger(__name__)
 
 fitestimate = namedtuple(
     "BootstrappedFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"]
 )
-
 
 __all__ = ["BCA", "percentile"]
 
@@ -59,7 +63,7 @@ def _make_boot_index(elements, niter):
     return numpy.random.randint(low=0, high=elements, size=(niter, elements))
 
 
-def BCA(data, statfxn, niter=10000, alpha=0.05):
+def BCA(data, statfxn, niter=10000, alpha=0.05, log=True, warn=False):
     """
     Estimates confidence intervals around a statistic using the
     Bias-Corrected and Accelerated method.
@@ -111,8 +115,11 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
     a_hat = _acceleration(data)
 
     if NumBelow == niter:
-        warnings.warn("All results below primary_result", UserWarning)
-        CI = percentile(data, statfxn, niter, alpha=alpha)
+        utils.log_or_warn(
+            "All results below primary_result",
+            warning=UserWarning if warn else None,
+            logger=_logger.debug if log else None
+        )
 
     # z-stats on the % of `NumBelow` and the confidence limits
     else:
@@ -129,7 +136,11 @@ def BCA(data, statfxn, niter=10000, alpha=0.05):
         # fall back to the standard percentile method if the results
         # don't make any sense
         if boot_result < CI[0] or CI[1] < boot_result:
-            warnings.warn("secondary result outside of CI", UserWarning)
+            utils.log_or_warn(
+                "Secondary result outside of CI",
+                warning=UserWarning if warn else None,
+                logger=_logger.debug if log else None
+            )
             CI = percentile(data, statfxn, niter, alpha=alpha)
 
     return CI
