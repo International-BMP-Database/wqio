@@ -152,7 +152,7 @@ def test_location_stats_arrays(location, attr):
         "shapiro": {True: [0.886889, 0.001789], False: [0.896744, 0.003236]},
         "shapiro_log": {True: [0.972679, 0.520949], False: [0.964298, 0.306435]},
         "lilliefors": {True: [0.185180, 0.003756], False: [0.160353, 0.023078]},
-        "lilliefors_log": {True: [0.091855, 0.2], False: [0.08148, 0.2]},
+        "lilliefors_log": {True: [0.091855, 0.64099], False: [0.08148, 0.80351]},
     }
     nptest.assert_array_almost_equal(
         getattr(location, attr), expected[attr][location.useros], decimal=5
