@@ -73,12 +73,6 @@ def test_formatResult(num, qual, N, expected):
         (numutils.process_p_vals, 0.0012, "0.001", None),
         (numutils.process_p_vals, 0.06, "0.060", None),
         (numutils.process_p_vals, 1.01, None, ValueError),
-        (numutils.translate_p_vals, None, r"ಠ_ಠ", None),
-        (numutils.translate_p_vals, 0.005, r"¯\(ツ)/¯", None),
-        (numutils.translate_p_vals, 0.03, r"¯\_(ツ)_/¯", None),
-        (numutils.translate_p_vals, 0.06, r"¯\__(ツ)__/¯", None),
-        (numutils.translate_p_vals, 0.11, r"(╯°□°)╯︵ ┻━┻", None),
-        (numutils.translate_p_vals, 1.01, None, ValueError),
     ],
 )
 def test_process_p_vals(fxn, pval, expected, error_to_raise):
@@ -99,7 +93,7 @@ def test_process_p_vals(fxn, pval, expected, error_to_raise):
         (1.01, (None, None), ValueError),
     ],
 )
-def test_process_p_vals(pval, expected, as_emoji, error_to_raise):
+def test_translate_p_vals(pval, expected, as_emoji, error_to_raise):
     with helpers.raises(error_to_raise):
         result = numutils.translate_p_vals(pval, as_emoji=as_emoji)
         assert result == expected[as_emoji]
