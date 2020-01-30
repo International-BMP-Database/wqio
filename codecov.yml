@@ -21,7 +21,7 @@ coverage:
         if_ci_failed: failure
         paths: '!wqio/tests/.*'
       tests:
-        target: auto
+        target: 99.5%
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: failure
