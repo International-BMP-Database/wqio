@@ -414,7 +414,16 @@ def _ros_estimate(df, result, censorship, transform_in, transform_out):
     return df
 
 
-def _do_ros(df, result, censorship, transform_in, transform_out, log=True, warn=False):
+def _do_ros(
+    df,
+    result,
+    censorship,
+    transform_in,
+    transform_out,
+    floor=None,
+    log=True,
+    warn=False,
+):
     """
     Prepares a dataframe for, and then esimates the values of a censored
     dataset using Regression on Order Statistics
@@ -434,6 +443,11 @@ def _do_ros(df, result, censorship, transform_in, transform_out, log=True, warn=
         Transformations to be applied to the data prior to fitting
         the line and after estimated values from that line. Typically,
         `numpy.log` and `numpy.exp` are used, respectively.
+    floor : float (optional)
+        When provided, all resulting values (inputed or otherwise) that are less
+        than the `floor` will be replaced with its value. As an example, this is
+        useful with bacterial concentrations since a value less than 1 isn't
+        feasible.
 
     Returns
     -------
@@ -461,6 +475,11 @@ def _do_ros(df, result, censorship, transform_in, transform_out, log=True, warn=
             .assign(plot_pos=lambda df: plotting_positions(df, censorship, cohn))
             .assign(Zprelim=lambda df: stats.norm.ppf(df["plot_pos"]))
             .pipe(_ros_estimate, result, censorship, transform_in, transform_out)
+        )
+
+    if floor:
+        modeled = modeled.assign(
+            final=modeled["final"].where(lambda x: x >= floor, floor)
         )
 
     return modeled
@@ -496,6 +515,7 @@ def ROS(
     transform_in=numpy.log,
     transform_out=numpy.exp,
     as_array=True,
+    floor=None,
     log=True,
     warn=False,
 ):
@@ -550,6 +570,12 @@ def ROS(
         Otherwise, a modified copy of the original dataframe with all
         of the intermediate calculations is returned.
 
+    floor : float (optional)
+        When provided, all resulting values (inputed or otherwise) that are less
+        than the `floor` will be replaced with its value. As an example, this is
+        useful with bacterial concentrations since a value less than 1 isn't
+        feasible.
+
     Returns
     -------
     imputed : numpy.array (default) or pandas.DataFrame
@@ -572,7 +598,14 @@ def ROS(
     # normal ROS stuff
     elif is_valid_to_ros(df, censorship, as_obj=False):
         output = _do_ros(
-            df, result, censorship, transform_in, transform_out, log=log, warn=warn
+            df,
+            result,
+            censorship,
+            transform_in,
+            transform_out,
+            floor=floor,
+            log=log,
+            warn=warn,
         )
 
     # substitute w/ fraction of the DLs if there's insufficient

@@ -751,6 +751,52 @@ def test__do_ros_basic(basic_data):
     nptest.assert_array_almost_equal(result, expected)
 
 
+def test__do_ros_basic_with_floor(basic_data):
+    expected = numpy.array(
+        [
+            5.00000000,
+            5.00000000,
+            5.00000000,
+            5.00000000,
+            5.00000000,
+            6.14010906,
+            6.97841457,
+            5.00000000,
+            5.00000000,
+            5.00000000,
+            5.57000000,
+            5.66000000,
+            5.86000000,
+            6.65000000,
+            6.78000000,
+            6.79000000,
+            7.50000000,
+            7.50000000,
+            7.50000000,
+            8.63000000,
+            8.71000000,
+            8.99000000,
+            9.85000000,
+            10.82000000,
+            11.25000000,
+            11.25000000,
+            12.20000000,
+            14.92000000,
+            16.77000000,
+            17.81000000,
+            19.16000000,
+            19.19000000,
+            19.64000000,
+            20.18000000,
+            22.97,
+        ]
+    )
+
+    df = basic_data.pipe(ros._do_ros, "conc", "censored", numpy.log, numpy.exp, floor=5)
+    result = df["final"].values
+    nptest.assert_array_almost_equal(result, expected)
+
+
 def test__do_ros_all_equal_some_cen():
     expected = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4]
     result = (

@@ -34,7 +34,11 @@ def test_getSeason(datemaker, datestring, expected):
         ({"sampledate": "2012-05-25", "sampletime": None}, "2012-05-25 00:00", None),
         ({"sampledate": None, "sampletime": None}, "1901-01-01 00:00", None),
         ({"sampledate": "garbage", "sampletime": "16:54"}, "1901-01-01 16:54", None),
-        ({"sampledate": "2012-05-25", "sampletime": "garbage"}, "2012-05-25 00:00", None),
+        (
+            {"sampledate": "2012-05-25", "sampletime": "garbage"},
+            "2012-05-25 00:00",
+            None,
+        ),
         ({"sampledate": "garbage", "sampletime": "garbage"}, "1901-01-01 00:00", None),
     ],
 )
