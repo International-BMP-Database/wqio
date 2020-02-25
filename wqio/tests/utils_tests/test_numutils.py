@@ -291,12 +291,14 @@ def test_test_pH2concentration(pH, expected, error):
 
 
 @helpers.seed
-@pytest.mark.parametrize('error', [None, ValueError])
+@pytest.mark.parametrize("error", [None, ValueError])
 def test_compute_theilslope_default(error):
     with helpers.raises(error):
         y = helpers.getTestROSData()["res"].values
         x = numpy.arange(len(y) - 1) if error else None
-        assert tuple(numutils.compute_theilslope(y, x)) == stats.mstats.theilslopes(y, x)
+        assert tuple(numutils.compute_theilslope(y, x)) == stats.mstats.theilslopes(
+            y, x
+        )
 
 
 @pytest.fixture
@@ -703,64 +705,64 @@ def test__paired_stat_generator():
         df, ["param"], "loc", "res", helpers.comp_statfxn
     )
     assert isinstance(gen, types.GeneratorType)
-    result = pandas.DataFrame(gen).sort_index(axis='columns')
+    result = pandas.DataFrame(gen).sort_index(axis="columns")
 
-    expected = pandas.DataFrame({
-        "loc_1": [
-            "Inflow",
-            "Inflow",
-            "Outflow",
-            "Outflow",
-            "Reference",
-            "Inflow",
-            "Outflow",
-            "Outflow",
-            "Reference",
-            "Reference",
-        ],
-        "loc_2": [
-            "Outflow",
-            "Reference",
-            "Inflow",
-            "Reference",
-            "Inflow",
-            "Reference",
-            "Inflow",
-            "Reference",
-            "Inflow",
-            "Outflow",
-        ],
-        "param": ["A", "A", "A", "A", "A", "H", "H", "H", "H", "H"],
-        "pvalue": [
-            2.688485,
-            3.406661,
-            9.084853,
-            9.084853,
-            5.243408,
-            9.399253,
-            20.234093,
-            20.23409,
-            2.801076,
-            2.801075,
-        ],
-        "stat": [
-            10.753940,
-            13.626645,
-            36.339414,
-            36.339414,
-            20.973631,
-            37.597010,
-            80.936373,
-            80.936373,
-            11.204302,
-            11.204302,
-        ],
-    }, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]).sort_index(axis='columns')
+    expected = pandas.DataFrame(
+        {
+            "loc_1": [
+                "Inflow",
+                "Inflow",
+                "Outflow",
+                "Outflow",
+                "Reference",
+                "Inflow",
+                "Outflow",
+                "Outflow",
+                "Reference",
+                "Reference",
+            ],
+            "loc_2": [
+                "Outflow",
+                "Reference",
+                "Inflow",
+                "Reference",
+                "Inflow",
+                "Reference",
+                "Inflow",
+                "Reference",
+                "Inflow",
+                "Outflow",
+            ],
+            "param": ["A", "A", "A", "A", "A", "H", "H", "H", "H", "H"],
+            "pvalue": [
+                2.688485,
+                3.406661,
+                9.084853,
+                9.084853,
+                5.243408,
+                9.399253,
+                20.234093,
+                20.23409,
+                2.801076,
+                2.801075,
+            ],
+            "stat": [
+                10.753940,
+                13.626645,
+                36.339414,
+                36.339414,
+                20.973631,
+                37.597010,
+                80.936373,
+                80.936373,
+                11.204302,
+                11.204302,
+            ],
+        },
+        index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47],
+    ).sort_index(axis="columns")
 
-    pdtest.assert_frame_equal(
-        expected,
-        pandas.concat([result.head(), result.tail()]),
-    )
+    pdtest.assert_frame_equal(expected, pandas.concat([result.head(), result.tail()]))
 
 
 @helpers.seed
