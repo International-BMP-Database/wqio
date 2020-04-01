@@ -66,6 +66,26 @@ class DataCollection(object):
         ``pandas.Groupby`` object to remove groups that should not be
         analyzed (for whatever reason). If not provided, all groups
         returned by ``dataframe.groupby(by=groupcols)`` will be used.
+    rosfloorfxn : callable, optional
+        Function that will be used to determine the ROS-floor of each group.
+        For example, it's not technically possible to have a bacteria count
+        measured in CFU/100 mL that is less than 1. In this case, we want all
+        biological data to have an ROS-floor of 1 CFU/100 mL. To do this, we
+        could write a function like the following:
+
+        .. code-block:: python
+
+           def biologicals(df_group):
+               if 'Biological' in df_group.name:
+                   return 1
+                return None
+
+        In this example, it is assumed that the parameter group is part of the
+        `groupcols` argument and therefore present in the `dr_group.name`
+        attribute that is available during the ROS-phase of tidying the data.
+        This function must accept a dataframe-like object as its only argument.
+        The example above specific requires a data group from a DataFrameGroupby
+        object since it access the `name` attribute.
     bsiter : int
         Number of iterations the bootstrapper should use when estimating
         confidence intervals around a statistic.
@@ -90,6 +110,7 @@ class DataCollection(object):
         pairgroups=None,
         useros=True,
         filterfxn=None,
+        rosfloorfxn=None,
         bsiter=10000,
         showpbar=True,
     ):
@@ -108,6 +129,7 @@ class DataCollection(object):
         self.pairgroups = validate.at_least_empty_list(pairgroups)
         self.useros = useros
         self.filterfxn = filterfxn or utils.non_filter
+        self.rosfloorfxn = rosfloorfxn or (lambda x: None)
         self.bsiter = bsiter
         self.showpbar = showpbar
 
@@ -140,6 +162,7 @@ class DataCollection(object):
         if self.useros:
 
             def fxn(g):
+                floor = self.rosfloorfxn(g)
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     rosdf = (
@@ -148,6 +171,7 @@ class DataCollection(object):
                             result=self._raw_rescol,
                             censorship=self.cencol,
                             as_array=False,
+                            floor=floor,
                         )
                         .rename(columns={"final": self.roscol})
                         .loc[:, [self._raw_rescol, self.roscol, self.cencol]]
@@ -187,15 +211,19 @@ class DataCollection(object):
 
     @cache_readonly
     def paired(self):
-        _pairs = (
+        indexed = (
             self.data.reset_index()
             .groupby(by=self.groupcols)
             .filter(self.filterfxn)
             .set_index(self.pairgroups)
-            .unstack(level=self.stationcol)
-            .rename_axis(["value", self.stationcol], axis="columns")
+        )
+
+        paired = (
+            indexed.unstack(level=self.stationcol).rename_axis(
+                ["value", self.stationcol], axis="columns"
+            )
         )[[self._raw_rescol, self.cencol]]
-        return _pairs
+        return paired
 
     def generic_stat(
         self,
