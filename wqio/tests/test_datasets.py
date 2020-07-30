@@ -3,7 +3,7 @@ import tempfile
 import shutil
 
 import pytest
-from pandas.util.testing import network
+from pandas.testing import network
 
 from wqio import datasets
 

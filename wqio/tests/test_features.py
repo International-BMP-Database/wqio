@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 import numpy.testing as nptest
-import pandas.util.testing as pdtest
+import pandas.testing as pdtest
 from wqio.tests import helpers
 
 import numpy
