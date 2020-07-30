@@ -947,6 +947,7 @@ def test__connect_spines():
     return fig
 
 
+@pytest.mark.xfail
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
 def test_parallel_coordinates():
     df = seaborn.load_dataset("iris")

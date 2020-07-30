@@ -542,7 +542,7 @@ def expected_cohn():
 
 def test__ros_sort_baseline(basic_data, expected_sorted):
     result = ros._ros_sort(basic_data, "conc", "censored")
-    pdtest.assert_frame_equal(result, expected_sorted)
+    pdtest.assert_frame_equal(result, expected_sorted, rtol=1e-5)
 
 
 def test__ros_sort_warning(basic_data, expected_sorted):
@@ -551,12 +551,12 @@ def test__ros_sort_warning(basic_data, expected_sorted):
     df.loc[max_row, "censored"] = True
     with pytest.warns(UserWarning):
         result = ros._ros_sort(df, "conc", "censored", warn=True)
-        pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1])
+        pdtest.assert_frame_equal(result, expected_sorted.iloc[:-1], rtol=1e-5)
 
 
 def test_cohn_numbers_baseline(basic_data, expected_cohn):
     result = ros.cohn_numbers(basic_data, result="conc", censorship="censored")
-    pdtest.assert_frame_equal(result, expected_cohn)
+    pdtest.assert_frame_equal(result, expected_cohn, rtol=1e-5)
 
 
 def test_cohn_numbers_no_NDs(basic_data):
@@ -1503,4 +1503,6 @@ def test_ros_from_literature(as_arrays, case):
 def test_cohn_from_literature(case):
     cols = ["nuncen_above", "nobs_below", "ncen_equal", "prob_exceedance"]
     result = ros.cohn_numbers(case.df, case.rescol, case.cencol)
-    pdtest.assert_frame_equal(result[cols], case.cohn[cols])
+    pdtest.assert_frame_equal(
+        result[cols].round(5), case.cohn[cols].round(5), atol=1e-4
+    )

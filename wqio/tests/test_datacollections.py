@@ -33,6 +33,7 @@ def check_stat(expected_csv, result, comp=False):
     pdtest.assert_frame_equal(
         expected.sort_index(axis="columns"),
         result.sort_index(axis="columns").round(6),
+        atol=1e-5,
     )
 
 
@@ -610,9 +611,7 @@ def test_inventory(dc):
         )
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
-    pdtest.assert_frame_equal(
-        expected, dc.inventory.astype(int), check_names=False
-    )
+    pdtest.assert_frame_equal(expected, dc.inventory.astype(int), check_names=False)
 
 
 def test_inventory_noNDs(dc_noNDs):
@@ -643,9 +642,7 @@ def test_inventory_noNDs(dc_noNDs):
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(
-        expected,
-        dc_noNDs.inventory.astype(int),
-        check_names=False,
+        expected, dc_noNDs.inventory.astype(int), check_names=False,
     )
 
 
@@ -694,10 +691,11 @@ def test_stat_summary(dc):
 
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).T
     pdtest.assert_frame_equal(
-        expected,
-        dc.stat_summary(),
+        expected.round(5),
+        dc.stat_summary().round(5),
         check_names=False,
         check_dtype=False,
+        rtol=1e-4,
     )
 
 
