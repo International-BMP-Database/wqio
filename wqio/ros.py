@@ -230,7 +230,7 @@ def _detection_limit_index(res, cohn):
     """
 
     if cohn.shape[0] > 0:
-        index, = numpy.where(cohn["lower_dl"] <= res)
+        (index,) = numpy.where(cohn["lower_dl"] <= res)
         det_limit_index = index[-1]
     else:
         det_limit_index = 0
