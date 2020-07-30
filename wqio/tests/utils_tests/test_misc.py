@@ -5,7 +5,7 @@ from io import StringIO
 
 
 import pytest
-import pandas.util.testing as pdtest
+import pandas.testing as pdtest
 
 import numpy
 import pandas

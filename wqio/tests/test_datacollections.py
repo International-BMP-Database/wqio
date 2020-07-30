@@ -9,7 +9,7 @@ import pandas
 
 from unittest import mock
 import pytest
-import pandas.util.testing as pdtest
+import pandas.testing as pdtest
 from wqio.tests import helpers
 
 from wqio.features import Location, Dataset
@@ -33,7 +33,7 @@ def check_stat(expected_csv, result, comp=False):
     pdtest.assert_frame_equal(
         expected.sort_index(axis="columns"),
         result.sort_index(axis="columns").round(6),
-        check_less_precise=True,
+        atol=1e-5,
     )
 
 
@@ -308,7 +308,7 @@ def test_geostd_dev(dc):
 def test_shapiro(dc):
     known_csv = """\
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
-        result,pvalue,shapiro,pvalue,shapiro,pvalue,shapiro
+        result,pvalue,statistic,pvalue,statistic,pvalue,statistic
         param,,,,,,
         A,1.8e-05,0.685783,1e-06,0.576069,4e-06,0.61735
         B,1e-06,0.594411,0.0,0.530962,0.0,0.41471
@@ -324,7 +324,7 @@ def test_shapiro(dc):
 def test_shapiro_log(dc):
     known_csv = """\
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
-        result,log-shapiro,pvalue,log-shapiro,pvalue,log-shapiro,pvalue
+        result,statistic,pvalue,statistic,pvalue,statistic,pvalue
         param,,,,,,
         A,0.983521938,0.96662426,0.979861856,0.913820148,0.939460814,0.234214202
         B,0.957531095,0.390856266,0.97048676,0.722278714,0.967978418,0.735424638
@@ -467,27 +467,27 @@ def test_levene(dc):
 @helpers.seed
 def test_wilcoxon(dc):
     known_csv = """\
-        ,,pvalue,pvalue,pvalue,wilcoxon,wilcoxon,wilcoxon
+        ,,wilcoxon,wilcoxon,wilcoxon,pvalue,pvalue,pvalue
         loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
         param,loc_1,,,,,,
-        A,Inflow,,0.0351569731,0.4074344561,,32.0,59.0
-        A,Outflow,0.0351569731,,0.2552905052,32.0,,46.0
-        A,Reference,0.4074344561,0.2552905052,,59.0,46.0,
-        B,Inflow,,0.6001794871,0.1823383542,,38.0,22.0
-        B,Outflow,0.6001794871,,0.8588630128,38.0,,31.0
-        B,Reference,0.1823383542,0.8588630128,,22.0,31.0,
-        C,Inflow,,0.1592244176,0.5840564537,,75.0,120.0
-        C,Outflow,0.1592244176,,0.4470311612,75.0,,113.0
-        C,Reference,0.5840564537,0.4470311612,,120.0,113.0,
-        D,Inflow,,0.5936182408,0.5302845968,,44.0,31.0
-        D,Outflow,0.5936182408,,0.9721253297,44.0,,45.0
-        D,Reference,0.5302845968,0.9721253297,,31.0,45.0,
-        E,Inflow,,0.8589549227,0.3862707204,,21.0,19.0
-        E,Outflow,0.8589549227,,0.0711892343,21.0,,16.0
-        E,Reference,0.3862707204,0.0711892343,,19.0,16.0,
-        F,Inflow,,0.4924592975,0.952765022,,62.0,22.0
-        F,Outflow,0.4924592975,,0.6566419343,62.0,,28.0
-        F,Reference,0.952765022,0.6566419343,,22.0,28.0
+        A,Inflow,,32.0,59.0,,0.03479,0.430679
+        A,Outflow,32.0,,46.0,0.03479,,0.274445
+        A,Reference,59.0,46.0,,0.430679,0.274445,
+        B,Inflow,,38.0,22.0,,0.600179,0.182338
+        B,Outflow,38.0,,31.0,0.600179,,0.858863
+        B,Reference,22.0,31.0,,0.182338,0.858863,
+        C,Inflow,,75.0,120.0,,0.167807,0.601046
+        C,Outflow,75.0,,113.0,0.167807,,0.463381
+        C,Reference,120.0,113.0,,0.601046,0.463381,
+        D,Inflow,,44.0,31.0,,0.593618,0.530285
+        D,Outflow,44.0,,45.0,0.593618,,0.972125
+        D,Reference,31.0,45.0,,0.530285,0.972125,
+        E,Inflow,,21.0,19.0,,0.910156,0.386271
+        E,Outflow,21.0,,16.0,0.910156,,0.077148
+        E,Reference,19.0,16.0,,0.386271,0.077148,
+        F,Inflow,,62.0,22.0,,0.492459,0.952765
+        F,Outflow,62.0,,28.0,0.492459,,0.656642
+        F,Reference,22.0,28.0,,0.952765,0.656642,
     """
     with pytest.warns(UserWarning):
         check_stat(known_csv, dc.wilcoxon, comp=True)
@@ -611,9 +611,7 @@ def test_inventory(dc):
         )
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
-    pdtest.assert_frame_equal(
-        expected, dc.inventory.astype(int), check_names=False, check_less_precise=True
-    )
+    pdtest.assert_frame_equal(expected, dc.inventory.astype(int), check_names=False)
 
 
 def test_inventory_noNDs(dc_noNDs):
@@ -644,10 +642,7 @@ def test_inventory_noNDs(dc_noNDs):
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(
-        expected,
-        dc_noNDs.inventory.astype(int),
-        check_names=False,
-        check_less_precise=True,
+        expected, dc_noNDs.inventory.astype(int), check_names=False,
     )
 
 
@@ -696,11 +691,11 @@ def test_stat_summary(dc):
 
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).T
     pdtest.assert_frame_equal(
-        expected,
-        dc.stat_summary(),
+        expected.round(5),
+        dc.stat_summary().round(5),
         check_names=False,
-        check_less_precise=True,
         check_dtype=False,
+        rtol=1e-4,
     )
 
 
