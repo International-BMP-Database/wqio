@@ -1,0 +1,8 @@
+click
+requests
+numpy
+matplotlib
+pandas
+metar >= 1.5
+pytest
+pytest-mpl
