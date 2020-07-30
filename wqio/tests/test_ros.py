@@ -1503,4 +1503,4 @@ def test_ros_from_literature(as_arrays, case):
 def test_cohn_from_literature(case):
     cols = ["nuncen_above", "nobs_below", "ncen_equal", "prob_exceedance"]
     result = ros.cohn_numbers(case.df, case.rescol, case.cencol)
-    pdtest.assert_frame_equal(result[cols], case.cohn[cols], check_less_precise=True)
+    pdtest.assert_frame_equal(result[cols], case.cohn[cols])

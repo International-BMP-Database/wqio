@@ -33,7 +33,6 @@ def check_stat(expected_csv, result, comp=False):
     pdtest.assert_frame_equal(
         expected.sort_index(axis="columns"),
         result.sort_index(axis="columns").round(6),
-        check_less_precise=True,
     )
 
 
@@ -612,7 +611,7 @@ def test_inventory(dc):
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(
-        expected, dc.inventory.astype(int), check_names=False, check_less_precise=True
+        expected, dc.inventory.astype(int), check_names=False
     )
 
 
@@ -647,7 +646,6 @@ def test_inventory_noNDs(dc_noNDs):
         expected,
         dc_noNDs.inventory.astype(int),
         check_names=False,
-        check_less_precise=True,
     )
 
 
@@ -699,7 +697,6 @@ def test_stat_summary(dc):
         expected,
         dc.stat_summary(),
         check_names=False,
-        check_less_precise=True,
         check_dtype=False,
     )
 
