@@ -8,7 +8,6 @@ probscale
 pytest
 pytest-cov
 pytest-mpl
-pytest-pep8
 coverage
 docopt
 requests
