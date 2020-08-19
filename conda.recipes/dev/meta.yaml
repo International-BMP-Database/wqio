@@ -1,6 +1,6 @@
 package:
   name: wqio
-  version: 0.4.x
+  version: 0.5.1
 
 source:
   path: ../../
