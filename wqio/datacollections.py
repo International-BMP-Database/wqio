@@ -4,7 +4,6 @@ from functools import partial
 
 import numpy
 from scipy import stats
-from matplotlib import pyplot
 import pandas
 import statsmodels.api as sm
 from statsmodels.tools.decorators import cache_readonly

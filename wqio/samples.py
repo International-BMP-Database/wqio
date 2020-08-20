@@ -1,5 +1,3 @@
-import sys
-
 from matplotlib import pyplot
 import seaborn
 import pandas

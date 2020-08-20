@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from wqio.tests import helpers
 

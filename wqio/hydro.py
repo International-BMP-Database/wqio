@@ -735,7 +735,6 @@ class Storm(object):
         artists = []
         labels = []
 
-        legcols = 0
         # in the label assignment: `serieslabels.pop(item, item)` might
         # seem odd. What it does is looks for a label (value) in the
         # dictionary with the key equal to `item`. If there is no valur

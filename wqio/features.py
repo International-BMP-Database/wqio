@@ -1,5 +1,3 @@
-import itertools
-
 import numpy
 from scipy import stats
 from matplotlib import pyplot
@@ -507,7 +505,7 @@ class Location(object):
         if xlabel is not None:
             bxpstats[0]["label"] = xlabel
 
-        bp = viz.boxplot(
+        viz.boxplot(
             bxpstats,
             ax=ax,
             position=pos,
@@ -749,7 +747,7 @@ class Location(object):
             hue_order = [True, False]
             df = self.raw_data.copy()
 
-        plot = (
+        ax = (
             df.assign(pos=pos)
             .assign(Result=lambda df: df[rescol])
             .assign(Censored=lambda df: df[self.cencol])
@@ -764,6 +762,7 @@ class Location(object):
                 color=self.color,
                 edgecolor="k",
                 linewidth=1.25,
+                ax=ax,
             )
         )
 
@@ -1220,7 +1219,7 @@ class Dataset(object):
             if loc is not None:
                 y_log = yscale == "log"
                 bxpstats = loc.boxplot_stats(log=y_log, bacteria=bacteria)
-                bp = viz.boxplot(
+                viz.boxplot(
                     bxpstats,
                     ax=ax,
                     position=pos + offset,
@@ -1624,7 +1623,7 @@ class Dataset(object):
                     txt_x, txt_y = positions.get(eqn_pos.lower())
                 except KeyError:
                     raise ValueError(
-                        "`eqn_pos` must be on of ".format(list.positions.keys())
+                        "`eqn_pos` must be on of {}".format(list.positions.keys())
                     )
                 # annotate axes with stats
 

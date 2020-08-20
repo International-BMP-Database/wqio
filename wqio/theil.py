@@ -1,9 +1,4 @@
-import os
-from textwrap import dedent
-
 import numpy
-from scipy import stats
-from matplotlib import pyplot
 from probscale.algo import _estimate_from_fit
 
 from wqio import utils

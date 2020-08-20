@@ -1,7 +1,6 @@
 from pkg_resources import resource_filename
 import warnings
 
-import wqio
 from .helpers import requires
 
 try:

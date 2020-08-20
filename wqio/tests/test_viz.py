@@ -1,4 +1,3 @@
-import os
 import pytest
 import numpy.testing as nptest
 

@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from wqio.tests import helpers
 
@@ -646,7 +644,7 @@ def test_ds_scatterplot_one2one(ds_NDs):
 
 def test_ds_scatterplot_useros(ds_NDs):
     with helpers.raises(ValueError):
-        fig11 = ds_NDs.scatterplot(useros=True)
+        ds_NDs.scatterplot(useros=True)
 
 
 @pytest.fixture
