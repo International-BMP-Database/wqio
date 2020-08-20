@@ -18,6 +18,10 @@ import numpy.testing as nptest
 import pytest
 
 
+def get_img_tolerance():
+    return int(os.environ.get("MPL_IMGCOMP_TOLERANCE", 15))
+
+
 def seed(func):
     """ Decorator to seed the RNG before any function. """
 

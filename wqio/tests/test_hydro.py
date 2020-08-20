@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import numpy.testing as nptest
 import pandas.testing as pdtest
@@ -11,6 +13,7 @@ from wqio import hydro
 
 
 BASELINE_IMAGES = "_baseline_images/hydro_tests"
+TOLERANCE = helpers.get_img_tolerance()
 
 
 class fakeStormSublcass(hydro.Storm):
@@ -183,7 +186,8 @@ def test_storm_start_end(stormfile, baseflow, sn, idx, known):
     assert storm.index[idx].strftime("%X %x") == ts.strftime("%X %x")
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+@pytest.mark.xfail(TOLERANCE > 15, reason="GH Action weirdness")
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_HydroRecord_histogram():
     stormfile = helpers.test_data_path("teststorm_simple.csv")
     orig_record = (
@@ -610,7 +614,7 @@ def single_storm():
     return hr.storms[2]
 
 
-@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=15)
+@pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_plot_storm_summary(single_storm):
     labels = {
         single_storm.inflowcol: "Effluent (l/s)",
