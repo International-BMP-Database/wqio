@@ -957,6 +957,7 @@ def test_parallel_coordinates():
     return fig
 
 
+@pytest.mark.xfail(TOLERANCE > 15, reason="GH Action weirdness")
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_categorical_histogram_simple(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
@@ -964,6 +965,7 @@ def test_categorical_histogram_simple(cat_hist_data):
     return fig.fig
 
 
+@pytest.mark.xfail(TOLERANCE > 15, reason="GH Action weirdness")
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_categorical_histogram_complex(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
