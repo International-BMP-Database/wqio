@@ -675,7 +675,7 @@ class Storm(object):
         try:
             meta = self.meta[quantity]
         except KeyError:
-            raise KeyError("%s not available".format(quantity))
+            raise KeyError("{} not available".format(quantity))
 
         # plot the data
         self.data[quantity].fillna(0).plot(

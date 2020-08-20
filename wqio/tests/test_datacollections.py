@@ -700,8 +700,8 @@ def test_stat_summary(dc):
 
 
 def test_locations(dc):
-    for l in dc.locations:
-        assert isinstance(l, Location)
+    for loc in dc.locations:
+        assert isinstance(loc, Location)
     assert len(dc.locations) == 18
     assert dc.locations[0].definition == {"loc": "Inflow", "param": "A"}
     assert dc.locations[1].definition == {"loc": "Inflow", "param": "B"}

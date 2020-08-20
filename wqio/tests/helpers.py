@@ -4,7 +4,6 @@ import subprocess
 import re
 import os
 import difflib
-from warnings import simplefilter
 from functools import wraps
 from pkg_resources import resource_filename
 from io import StringIO
@@ -14,7 +13,6 @@ from contextlib import contextmanager
 import numpy
 import pandas
 
-import numpy.testing as nptest
 import pytest
 
 
