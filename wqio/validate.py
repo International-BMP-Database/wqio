@@ -32,7 +32,7 @@ def timestamp(datelike):
 
     try:
         tstamp = pandas.Timestamp(datelike)
-    except:
+    except ValueError:
         msg = "{} could not be coerced into a pandas.Timestamp".format(datelike)
         raise ValueError(msg)
 

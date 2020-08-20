@@ -1,6 +1,4 @@
 from distutils.version import LooseVersion
-from textwrap import dedent
-from io import StringIO
 
 import pytest
 import numpy.testing as nptest

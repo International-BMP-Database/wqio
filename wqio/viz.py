@@ -1,11 +1,8 @@
-import copy
 from functools import partial
 
 import numpy
-import matplotlib
 from matplotlib import pyplot
 from matplotlib import ticker
-import scipy.stats as stats
 from pandas.api.types import CategoricalDtype
 import seaborn
 import probscale
@@ -551,9 +548,7 @@ def parallel_coordinates(
 
         for row in data.values:
             for n, (ax1, ax2) in enumerate(zip(axes[:-1], axes[1:])):
-                line = _connect_spines(
-                    ax1, ax2, row[n], row[n + 1], color=color_dict[row[-1]]
-                )
+                _connect_spines(ax1, ax2, row[n], row[n + 1], color=color_dict[row[-1]])
 
     if showlegend:
         fig.legend(lines, hue_vals)

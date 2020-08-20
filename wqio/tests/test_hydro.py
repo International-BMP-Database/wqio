@@ -1,7 +1,4 @@
-import os
-
 import pytest
-import numpy.testing as nptest
 import pandas.testing as pdtest
 from wqio.tests import helpers
 

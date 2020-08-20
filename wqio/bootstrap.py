@@ -1,4 +1,3 @@
-import warnings
 import logging
 from collections import namedtuple
 

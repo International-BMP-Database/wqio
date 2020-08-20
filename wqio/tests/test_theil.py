@@ -1,8 +1,5 @@
 import numpy
-import pandas
-from scipy.stats import mstats
 
-from unittest.mock import patch
 import pytest
 import numpy.testing as nptest
 from wqio.tests import helpers
