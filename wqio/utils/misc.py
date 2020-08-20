@@ -1,4 +1,3 @@
-from io import StringIO
 from copy import copy
 from functools import wraps
 import warnings

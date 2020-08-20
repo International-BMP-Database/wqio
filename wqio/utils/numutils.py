@@ -632,7 +632,6 @@ def remove_outliers(x, factor=1.5):
     (35,)
 
     """
-    mean = numpy.mean(x)
     pctl25 = numpy.percentile(x, 25)
     pctl75 = numpy.percentile(x, 75)
     IQR = pctl75 - pctl25

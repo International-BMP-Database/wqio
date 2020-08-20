@@ -1,6 +1,5 @@
 from textwrap import dedent
 from io import StringIO
-import warnings
 
 import pytest
 import numpy.testing as nptest

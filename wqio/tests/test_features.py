@@ -2,10 +2,8 @@ from distutils.version import LooseVersion
 
 import pytest
 import numpy.testing as nptest
-import pandas.testing as pdtest
 from wqio.tests import helpers
 
-import numpy
 import scipy
 import pandas
 

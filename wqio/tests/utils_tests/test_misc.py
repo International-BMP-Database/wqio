@@ -1,4 +1,3 @@
-from pathlib import Path
 from functools import partial
 from textwrap import dedent
 from io import StringIO
@@ -149,7 +148,6 @@ def test_redefine_index_level(multiindex_df, criteria, dropold):
 
 @pytest.fixture
 def basic_dataset():
-    known_float = 123.4567
     inflow = [1, 3, 4, 12.57]
     outflow = [2, 5, 7, 15.17]
     return mockDataset(inflow, outflow)

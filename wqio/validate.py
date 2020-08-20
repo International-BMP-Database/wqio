@@ -16,7 +16,9 @@ def dataset(fname):
 
 
 def timestamp(datelike):
-    """ Converts datetime-like objects to pandas.Timestamp
+    """ Converts datetime-like objects to pandas.Timestamp.
+    Pretty miuch a direct pass through, but give a slighly
+    more informative error message.
 
     Parameters
     ----------
