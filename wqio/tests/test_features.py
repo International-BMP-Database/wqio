@@ -156,7 +156,7 @@ def test_location_stats_arrays(location, attr):
 
 
 @pytest.mark.parametrize("attr", ["anderson", "anderson_log"])
-@pytest.mark.parametrize("index", range(4))
+@pytest.mark.parametrize("index", [0, 1, 2, pytest.param(3, marks=pytest.mark.skip), 4])
 def test_location_anderson(location, attr, index):
     expected = {
         "anderson": {
@@ -164,12 +164,14 @@ def test_location_anderson(location, attr, index):
                 1.54388800,
                 [0.527, 0.6, 0.719, 0.839, 0.998],
                 [15.0, 10.0, 5.0, 2.5, 1.0],
+                None,
                 0.000438139,
             ),
             False: (
                 1.4392085,
                 [0.527, 0.6, 0.719, 0.839, 0.998],
                 [15.0, 10.0, 5.0, 2.5, 1.0],
+                None,
                 0.00080268,
             ),
         },
@@ -178,22 +180,24 @@ def test_location_anderson(location, attr, index):
                 0.30409634,
                 [0.527, 0.6, 0.719, 0.839, 0.998],
                 [15.0, 10.0, 5.0, 2.5, 1.0],
+                None,
                 0.552806894,
             ),
             False: (
                 0.3684061,
                 [0.527, 0.6, 0.719, 0.839, 0.998],
                 [15.0, 10.0, 5.0, 2.5, 1.0],
+                None,
                 0.41004028,
             ),
         },
     }
     result = expected[attr][location.useros][index]
-    if index in [0, 3]:
+    if index in [0, 4]:
         nptest.assert_approx_equal(
             getattr(location, attr)[index], result, significant=5
         )
-    else:
+    elif index != 3:
         nptest.assert_array_almost_equal(
             getattr(location, attr)[index], result, decimal=5
         )

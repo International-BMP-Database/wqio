@@ -100,7 +100,7 @@ def swap_column_levels(df, level_1, level_2, sort=True):
     return df2
 
 
-def flatten_columns(df, sep="_"):
+def flatten_columns(df: pandas.DataFrame, sep: str = "_"):
     """ Completely flattens a multi-level column index
 
     Parameters
@@ -117,7 +117,7 @@ def flatten_columns(df, sep="_"):
 
     """
     newcols = [sep.join(_) for _ in df.columns]
-    return df.set_axis(newcols, axis="columns", inplace=False)
+    return df.set_axis(newcols, axis="columns")
 
 
 def expand_columns(df, names, sep="_"):
@@ -155,7 +155,7 @@ def expand_columns(df, names, sep="_"):
     """
 
     newcols = df.columns.str.split(sep, expand=True)
-    return df.set_axis(newcols, axis="columns", inplace=False).rename_axis(
+    return df.set_axis(newcols, axis="columns").rename_axis(
         names, axis="columns"
     )
 

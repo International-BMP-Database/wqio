@@ -108,6 +108,7 @@ def test_anderson_darling():
         1.4392085,
         [0.527, 0.6, 0.719, 0.839, 0.998],
         [15.0, 10.0, 5.0, 2.5, 1.0],
+        None,
         0.00080268,
     )
 
@@ -121,7 +122,7 @@ def test_anderson_darling():
     nptest.assert_allclose(result[2], known_anderson[2], rtol=tolerance)
 
     # p-value
-    assert abs(result[3] - known_anderson[3]) < 0.0000001
+    assert abs(result[4] - known_anderson[4]) < 0.0000001
 
 
 @pytest.mark.parametrize("which", ["good", "bad"])

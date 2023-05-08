@@ -212,13 +212,13 @@ def anderson_darling(data):
 
     """
     AD = stats.anderson(data)
-    field_names = list(AD._fields) + ["pvalue"]
+    # field_names = list(AD._fields) + ["pvalue"]
 
     p = _anderson_darling_p_vals(AD, len(data))
     values = AD._asdict()
     values["pvalue"] = p
 
-    ADResult = namedtuple("ADResult", field_names)
+    ADResult = namedtuple("ADResult", values)
     return ADResult(**values)
 
 
