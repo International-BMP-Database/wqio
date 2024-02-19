@@ -1,4 +1,3 @@
-from distutils.version import LooseVersion
 from io import StringIO
 from textwrap import dedent
 from unittest import mock
@@ -8,13 +7,14 @@ import pandas
 import pandas.testing as pdtest
 import pytest
 import scipy
+from packaging.version import Version
 from scipy import stats
 
 from wqio.datacollections import DataCollection, _dist_compare
 from wqio.features import Dataset, Location
 from wqio.tests import helpers
 
-OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
+OLD_SCIPY = Version(scipy.version.version) < Version("0.19")
 
 
 def check_stat(expected_csv, result, comp=False):

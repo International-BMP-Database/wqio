@@ -1,14 +1,13 @@
-from distutils.version import LooseVersion
-
 import numpy.testing as nptest
 import pandas
 import pytest
 import scipy
+from packaging.version import Version
 
 from wqio.features import Dataset, Location
 from wqio.tests import helpers
 
-OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
+OLD_SCIPY = Version(scipy.version.version) < Version("0.19")
 TOLERANCE = 0.05
 
 

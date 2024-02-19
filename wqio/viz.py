@@ -61,6 +61,8 @@ def log_formatter(use_1x=True, threshold=5):
                 tick = r"$1 \times 10 ^ {%d}$" % int(numpy.log10(tick))
             else:
                 tick = r"$10 ^ {%d}$" % int(numpy.log10(tick))
+        else:
+            tick = utils.sigFigs(tick, n=1)
 
         return str(tick)
 

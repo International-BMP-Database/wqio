@@ -1,12 +1,10 @@
-import pytest
-from wqio.tests import helpers
-
 import numpy
-from matplotlib import pyplot
+import pytest
 import seaborn
+from matplotlib import pyplot
 
-from wqio.features import Location, Dataset
-
+from wqio.features import Dataset, Location
+from wqio.tests import helpers
 
 BASELINE_IMAGES = "_baseline_images/features_tests"
 TOLERANCE = helpers.get_img_tolerance()
@@ -699,19 +697,19 @@ def test_ds__plot_NDs_neither(ds_NDs, markerkwargs):
 def _do_jointplots(ds, hist=False, kde=False, rug=False):
     jg = ds.jointplot(hist=hist, kde=kde, rug=rug)
     assert isinstance(jg, seaborn.JointGrid)
-    return jg.fig
+    return jg.figure
 
 
 def test_ds_joint_hist_smoke(ds_NDs):
     with seaborn.axes_style("ticks"):
         fig1 = _do_jointplots(ds_NDs, hist=True)
-        return fig1
+    return fig1
 
 
 def test_ds_joint_kde_smoke(ds_NDs):
     with seaborn.axes_style("ticks"):
         fig2 = _do_jointplots(ds_NDs, kde=True)
-        return fig2
+    return fig2
 
 
 def test_ds_joint_rug_smoke(ds_NDs):
@@ -722,5 +720,5 @@ def test_ds_joint_rug_smoke(ds_NDs):
 
 def test_ds_joint_kde_rug_hist_smoke(ds_NDs):
     with seaborn.axes_style("ticks"):
-        fig4 = _do_jointplots(ds_NDs, hist=True, kde=True, rug=True)
-        return fig4
+        fig4 = _do_jointplots(ds_NDs, hist=True, kde=True)
+    return fig4

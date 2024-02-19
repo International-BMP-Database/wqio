@@ -1292,7 +1292,7 @@ class Dataset:
         xlabels = {
             "pp": "Theoretical percentiles",
             "qq": "Theoretical quantiles",
-            "prob": r"Non-exceedance probability (\%)",
+            "prob": r"Non-exceedance probability (%)",
         }
 
         ax.set_xlabel(xlabels[axtype])
@@ -1392,7 +1392,7 @@ class Dataset:
             Toggles showing histograms on the distribution plots
         kde : bool, optional (default is True)
             Toggles showing KDE plots on the distribution plots
-        run : bool, optional (default is True)
+        rug : bool, optional (default is True)
             Toggles showing rug plots on the distribution plots
         **scatter_kws : keyword arguments
             Optionals passed directly to Dataset.scatterplot
@@ -1405,7 +1405,7 @@ class Dataset:
         --------
         seaborn.JointGrid
         seaborn.jointplot
-        seaborn.distplot
+        seaborn.displot
         Dataset.scatterplot
 
         """
@@ -1417,7 +1417,7 @@ class Dataset:
             data = self.paired_data.xs("res", level="quantity", axis=1)
             jg = seaborn.JointGrid(x="inflow", y="outflow", data=data)
             self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter_kws)
-            jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
+            jg.plot_marginals(seaborn.displot, rug=rug, kde=kde)
 
             jg.ax_marg_x.set_xscale(scatter_kws.pop("xscale", "log"))
             jg.ax_marg_y.set_yscale(scatter_kws.pop("yscale", "log"))

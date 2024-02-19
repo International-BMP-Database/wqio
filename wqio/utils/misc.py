@@ -514,7 +514,7 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=
         other_symbol = false_symbol
 
     mapper = {True: true_symbol, False: false_symbol}
-    symbolized = df.applymap(lambda x: mapper.get(x, other_symbol))
+    symbolized = df.map(lambda x: mapper.get(x, other_symbol))
     if join_char is None:
         return symbolized
     return symbolized.apply(lambda r: join_char.join(r), axis=1)

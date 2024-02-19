@@ -159,12 +159,12 @@ class DataCollection:
 
             def make_tidy(df):
                 tqdm.pandas(desc="Tidying the DataCollection")
-                return df.groupby(self.groupcols).progress_apply(fxn)
+                return df.groupby(self.groupcols).progress_apply(fxn, include_groups=False)
 
         else:
 
             def make_tidy(df):
-                return df.groupby(self.groupcols).apply(fxn)
+                return df.groupby(self.groupcols).apply(fxn, include_groups=False)
 
         keep_cols = self.tidy_columns + [self.roscol]
         with warnings.catch_warnings():
@@ -277,9 +277,9 @@ class DataCollection:
 
         if tqdm and self.showpbar:
             tqdm.pandas(desc="Computing stats")
-            vals = groups.progress_apply(fxn)
+            vals = groups.progress_apply(fxn, include_groups=False)
         else:
-            vals = groups.apply(fxn)
+            vals = groups.apply(fxn, include_groups=False)
 
         results = (
             vals.unstack(level=self.stationcol)

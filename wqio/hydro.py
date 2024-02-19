@@ -1010,7 +1010,7 @@ class HydroRecord:
         """
 
         fg = viz.categorical_histogram(self.storm_stats, valuecol, bins, **factoropts)
-        fg.fig.tight_layout()
+        fg.figure.tight_layout()
         return fg
 
 

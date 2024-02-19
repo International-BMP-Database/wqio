@@ -1,5 +1,4 @@
 import difflib
-import distutils
 import os
 import re
 import subprocess
@@ -12,6 +11,7 @@ from io import StringIO
 import numpy
 import pandas
 import pytest
+from packaging.version import Version
 from pkg_resources import resource_filename
 
 
@@ -189,8 +189,8 @@ def compare_versions(utility="latex"):  # pragma: no cover
     required = requirements[utility]
     present = available[utility]
     if present:
-        present = distutils.version.LooseVersion(present)
-        required = distutils.version.LooseVersion(required)
+        present = Version(present)
+        required = Version(required)
         return present >= required
 
     else:
