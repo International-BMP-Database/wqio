@@ -1,9 +1,9 @@
-from . import bootstrap
-from .ros import ROS, cohn_numbers
-from .datasets import download
-from .features import Location, Dataset
-from .datacollections import DataCollection
-from .samples import CompositeSample, GrabSample, Parameter
-from .hydro import parse_storm_events, HydroRecord, Storm, DrainageArea
-from . import utils
-from .tests import test, teststrict
+from wqio import bootstrap  # noqa
+from wqio import utils  # noqa
+from wqio.datacollections import DataCollection  # noqa
+from wqio.datasets import download  # noqa
+from wqio.features import Dataset, Location  # noqa
+from wqio.hydro import DrainageArea, HydroRecord, Storm, parse_storm_events  # noqa
+from wqio.ros import ROS, cohn_numbers  # noqa
+from wqio.samples import CompositeSample, GrabSample, Parameter  # noqa
+from wqio.tests import test, teststrict  # noqa

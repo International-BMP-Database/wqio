@@ -1,7 +1,7 @@
 import os
-from zipfile import ZipFile
-from urllib import request
 from pathlib import Path
+from urllib import request
+from zipfile import ZipFile
 
 from wqio import validate
 
@@ -9,12 +9,11 @@ from wqio import validate
 def download(dataset, year=None, redownload=True, data_dir=None):
     fname = validate.dataset(dataset)
 
-    if year is None:
-        tag = "master"
-    else:
-        tag = "v{:d}".format(year)
+    tag = "master" if year is None else f"v{year:d}"
 
-    url_template = "https://github.com/Geosyntec/water-quality-datasets/blob/{tag:s}/data/{fname:s}?raw=true"
+    url_template = (
+        "https://github.com/Geosyntec/water-quality-datasets/blob/{tag:s}/data/{fname:s}?raw=true"
+    )
     src_url = url_template.format(tag=tag, fname=fname)
 
     if data_dir is None:
@@ -31,4 +30,4 @@ def download(dataset, year=None, redownload=True, data_dir=None):
         with ZipFile(dst_path, "r") as zip_ref:
             zip_ref.extractall(data_dir)
 
-    return dst_path.parent / "{}.csv".format(dst_path.stem)
+    return dst_path.parent / f"{dst_path.stem}.csv"

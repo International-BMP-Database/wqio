@@ -1,6 +1,6 @@
+import warnings
 from copy import copy
 from functools import wraps
-import warnings
 
 import numpy
 import pandas
@@ -11,7 +11,7 @@ def head_tail(df, N=5):
 
 
 def add_column_level(df, levelvalue, levelname):
-    """ Adds a second level to the column-index if a dataframe.
+    """Adds a second level to the column-index if a dataframe.
 
     Parameters
     ----------
@@ -50,7 +50,7 @@ def add_column_level(df, levelvalue, levelname):
 
 
 def swap_column_levels(df, level_1, level_2, sort=True):
-    """ Swaps columns levels in a dataframe with multi-level columns
+    """Swaps columns levels in a dataframe with multi-level columns
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ def swap_column_levels(df, level_1, level_2, sort=True):
 
 
 def flatten_columns(df: pandas.DataFrame, sep: str = "_"):
-    """ Completely flattens a multi-level column index
+    """Completely flattens a multi-level column index
 
     Parameters
     ----------
@@ -155,13 +155,11 @@ def expand_columns(df, names, sep="_"):
     """
 
     newcols = df.columns.str.split(sep, expand=True)
-    return df.set_axis(newcols, axis="columns").rename_axis(
-        names, axis="columns"
-    )
+    return df.set_axis(newcols, axis="columns").rename_axis(names, axis="columns")
 
 
 def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
-    """ Redefine a index values in a dataframe.
+    """Redefine a index values in a dataframe.
 
     Parameters
     ----------
@@ -214,14 +212,14 @@ def categorize_columns(df, *columns):
     newdf = df.copy()
     for c in columns:
         if newdf[c].dtype != object:
-            raise ValueError("column {} is not an object type".format(c))
+            raise ValueError(f"column {c} is not an object type")
         newdf[c] = newdf[c].astype("category")
 
     return newdf
 
 
 def nested_getattr(baseobject, attribute):
-    """  Returns the value of an attribute of an object that is nested
+    """Returns the value of an attribute of an object that is nested
     several layers deep.
 
     Parameters
@@ -254,7 +252,7 @@ def nested_getattr(baseobject, attribute):
 
 
 def stringify(value, fmt, attribute=None):
-    """ Weird wrapper to format attributes of objects as strings
+    """Weird wrapper to format attributes of objects as strings
 
     Parameters
     ----------
@@ -330,17 +328,17 @@ def classifier(value, bins, units=None):
 
     # below the lower edge
     elif value <= min(bins):
-        output = "<{}".format(min(bins))
+        output = f"<{min(bins)}"
 
     # above the upper edge
     elif value > max(bins):
-        output = ">{}".format(max(bins))
+        output = f">{max(bins)}"
 
     # everything else with the range of bins
     else:
         for left, right in zip(bins[:-1], bins[1:]):
             if left < value <= right:
-                output = "{} - {}".format(left, right)
+                output = f"{left} - {right}"
                 break
 
     # add the units (or don't)
@@ -383,7 +381,7 @@ def unique_categories(classifier, bins):
 
 
 def pop_many(some_dict, *args):
-    """ Pop several key-values out of a dictionary and return a copy
+    """Pop several key-values out of a dictionary and return a copy
 
     Parameters
     ----------
@@ -411,7 +409,7 @@ def pop_many(some_dict, *args):
 
 
 def selector(default, *cond_results):
-    """ Thin wrapper around numpy.select with a more convenient API (maybe).
+    """Thin wrapper around numpy.select with a more convenient API (maybe).
 
     Parameters
     ----------
@@ -445,7 +443,7 @@ def no_op(value):
 
 
 def assign_multilevel_column(df, val_or_fxn, *collevels):
-    """ Dataframe-pipeable function to assign new multi-level columns
+    """Dataframe-pipeable function to assign new multi-level columns
 
     Parameters
     ----------
@@ -474,7 +472,7 @@ def assign_multilevel_column(df, val_or_fxn, *collevels):
 
 
 def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=None):
-    """ Symbolize boolean values in a dataframe with strings
+    """Symbolize boolean values in a dataframe with strings
 
     Parameters
     ----------
@@ -523,8 +521,7 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=
 
 
 def log_df_shape(logger):  # pragma: no cover
-    """ Decorator to log the shape of a dataframe before and after a function.
-    """
+    """Decorator to log the shape of a dataframe before and after a function."""
 
     def decorate(func):
         @wraps(func)
@@ -532,9 +529,7 @@ def log_df_shape(logger):  # pragma: no cover
             shape_init = args[0].shape
             new_df = func(*args, **kwargs)
             shape_final = new_df.shape
-            logger.debug(
-                f"{func.__name__}: dataframe shape = {shape_init} -> {shape_final}."
-            )
+            logger.debug(f"{func.__name__}: dataframe shape = {shape_init} -> {shape_final}.")
             return new_df
 
         return wrapper

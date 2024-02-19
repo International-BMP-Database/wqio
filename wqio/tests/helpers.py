@@ -1,19 +1,18 @@
-import distutils
-import sys
-import subprocess
-import re
-import os
 import difflib
-from functools import wraps
-from pkg_resources import resource_filename
-from io import StringIO
+import distutils
+import os
+import re
+import subprocess
+import sys
 from collections import namedtuple
 from contextlib import contextmanager
+from functools import wraps
+from io import StringIO
 
 import numpy
 import pandas
-
 import pytest
+from pkg_resources import resource_filename
 
 
 def get_img_tolerance():
@@ -21,7 +20,7 @@ def get_img_tolerance():
 
 
 def seed(func):
-    """ Decorator to seed the RNG before any function. """
+    """Decorator to seed the RNG before any function."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -52,9 +51,7 @@ def requires(module, modulename):
         @wraps(function)
         def inner_wrapper(*args, **kwargs):
             if module is None:
-                raise RuntimeError(
-                    "{} required for `{}`".format(modulename, function.__name__)
-                )
+                raise RuntimeError(f"{modulename} required for `{function.__name__}`")
             else:
                 return function(*args, **kwargs)
 
@@ -123,9 +120,7 @@ def make_dc_data_complex(dropsome=True):
     )
 
     xtab = (
-        pandas.DataFrame(index=index, columns=["res"])
-        .unstack(level="param")
-        .unstack(level="state")
+        pandas.DataFrame(index=index, columns=["res"]).unstack(level="param").unstack(level="state")
     )
 
     xtab_rows = xtab.shape[0]
@@ -196,17 +191,15 @@ def compare_versions(utility="latex"):  # pragma: no cover
     if present:
         present = distutils.version.LooseVersion(present)
         required = distutils.version.LooseVersion(required)
-        if present >= required:
-            return True
-        else:
-            return False
+        return present >= required
+
     else:
         return False
 
 
 def _show_package_info(package, name):  # pragma: no cover
     packagedir = os.path.dirname(package.__file__)
-    print("%s version %s is installed in %s" % (name, package.__version__, packagedir))
+    print(f"{name} version {package.__version__} is installed in {packagedir}")
 
 
 def _show_system_info():  # pragma: no cover
@@ -249,11 +242,9 @@ def checkdep_tex():  # pragma: no cover
             return b
 
     try:
-        s = subprocess.Popen(
-            ["tex", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        s = subprocess.Popen(["tex", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         line = byte2str(s.stdout.readlines()[0])
-        pattern = "3\.1\d+"
+        pattern = r"3\.1\d+"
         match = re.search(pattern, line)
         v = match.group(0)
         return v

@@ -1,20 +1,18 @@
 from distutils.version import LooseVersion
-from textwrap import dedent
 from io import StringIO
+from textwrap import dedent
+from unittest import mock
 
 import numpy
+import pandas
+import pandas.testing as pdtest
+import pytest
 import scipy
 from scipy import stats
-import pandas
 
-from unittest import mock
-import pytest
-import pandas.testing as pdtest
-from wqio.tests import helpers
-
-from wqio.features import Location, Dataset
 from wqio.datacollections import DataCollection, _dist_compare
-
+from wqio.features import Dataset, Location
+from wqio.tests import helpers
 
 OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
 
@@ -642,7 +640,9 @@ def test_inventory_noNDs(dc_noNDs):
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(
-        expected, dc_noNDs.inventory.astype(int), check_names=False,
+        expected,
+        dc_noNDs.inventory.astype(int),
+        check_names=False,
     )
 
 
@@ -751,17 +751,17 @@ def test_selectLocations_squeeze_True_None(dc):
 # since the test_selectLocations* tests stress _filter_collection
 # enough, we'll mock it out for datasets:
 def test_selectDatasets(dc):
-    with mock.patch.object(dc, "_filter_collection") as _fc:
-        with mock.patch.object(dc, "datasets", return_value=["A", "B"]) as _ds:
-            dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
-            _ds.assert_called_once_with("Inflow", "Reference")
-            _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
+    with (
+        mock.patch.object(dc, "_filter_collection") as _fc,
+        mock.patch.object(dc, "datasets", return_value=["A", "B"]) as _ds,
+    ):
+        dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
+        _ds.assert_called_once_with("Inflow", "Reference")
+        _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
 
 
 @pytest.mark.parametrize("func", [stats.mannwhitneyu, stats.wilcoxon])
-@pytest.mark.parametrize(
-    ("x", "all_same"), [([5, 5, 5, 5, 5], True), ([5, 6, 7, 7, 8], False)]
-)
+@pytest.mark.parametrize(("x", "all_same"), [([5, 5, 5, 5, 5], True), ([5, 6, 7, 7, 8], False)])
 def test_dist_compare_wrapper(x, all_same, func):
     y = [5, 5, 5, 5, 5]
     with mock.patch.object(stats, func.__name__) as _test:

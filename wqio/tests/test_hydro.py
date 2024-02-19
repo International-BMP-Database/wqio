@@ -1,13 +1,11 @@
-import pytest
-import pandas.testing as pdtest
-from wqio.tests import helpers
-
 import numpy
 import pandas
+import pandas.testing as pdtest
+import pytest
 from matplotlib import pyplot
 
 from wqio import hydro
-
+from wqio.tests import helpers
 
 BASELINE_IMAGES = "_baseline_images/hydro_tests"
 TOLERANCE = helpers.get_img_tolerance()
@@ -213,9 +211,7 @@ def test_HydroRecord_attr(hr_simple_fixture):
 
     assert isinstance(hr_simple_fixture.data, pandas.DataFrame)
     assert isinstance(hr_simple_fixture.data.index, pandas.DatetimeIndex)
-    assert sorted(hr_simple_fixture.data.columns.tolist()) == sorted(
-        expected_std_columns
-    )
+    assert sorted(hr_simple_fixture.data.columns.tolist()) == sorted(expected_std_columns)
 
     assert isinstance(hr_simple_fixture.all_storms, dict)
 
@@ -354,9 +350,7 @@ def test_HydroRecord_storm_stats(hr_simple_fixture):
 @pytest.mark.parametrize("smallstorms", [True, False])
 def test_getStormFromTimestamp_(hr_simple_fixture, value, smallstorms, error):
     with helpers.raises(error):
-        sn, storm = hr_simple_fixture.getStormFromTimestamp(
-            value, smallstorms=smallstorms
-        )
+        sn, storm = hr_simple_fixture.getStormFromTimestamp(value, smallstorms=smallstorms)
         assert sn == 2
         if not smallstorms:
             assert storm is None
@@ -499,9 +493,7 @@ def test_Storm_peak_outflow(basic_storm):
 def test_Storm_peak_precip_intensity_time(basic_storm):
     assert hasattr(basic_storm, "peak_precip_intensity_time")
     ts = pandas.Timestamp("2013-05-19 08:00")
-    assert basic_storm.peak_precip_intensity_time.strftime("%X %x") == ts.strftime(
-        "%X %x"
-    )
+    assert basic_storm.peak_precip_intensity_time.strftime("%X %x") == ts.strftime("%X %x")
 
 
 def test_Storm_peak_inflow_time(basic_storm):
@@ -644,9 +636,7 @@ def test_da_bmp_area(drainage_area):
 )
 def test_simple_method(drainage_area, conversion, factor, expected):
     depth = 1
-    result = drainage_area.simple_method(
-        depth, annual_factor=factor, volume_conversion=conversion
-    )
+    result = drainage_area.simple_method(depth, annual_factor=factor, volume_conversion=conversion)
     area = drainage_area.total_area + drainage_area.bmp_area
     storm_volume = depth * conversion * factor * area
     assert abs(expected - result) < 0.001

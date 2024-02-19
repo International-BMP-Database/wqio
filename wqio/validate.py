@@ -1,8 +1,8 @@
 import os
 
 import numpy
-from matplotlib import pyplot
 import pandas
+from matplotlib import pyplot
 
 
 def dataset(fname):
@@ -16,7 +16,7 @@ def dataset(fname):
 
 
 def timestamp(datelike):
-    """ Converts datetime-like objects to pandas.Timestamp.
+    """Converts datetime-like objects to pandas.Timestamp.
     Pretty miuch a direct pass through, but give a slighly
     more informative error message.
 
@@ -35,14 +35,14 @@ def timestamp(datelike):
     try:
         tstamp = pandas.Timestamp(datelike)
     except ValueError:
-        msg = "{} could not be coerced into a pandas.Timestamp".format(datelike)
+        msg = f"{datelike} could not be coerced into a pandas.Timestamp"
         raise ValueError(msg)
 
     return tstamp
 
 
 def axes(ax, fallback="new"):
-    """ Checks if a value if an Axes. If None, a new one is created or
+    """Checks if a value if an Axes. If None, a new one is created or
     the 'current' one is found.
 
     Parameters
@@ -81,7 +81,7 @@ def axes(ax, fallback="new"):
 
 
 def single_value_in_index(df, index_level):
-    """ Confirms that a given level of a dataframe's index only has
+    """Confirms that a given level of a dataframe's index only has
     one unique value. Useful for confirming consistent units. Raises
     error if level is not a single value. Returns unique value of the
     index level.
@@ -103,7 +103,7 @@ def single_value_in_index(df, index_level):
 
     index = numpy.unique(df.index.get_level_values(index_level).tolist())
     if index.shape != (1,):
-        raise ValueError('index level "{}" is not unique.'.format(index_level))
+        raise ValueError(f'index level "{index_level}" is not unique.')
 
     return index[0]
 
@@ -123,7 +123,7 @@ def at_least_empty_dict(value, **kwargs):
     if value is None or value == "":
         value = {}
     elif not isinstance(value, dict):
-        raise ValueError("{} cannot be a dictionary".format(value))
+        raise ValueError(f"{value} cannot be a dictionary")
     else:
         value = value.copy()
 

@@ -1,10 +1,9 @@
 import numpy
-
-import pytest
 import numpy.testing as nptest
-from wqio.tests import helpers
+import pytest
 
 from wqio import theil
+from wqio.tests import helpers
 from wqio.utils import TheilStats
 
 
@@ -262,9 +261,7 @@ def test_TheilSenFit_errors(ts):
             ]
         ),
     }
-    nptest.assert_array_almost_equal(
-        ts.errors, expected[(ts.log_infl, ts.log_effl)], decimal=5
-    )
+    nptest.assert_array_almost_equal(ts.errors, expected[(ts.log_infl, ts.log_effl)], decimal=5)
 
 
 def test_TheilSenFit_MAD(ts):

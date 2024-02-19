@@ -1,21 +1,20 @@
 import itertools
-from textwrap import dedent
 from collections import namedtuple
+from textwrap import dedent
 
 import numpy
-from scipy import stats
 import statsmodels.api as sm
 from probscale.algo import _estimate_from_fit
+from scipy import stats
 
 from wqio import validate
 from wqio.utils import misc
-
 
 TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_slope"))
 
 
 def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
-    """ Formats a number with the correct number of sig figs.
+    """Formats a number with the correct number of sig figs.
 
     Parameters
     ----------
@@ -55,7 +54,6 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
     # check on the number provided
     elif x is not None and not numpy.isinf(x) and not numpy.isnan(x):
-
         # check on the sigFigs
         if n < 1:
             raise ValueError("number of sig figs must be greater than zero!")
@@ -63,10 +61,10 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
         elif pval and x < 0.001:
             out = "<0.001"
             if tex:
-                out = "${}$".format(out)
+                out = f"${out}$"
 
         elif forceint:
-            out = "{:,.0f}".format(x)
+            out = f"{x:,.0f}"
 
         # logic to do all of the rounding
         elif x != 0.0:
@@ -76,7 +74,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
                 decimal_places = int(n - 1 - order)
 
                 if decimal_places <= 0:
-                    out = "{0:,.0f}".format(round(x, decimal_places))
+                    out = f"{round(x, decimal_places):,.0f}"
 
                 else:
                     fmt = "{0:,.%df}" % decimal_places
@@ -86,7 +84,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
                 decimal_places = n - 1
                 if tex:
                     fmt = r"$%%0.%df \times 10 ^ {%d}$" % (decimal_places, order)
-                    out = fmt % round(x / 10 ** order, decimal_places)
+                    out = fmt % round(x / 10**order, decimal_places)
                 else:
                     fmt = "{0:.%de}" % decimal_places
                     out = fmt.format(x)
@@ -102,7 +100,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
 
 def formatResult(result, qualifier, sigfigs=3):
-    """ Formats a results with its qualifier
+    """Formats a results with its qualifier
 
     Parameters
     ----------
@@ -125,11 +123,11 @@ def formatResult(result, qualifier, sigfigs=3):
 
     """
 
-    return "{}{}".format(qualifier, sigFigs(result, sigfigs))
+    return f"{qualifier}{sigFigs(result, sigfigs)}"
 
 
 def process_p_vals(pval):
-    """ Processes p-values into nice strings to reporting. When the
+    """Processes p-values into nice strings to reporting. When the
     p-values are less than 0.001, "<0.001" is returned. Otherwise, a
     string with three decimal places is returned.
 
@@ -149,7 +147,7 @@ def process_p_vals(pval):
     elif 0 < pval < 0.001:
         out = formatResult(0.001, "<", sigfigs=1)
     elif pval > 1 or pval < 0:
-        raise ValueError("p-values must be between 0 and 1 (not {})".format(pval))
+        raise ValueError(f"p-values must be between 0 and 1 (not {pval})")
     else:
         out = "%0.3f" % pval
 
@@ -157,7 +155,7 @@ def process_p_vals(pval):
 
 
 def translate_p_vals(pval, as_emoji=True):
-    """ Translates ambiguous p-values into more meaningful emoji.
+    """Translates ambiguous p-values into more meaningful emoji.
 
     Parameters
     ----------
@@ -182,7 +180,7 @@ def translate_p_vals(pval, as_emoji=True):
     elif 0.1 < pval <= 1:
         interpreted = r"(╯°□°)╯︵ ┻━┻" if as_emoji else "nope"
     else:
-        raise ValueError("p-values must be between 0 and 1 (not {})".format(pval))
+        raise ValueError(f"p-values must be between 0 and 1 (not {pval})")
 
     return interpreted
 
@@ -223,7 +221,7 @@ def anderson_darling(data):
 
 
 def processAndersonDarlingResults(ad_results):
-    """ Return a nice string of Anderson-Darling test results
+    """Return a nice string of Anderson-Darling test results
 
     Parameters
     ----------
@@ -239,11 +237,11 @@ def processAndersonDarlingResults(ad_results):
 
     AD, crit, sig = ad_results
     try:
-        ci = 100 - sig[AD > crit][-1]
-        return "%0.1f%%" % (ci,)
+        ci = 100 - sig[crit < AD][-1]
+        return f"{ci:0.1f}%"
     except IndexError:
         ci = 100 - sig[0]
-        return "<%0.1f%%" % (ci,)
+        return f"<{ci:0.1f}%"
 
 
 def _anderson_darling_p_vals(ad_results, n_points):
@@ -269,15 +267,15 @@ def _anderson_darling_p_vals(ad_results, n_points):
     """
 
     AD, crit, sig = ad_results
-    AD_star = AD * (1 + 0.75 / n_points + 2.25 / n_points ** 2)
+    AD_star = AD * (1 + 0.75 / n_points + 2.25 / n_points**2)
     if AD_star >= 0.6:
-        p = numpy.exp(1.2397 - (5.709 * AD_star) + (0.0186 * AD_star ** 2))
+        p = numpy.exp(1.2397 - (5.709 * AD_star) + (0.0186 * AD_star**2))
     elif 0.34 <= AD_star < 0.6:
-        p = numpy.exp(0.9177 - (4.279 * AD_star) - (1.38 * AD_star ** 2))
+        p = numpy.exp(0.9177 - (4.279 * AD_star) - (1.38 * AD_star**2))
     elif 0.2 < AD_star < 0.34:
-        p = 1 - numpy.exp(-8.318 + (42.796 * AD_star) - (59.938 * AD_star ** 2))
+        p = 1 - numpy.exp(-8.318 + (42.796 * AD_star) - (59.938 * AD_star**2))
     else:
-        p = 1 - numpy.exp(-13.436 + (101.14 * AD_star) - (223.73 * AD_star ** 2))
+        p = 1 - numpy.exp(-13.436 + (101.14 * AD_star) - (223.73 * AD_star**2))
 
     return p
 
@@ -336,9 +334,7 @@ def normalize_units(
         msg = ""
         if target.isnull().any():
             nulls = df[target.isnull()][paramcol].unique()
-            msg += "Some target units could not be mapped to the {} column ({})\n".format(
-                paramcol, nulls
-            )
+            msg += f"Some target units could not be mapped to the {paramcol} column ({nulls})\n"
 
         if normalization.isnull().any():
             nulls = df[normalization.isnull()][unitcol].unique()
@@ -348,23 +344,19 @@ def normalize_units(
 
         if conversion.isnull().any():
             nulls = target[conversion.isnull()]
-            msg += "Some conversion factors could not be mapped to the target units ({})".format(
-                nulls
-            )
+            msg += f"Some conversion factors could not be mapped to the target units ({nulls})"
 
         if len(msg) > 0:
             raise ValueError(msg)
 
     # convert results
-    normalized = df.assign(
-        **{rescol: df[rescol] * normalization / conversion, unitcol: target}
-    )
+    normalized = df.assign(**{rescol: df[rescol] * normalization / conversion, unitcol: target})
 
     return normalized
 
 
 def pH2concentration(pH, *args):
-    """ Converts pH values to proton concentrations in mg/L
+    """Converts pH values to proton concentrations in mg/L
 
     Parameters
     ----------
@@ -398,13 +390,11 @@ def pH2concentration(pH, *args):
 
 
 def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
-    """ Adapted from stats.mstats.theilslopes so that we can tweak the
+    f""" Adapted from stats.mstats.theilslopes so that we can tweak the
     `percentile` parameter.
     https://goo.gl/nxPF54
-    {}
-    """.format(
-        dedent(stats.mstats.theilslopes.__doc__)
-    )
+    {dedent(stats.mstats.theilslopes.__doc__)}
+    """
 
     # We copy both x and y so we can use _find_repeats.
     y = numpy.array(y).flatten()
@@ -413,7 +403,7 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     else:
         x = numpy.array(x, dtype=float).flatten()
         if len(x) != len(y):
-            raise ValueError("Incompatible lengths (%s != %s)" % (len(y), len(x)))
+            raise ValueError(f"Incompatible lengths ({len(y)} != {len(x)})")
 
     # Compute sorted slopes only when deltax > 0
     deltax = x[:, numpy.newaxis] - x
@@ -454,10 +444,8 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     return TheilStats(outslope, outinter, delta[0], delta[1])
 
 
-def fit_line(
-    x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False
-):
-    """ Fits a line to x-y data in various forms (raw, log, prob scales)
+def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
+    """Fits a line to x-y data in various forms (raw, log, prob scales)
 
     Parameters
     ----------
@@ -541,7 +529,7 @@ def fit_line(
 
 
 def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
-    """ Checks if two numeric intervals overlaps.
+    """Checks if two numeric intervals overlaps.
 
     Parameters
     ----------
@@ -572,13 +560,11 @@ def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
     if oneway:
         return first_check
     else:
-        return first_check | checkIntervalOverlap(
-            interval2, interval1, oneway=True, axis=axis
-        )
+        return first_check | checkIntervalOverlap(interval2, interval1, oneway=True, axis=axis)
 
 
 def winsorize_dataframe(df, **limits):
-    """ Winsorizes columns in a dataframe
+    """Winsorizes columns in a dataframe
 
     Parameters
     ----------
@@ -608,7 +594,7 @@ def winsorize_dataframe(df, **limits):
 
 
 def remove_outliers(x, factor=1.5):
-    """ Removes outliers from an array based on a scaling of the
+    """Removes outliers from an array based on a scaling of the
     interquartile range (IQR).
 
     Parameters
@@ -641,7 +627,7 @@ def remove_outliers(x, factor=1.5):
 def _comp_stat_generator(
     df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
 ):
-    """ Generator of records containing results of comparitive
+    """Generator of records containing results of comparitive
     statistical functions.
 
     Parameters
@@ -699,7 +685,7 @@ def _comp_stat_generator(
 def _paired_stat_generator(
     df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
 ):
-    """ Generator of records containing results of comparitive
+    """Generator of records containing results of comparitive
     statistical functions specifically for paired data.
 
     Parameters

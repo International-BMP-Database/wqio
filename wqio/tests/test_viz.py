@@ -1,15 +1,12 @@
-import pytest
-import numpy.testing as nptest
-
 import numpy
+import numpy.testing as nptest
 import pandas
-from matplotlib import pyplot
+import pytest
 import seaborn
+from matplotlib import pyplot
 
-from wqio import viz
-from wqio import utils
+from wqio import utils, viz
 from wqio.tests import helpers
-
 
 BASELINE_IMAGES = "_baseline_images/viz_tests"
 TOLERANCE = helpers.get_img_tolerance()
@@ -711,17 +708,13 @@ def test_jointplot_defaultlabels(jp_data):
 
 
 def test_jointplot_xlabeled(jp_data):
-    jg2 = viz.jointplot(
-        x="B", y="C", data=jp_data, one2one=False, color="g", xlabel="Quantity B"
-    )
+    jg2 = viz.jointplot(x="B", y="C", data=jp_data, one2one=False, color="g", xlabel="Quantity B")
     assert jg2.ax_joint.get_xlabel() == "Quantity B"
     return jg2.fig
 
 
 def test_jointplot_ylabeled(jp_data):
-    jg3 = viz.jointplot(
-        x="B", y="C", data=jp_data, one2one=False, color="r", ylabel="Quantity C"
-    )
+    jg3 = viz.jointplot(x="B", y="C", data=jp_data, one2one=False, color="r", ylabel="Quantity C")
     assert jg3.ax_joint.get_ylabel() == "Quantity C"
     return jg3.fig
 
@@ -767,7 +760,7 @@ def test_jointplot_one2one_zerominFalse(jp_data):
     [
         ("linear", utils.no_op, utils.no_op),
         ("natlog", numpy.log, numpy.exp),
-        ("log10", numpy.log10, lambda x: 10 ** x),
+        ("log10", numpy.log10, lambda x: 10**x),
     ],
 )
 @pytest.mark.parametrize("key", ["whishi", "whislo", "fliers"])
@@ -891,9 +884,7 @@ def test_probplot_qq(plot_data):
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_probplot_pp(plot_data):
     fig, ax = pyplot.subplots()
-    scatter_kws = dict(
-        color="b", linestyle="--", markeredgecolor="g", markerfacecolor="none"
-    )
+    scatter_kws = dict(color="b", linestyle="--", markeredgecolor="g", markerfacecolor="none")
     fig = viz.probplot(
         plot_data,
         ax=ax,
@@ -968,7 +959,5 @@ def test_categorical_histogram_simple(cat_hist_data):
 @pytest.mark.mpl_image_compare(baseline_dir=BASELINE_IMAGES, tolerance=TOLERANCE)
 def test_categorical_histogram_complex(cat_hist_data):
     bins = numpy.arange(5, 35, 5)
-    fig = viz.categorical_histogram(
-        cat_hist_data, "depth", bins, hue="year", row="has_outflow"
-    )
+    fig = viz.categorical_histogram(cat_hist_data, "depth", bins, hue="year", row="has_outflow")
     return fig.fig

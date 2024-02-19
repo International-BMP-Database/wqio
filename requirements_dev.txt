@@ -12,3 +12,6 @@ coverage
 docopt
 requests
 pyyaml
+ruff
+pre-commit
+isort

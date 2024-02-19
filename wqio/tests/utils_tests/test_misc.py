@@ -1,16 +1,14 @@
 from functools import partial
-from textwrap import dedent
 from io import StringIO
-
-
-import pytest
-import pandas.testing as pdtest
+from textwrap import dedent
 
 import numpy
 import pandas
+import pandas.testing as pdtest
+import pytest
 
-from wqio.utils import misc
 from wqio.tests import helpers
+from wqio.utils import misc
 
 
 @pytest.fixture
@@ -26,25 +24,23 @@ def basic_data():
 
 @pytest.fixture
 def multiindex_df():
-    index = pandas.MultiIndex.from_product(
-        [["A", "B", "C"], ["mg/L"]], names=["loc", "units"]
-    )
+    index = pandas.MultiIndex.from_product([["A", "B", "C"], ["mg/L"]], names=["loc", "units"])
     return pandas.DataFrame([[1, 2], [3, 4], [5, 6]], index=index, columns=["a", "b"])
 
 
-class mockDataset(object):
+class mockDataset:
     def __init__(self, inflow, outflow):
         self.inflow = mockLocation(inflow)
         self.outflow = mockLocation(outflow)
 
 
-class mockLocation(object):
+class mockLocation:
     def __init__(self, data):
         self.data = data
         self.stats = mockSummary(data)
 
 
-class mockSummary(object):
+class mockSummary:
     def __init__(self, data):
         self.N = len(data)
         self.max = max(data)
@@ -54,7 +50,7 @@ class mockSummary(object):
 
 def test_add_column_level(basic_data):
     known_cols = pandas.MultiIndex.from_tuples(
-        [(u"test", u"A"), (u"test", u"B"), (u"test", u"C"), (u"test", u"D")]
+        [("test", "A"), ("test", "B"), ("test", "C"), ("test", "D")]
     )
     newdata = misc.add_column_level(basic_data, "test", "testlevel")
     assert known_cols.tolist() == newdata.columns.tolist()
@@ -84,9 +80,7 @@ def test_flatten_columns(multiindex_df, basic_data):
     expected = ["A_mg/L", "B_mg/L", "C_mg/L"]
     flat = misc.flatten_columns(multiindex_df.T)
     assert flat.columns.tolist() == expected
-    assert (
-        misc.flatten_columns(basic_data).columns.tolist() == basic_data.columns.tolist()
-    )
+    assert misc.flatten_columns(basic_data).columns.tolist() == basic_data.columns.tolist()
 
 
 def test_expand_columns():
@@ -211,7 +205,7 @@ def test_categorize_columns():
 def test_classifier(value, units, expected):
     bins = numpy.arange(5, 36, 5)
     if units is not None:
-        expected = "{} {}".format(expected, units)
+        expected = f"{expected} {units}"
 
     result = misc.classifier(value, bins, units=units)
     assert result == expected

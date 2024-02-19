@@ -1,15 +1,14 @@
-from textwrap import dedent
 from io import StringIO
-
-import pytest
-import numpy.testing as nptest
-import pandas.testing as pdtest
-from wqio.tests import helpers
+from textwrap import dedent
 
 import numpy
+import numpy.testing as nptest
 import pandas
+import pandas.testing as pdtest
+import pytest
 
 from wqio import ros
+from wqio.tests import helpers
 
 
 @pytest.fixture
@@ -559,9 +558,7 @@ def test_cohn_numbers_baseline(basic_data, expected_cohn):
 
 
 def test_cohn_numbers_no_NDs(basic_data):
-    result = ros.cohn_numbers(
-        basic_data.assign(qual=False), result="conc", censorship="qual"
-    )
+    result = ros.cohn_numbers(basic_data.assign(qual=False), result="conc", censorship="qual")
     assert result.shape == (0, 6)
 
 
@@ -1345,15 +1342,9 @@ class HalfDLs_80pctNDs:
 
     cohn = pandas.DataFrame(
         {
-            "nuncen_above": numpy.array(
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, numpy.nan]
-            ),
-            "nobs_below": numpy.array(
-                [6.0, 7.0, 8.0, 9.0, 12.0, 13.0, 14.0, 15.0, numpy.nan]
-            ),
-            "ncen_equal": numpy.array(
-                [6.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, numpy.nan]
-            ),
+            "nuncen_above": numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, numpy.nan]),
+            "nobs_below": numpy.array([6.0, 7.0, 8.0, 9.0, 12.0, 13.0, 14.0, 15.0, numpy.nan]),
+            "ncen_equal": numpy.array([6.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, numpy.nan]),
             "prob_exceedance": numpy.array([0.1667] * 8 + [0.0]),
         }
     )
@@ -1480,9 +1471,7 @@ def test_ros_from_literature(as_arrays, case):
     else:
         result = ros.ROS(case.rescol, case.cencol, df=case.df)
 
-    nptest.assert_array_almost_equal(
-        sorted(result), sorted(case.values), decimal=case.decimal
-    )
+    nptest.assert_array_almost_equal(sorted(result), sorted(case.values), decimal=case.decimal)
 
 
 @pytest.mark.parametrize(
@@ -1502,6 +1491,4 @@ def test_ros_from_literature(as_arrays, case):
 def test_cohn_from_literature(case):
     cols = ["nuncen_above", "nobs_below", "ncen_equal", "prob_exceedance"]
     result = ros.cohn_numbers(case.df, case.rescol, case.cencol)
-    pdtest.assert_frame_equal(
-        result[cols].round(5), case.cohn[cols].round(5), atol=1e-4
-    )
+    pdtest.assert_frame_equal(result[cols].round(5), case.cohn[cols].round(5), atol=1e-4)

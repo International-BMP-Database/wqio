@@ -92,10 +92,7 @@ if __name__ == "__main__":
     configpath = configdir / "tasks.json"
 
     python = str(Path(sys.executable))
-    if len(sys.argv) < 2:
-        name = Path.cwd().name
-    else:
-        name = sys.argv[1]
+    name = Path.cwd().name if len(sys.argv) < 2 else sys.argv[1]
 
     config = TEMPLATE.format(pyexec=python, modulename=name)
     with configpath.open("w") as configfile:
