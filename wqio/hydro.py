@@ -197,7 +197,7 @@ class Storm:
         # tease out start/stop info
         self.start = self.data.index[0]
         self.end = self.data.index[-1]
-        self._season = utils.getSeason(self.start)
+        self._season = utils.get_season(self.start)
 
         # storm duration (hours)
         duration = self.end - self.start

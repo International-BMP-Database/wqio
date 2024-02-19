@@ -582,7 +582,13 @@ def ROS(
         output = df[[result, censorship]].assign(final=df[result])
 
     # normal ROS stuff
-    elif is_valid_to_ros(df, censorship, as_obj=False):
+    elif is_valid_to_ros(
+        df,
+        censorship,
+        max_fraction_censored=max_fraction_censored,
+        min_uncensored=min_uncensored,
+        as_obj=False,
+    ):
         output = _do_ros(
             df,
             result,

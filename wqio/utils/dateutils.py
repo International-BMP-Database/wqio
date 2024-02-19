@@ -9,7 +9,7 @@ from wqio.utils import misc
 _logger = logging.getLogger(__name__)
 
 
-def getSeason(date):
+def get_season(date):
     """Defines the season from a given date.
 
     Parameters
@@ -50,7 +50,7 @@ def getSeason(date):
     return season
 
 
-def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings=False):
+def make_timestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings=False):
     """Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
@@ -114,7 +114,7 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
     return tstamp
 
 
-def getWaterYear(date):
+def get_wateryear(date):
     """Returns the water year of a given date
 
     Parameters
@@ -132,7 +132,7 @@ def getWaterYear(date):
     >>> import datetime
     >>> import wqio
     >>> x = datetime.datetime(2005, 11, 2)
-    >>> print(wqio.utils.getWaterYear(x))
+    >>> print(wqio.utils.get_wateryear(x))
     2005/2006
 
     """

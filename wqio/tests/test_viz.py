@@ -605,7 +605,7 @@ def test_rotateTickLabels_xaxis():
     fig, ax = pyplot.subplots()
     ax.set_xticks([1, 2, 3])
     ax.set_xticklabels(["AAA", "BBB", "CCC"])
-    viz.rotateTickLabels(ax, 60, "x")
+    viz.rotate_tick_labels(ax, 60, "x")
     return fig
 
 
@@ -614,7 +614,7 @@ def test_rotateTickLabels_yaxis():
     fig, ax = pyplot.subplots()
     ax.set_yticks([1, 2, 3])
     ax.set_yticklabels(["AAA", "BBB", "CCC"])
-    viz.rotateTickLabels(ax, -30, "y")
+    viz.rotate_tick_labels(ax, -30, "y")
     return fig
 
 
@@ -626,7 +626,7 @@ def test_rotateTickLabels_both():
 
     ax.set_yticks([1, 2, 3])
     ax.set_yticklabels(["AAA", "BBB", "CCC"])
-    viz.rotateTickLabels(ax, 45, "both")
+    viz.rotate_tick_labels(ax, 45, "both")
     return fig
 
 
@@ -692,7 +692,7 @@ def test_one2one():
     fig, ax = pyplot.subplots()
     ax.set_xlim([-2, 5])
     ax.set_ylim([-3, 3])
-    viz.one2one(ax, label="Equality", lw=5, ls="--")
+    viz.one2one_line(ax, label="Equality", lw=5, ls="--")
     ax.legend()
     return fig
 

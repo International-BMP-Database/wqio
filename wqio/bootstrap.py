@@ -13,7 +13,7 @@ fitestimate = namedtuple(
     "BootstrappedFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"]
 )
 
-__all__ = ["BCA", "percentile"]
+__all__ = ["BCA", "percentile", "fit"]
 
 
 def _acceleration(data):

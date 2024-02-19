@@ -590,7 +590,7 @@ class Location:
             ax.set_yticklabels([])
 
         if rotateticklabels:
-            viz.rotateTickLabels(ax, 45, "x", ha="right")
+            viz.rotate_tick_labels(ax, 45, "x", ha="right")
 
         if bestfit:
             utils.fit_line()
@@ -868,7 +868,7 @@ class Dataset:
     def medianCIsOverlap(self):
         overlap = True
         if self.influent.hasData and self.effluent.hasData:
-            overlap = utils.checkIntervalOverlap(
+            overlap = utils.check_interval_overlap(
                 self.influent.median_conf_interval,
                 self.effluent.median_conf_interval,
                 oneway=False,
@@ -1302,7 +1302,7 @@ class Dataset:
             ax.set_ylabel(ylabel)
 
         if rotateticklabels:
-            viz.rotateTickLabels(ax, 45, "x")
+            viz.rotate_tick_labels(ax, 45, "x")
 
         return fig
 
@@ -1552,7 +1552,7 @@ class Dataset:
 
         # include the line of equality, if requested
         if one2one:
-            viz.one2one(
+            viz.one2one_line(
                 ax,
                 linestyle="-",
                 linewidth=1.25,
@@ -1601,8 +1601,8 @@ class Dataset:
 
                 ax.annotate(
                     r"$\log(y) = {} \, \log(x) + {}$".format(
-                        utils.sigFigs(modelres.params[1], n=3),
-                        utils.sigFigs(modelres.params[0], n=3),
+                        utils.sig_figs(modelres.params[1], n=3),
+                        utils.sig_figs(modelres.params[0], n=3),
                     ),
                     (txt_x, txt_y),
                     xycoords="axes fraction",

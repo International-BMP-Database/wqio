@@ -9,7 +9,7 @@ from pandas.api.types import CategoricalDtype
 from wqio import utils, validate
 
 
-def rotateTickLabels(ax, rotation, which, rotation_mode="anchor", ha="right"):
+def rotate_tick_labels(ax, rotation, which, rotation_mode="anchor", ha="right"):
     """Rotates the ticklabels of a matplotlib Axes
 
     Parameters
@@ -35,8 +35,8 @@ def rotateTickLabels(ax, rotation, which, rotation_mode="anchor", ha="right"):
     """
 
     if which == "both":
-        rotateTickLabels(ax, rotation, "x", rotation_mode=rotation_mode, ha=ha)
-        rotateTickLabels(ax, rotation, "y", rotation_mode=rotation_mode, ha=ha)
+        rotate_tick_labels(ax, rotation, "x", rotation_mode=rotation_mode, ha=ha)
+        rotate_tick_labels(ax, rotation, "y", rotation_mode=rotation_mode, ha=ha)
     else:
         if which == "x":
             axis = ax.xaxis
@@ -62,7 +62,7 @@ def log_formatter(use_1x=True, threshold=5):
             else:
                 tick = r"$10 ^ {%d}$" % int(numpy.log10(tick))
         else:
-            tick = utils.sigFigs(tick, n=1)
+            tick = utils.sig_figs(tick, n=1)
 
         return str(tick)
 
@@ -117,7 +117,7 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=Tru
         ax.yaxis.grid(True, which="minor", ls="-", alpha=0.17)
 
 
-def one2one(ax, set_limits=True, set_aspect=True, **kwargs):
+def one2one_line(ax, set_limits=True, set_aspect=True, **kwargs):
     label = kwargs.pop("label", "1:1 Line")
     axis_limits = [
         numpy.min([ax.get_xlim(), ax.get_ylim()]),
