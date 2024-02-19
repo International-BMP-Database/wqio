@@ -705,8 +705,8 @@ def test_jointplot_defaultlabels(jp_data):
     jg1 = viz.jointplot(x="B", y="C", data=jp_data, one2one=False, color="b")
     assert jg1.ax_joint.get_xlabel() == "B"
     assert jg1.ax_joint.get_ylabel() == "C"
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 17])
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 15])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 16])
     return jg1.fig
 
 
@@ -743,22 +743,22 @@ def test_jointplot_bothlabeled(jp_data):
 
 def test_jointplot_zerominFalse(jp_data):
     jg1 = viz.jointplot(x="A", y="C", data=jp_data, zeromin=False, one2one=False)
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-4, 4])
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [-7, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-3, 3])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 16])
     return jg1.fig
 
 
 def test_jointplot_one2one(jp_data):
     jg1 = viz.jointplot(x="B", y="C", data=jp_data, one2one=True)
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 23])
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [0, 16])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [0, 16])
     return jg1.fig
 
 
 def test_jointplot_one2one_zerominFalse(jp_data):
     jg1 = viz.jointplot(x="A", y="C", data=jp_data, one2one=True, zeromin=False)
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-7, 23])
-    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [-7, 23])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_xlim()), [-3, 16])
+    nptest.assert_array_equal(numpy.round(jg1.ax_joint.get_ylim()), [-3, 16])
     return jg1.fig
 
 

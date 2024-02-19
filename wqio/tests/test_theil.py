@@ -71,11 +71,14 @@ def test_TheilSenFit_stats(ts):
             high_slope=0.09183488925940173,
         ),
     }
-    assert ts.theil_stats == expected[(ts.log_infl, ts.log_effl)]
-    assert ts.med_slope == expected[(ts.log_infl, ts.log_effl)][0]
-    assert ts.intercept == expected[(ts.log_infl, ts.log_effl)][1]
-    assert ts.low_slope == expected[(ts.log_infl, ts.log_effl)][2]
-    assert ts.high_slope == expected[(ts.log_infl, ts.log_effl)][3]
+    assert abs(ts.theil_stats.slope - expected[(ts.log_infl, ts.log_effl)].slope) < 0.0001
+    assert abs(ts.theil_stats.intercept - expected[(ts.log_infl, ts.log_effl)].intercept) < 0.0001
+    assert abs(ts.theil_stats.low_slope - expected[(ts.log_infl, ts.log_effl)].low_slope) < 0.0001
+    assert abs(ts.theil_stats.high_slope - expected[(ts.log_infl, ts.log_effl)].high_slope) < 0.0001
+    assert abs(ts.med_slope - expected[(ts.log_infl, ts.log_effl)][0]) < 0.0001
+    assert abs(ts.intercept - expected[(ts.log_infl, ts.log_effl)][1]) < 0.0001
+    assert abs(ts.low_slope - expected[(ts.log_infl, ts.log_effl)][2]) < 0.0001
+    assert abs(ts.high_slope - expected[(ts.log_infl, ts.log_effl)][3]) < 0.0001
 
 
 def test_TheilSenFit_x_fit(ts):

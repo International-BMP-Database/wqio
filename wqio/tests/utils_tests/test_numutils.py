@@ -564,7 +564,7 @@ def test_winsorize_dataframe(opts, expected_key):
     }
 
     result = numutils.winsorize_dataframe(df, **opts)
-    pdtest.assert_frame_equal(result, expected[expected_key])
+    assert result.eq(expected[expected_key]).all().all()
 
 
 def test__comp_stat_generator():

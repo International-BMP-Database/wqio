@@ -485,7 +485,7 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **lin
         left_bbox, right_bbox, loc1=3, loc2=2, linestyle=linestyle, **line_kwds
     )
     connector.set_clip_on(False)
-    left_ax.add_line(connector)
+    left_ax.add_artist(connector)
 
     return connector
 

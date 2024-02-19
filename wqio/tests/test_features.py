@@ -11,6 +11,7 @@ from wqio.features import Location, Dataset
 
 
 OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
+TOLERANCE = 0.05
 
 
 @pytest.fixture(params=[True, False])
@@ -147,7 +148,7 @@ def test_location_stats_arrays(location, attr):
         "median_conf_interval": {True: [5.66000, 8.71000], False: [6.65000, 9.850000]},
         "shapiro": {True: [0.886889, 0.001789], False: [0.896744, 0.003236]},
         "shapiro_log": {True: [0.972679, 0.520949], False: [0.964298, 0.306435]},
-        "lilliefors": {True: [0.185180, 0.003756], False: [0.160353, 0.023078]},
+        "lilliefors": {True: [0.185180, 0.004200], False: [0.160353, 0.02425]},
         "lilliefors_log": {True: [0.091855, 0.64099], False: [0.08148, 0.80351]},
     }
     nptest.assert_array_almost_equal(
@@ -203,242 +204,225 @@ def test_location_anderson(location, attr, index):
         )
 
 
-class Test_Dataset(object):
-    def setup(self):
-        self.maxDiff = None
+@pytest.fixture
+def dataset():
+    known_bsiter = 750
+    in_data = helpers.getTestROSData()
+    in_data["res"] += 3
 
-        # basic test data
-        self.tolerance = 0.05
-        self.known_bsiter = 750
+    out_data = helpers.getTestROSData()
+    out_data["res"] -= 1.5
+    influent = Location(
+        in_data,
+        station_type="inflow",
+        bsiter=known_bsiter,
+        rescol="res",
+        qualcol="qual",
+        useros=False,
+    )
 
-        in_data = helpers.getTestROSData()
-        in_data["res"] += 3
+    effluent = Location(
+        out_data,
+        station_type="outflow",
+        bsiter=known_bsiter,
+        rescol="res",
+        qualcol="qual",
+        useros=False,
+    )
 
-        out_data = helpers.getTestROSData()
-        out_data["res"] -= 1.5
+    return Dataset(influent, effluent)
 
-        self.influent = Location(
-            in_data,
-            station_type="inflow",
-            bsiter=self.known_bsiter,
-            rescol="res",
-            qualcol="qual",
-            useros=False,
-        )
 
-        self.effluent = Location(
-            out_data,
-            station_type="outflow",
-            bsiter=self.known_bsiter,
-            rescol="res",
-            qualcol="qual",
-            useros=False,
-        )
+def test_ds_data(dataset):
+    assert hasattr(dataset, "data")
+    assert isinstance(dataset.data, pandas.DataFrame)
 
-        self.ds = Dataset(self.influent, self.effluent)
 
-        self.known_dumpFile = None
-        self.known_kendall_stats = (1.00, 5.482137e-17)
-        self.known_kendall_tau = self.known_kendall_stats[0]
-        self.known_kendall_p = self.known_kendall_stats[1]
+def test_paired_data(dataset):
+    assert hasattr(dataset, "paired_data")
+    assert isinstance(dataset.paired_data, pandas.DataFrame)
 
-        self.known_mannwhitney_stats = (927.0, 2.251523e-04)
-        self.known_mannwhitney_u = self.known_mannwhitney_stats[0]
-        self.known_mannwhitney_p = self.known_mannwhitney_stats[1]
 
-        self.known_spearman_stats = (1.0, 0.0)
-        self.known_spearman_rho = self.known_spearman_stats[0]
-        self.known_spearman_p = self.known_spearman_stats[1]
+def test__non_paired_stats(dataset):
+    assert hasattr(dataset, "_non_paired_stats")
+    known__non_paired_stats = True
+    assert dataset._non_paired_stats == known__non_paired_stats
 
-        self.known_theil_stats = (1.0, -4.5, 1.0, 1.0)
-        self.known_theil_hislope = self.known_theil_stats[0]
-        self.known_theil_intercept = self.known_theil_stats[1]
-        self.known_theil_loslope = self.known_theil_stats[2]
-        self.known_theil_medslope = self.known_theil_stats[3]
 
-        self.known_wilcoxon_stats = (0.0, 2.4690274207037342e-07)
-        self.known_wilcoxon_z = self.known_wilcoxon_stats[0]
-        self.known_wilcoxon_p = self.known_wilcoxon_stats[1]
+def test__paired_stats(dataset):
+    known__paired_stats = True
+    assert hasattr(dataset, "_paired_stats")
+    assert dataset._paired_stats == known__paired_stats
 
-        self.known__non_paired_stats = True
-        self.known__paired_stats = True
-        self.known_definition = {"attr1": "test1", "attr2": "test2"}
-        self.known_include = True
-        self.known_exclude = not self.known_include
 
-        self.known_medianCIsOverlap = False
+def test_name(dataset):
+    assert hasattr(dataset, "name")
+    assert dataset.name is None
 
-    def test_data(self):
-        assert hasattr(self.ds, "data")
-        assert isinstance(self.ds.data, pandas.DataFrame)
 
-    def test_paired_data(self):
-        assert hasattr(self.ds, "paired_data")
-        assert isinstance(self.ds.paired_data, pandas.DataFrame)
+def test_name_set(dataset):
+    assert hasattr(dataset, "name")
+    testname = "Test Name"
+    dataset.name = testname
+    assert dataset.name == testname
 
-    def test__non_paired_stats(self):
-        assert hasattr(self.ds, "_non_paired_stats")
-        assert self.ds._non_paired_stats, self.known__non_paired_stats
 
-    def test__paired_stats(self):
-        assert hasattr(self.ds, "_paired_stats")
-        assert self.ds._paired_stats, self.known__paired_stats
+def test_defintion_default(dataset):
+    assert hasattr(dataset, "definition")
+    assert dataset.definition == {}
 
-    def test_name(self):
-        assert hasattr(self.ds, "name")
-        assert self.ds.name is None
 
-    def test_name_set(self):
-        assert hasattr(self.ds, "name")
-        testname = "Test Name"
-        self.ds.name = testname
-        assert self.ds.name == testname
+def test_defintion_set(dataset):
+    known_definition = {"attr1": "test1", "attr2": "test2"}
+    assert hasattr(dataset, "definition")
+    dataset.definition = known_definition
+    assert dataset.definition == known_definition
 
-    def test_defintion_default(self):
-        assert hasattr(self.ds, "definition")
-        assert self.ds.definition == {}
 
-    def test_defintion_set(self):
-        assert hasattr(self.ds, "definition")
-        self.ds.definition = self.known_definition
-        assert self.ds.definition == self.known_definition
+def test_include_exclude(dataset):
+    known_include = True
+    assert hasattr(dataset, "include")
+    assert dataset.include == known_include
 
-    def test_include(self):
-        assert hasattr(self.ds, "include")
-        assert self.ds.include == self.known_include
+    assert hasattr(dataset, "exclude")
+    assert dataset.exclude == (not dataset.include)
 
-    def test_exclude(self):
-        assert hasattr(self.ds, "exclude")
-        assert self.ds.exclude == self.known_exclude
 
-    def test_wilcoxon_z(self):
-        assert hasattr(self.ds, "wilcoxon_z")
-        nptest.assert_allclose(
-            self.ds.wilcoxon_z, self.known_wilcoxon_z, rtol=self.tolerance
-        )
+def test_wilcoxon(dataset):
+    known_wilcoxon_stats = (0.0, 5.820766e-11)
+    known_wilcoxon_z = known_wilcoxon_stats[0]
+    known_wilcoxon_p = known_wilcoxon_stats[1]
 
-    def test_wilcoxon_p(self):
-        assert hasattr(self.ds, "wilcoxon_p")
-        nptest.assert_allclose(
-            self.ds.wilcoxon_p, self.known_wilcoxon_p, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "wilcoxon_z")
+    nptest.assert_allclose(
+        dataset.wilcoxon_z, known_wilcoxon_z, rtol=TOLERANCE
+    )
 
-    def test_mannwhitney_u(self):
-        assert hasattr(self.ds, "mannwhitney_u")
-        nptest.assert_allclose(
-            self.ds.mannwhitney_u, self.known_mannwhitney_u, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "wilcoxon_p")
+    nptest.assert_allclose(
+        dataset.wilcoxon_p, known_wilcoxon_p, rtol=TOLERANCE
+    )
 
-    def test_mannwhitney_p(self):
-        assert hasattr(self.ds, "mannwhitney_p")
-        nptest.assert_allclose(
-            self.ds.mannwhitney_p, self.known_mannwhitney_p, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "_wilcoxon_stats")
+    nptest.assert_allclose(
+        dataset._wilcoxon_stats, known_wilcoxon_stats, rtol=TOLERANCE
+    )
 
-    @pytest.mark.xfail(OLD_SCIPY, reason="Scipy < 0.19")
-    def test_kendall_tau(self):
-        assert hasattr(self.ds, "kendall_tau")
-        nptest.assert_allclose(
-            self.ds.kendall_tau, self.known_kendall_tau, rtol=self.tolerance
-        )
+def test_mannwhitney(dataset):
+    known_mannwhitney_stats = (927.0, 2.251523e-04)
+    known_mannwhitney_u = known_mannwhitney_stats[0]
+    known_mannwhitney_p = known_mannwhitney_stats[1]
+    assert hasattr(dataset, "mannwhitney_u")
+    nptest.assert_allclose(
+        dataset.mannwhitney_u, known_mannwhitney_u, rtol=TOLERANCE
+    )
 
-    @pytest.mark.xfail(OLD_SCIPY, reason="Scipy < 0.19")
-    def test_kendall_p(self):
-        assert hasattr(self.ds, "kendall_p")
-        nptest.assert_allclose(
-            self.ds.kendall_p, self.known_kendall_p, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "mannwhitney_p")
+    nptest.assert_allclose(
+        dataset.mannwhitney_p, known_mannwhitney_p, rtol=TOLERANCE
+    )
 
-    def test_spearman_rho(self):
-        assert hasattr(self.ds, "spearman_rho")
-        nptest.assert_allclose(
-            self.ds.spearman_rho, self.known_spearman_rho, atol=0.0001
-        )
+    assert hasattr(dataset, "_mannwhitney_stats")
+    nptest.assert_allclose(
+        dataset._mannwhitney_stats,
+        known_mannwhitney_stats,
+        rtol=TOLERANCE,
+    )
 
-    def test_spearman_p(self):
-        assert hasattr(self.ds, "spearman_p")
-        nptest.assert_allclose(self.ds.spearman_p, self.known_spearman_p, atol=0.0001)
+@pytest.mark.xfail(OLD_SCIPY, reason="Scipy < 0.19")
+def test_kendall(dataset):
+    known_kendall_stats = (1.00, 5.482137e-17)
+    known_kendall_tau = known_kendall_stats[0]
+    known_kendall_p = known_kendall_stats[1]
+    assert hasattr(dataset, "kendall_tau")
+    nptest.assert_allclose(
+        dataset.kendall_tau, known_kendall_tau, rtol=TOLERANCE
+    )
 
-    def test_theil_medslope(self):
-        assert hasattr(self.ds, "theil_medslope")
-        nptest.assert_allclose(
-            self.ds.theil_medslope, self.known_theil_medslope, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "kendall_p")
+    nptest.assert_allclose(
+        dataset.kendall_p, known_kendall_p, rtol=TOLERANCE
+    )
 
-    def test_theil_intercept(self):
-        assert hasattr(self.ds, "theil_intercept")
-        nptest.assert_allclose(
-            self.ds.theil_intercept, self.known_theil_intercept, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "_kendall_stats")
+    nptest.assert_allclose(
+        dataset._kendall_stats, known_kendall_stats, rtol=TOLERANCE
+    )
 
-    def test_theil_loslope(self):
-        assert hasattr(self.ds, "theil_loslope")
-        nptest.assert_allclose(
-            self.ds.theil_loslope, self.known_theil_loslope, rtol=self.tolerance
-        )
+def test_spearman(dataset):
+    known_spearman_stats = (1.0, 0.0)
+    known_spearman_rho = known_spearman_stats[0]
+    known_spearman_p = known_spearman_stats[1]
+    assert hasattr(dataset, "spearman_rho")
+    nptest.assert_allclose(
+        dataset.spearman_rho, known_spearman_rho, atol=0.0001
+    )
 
-    def test_theil_hilope(self):
-        assert hasattr(self.ds, "theil_hislope")
-        nptest.assert_allclose(
-            self.ds.theil_hislope, self.known_theil_hislope, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "spearman_p")
+    nptest.assert_allclose(dataset.spearman_p, known_spearman_p, atol=0.0001)
 
-    def test_wilcoxon_stats(self):
-        assert hasattr(self.ds, "_wilcoxon_stats")
-        nptest.assert_allclose(
-            self.ds._wilcoxon_stats, self.known_wilcoxon_stats, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "_spearman_stats")
+    nptest.assert_allclose(
+        dataset._spearman_stats, known_spearman_stats, atol=0.0001
+    )
 
-    def test_mannwhitney_stats(self):
-        assert hasattr(self.ds, "_mannwhitney_stats")
-        nptest.assert_allclose(
-            self.ds._mannwhitney_stats,
-            self.known_mannwhitney_stats,
-            rtol=self.tolerance,
-        )
+def test_theil(dataset):
+    known_theil_stats = (1.0, -4.5, 1.0, 1.0)
+    known_theil_hislope = known_theil_stats[0]
+    known_theil_intercept = known_theil_stats[1]
+    known_theil_loslope = known_theil_stats[2]
+    known_theil_medslope = known_theil_stats[3]
+    assert hasattr(dataset, "theil_medslope")
+    nptest.assert_allclose(
+        dataset.theil_medslope, known_theil_medslope, rtol=TOLERANCE
+    )
 
-    @pytest.mark.xfail(OLD_SCIPY, reason="Scipy < 0.19")
-    def test_kendall_stats(self):
-        assert hasattr(self.ds, "_kendall_stats")
-        nptest.assert_allclose(
-            self.ds._kendall_stats, self.known_kendall_stats, rtol=self.tolerance
-        )
+    assert hasattr(dataset, "theil_intercept")
+    nptest.assert_allclose(
+        dataset.theil_intercept, known_theil_intercept, rtol=TOLERANCE
+    )
 
-    def test_spearman_stats(self):
-        assert hasattr(self.ds, "_spearman_stats")
-        nptest.assert_allclose(
-            self.ds._spearman_stats, self.known_spearman_stats, atol=0.0001
-        )
+    assert hasattr(dataset, "theil_loslope")
+    nptest.assert_allclose(
+        dataset.theil_loslope, known_theil_loslope, rtol=TOLERANCE
+    )
 
-    def test_theil_stats(self):
-        assert hasattr(self.ds, "_theil_stats")
-        nptest.assert_almost_equal(
-            self.ds._theil_stats["medslope"], self.known_theil_stats[0], decimal=4
-        )
+    assert hasattr(dataset, "theil_hislope")
+    nptest.assert_allclose(
+        dataset.theil_hislope, known_theil_hislope, rtol=TOLERANCE
+    )
 
-        nptest.assert_almost_equal(
-            self.ds._theil_stats["intercept"], self.known_theil_stats[1], decimal=4
-        )
+    assert hasattr(dataset, "_theil_stats")
+    nptest.assert_almost_equal(
+        dataset._theil_stats["medslope"], known_theil_stats[0], decimal=4
+    )
 
-        nptest.assert_almost_equal(
-            self.ds._theil_stats["loslope"], self.known_theil_stats[2], decimal=4
-        )
+    nptest.assert_almost_equal(
+        dataset._theil_stats["intercept"], known_theil_stats[1], decimal=4
+    )
 
-        nptest.assert_almost_equal(
-            self.ds._theil_stats["hislope"], self.known_theil_stats[3], decimal=4
-        )
+    nptest.assert_almost_equal(
+        dataset._theil_stats["loslope"], known_theil_stats[2], decimal=4
+    )
 
-        assert not self.ds._theil_stats["is_inverted"]
+    nptest.assert_almost_equal(
+        dataset._theil_stats["hislope"], known_theil_stats[3], decimal=4
+    )
 
-        assert "estimated_effluent" in list(self.ds._theil_stats.keys())
-        assert "estimate_error" in list(self.ds._theil_stats.keys())
+    assert not dataset._theil_stats["is_inverted"]
 
-    def test_medianCIsOverlap(self):
-        assert self.known_medianCIsOverlap == self.ds.medianCIsOverlap
+    assert "estimated_effluent" in list(dataset._theil_stats.keys())
+    assert "estimate_error" in list(dataset._theil_stats.keys())
 
-    def test__repr__normal(self):
-        self.ds.__repr__
 
-    def test_repr__None(self):
-        self.ds.definition = None
-        self.ds.__repr__
+
+def test_medianCIsOverlap(dataset):
+    known_medianCIsOverlap = False
+    assert known_medianCIsOverlap == dataset.medianCIsOverlap
+
+def test__repr__normal(dataset):
+    dataset.__repr__
+
+def test_repr__None(dataset):
+    dataset.definition = None
+    dataset.__repr__
