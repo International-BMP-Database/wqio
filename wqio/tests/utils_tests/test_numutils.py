@@ -43,9 +43,9 @@ from wqio.utils import numutils
         (numpy.inf * -1, 3, False, False, False, "NA", None),
     ],
 )
-def test_sigFigs(value, N, tex, forceint, pval, expected, error):
+def test_sig_figs(value, N, tex, forceint, pval, expected, error):
     with helpers.raises(error):
-        result = numutils.sigFigs(value, N, tex=tex, forceint=forceint, pval=pval)
+        result = numutils.sig_figs(value, N, tex=tex, forceint=forceint, pval=pval)
         assert result == expected
 
 
@@ -58,8 +58,8 @@ def test_sigFigs(value, N, tex, forceint, pval, expected, error):
         (0.00257, "=", 2, "=0.0026"),
     ],
 )
-def test_formatResult(num, qual, N, expected):
-    assert numutils.formatResult(num, qual, N) == expected
+def test_format_result(num, qual, N, expected):
+    assert numutils.format_result(num, qual, N) == expected
 
 
 @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ def test_processAndersonDarlingResults(which):
 
     expected = {"bad": "<85.0%", "good": "99.0%"}
 
-    assert numutils.processAndersonDarlingResults(ARs[which]) == expected[which]
+    assert numutils.process_AD_result(ARs[which]) == expected[which]
 
 
 @pytest.mark.parametrize(
@@ -287,7 +287,7 @@ def test_normalize_units_bad_conversion(units_norm_data):
 )
 def test_test_pH2concentration(pH, expected, error):
     with helpers.raises(error):
-        assert abs(numutils.pH2concentration(pH) - expected) < 0.0001
+        assert abs(numutils.pH_to_concentration(pH) - expected) < 0.0001
 
 
 @helpers.seed
@@ -501,9 +501,9 @@ def test_fit_line_with_xhat(fit_data):
 )
 def test_checkIntervalOverlap_single(oneway, expected):
     result = [
-        numutils.checkIntervalOverlap([1, 2], [3, 4], oneway=oneway),
-        numutils.checkIntervalOverlap([1, 4], [2, 3], oneway=oneway),
-        numutils.checkIntervalOverlap([1, 3], [2, 4], oneway=oneway),
+        numutils.check_interval_overlap([1, 2], [3, 4], oneway=oneway),
+        numutils.check_interval_overlap([1, 4], [2, 3], oneway=oneway),
+        numutils.check_interval_overlap([1, 3], [2, 4], oneway=oneway),
     ]
     assert result == expected
 
@@ -513,7 +513,7 @@ def test_checkIntervalOverlap(oneway, expected):
     x = numpy.array([[1, 2], [1, 4], [1, 3]])
     y = numpy.array([[3, 4], [2, 3], [2, 4]])
     nptest.assert_array_equal(
-        numutils.checkIntervalOverlap(x, y, oneway=oneway, axis=1),
+        numutils.check_interval_overlap(x, y, oneway=oneway, axis=1),
         numpy.array(expected, dtype=bool),
     )
 

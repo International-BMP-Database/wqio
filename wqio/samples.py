@@ -103,7 +103,7 @@ class SampleMixin:
         self._markersize = None
         self._linestyle = None
         self._yfactor = None
-        self._season = utils.getSeason(self.starttime)
+        self._season = utils.get_season(self.starttime)
         self.storm = storm
 
     @property

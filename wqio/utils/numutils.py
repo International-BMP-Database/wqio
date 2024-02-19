@@ -13,7 +13,7 @@ from wqio.utils import misc
 TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_slope"))
 
 
-def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
+def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     """Formats a number with the correct number of sig figs.
 
     Parameters
@@ -41,10 +41,10 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
     Examples
     --------
-    >>> print(sigFigs(1247.15, 3))
+    >>> print(sig_figs(1247.15, 3))
     1,250
 
-    >>> print(sigFigs(1247.15, 7))
+    >>> print(sig_figs(1247.15, 7))
     1,247.150
 
     """
@@ -54,7 +54,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
     # check on the number provided
     elif x is not None and not numpy.isinf(x) and not numpy.isnan(x):
-        # check on the sigFigs
+        # check on the sig_figs
         if n < 1:
             raise ValueError("number of sig figs must be greater than zero!")
 
@@ -99,7 +99,7 @@ def sigFigs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     return out
 
 
-def formatResult(result, qualifier, sigfigs=3):
+def format_result(result, qualifier, sigfigs=3):
     """Formats a results with its qualifier
 
     Parameters
@@ -118,12 +118,12 @@ def formatResult(result, qualifier, sigfigs=3):
 
     Example
     -------
-    >>> formatResult(1.23, '<', sigfigs=4)
+    >>> format_result(1.23, '<', sigfigs=4)
     '<1.230'
 
     """
 
-    return f"{qualifier}{sigFigs(result, sigfigs)}"
+    return f"{qualifier}{sig_figs(result, sigfigs)}"
 
 
 def process_p_vals(pval):
@@ -145,7 +145,7 @@ def process_p_vals(pval):
     if pval is None:
         out = "NA"
     elif 0 < pval < 0.001:
-        out = formatResult(0.001, "<", sigfigs=1)
+        out = format_result(0.001, "<", sigfigs=1)
     elif pval > 1 or pval < 0:
         raise ValueError(f"p-values must be between 0 and 1 (not {pval})")
     else:
@@ -220,7 +220,7 @@ def anderson_darling(data):
     return ADResult(**values)
 
 
-def processAndersonDarlingResults(ad_results):
+def process_AD_result(ad_result):
     """Return a nice string of Anderson-Darling test results
 
     Parameters
@@ -235,7 +235,7 @@ def processAndersonDarlingResults(ad_results):
 
     """
 
-    AD, crit, sig = ad_results
+    AD, crit, sig = ad_result
     try:
         ci = 100 - sig[crit < AD][-1]
         return f"{ci:0.1f}%"
@@ -355,7 +355,7 @@ def normalize_units(
     return normalized
 
 
-def pH2concentration(pH, *args):
+def pH_to_concentration(pH, *args):
     """Converts pH values to proton concentrations in mg/L
 
     Parameters
@@ -528,7 +528,7 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
     return xhat, yhat, results
 
 
-def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
+def check_interval_overlap(interval1, interval2, oneway=False, axis=None):
     """Checks if two numeric intervals overlaps.
 
     Parameters
@@ -560,7 +560,7 @@ def checkIntervalOverlap(interval1, interval2, oneway=False, axis=None):
     if oneway:
         return first_check
     else:
-        return first_check | checkIntervalOverlap(interval2, interval1, oneway=True, axis=axis)
+        return first_check | check_interval_overlap(interval2, interval1, oneway=True, axis=axis)
 
 
 def winsorize_dataframe(df, **limits):

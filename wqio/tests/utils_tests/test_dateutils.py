@@ -1,11 +1,11 @@
-from datetime import datetime
 import warnings
+from datetime import datetime
 
-import pytest
 import pandas
+import pytest
 
-from wqio.utils import dateutils
 from wqio.tests import helpers
+from wqio.utils import dateutils
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,7 @@ from wqio.tests import helpers
 )
 def test_getSeason(datemaker, datestring, expected):
     date = datemaker(datestring)
-    season = dateutils.getSeason(date)
+    season = dateutils.get_season(date)
     assert season == expected
 
 
@@ -45,13 +45,13 @@ def test_getSeason(datemaker, datestring, expected):
 def test_makeTimestamp_basic(row, expected, error):
     with warnings.catch_warnings(), helpers.raises(error):
         warnings.simplefilter("always")
-        tstamp = dateutils.makeTimestamp(row)
+        tstamp = dateutils.make_timestamp(row)
         assert tstamp == pandas.Timestamp(expected)
 
 
 def test_makeTimestamp_customcols():
     row = {"mydate": "2012-05-25", "mytime": "16:54"}
-    tstamp = dateutils.makeTimestamp(row, datecol="mydate", timecol="mytime")
+    tstamp = dateutils.make_timestamp(row, datecol="mydate", timecol="mytime")
     assert tstamp == pandas.Timestamp("2012-05-25 16:54")
 
 
@@ -59,7 +59,7 @@ def test_makeTimestamp_customcols():
     "datemaker", [pandas.Timestamp, lambda x: datetime.strptime(x, "%Y-%m-%d")]
 )
 @pytest.mark.parametrize("datestring", ["2005-10-02", "2006-09-02"])
-def test_getWaterYear(datemaker, datestring):
+def test_get_wateryear(datemaker, datestring):
     date = datemaker(datestring)
-    wateryear = dateutils.getWaterYear(date)
+    wateryear = dateutils.get_wateryear(date)
     assert wateryear == "2005/2006"
