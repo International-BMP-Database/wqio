@@ -6,12 +6,11 @@ import pandas
 from wqio import validate
 from wqio.utils import misc
 
-
 _logger = logging.getLogger(__name__)
 
 
 def getSeason(date):
-    """ Defines the season from a given date.
+    """Defines the season from a given date.
 
     Parameters
     ----------
@@ -52,7 +51,7 @@ def getSeason(date):
 
 
 def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings=False):
-    """ Makes a pandas.Timestamp from separate date/time columns
+    """Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
     ----------
@@ -86,7 +85,7 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
         date = fallback_datetime.date()
         if issuewarnings:  # pragma: no cover
             misc.log_or_warn(
-                "Using fallback date from {}".format(row[datecol]),
+                f"Using fallback date from {row[datecol]}",
                 UserWarning if issuewarnings else None,
                 logger=_logger,
             )
@@ -104,19 +103,19 @@ def makeTimestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings
         time = fallback_datetime.time()
         if issuewarnings:  # pragma: no cover
             misc.log_or_warn(
-                "Using fallback time from {}".format(row[timecol]),
+                f"Using fallback time from {row[timecol]}",
                 UserWarning if issuewarnings else None,
                 logger=_logger,
             )
 
-    dtstring = "{} {}".format(date, time)
+    dtstring = f"{date} {time}"
     tstamp = pandas.Timestamp(dtstring)
 
     return tstamp
 
 
 def getWaterYear(date):
-    """ Returns the water year of a given date
+    """Returns the water year of a given date
 
     Parameters
     ----------

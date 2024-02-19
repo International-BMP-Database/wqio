@@ -7,7 +7,6 @@ from probscale.algo import _estimate_from_fit
 
 from wqio import utils
 
-
 _logger = logging.getLogger(__name__)
 
 fitestimate = namedtuple(
@@ -18,7 +17,7 @@ __all__ = ["BCA", "percentile"]
 
 
 def _acceleration(data):
-    """ Compute the acceleration statistic.
+    """Compute the acceleration statistic.
 
     Parameters
     ----------
@@ -39,11 +38,11 @@ def _acceleration(data):
     sumsqr_resids = max(((data.mean() - data) ** 2).sum(), 1e-12)
 
     # compute and return the acceleration
-    return sumcube_resids / (6 * sumsqr_resids ** 1.5)
+    return sumcube_resids / (6 * sumsqr_resids**1.5)
 
 
 def _make_boot_index(elements, niter):
-    """ Generate an array of bootstrap sample sets
+    """Generate an array of bootstrap sample sets
 
     Parameters
     ----------

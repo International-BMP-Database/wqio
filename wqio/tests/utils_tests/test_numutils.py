@@ -3,16 +3,15 @@ from collections import namedtuple
 from io import StringIO
 from textwrap import dedent
 
-import pytest
-import numpy.testing as nptest
-import pandas.testing as pdtest
-from wqio.tests import helpers
-
 import numpy
-from scipy import stats
+import numpy.testing as nptest
 import pandas
+import pandas.testing as pdtest
+import pytest
 import statsmodels.api as sm
+from scipy import stats
 
+from wqio.tests import helpers
 from wqio.utils import numutils
 
 
@@ -108,6 +107,7 @@ def test_anderson_darling():
         1.4392085,
         [0.527, 0.6, 0.719, 0.839, 0.998],
         [15.0, 10.0, 5.0, 2.5, 1.0],
+        None,
         0.00080268,
     )
 
@@ -121,7 +121,7 @@ def test_anderson_darling():
     nptest.assert_allclose(result[2], known_anderson[2], rtol=tolerance)
 
     # p-value
-    assert abs(result[3] - known_anderson[3]) < 0.0000001
+    assert abs(result[4] - known_anderson[4]) < 0.0000001
 
 
 @pytest.mark.parametrize("which", ["good", "bad"])
@@ -296,9 +296,7 @@ def test_compute_theilslope_default(error):
     with helpers.raises(error):
         y = helpers.getTestROSData()["res"].values
         x = numpy.arange(len(y) - 1) if error else None
-        assert tuple(numutils.compute_theilslope(y, x)) == stats.mstats.theilslopes(
-            y, x
-        )
+        assert tuple(numutils.compute_theilslope(y, x)) == stats.mstats.theilslopes(y, x)
 
 
 @pytest.fixture
@@ -510,9 +508,7 @@ def test_checkIntervalOverlap_single(oneway, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    ("oneway", "expected"), [(True, [0, 0, 1]), (False, [0, 1, 1])]
-)
+@pytest.mark.parametrize(("oneway", "expected"), [(True, [0, 0, 1]), (False, [0, 1, 1])])
 def test_checkIntervalOverlap(oneway, expected):
     x = numpy.array([[1, 2], [1, 4], [1, 3]])
     y = numpy.array([[3, 4], [2, 3], [2, 4]])
@@ -533,21 +529,13 @@ def test_checkIntervalOverlap(oneway, expected):
     ],
 )
 def test_winsorize_dataframe(opts, expected_key):
-    x = numpy.array(
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    )
+    x = numpy.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
 
-    w_05 = numpy.array(
-        [1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 19]
-    )
+    w_05 = numpy.array([1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 19])
 
-    w_10 = numpy.array(
-        [2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 18, 18]
-    )
+    w_10 = numpy.array([2, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 18, 18])
 
-    w_20 = numpy.array(
-        [4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16]
-    )
+    w_20 = numpy.array([4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16])
 
     w_05_20 = numpy.array(
         [1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16]
@@ -563,14 +551,12 @@ def test_winsorize_dataframe(opts, expected_key):
     }
 
     result = numutils.winsorize_dataframe(df, **opts)
-    pdtest.assert_frame_equal(result, expected[expected_key])
+    assert result.eq(expected[expected_key]).all().all()
 
 
 def test__comp_stat_generator():
     df = helpers.make_dc_data().reset_index()
-    gen = numutils._comp_stat_generator(
-        df, ["param", "bmp"], "loc", "res", helpers.comp_statfxn
-    )
+    gen = numutils._comp_stat_generator(df, ["param", "bmp"], "loc", "res", helpers.comp_statfxn)
     assert isinstance(gen, types.GeneratorType)
     result = pandas.DataFrame(gen)
 
@@ -627,9 +613,9 @@ def test__comp_stat_generator():
         ],
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(
-            expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]
-        ).sort_index(axis="columns"),
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 331, 332, 333, 334, 335]).sort_index(
+            axis="columns"
+        ),
         pandas.concat([result.head(), result.tail()]).sort_index(axis="columns"),
     )
 
@@ -692,18 +678,16 @@ def test__comp_stat_generator_single_group_col():
         ],
     }
     pdtest.assert_frame_equal(
-        pandas.DataFrame(
-            expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]
-        ).sort_index(axis="columns"),
+        pandas.DataFrame(expected, index=[0, 1, 2, 3, 4, 43, 44, 45, 46, 47]).sort_index(
+            axis="columns"
+        ),
         pandas.concat([result.head(), result.tail()]).sort_index(axis="columns"),
     )
 
 
 def test__paired_stat_generator():
     df = helpers.make_dc_data_complex().unstack(level="loc")
-    gen = numutils._paired_stat_generator(
-        df, ["param"], "loc", "res", helpers.comp_statfxn
-    )
+    gen = numutils._paired_stat_generator(df, ["param"], "loc", "res", helpers.comp_statfxn)
     assert isinstance(gen, types.GeneratorType)
     result = pandas.DataFrame(gen).sort_index(axis="columns")
 

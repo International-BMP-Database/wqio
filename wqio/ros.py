@@ -1,12 +1,11 @@
-import warnings
 import logging
+import warnings
 
 import numpy
-from scipy import stats
 import pandas
+from scipy import stats
 
 from wqio import utils
-
 
 _logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ def _ros_sort(df, result, censorship, log=True, warn=False):
 
 
 def cohn_numbers(df, result, censorship):
-    """
+    r"""
     Computes the Cohn numbers for the detection limits in the dataset.
 
     The Cohn Numbers are:
@@ -100,8 +99,7 @@ def cohn_numbers(df, result, censorship):
     """
 
     def nuncen_above(row):
-        """ A, the number of uncensored obs above the given threshold.
-        """
+        """A, the number of uncensored obs above the given threshold."""
 
         # index of results above the lower_dl DL
         above = df[result] >= row["lower_dl"]
@@ -116,7 +114,7 @@ def cohn_numbers(df, result, censorship):
         return df[above & below & detect].shape[0]
 
     def nobs_below(row):
-        """ B, the number of observations (cen & uncen) below the given
+        """B, the number of observations (cen & uncen) below the given
         threshold
         """
 
@@ -140,7 +138,7 @@ def cohn_numbers(df, result, censorship):
         return LTE_censored + LT_uncensored
 
     def ncen_equal(row):
-        """ C, the number of censored observations at the given
+        """C, the number of censored observations at the given
         threshold.
         """
 
@@ -150,15 +148,15 @@ def cohn_numbers(df, result, censorship):
         return censored_below.sum()
 
     def set_upper_limit(cohn):
-        """ Sets the upper_dl DL for each row of the Cohn dataframe. """
+        """Sets the upper_dl DL for each row of the Cohn dataframe."""
         if cohn.shape[0] > 1:
             return cohn["lower_dl"].shift(-1).fillna(value=numpy.inf)
         else:
             return [numpy.inf]
 
     def compute_PE(A, B):
-        """ Computes the probability of excedance for each row of the
-        Cohn dataframe. """
+        """Computes the probability of excedance for each row of the
+        Cohn dataframe."""
         N = len(A)
         PE = numpy.empty(N, dtype="float64")
         PE[-1] = 0.0
@@ -186,11 +184,7 @@ def cohn_numbers(df, result, censorship):
             .assign(nobs_below=lambda df: df.apply(nobs_below, axis=1))
             .assign(ncen_equal=lambda df: df.apply(ncen_equal, axis=1))
             .reindex(range(DLs.shape[0] + 1))
-            .assign(
-                prob_exceedance=lambda df: compute_PE(
-                    df["nuncen_above"], df["nobs_below"]
-                )
-            )
+            .assign(prob_exceedance=lambda df: compute_PE(df["nuncen_above"], df["nobs_below"]))
         )
 
     else:
@@ -208,7 +202,7 @@ def cohn_numbers(df, result, censorship):
 
 
 def _detection_limit_index(res, cohn):
-    """ Helper function to create an array of indices for the detection
+    """Helper function to create an array of indices for the detection
     limits (cohn) corresponding to each data point.
 
     Parameters
@@ -262,9 +256,7 @@ def _ros_group_rank(df, dl_idx, censorship):
     """
 
     ranks = (
-        df.assign(rank=1)
-        .groupby(by=[dl_idx, censorship])["rank"]
-        .transform(lambda g: g.cumsum())
+        df.assign(rank=1).groupby(by=[dl_idx, censorship])["rank"].transform(lambda g: g.cumsum())
     )
     return ranks
 
@@ -364,7 +356,7 @@ def plotting_positions(df, censorship, cohn):
 
 
 def _ros_estimate(df, result, censorship, transform_in, transform_out):
-    """ Computed the estimated censored from the best-fit line of a
+    """Computed the estimated censored from the best-fit line of a
     probability plot of the uncensored values.
 
     Parameters
@@ -467,9 +459,7 @@ def _do_ros(
         modeled = (
             df.pipe(_ros_sort, result=result, censorship=censorship, log=log, warn=warn)
             .assign(
-                det_limit_index=lambda df: df[result].apply(
-                    _detection_limit_index, args=(cohn,)
-                )
+                det_limit_index=lambda df: df[result].apply(_detection_limit_index, args=(cohn,))
             )
             .assign(rank=lambda df: _ros_group_rank(df, "det_limit_index", censorship))
             .assign(plot_pos=lambda df: plotting_positions(df, censorship, cohn))
@@ -478,16 +468,12 @@ def _do_ros(
         )
 
     if floor:
-        modeled = modeled.assign(
-            final=modeled["final"].where(lambda x: x >= floor, floor)
-        )
+        modeled = modeled.assign(final=modeled["final"].where(lambda x: x >= floor, floor))
 
     return modeled
 
 
-def is_valid_to_ros(
-    df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False
-):
+def is_valid_to_ros(df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False):
     # basic counts/metrics of the dataset
     N_observations = df.shape[0]
     N_censored = df[censorship].astype(int).sum()
@@ -611,9 +597,7 @@ def ROS(
     # substitute w/ fraction of the DLs if there's insufficient
     # uncensored data
     else:
-        final = numpy.where(
-            df[censorship], df[result] * substitution_fraction, df[result]
-        )
+        final = numpy.where(df[censorship], df[result] * substitution_fraction, df[result])
         output = df.assign(final=final)[[result, censorship, "final"]]
 
     # convert to an array if necessary

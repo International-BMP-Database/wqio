@@ -1,18 +1,14 @@
 import numpy
-from scipy import stats
-from matplotlib import pyplot
 import pandas
-import statsmodels.api as sm
-from statsmodels.tools.decorators import cache_readonly
 import seaborn
+import statsmodels.api as sm
+from matplotlib import pyplot
 from probscale.algo import _estimate_from_fit
+from scipy import stats
+from statsmodels.tools.decorators import cache_readonly
 
-from wqio import utils
-from wqio import bootstrap
+from wqio import bootstrap, utils, validate, viz
 from wqio.ros import ROS
-from wqio import validate
-from wqio import viz
-
 
 # meta data mappings based on station
 station_names = {
@@ -27,8 +23,8 @@ palette = seaborn.color_palette(palette="deep", n_colors=3, desat=0.88)
 colors = {"Influent": palette[0], "Effluent": palette[1], "Reference Flow": palette[2]}
 
 
-class Location(object):
-    """ Object providing convenient access to statistical and
+class Location:
+    """Object providing convenient access to statistical and
     graphical methods for summarizing a single set of water quality
     observations for a single pollutant.
 
@@ -179,9 +175,7 @@ class Location(object):
             self.ndvals = ndval
 
         # original data and quantity
-        self.raw_data = dataframe.assign(
-            **{self.cencol: dataframe[qualcol].isin(self.ndvals)}
-        )
+        self.raw_data = dataframe.assign(**{self.cencol: dataframe[qualcol].isin(self.ndvals)})
         self._dataframe = None
         self._data = None
 
@@ -192,9 +186,7 @@ class Location(object):
                 **{self.cencol: lambda df: df[self.qualcol].isin(self.ndvals)}
             )
             if self.useros:
-                ros = ROS(
-                    df=df, result=self.rescol, censorship=self.cencol, as_array=False
-                )
+                ros = ROS(df=df, result=self.rescol, censorship=self.cencol, as_array=False)
                 self._dataframe = ros[["final", self.cencol]]
             else:
                 self._dataframe = df[[self.rescol, self.cencol]]
@@ -318,16 +310,12 @@ class Location(object):
     @cache_readonly
     def min_detect(self):
         if self.hasData:
-            return self.raw_data[self.rescol][
-                ~self.raw_data[self.qualcol].isin(self.ndvals)
-            ].min()
+            return self.raw_data[self.rescol][~self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cache_readonly
     def min_DL(self):
         if self.hasData:
-            return self.raw_data[self.rescol][
-                self.raw_data[self.qualcol].isin(self.ndvals)
-            ].min()
+            return self.raw_data[self.rescol][self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cache_readonly
     def max(self):
@@ -438,9 +426,7 @@ class Location(object):
                 transformout=numpy.exp,
             )
         else:
-            wnf = viz.whiskers_and_fliers(
-                self.data, self.pctl25, self.pctl75, transformout=None
-            )
+            wnf = viz.whiskers_and_fliers(self.data, self.pctl25, self.pctl75, transformout=None)
 
         bxpstats.update(wnf)
         return [bxpstats]
@@ -460,7 +446,7 @@ class Location(object):
         patch_artist=False,
         xlims=None,
     ):
-        """ Draws a boxplot and whisker on a matplotlib figure
+        """Draws a boxplot and whisker on a matplotlib figure
 
         Parameters
         ----------
@@ -544,9 +530,9 @@ class Location(object):
         clearYLabels=False,
         rotateticklabels=True,
         bestfit=False,
-        **plotopts
+        **plotopts,
     ):
-        """ Draws a probability plot on a matplotlib figure
+        """Draws a probability plot on a matplotlib figure
 
         Parameters
         ----------
@@ -623,9 +609,9 @@ class Location(object):
         xlabel=None,
         axtype="prob",
         patch_artist=False,
-        **plotopts
+        **plotopts,
     ):
-        """ Creates a two-axis figure with a boxplot & probability plot.
+        """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
         ----------
@@ -686,12 +672,7 @@ class Location(object):
         )
 
         self.probplot(
-            ax=ax2,
-            yscale=yscale,
-            axtype=axtype,
-            ylabel=None,
-            clearYLabels=True,
-            **plotopts
+            ax=ax2, yscale=yscale, axtype=axtype, ylabel=None, clearYLabels=True, **plotopts
         )
 
         ax1.yaxis.tick_left()
@@ -702,7 +683,7 @@ class Location(object):
     def verticalScatter(
         self, ax=None, pos=1, ylabel=None, yscale="log", ignoreROS=True, markersize=6
     ):
-        """ Draws a clustered & jittered scatter plot of the data
+        """Draws a clustered & jittered scatter plot of the data
 
         Parameters
         ----------
@@ -773,8 +754,8 @@ class Location(object):
         return fig
 
 
-class Dataset(object):
-    """ Dataset: object for comparings two Location objects
+class Dataset:
+    """Dataset: object for comparings two Location objects
 
     Parameters
     ----------
@@ -797,7 +778,6 @@ class Dataset(object):
     # not the other way around. This will allow Dataset.influent = None
     # by passing in a dataframe where df.shape[0] == 0
     def __init__(self, influent, effluent, useros=True, name=None):
-
         # basic attributes
         self.influent = influent
         self.effluent = effluent
@@ -847,12 +827,10 @@ class Dataset(object):
         return self._non_paired_stats and self.paired_data.shape[0] > 20
 
     def __repr__(self):
-        x = "<wqio.Dataset>\n  N influent  {0}\n  N effluent = {1}".format(
-            self.influent.N, self.effluent.N
-        )
+        x = f"<wqio.Dataset>\n  N influent  {self.influent.N}\n  N effluent = {self.effluent.N}"
         if self.definition is not None:
             for k, v in self.definition.items():
-                x = "{0}\n  {1} = {2}".format(x, k.title(), v)
+                x = f"{x}\n  {k.title()} = {v}"
         return x
 
     @property
@@ -1075,9 +1053,7 @@ class Dataset(object):
     @cache_readonly
     def _kendall_stats(self):
         if self._paired_stats:
-            return stats.kendalltau(
-                self.paired_data.inflow.res, self.paired_data.outflow.res
-            )
+            return stats.kendalltau(self.paired_data.inflow.res, self.paired_data.outflow.res)
 
     @cache_readonly
     def _spearman_stats(self):
@@ -1171,7 +1147,7 @@ class Dataset(object):
         offset=0.5,
         patch_artist=False,
     ):
-        """ Adds a boxplot to a matplotlib figure
+        """Adds a boxplot to a matplotlib figure
 
         Parameters
         ----------
@@ -1268,7 +1244,7 @@ class Dataset(object):
         rotateticklabels=True,
         bestfit=False,
     ):
-        """ Adds probability plots to a matplotlib figure
+        """Adds probability plots to a matplotlib figure
 
         Parameters
         ----------
@@ -1316,7 +1292,7 @@ class Dataset(object):
         xlabels = {
             "pp": "Theoretical percentiles",
             "qq": "Theoretical quantiles",
-            "prob": "Non-exceedance probability (\%)",
+            "prob": r"Non-exceedance probability (%)",
         }
 
         ax.set_xlabel(xlabels[axtype])
@@ -1408,7 +1384,7 @@ class Dataset(object):
         return fig
 
     def jointplot(self, hist=False, kde=True, rug=True, **scatter_kws):
-        """ Create a joint distribution plot for the dataset
+        """Create a joint distribution plot for the dataset
 
         Parameters
         ----------
@@ -1416,7 +1392,7 @@ class Dataset(object):
             Toggles showing histograms on the distribution plots
         kde : bool, optional (default is True)
             Toggles showing KDE plots on the distribution plots
-        run : bool, optional (default is True)
+        rug : bool, optional (default is True)
             Toggles showing rug plots on the distribution plots
         **scatter_kws : keyword arguments
             Optionals passed directly to Dataset.scatterplot
@@ -1429,7 +1405,7 @@ class Dataset(object):
         --------
         seaborn.JointGrid
         seaborn.jointplot
-        seaborn.distplot
+        seaborn.displot
         Dataset.scatterplot
 
         """
@@ -1441,7 +1417,7 @@ class Dataset(object):
             data = self.paired_data.xs("res", level="quantity", axis=1)
             jg = seaborn.JointGrid(x="inflow", y="outflow", data=data)
             self.scatterplot(ax=jg.ax_joint, showlegend=False, **scatter_kws)
-            jg.plot_marginals(seaborn.distplot, hist=hist, rug=rug, kde=kde)
+            jg.plot_marginals(seaborn.displot, rug=rug, kde=kde)
 
             jg.ax_marg_x.set_xscale(scatter_kws.pop("xscale", "log"))
             jg.ax_marg_y.set_yscale(scatter_kws.pop("yscale", "log"))
@@ -1466,9 +1442,9 @@ class Dataset(object):
         eqn_pos="lower right",
         equal_scales=True,
         fitopts=None,
-        **markeropts
+        **markeropts,
     ):
-        """ Creates an influent/effluent scatter plot
+        """Creates an influent/effluent scatter plot
 
         Parameters
         ----------
@@ -1506,9 +1482,7 @@ class Dataset(object):
         ax.set_yscale(yscale)
 
         # common symbology
-        commonopts = dict(
-            linestyle="none", markeredgewidth=0.5, markersize=6, zorder=10
-        )
+        commonopts = dict(linestyle="none", markeredgewidth=0.5, markersize=6, zorder=10)
 
         # plot the ROSd'd result, if requested
         if useros:
@@ -1622,9 +1596,7 @@ class Dataset(object):
                 try:
                     txt_x, txt_y = positions.get(eqn_pos.lower())
                 except KeyError:
-                    raise ValueError(
-                        "`eqn_pos` must be on of {}".format(list.positions.keys())
-                    )
+                    raise ValueError(f"`eqn_pos` must be on of {list.positions.keys()}")
                 # annotate axes with stats
 
                 ax.annotate(

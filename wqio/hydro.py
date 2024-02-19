@@ -1,17 +1,12 @@
 import warnings
 
 import numpy
-from matplotlib import pyplot
-from matplotlib import dates
-from matplotlib import gridspec
-import seaborn
 import pandas
-
-from wqio import utils
-from wqio import viz
-from wqio import validate
-
+import seaborn
+from matplotlib import dates, gridspec, pyplot
 from pandas.plotting import register_matplotlib_converters
+
+from wqio import utils, validate, viz
 
 register_matplotlib_converters()
 
@@ -133,9 +128,7 @@ def parse_storm_events(
         data.resample(freq)
         .agg(agg_dict)
         .loc[:, lambda df: df.columns.isin(cols_to_use)]
-        .assign(
-            __wet=lambda df: numpy.any(df[water_columns] > 0, axis=1) & ~df[baseflowcol]
-        )
+        .assign(__wet=lambda df: numpy.any(df[water_columns] > 0, axis=1) & ~df[baseflowcol])
         .assign(__windiff=lambda df: _wet_window_diff(df["__wet"], ie_periods))
         .pipe(_wet_first_row, "__wet", "__windiff")
         .assign(__event_start=lambda df: df["__windiff"] == 1)
@@ -156,8 +149,8 @@ def parse_storm_events(
     return res
 
 
-class Storm(object):
-    """ Object representing a storm event
+class Storm:
+    """Object representing a storm event
 
     Parameters
     ----------
@@ -189,7 +182,6 @@ class Storm(object):
         freqMinutes=5,
         volume_conversion=1,
     ):
-
         self.inflowcol = inflowcol
         self.outflowcol = outflowcol
         self.precipcol = precipcol
@@ -200,7 +192,7 @@ class Storm(object):
 
         # basic data
         self.data = dataframe[dataframe[stormcol] == self.stormnumber].copy()
-        self.hydrofreq_label = "{0} min".format(self.freqMinutes)
+        self.hydrofreq_label = f"{self.freqMinutes} min"
 
         # tease out start/stop info
         self.start = self.data.index[0]
@@ -216,9 +208,7 @@ class Storm(object):
             prev_storm_mask = dataframe[stormcol] == self.stormnumber - 1
             previous_end = dataframe[prev_storm_mask].index[-1]
             antecedent_timedelta = self.start - previous_end
-            self.antecedent_period_days = (
-                antecedent_timedelta.total_seconds() / SEC_PER_DAY
-            )
+            self.antecedent_period_days = antecedent_timedelta.total_seconds() / SEC_PER_DAY
         else:
             self.antecedent_period_days = numpy.nan
 
@@ -316,9 +306,7 @@ class Storm(object):
     def outflow(self):
         if self._outflow is None:
             if self.outflowcol is not None:
-                self._outflow = self.data[self.data[self.outflowcol] > 0][
-                    self.outflowcol
-                ]
+                self._outflow = self.data[self.data[self.outflowcol] > 0][self.outflowcol]
             else:
                 self._outflow = numpy.array([])
         return self._outflow
@@ -388,9 +376,7 @@ class Storm(object):
     @property
     def peak_precip_intensity(self):
         if self._peak_precip_intensity is None and self.has_precip:
-            self._peak_precip_intensity = (
-                self._peak_depth * MIN_PER_HOUR / self.freqMinutes
-            )
+            self._peak_precip_intensity = self._peak_depth * MIN_PER_HOUR / self.freqMinutes
         return self._peak_precip_intensity
 
     @property
@@ -414,17 +400,13 @@ class Storm(object):
     @property
     def total_inflow_volume(self):
         if self._total_inflow_volume is None and self.has_inflow:
-            self._total_inflow_volume = (
-                self.data[self.inflowcol].sum() * self.volume_conversion
-            )
+            self._total_inflow_volume = self.data[self.inflowcol].sum() * self.volume_conversion
         return self._total_inflow_volume
 
     @property
     def total_outflow_volume(self):
         if self._total_outflow_volume is None and self.has_outflow:
-            self._total_outflow_volume = (
-                self.data[self.outflowcol].sum() * self.volume_conversion
-            )
+            self._total_outflow_volume = self.data[self.outflowcol].sum() * self.volume_conversion
         return self._total_outflow_volume
 
     @property
@@ -486,7 +468,6 @@ class Storm(object):
             and self.peak_outflow_time is not None
             and self.peak_inflow_time is not None
         ):
-
             time_delta = self.peak_outflow_time - self.peak_inflow_time
             self._peak_lag_hours = time_delta.total_seconds() / SEC_PER_HOUR
         return self._peak_lag_hours
@@ -514,7 +495,7 @@ class Storm(object):
         return self._summary_dict
 
     def is_small(self, minprecip=0.0, mininflow=0.0, minoutflow=0.0):
-        """ Determines whether a storm can be considered "small".
+        """Determines whether a storm can be considered "small".
 
         Parameters
         ----------
@@ -530,18 +511,9 @@ class Storm(object):
         """
 
         storm_is_small = (
-            (
-                self.total_precip_depth is not None
-                and self.total_precip_depth < minprecip
-            )
-            or (
-                self.total_inflow_volume is not None
-                and self.total_inflow_volume < mininflow
-            )
-            or (
-                self.total_outflow_volume is not None
-                and self.total_outflow_volume < minoutflow
-            )
+            (self.total_precip_depth is not None and self.total_precip_depth < minprecip)
+            or (self.total_inflow_volume is not None and self.total_inflow_volume < mininflow)
+            or (self.total_outflow_volume is not None and self.total_outflow_volume < minoutflow)
         )
         return storm_is_small
 
@@ -549,7 +521,7 @@ class Storm(object):
         index_map = {"start": 0, "end": -1}
         quantity = self.data[self.data[column] > 0]
         if quantity.shape[0] == 0:
-            warnings.warn("Storm has no {}".format(column), UserWarning)
+            warnings.warn(f"Storm has no {column}", UserWarning)
         else:
             return quantity.index[index_map[bound]]
 
@@ -558,13 +530,9 @@ class Storm(object):
 
     def _compute_centroid(self, column):
         # ordinal time index of storm
-        time_idx = [
-            dates.date2num(idx.to_pydatetime()) for idx in self.data.index.tolist()
-        ]
+        time_idx = [dates.date2num(idx.to_pydatetime()) for idx in self.data.index.tolist()]
 
-        centroid = numpy.sum(self.data[column] * time_idx) / numpy.sum(
-            self.data[column]
-        )
+        centroid = numpy.sum(self.data[column] * time_idx) / numpy.sum(self.data[column])
 
         if numpy.isnan(centroid):
             return None
@@ -572,7 +540,6 @@ class Storm(object):
             return pandas.Timestamp(dates.num2date(centroid)).tz_convert(None)
 
     def _plot_centroids(self, ax, yfactor=0.5):
-
         artists = []
         labels = []
         y_val = yfactor * ax.get_ylim()[1]
@@ -631,10 +598,8 @@ class Storm(object):
 
         return artists, labels
 
-    def plot_hydroquantity(
-        self, quantity, ax=None, label=None, otherlabels=None, artists=None
-    ):
-        """ Draws a hydrologic quantity to a matplotlib axes.
+    def plot_hydroquantity(self, quantity, ax=None, label=None, otherlabels=None, artists=None):
+        """Draws a hydrologic quantity to a matplotlib axes.
 
         Parameters
         ----------
@@ -675,7 +640,7 @@ class Storm(object):
         try:
             meta = self.meta[quantity]
         except KeyError:
-            raise KeyError("{} not available".format(quantity))
+            raise KeyError(f"{quantity} not available")
 
         # plot the data
         self.data[quantity].fillna(0).plot(
@@ -724,9 +689,7 @@ class Storm(object):
             None
         """
         fig = pyplot.figure(**figopts)
-        gs = gridspec.GridSpec(
-            nrows=2, ncols=1, height_ratios=[1, axratio], hspace=0.12
-        )
+        gs = gridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, axratio], hspace=0.12)
         rainax = fig.add_subplot(gs[0])
         rainax.yaxis.set_major_locator(pyplot.MaxNLocator(5))
         flowax = fig.add_subplot(gs[1], sharex=rainax)
@@ -801,8 +764,8 @@ class Storm(object):
         return fig, artists, labels
 
 
-class HydroRecord(object):
-    """ Class representing an entire hydrologic record.
+class HydroRecord:
+    """Class representing an entire hydrologic record.
 
     Parameters
     ----------
@@ -861,7 +824,6 @@ class HydroRecord(object):
         stormclass=None,
         lowmem=False,
     ):
-
         # validate input
         if precipcol is None and inflowcol is None and outflowcol is None:
             msg = "`hydrodata` must have at least a precip or in/outflow column"
@@ -957,16 +919,13 @@ class HydroRecord(object):
             "Centroid Lag Hours",
         ]
         if self._storm_stats is None:
-            storm_stats = pandas.DataFrame(
-                [self.storms[sn].summary_dict for sn in self.storms]
-            )
+            storm_stats = pandas.DataFrame([self.storms[sn].summary_dict for sn in self.storms])
 
             self._storm_stats = storm_stats[col_order]
 
         return self._storm_stats.sort_values(by=["Storm Number"]).reset_index(drop=True)
 
     def _define_storms(self, debug=False):
-
         parsed = parse_storm_events(
             self._raw_data,
             self.intereventHours,
@@ -981,7 +940,7 @@ class HydroRecord(object):
         return parsed
 
     def getStormFromTimestamp(self, timestamp, lookback_hours=0, smallstorms=False):
-        """ Get the storm associdated with a give (sample) date
+        """Get the storm associdated with a give (sample) date
 
         Parameters
         ----------
@@ -1019,12 +978,7 @@ class HydroRecord(object):
             storms = self.data.loc[lookback_time:timestamp, [self.stormcol]]
             storms = storms[storms > 0].dropna()
 
-            if storms.shape[0] == 0:
-                # no storm
-                storm_number = None
-            else:
-                # storm w/i the lookback period
-                storm_number = int(storms.iloc[-1])
+            storm_number = None if storms.shape[0] == 0 else int(storms.iloc[-1])
 
         # return storm_number and storms
         if smallstorms:
@@ -1033,7 +987,7 @@ class HydroRecord(object):
             return storm_number, self.storms.get(storm_number, None)
 
     def histogram(self, valuecol, bins, **factoropts):
-        """ Plot a faceted, categorical histogram of storms.
+        """Plot a faceted, categorical histogram of storms.
 
         Parameters
         ----------
@@ -1056,13 +1010,13 @@ class HydroRecord(object):
         """
 
         fg = viz.categorical_histogram(self.storm_stats, valuecol, bins, **factoropts)
-        fg.fig.tight_layout()
+        fg.figure.tight_layout()
         return fg
 
 
-class DrainageArea(object):
+class DrainageArea:
     def __init__(self, total_area=1.0, imp_area=1.0, bmp_area=0.0):
-        """ A simple object representing the drainage area of a BMP.
+        """A simple object representing the drainage area of a BMP.
 
         Units are not enforced, so keep them consistent yourself. The
         calculations available assume that the area of the BMP and the
@@ -1116,7 +1070,5 @@ class DrainageArea(object):
         bmp_conversion = self.bmp_area * volume_conversion
 
         # total runoff based on actual storm depth
-        runoff_volume = (
-            drainage_conversion * annual_factor + bmp_conversion
-        ) * storm_depth
+        runoff_volume = (drainage_conversion * annual_factor + bmp_conversion) * storm_depth
         return runoff_volume

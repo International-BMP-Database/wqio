@@ -1,11 +1,9 @@
-import pytest
-from wqio.tests import helpers
-
 import pandas
+import pytest
 from matplotlib import pyplot
 
 from wqio import samples
-
+from wqio.tests import helpers
 
 BASELINE_IMAGES = "_baseline_images/samples_tests"
 TOLERANCE = helpers.get_img_tolerance()
@@ -33,9 +31,7 @@ def grab_sample(sample_data):
     endtime = "2013-02-24 16:59"
     freq = None
 
-    wqs = samples.GrabSample(
-        sample_data, starttime, endtime=endtime, samplefreq=freq, storm=None
-    )
+    wqs = samples.GrabSample(sample_data, starttime, endtime=endtime, samplefreq=freq, storm=None)
     wqs.marker = "D"
     wqs.markersize = 8
 

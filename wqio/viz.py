@@ -1,18 +1,16 @@
 from functools import partial
 
 import numpy
-from matplotlib import pyplot
-from matplotlib import ticker
-from pandas.api.types import CategoricalDtype
-import seaborn
 import probscale
+import seaborn
+from matplotlib import pyplot, ticker
+from pandas.api.types import CategoricalDtype
 
-from wqio import utils
-from wqio import validate
+from wqio import utils, validate
 
 
 def rotateTickLabels(ax, rotation, which, rotation_mode="anchor", ha="right"):
-    """ Rotates the ticklabels of a matplotlib Axes
+    """Rotates the ticklabels of a matplotlib Axes
 
     Parameters
     ----------
@@ -54,15 +52,17 @@ def rotateTickLabels(ax, rotation, which, rotation_mode="anchor", ha="right"):
 
 def log_formatter(use_1x=True, threshold=5):
     def _formatter(tick, pos=None, use_1x=True, threshold=3):
-        """ Formats log axes as `1 x 10^N` when N > 4 or N < -4. """
+        """Formats log axes as `1 x 10^N` when N > 4 or N < -4."""
 
-        if 10 ** threshold >= tick > 1:
-            tick = "{:,d}".format(int(tick))
-        elif tick > 10 ** threshold or tick < 10 ** (-1 * threshold):
+        if 10**threshold >= tick > 1:
+            tick = f"{int(tick):,d}"
+        elif tick > 10**threshold or tick < 10 ** (-1 * threshold):
             if use_1x:
                 tick = r"$1 \times 10 ^ {%d}$" % int(numpy.log10(tick))
             else:
                 tick = r"$10 ^ {%d}$" % int(numpy.log10(tick))
+        else:
+            tick = utils.sigFigs(tick, n=1)
 
         return str(tick)
 
@@ -70,10 +70,8 @@ def log_formatter(use_1x=True, threshold=5):
     return ticker.FuncFormatter(func)
 
 
-def gridlines(
-    ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=True, yminor=True
-):
-    """ Standard formatting for gridlines on a matplotlib Axes
+def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=True, yminor=True):
+    """Standard formatting for gridlines on a matplotlib Axes
 
     Parameters
     ----------
@@ -144,7 +142,7 @@ def jointplot(
     zeromin=True,
     one2one=True,
 ):
-    """ Plots the joint distribution of two variables via seaborn
+    """Plots the joint distribution of two variables via seaborn
 
     Parameters
     ----------
@@ -167,9 +165,7 @@ def jointplot(
     jg : seaborn.JointGrid
 
     """
-    jg = seaborn.jointplot(
-        x=x, y=y, color=color, data=data, marginal_kws=dict(rug=True, kde=True)
-    )
+    jg = seaborn.jointplot(x=x, y=y, color=color, data=data, marginal_kws=dict(rug=True, kde=True))
 
     if xlabel is None:
         xlabel = jg.ax_joint.get_xlabel()
@@ -205,7 +201,7 @@ def jointplot(
 
 
 def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
-    """ Computes extent of whiskers and fliers on optionally transformed
+    """Computes extent of whiskers and fliers on optionally transformed
     data for box and whisker plots.
 
     Parameters
@@ -249,18 +245,12 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
     # get low extreme
     loval = q1 - (1.5 * iqr)
     whislo = numpy.compress(x >= loval, x)
-    if len(whislo) == 0 or numpy.min(whislo) > q1:
-        whislo = q1
-    else:
-        whislo = numpy.min(whislo)
+    whislo = q1 if len(whislo) == 0 or numpy.min(whislo) > q1 else numpy.min(whislo)
 
     # get high extreme
     hival = q3 + (1.5 * iqr)
     whishi = numpy.compress(x <= hival, x)
-    if len(whishi) == 0 or numpy.max(whishi) < q3:
-        whishi = q3
-    else:
-        whishi = numpy.max(whishi)
+    whishi = q3 if len(whishi) == 0 or numpy.max(whishi) < q3 else numpy.max(whishi)
 
     wnf["fliers"] = numpy.hstack(
         [
@@ -285,7 +275,6 @@ def boxplot(
     patch_artist=True,
     showmean=False,
 ):
-
     """
     Draws a boxplot on an axes
 
@@ -328,9 +317,7 @@ def boxplot(
     elif numpy.isscalar(position):
         position = [position]
 
-    meanprops = dict(
-        marker=marker, markersize=6, markerfacecolor=color, markeredgecolor="Black"
-    )
+    meanprops = dict(marker=marker, markersize=6, markerfacecolor=color, markeredgecolor="Black")
 
     flierprops = dict(
         marker=marker,
@@ -346,9 +333,7 @@ def boxplot(
     if patch_artist:
         medianprops = dict(linewidth=1.00, color="k", linestyle="-", zorder=5)
 
-        boxprops = dict(
-            edgecolor="k", facecolor=color, linewidth=0.75, zorder=4, alpha=0.5
-        )
+        boxprops = dict(edgecolor="k", facecolor=color, linewidth=0.75, zorder=4, alpha=0.5)
     else:
         medianprops = dict(linewidth=1.00, color=color, linestyle="-", zorder=3)
 
@@ -385,7 +370,7 @@ def probplot(
     line_kws=None,
     return_results=False,
 ):
-    """ Probability, percentile, and quantile plots.
+    """Probability, percentile, and quantile plots.
 
     Parameters
     ----------
@@ -441,7 +426,7 @@ def probplot(
 
 
 def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **line_kwds):
-    """ Connects the y-spines between two Axes
+    """Connects the y-spines between two Axes
 
     Parameters
     ----------
@@ -466,9 +451,7 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **lin
     import mpl_toolkits.axes_grid1.inset_locator as inset
 
     left_trans = mtrans.blended_transform_factory(left_ax.transData, left_ax.transAxes)
-    right_trans = mtrans.blended_transform_factory(
-        right_ax.transData, right_ax.transAxes
-    )
+    right_trans = mtrans.blended_transform_factory(right_ax.transData, right_ax.transAxes)
 
     left_data_trans = left_ax.transScale + left_ax.transLimits
     right_data_trans = right_ax.transScale + right_ax.transLimits
@@ -485,15 +468,13 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **lin
         left_bbox, right_bbox, loc1=3, loc2=2, linestyle=linestyle, **line_kwds
     )
     connector.set_clip_on(False)
-    left_ax.add_line(connector)
+    left_ax.add_artist(connector)
 
     return connector
 
 
-def parallel_coordinates(
-    dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws
-):
-    """ Produce a parallel coordinates plot from a dataframe.
+def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws):
+    """Produce a parallel coordinates plot from a dataframe.
 
     Parameters
     ----------
@@ -559,7 +540,7 @@ def parallel_coordinates(
 
 
 def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
-    """ Plot a faceted, categorical histogram.
+    """Plot a faceted, categorical histogram.
 
     Parameters
     ----------

@@ -1,10 +1,9 @@
-import pytest
-import numpy.testing as nptest
-from wqio.tests import helpers
-
 import numpy
+import numpy.testing as nptest
+import pytest
 
 from wqio import bootstrap
+from wqio.tests import helpers
 
 
 @pytest.fixture
@@ -42,9 +41,7 @@ def test_bootstrappers(testdata, bootstrapper, known_ci):
 def test_fit(uselog):
     N = 10
     x = numpy.arange(1, N + 1, dtype=float)
-    y = numpy.array(
-        [4.527, 3.519, 9.653, 8.036, 10.805, 14.329, 13.508, 11.822, 13.281, 10.410]
-    )
+    y = numpy.array([4.527, 3.519, 9.653, 8.036, 10.805, 14.329, 13.508, 11.822, 13.281, 10.410])
     bsfit = bootstrap.fit(
         x, y, numpy.polyfit, niter=2000, xlog=uselog, ylog=uselog, deg=1, full=False
     )

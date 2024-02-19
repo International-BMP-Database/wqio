@@ -1,22 +1,20 @@
-from distutils.version import LooseVersion
-from textwrap import dedent
 from io import StringIO
+from textwrap import dedent
+from unittest import mock
 
 import numpy
-import scipy
-from scipy import stats
 import pandas
-
-from unittest import mock
-import pytest
 import pandas.testing as pdtest
+import pytest
+import scipy
+from packaging.version import Version
+from scipy import stats
+
+from wqio.datacollections import DataCollection, _dist_compare
+from wqio.features import Dataset, Location
 from wqio.tests import helpers
 
-from wqio.features import Location, Dataset
-from wqio.datacollections import DataCollection, _dist_compare
-
-
-OLD_SCIPY = LooseVersion(scipy.version.version) < LooseVersion("0.19")
+OLD_SCIPY = Version(scipy.version.version) < Version("0.19")
 
 
 def check_stat(expected_csv, result, comp=False):
@@ -342,12 +340,12 @@ def test_lilliefors(dc):
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
         result,lilliefors,pvalue,lilliefors,pvalue,lilliefors,pvalue
         param,,,,,,
-        A,0.308131,1.4e-05,0.340594,0.0,0.364453,0.0
-        B,0.36764,0.0,0.420343,0.0,0.417165,0.0
-        C,0.166799,0.082737,0.324733,0.0,0.161753,0.090455
-        D,0.273012,6.7e-05,0.240311,0.000665,0.296919,3.7e-05
-        E,0.341398,3e-06,0.239314,0.014862,0.233773,0.005474
-        F,0.419545,0.0,0.331315,0.0,0.284249,0.000741
+        A,0.308131,0.001,0.340594,0.001,0.364453,0.001
+        B,0.36764,0.001,0.420343,0.001,0.417165,0.001
+        C,0.166799,0.082069,0.324733,0.001,0.161753,0.08817
+        D,0.273012,0.001,0.240311,0.001,0.296919,0.001
+        E,0.341398,0.001,0.239314,0.016156,0.233773,0.005575
+        F,0.419545,0.001,0.331315,0.001,0.284249,0.001
     """
     check_stat(known_csv, dc.lilliefors)
 
@@ -358,12 +356,12 @@ def test_lilliefors_log(dc):
         station,Inflow,Inflow,Outflow,Outflow,Reference,Reference
         result,log-lilliefors,pvalue,log-lilliefors,pvalue,log-lilliefors,pvalue
         param,,,,,,
-        A,0.08548109,0.95458004,0.15443943,0.19715747,0.20141389,0.03268737
-        B,0.16162839,0.10505016,0.12447902,0.49697902,0.15934334,0.22969362
-        C,0.16957278,0.07248915,0.12388174,0.44379732,0.11746642,0.48915671
-        D,0.06885549,0.99,0.06067356,0.99,0.13401954,0.41967483
-        E,0.13506577,0.47186822,0.14552341,0.47797919,0.09164876,0.92860794
-        F,0.14420794,0.30694533,0.08463267,0.92741885,0.08586933,0.9800294
+        A,0.085481,0.95458,0.154439,0.197157,0.201414,0.033257
+        B,0.161628,0.10505,0.124479,0.496979,0.159343,0.229694
+        C,0.169573,0.071882,0.123882,0.443797,0.117466,0.489157
+        D,0.068855,0.99,0.060674,0.99,0.13402,0.419675
+        E,0.135066,0.471868,0.145523,0.477979,0.091649,0.928608
+        F,0.144208,0.306945,0.084633,0.927419,0.085869,0.980029
     """
     check_stat(known_csv, dc.lilliefors_log)
 
@@ -642,7 +640,9 @@ def test_inventory_noNDs(dc_noNDs):
     )
     expected = pandas.read_csv(known_csv, index_col=[0, 1]).astype(int)
     pdtest.assert_frame_equal(
-        expected, dc_noNDs.inventory.astype(int), check_names=False,
+        expected,
+        dc_noNDs.inventory.astype(int),
+        check_names=False,
     )
 
 
@@ -751,17 +751,17 @@ def test_selectLocations_squeeze_True_None(dc):
 # since the test_selectLocations* tests stress _filter_collection
 # enough, we'll mock it out for datasets:
 def test_selectDatasets(dc):
-    with mock.patch.object(dc, "_filter_collection") as _fc:
-        with mock.patch.object(dc, "datasets", return_value=["A", "B"]) as _ds:
-            dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
-            _ds.assert_called_once_with("Inflow", "Reference")
-            _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
+    with (
+        mock.patch.object(dc, "_filter_collection") as _fc,
+        mock.patch.object(dc, "datasets", return_value=["A", "B"]) as _ds,
+    ):
+        dc.selectDatasets("Inflow", "Reference", foo="A", bar="C")
+        _ds.assert_called_once_with("Inflow", "Reference")
+        _fc.assert_called_once_with(["A", "B"], foo="A", bar="C", squeeze=False)
 
 
 @pytest.mark.parametrize("func", [stats.mannwhitneyu, stats.wilcoxon])
-@pytest.mark.parametrize(
-    ("x", "all_same"), [([5, 5, 5, 5, 5], True), ([5, 6, 7, 7, 8], False)]
-)
+@pytest.mark.parametrize(("x", "all_same"), [([5, 5, 5, 5, 5], True), ([5, 6, 7, 7, 8], False)])
 def test_dist_compare_wrapper(x, all_same, func):
     y = [5, 5, 5, 5, 5]
     with mock.patch.object(stats, func.__name__) as _test:

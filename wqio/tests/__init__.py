@@ -1,7 +1,8 @@
-from pkg_resources import resource_filename
 import warnings
 
-from .helpers import requires
+from pkg_resources import resource_filename
+
+from wqio.tests.helpers import requires
 
 try:
     import pytest

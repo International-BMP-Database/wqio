@@ -4,9 +4,9 @@ from probscale.algo import _estimate_from_fit
 from wqio import utils
 
 
-class TheilSenFit(object):
+class TheilSenFit:
     def __init__(self, infl, effl, log_infl=False, log_effl=False, **theil_opts):
-        """ Theil-Sen Fit object
+        """Theil-Sen Fit object
 
         Parameters
         ----------
@@ -97,9 +97,7 @@ class TheilSenFit(object):
 
     @property
     def errors(self):
-        return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(
-            self.med_estimate
-        )
+        return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(self.med_estimate)
 
     @property
     def MAD(self):

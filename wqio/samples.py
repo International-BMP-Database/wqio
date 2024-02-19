@@ -1,17 +1,16 @@
-from matplotlib import pyplot
-import seaborn
 import pandas
+import seaborn
+from matplotlib import pyplot
+from pandas.plotting import register_matplotlib_converters
 
 from wqio import utils
-
-from pandas.plotting import register_matplotlib_converters
 
 register_matplotlib_converters()
 
 
-class Parameter(object):
+class Parameter:
     def __init__(self, name, units, usingTex=False):
-        """ Class representing a single analytical parameter (pollutant).
+        """Class representing a single analytical parameter (pollutant).
 
         (Input) Parameters
         ------------------
@@ -57,7 +56,7 @@ class Parameter(object):
             raise ValueError("`usingTex` must be of type `bool`")
 
     def paramunit(self, usecomma=False):
-        """ Creates a string representation of the parameter and units.
+        """Creates a string representation of the parameter and units.
 
         Parameters
         ----------
@@ -67,10 +66,7 @@ class Parameter(object):
             format is "<parameter> (<unit>)".
         """
 
-        if usecomma:
-            paramunit = "{0}, {1}"
-        else:
-            paramunit = "{0} ({1})"
+        paramunit = "{0}, {1}" if usecomma else "{0} ({1})"
 
         n = self.name
         u = self.units
@@ -78,13 +74,13 @@ class Parameter(object):
         return paramunit.format(n, u)
 
     def __repr__(self):
-        return "<wqio Parameter object> ({})".format(self.paramunit(usecomma=False))
+        return f"<wqio Parameter object> ({self.paramunit(usecomma=False)})"
 
     def __str__(self):
-        return "<wqio Parameter object> ({})".format(self.paramunit(usecomma=False))
+        return f"<wqio Parameter object> ({self.paramunit(usecomma=False)})"
 
 
-class SampleMixin(object):
+class SampleMixin:
     def __init__(
         self,
         dataframe,
@@ -97,7 +93,6 @@ class SampleMixin(object):
         dlcol="DL",
         unitscol="units",
     ):
-
         self._wqdata = dataframe
         self._startime = pandas.Timestamp(starttime)
         self._endtime = pandas.Timestamp(endtime)
@@ -185,10 +180,7 @@ class SampleMixin(object):
 
     def plot_ts(self, ax, isFocus=True, asrug=False):
         if self.sample_ts is not None:
-            if isFocus:
-                alpha = 0.75
-            else:
-                alpha = 0.35
+            alpha = 0.75 if isFocus else 0.35
 
         ymax = ax.get_ylim()[-1]
         yposition = [self.yfactor * ymax] * len(self.sample_ts)
@@ -233,7 +225,7 @@ class SampleMixin(object):
 
 
 class CompositeSample(SampleMixin):
-    """ Class for composite samples """
+    """Class for composite samples"""
 
     @property
     def label(self):
@@ -266,7 +258,7 @@ class CompositeSample(SampleMixin):
 
 
 class GrabSample(SampleMixin):
-    """ Class for grab (discrete) samples """
+    """Class for grab (discrete) samples"""
 
     @property
     def label(self):

@@ -3,9 +3,9 @@ from collections import namedtuple
 from functools import partial
 
 import numpy
-from scipy import stats
 import pandas
 import statsmodels.api as sm
+from scipy import stats
 from statsmodels.tools.decorators import cache_readonly
 
 try:
@@ -13,12 +13,9 @@ try:
 except ImportError:  # pragma: no cover
     tqdm = None
 
-from wqio import utils
-from wqio import bootstrap
+from wqio import bootstrap, utils, validate
+from wqio.features import Dataset, Location
 from wqio.ros import ROS
-from wqio import validate
-from wqio.features import Location, Dataset
-
 
 _Stat = namedtuple("_stat", ["stat", "pvalue"])
 
@@ -29,7 +26,7 @@ def _dist_compare(x, y, stat_comp_func):
     return stat_comp_func(x, y, alternative="two-sided")
 
 
-class DataCollection(object):
+class DataCollection:
     """Generalized water quality comparison object.
 
     Parameters
@@ -92,7 +89,6 @@ class DataCollection(object):
         bsiter=10000,
         showpbar=True,
     ):
-
         # cache for all of the properties
         self._cache = {}
 
@@ -163,12 +159,12 @@ class DataCollection(object):
 
             def make_tidy(df):
                 tqdm.pandas(desc="Tidying the DataCollection")
-                return df.groupby(self.groupcols).progress_apply(fxn)
+                return df.groupby(self.groupcols).progress_apply(fxn, include_groups=False)
 
         else:
 
             def make_tidy(df):
-                return df.groupby(self.groupcols).apply(fxn)
+                return df.groupby(self.groupcols).apply(fxn, include_groups=False)
 
         keep_cols = self.tidy_columns + [self.roscol]
         with warnings.catch_warnings():
@@ -203,7 +199,7 @@ class DataCollection(object):
         statname=None,
         has_pvalue=False,
         filterfxn=None,
-        **statopts
+        **statopts,
     ):
         """Generic function to estimate a statistic and its CIs.
 
@@ -277,17 +273,13 @@ class DataCollection(object):
 
             return pandas.Series(values, index=statnames)
 
-        groups = (
-            self.tidy.groupby(by=self.groupcols)
-            .filter(filterfxn)
-            .groupby(by=self.groupcols)
-        )
+        groups = self.tidy.groupby(by=self.groupcols).filter(filterfxn).groupby(by=self.groupcols)
 
         if tqdm and self.showpbar:
             tqdm.pandas(desc="Computing stats")
-            vals = groups.progress_apply(fxn)
+            vals = groups.progress_apply(fxn, include_groups=False)
         else:
-            vals = groups.apply(fxn)
+            vals = groups.apply(fxn, include_groups=False)
 
         results = (
             vals.unstack(level=self.stationcol)
@@ -299,9 +291,7 @@ class DataCollection(object):
     @cache_readonly
     def count(self):
         return (
-            self.generic_stat(
-                lambda x: x.shape[0], use_bootstrap=False, statname="Count"
-            )
+            self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname="Count")
             .fillna(0)
             .astype(int)
         )
@@ -339,7 +329,7 @@ class DataCollection(object):
         """Return the percentiles (0 - 100) for the data."""
         return self.generic_stat(
             lambda x: numpy.percentile(x, percentile),
-            statname="pctl {}".format(percentile),
+            statname=f"pctl {percentile}",
             use_bootstrap=False,
         )
 
@@ -485,13 +475,7 @@ class DataCollection(object):
         index_cols = meta_columns + station_columns
 
         results = generator(
-            data,
-            meta_columns,
-            self.stationcol,
-            rescol,
-            statfxn,
-            statname=statname,
-            **statopts
+            data, meta_columns, self.stationcol, rescol, statfxn, statname=statname, **statopts
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
 
@@ -524,15 +508,11 @@ class DataCollection(object):
 
     @cache_readonly
     def kendall(self):
-        return self.comparison_stat(
-            stats.kendalltau, statname="kendalltau", paired=True
-        )
+        return self.comparison_stat(stats.kendalltau, statname="kendalltau", paired=True)
 
     @cache_readonly
     def spearman(self):
-        return self.comparison_stat(
-            stats.spearmanr, statname="spearmanrho", paired=True
-        )
+        return self.comparison_stat(stats.spearmanr, statname="spearmanrho", paired=True)
 
     @cache_readonly
     def theilslopes(self, logs=False):
@@ -542,9 +522,7 @@ class DataCollection(object):
     def locations(self):
         _locations = []
         groups = (
-            self.data.groupby(by=self.groupcols)
-            .filter(self.filterfxn)
-            .groupby(by=self.groupcols)
+            self.data.groupby(by=self.groupcols).filter(self.filterfxn).groupby(by=self.groupcols)
         )
         cols = [self._raw_rescol, self.qualcol]
         for names, data in groups:
@@ -569,7 +547,7 @@ class DataCollection(object):
         return _locations
 
     def datasets(self, loc1, loc2):
-        """ Generate ``Dataset`` objects from the raw data of the
+        """Generate ``Dataset`` objects from the raw data of the
         ``DataColletion``.
 
         Data are first grouped by ``self.groupcols`` and
@@ -627,7 +605,7 @@ class DataCollection(object):
         return items
 
     def selectLocations(self, squeeze=False, **conditions):
-        """ Select ``Location`` objects meeting specified criteria
+        """Select ``Location`` objects meeting specified criteria
         from the ``DataColletion``.
 
         Parameters
@@ -663,13 +641,11 @@ class DataCollection(object):
 
         """
 
-        locations = self._filter_collection(
-            self.locations.copy(), squeeze=squeeze, **conditions
-        )
+        locations = self._filter_collection(self.locations.copy(), squeeze=squeeze, **conditions)
         return locations
 
     def selectDatasets(self, loc1, loc2, squeeze=False, **conditions):
-        """ Select ``Dataset`` objects meeting specified criteria
+        """Select ``Dataset`` objects meeting specified criteria
         from the ``DataColletion``.
 
         Parameters
@@ -709,9 +685,7 @@ class DataCollection(object):
         {'param': 'A'}
         """
 
-        datasets = self._filter_collection(
-            self.datasets(loc1, loc2), squeeze=squeeze, **conditions
-        )
+        datasets = self._filter_collection(self.datasets(loc1, loc2), squeeze=squeeze, **conditions)
         return datasets
 
     def n_unique(self, column):
@@ -728,7 +702,7 @@ class DataCollection(object):
         )
 
     def stat_summary(self, percentiles=None, groupcols=None, useros=True):
-        """ A generic, high-level summary of the data collection.
+        """A generic, high-level summary of the data collection.
 
         Parameters
         ----------
@@ -745,16 +719,8 @@ class DataCollection(object):
 
         """
 
-        if useros:
-            col = self.roscol
-        else:
-            col = self.rescol
-
-        if groupcols is None:
-            groupcols = self.groupcols
-        else:
-            groupcols = validate.at_least_empty_list(groupcols)
-
+        col = self.roscol if useros else self.rescol
+        groupcols = validate.at_least_empty_list(groupcols) or self.groupcols
         ptiles = percentiles or [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
             self.tidy.groupby(by=groupcols)
