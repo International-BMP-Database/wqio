@@ -1,9 +1,9 @@
 name: Run coverage via codecov
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   run:
