@@ -9,7 +9,7 @@ from wqio import validate
 def download(dataset, year=None, redownload=True, data_dir=None):
     fname = validate.dataset(dataset)
 
-    tag = "master" if year is None else f"v{year:d}"
+    tag = "main" if year is None else f"v{year:d}"
 
     url_template = (
         "https://github.com/Geosyntec/water-quality-datasets/blob/{tag:s}/data/{fname:s}?raw=true"
