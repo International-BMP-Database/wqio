@@ -79,6 +79,7 @@ wqio/*/tests/*.xlsx
 wqio.egg-info
 result_images
 cov.xml
+.ruff_cache
 
 # scratch files #
 #################
