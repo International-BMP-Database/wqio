@@ -48,7 +48,7 @@ test:
     - python -c "import sys, wqio; sys.exit(wqio.test())"
 
 about:
-  home: https://github.com/Geosyntec/wqio.git
+  home: https://github.com/International-BMP-Database/wqio.git
   license:  BSD License
   summary: 'Basic water quality inflow/outflow analysis tools'
 

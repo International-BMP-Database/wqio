@@ -41,7 +41,7 @@ test:
     - wqio.utils
 
 about:
-  home: https://github.com/Geosyntec/wqio.git
+  home: https://github.com/International-BMP-Database/wqio.git
   license:  BSD License
   summary: 'Basic water quality inflow/outflow analysis tools'
 

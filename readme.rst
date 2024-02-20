@@ -3,11 +3,11 @@
 
 wqio - Water Quality, Inflow/Outflow
 ------------------------------------
-.. image:: https://travis-ci.org/Geosyntec/wqio.svg?branch=master
-    :target: https://travis-ci.org/Geosyntec/wqio
+.. image:: https://travis-ci.org/International-BMP-Database/wqio.svg?branch=main
+    :target: https://travis-ci.org/International-BMP-Database/wqio
 
-.. image:: https://codecov.io/github/Geosyntec/wqio/coverage.svg?precision=1
-    :target: https://codecov.io/gh/Geosyntec/wqio
+.. image:: https://codecov.io/github/International-BMP-Database/wqio/coverage.svg?precision=1
+    :target: https://codecov.io/gh/International-BMP-Database/wqio
 
 .. image:: https://anaconda.org/phobson/wqio/badges/version.svg
     :target: https://anaconda.org/phobson/wqio
@@ -40,11 +40,11 @@ Development
 
 From source::
 
-    $ git clone git@github.com:Geosyntec/wqio.git
+    $ git clone git@github.com:International-BMP-Database/wqio.git
     $ cd wqio
     $ pip install -e .
 
-Periodic builds of ``master`` through conda::
+Periodic builds of ``main`` through conda::
 
     $ conda install wqio --channel=phobson/label/dev
 
