@@ -1,10 +1,9 @@
 from datetime import datetime
 
 import numpy
-from matplotlib import pyplot
 import pandas
-
 import pytest
+from matplotlib import pyplot
 
 from wqio import validate
 from wqio.tests import helpers
@@ -62,6 +61,15 @@ def test_axes_with_None():
     fig1, ax1 = validate.axes(None)
     assert isinstance(ax1, pyplot.Axes)
     assert isinstance(fig1, pyplot.Figure)
+
+
+def test_axes_fallback_current():
+    fig, ax = pyplot.subplots()
+    fig1, ax1 = validate.axes(None, fallback="current")
+    assert isinstance(ax1, pyplot.Axes)
+    assert isinstance(fig1, pyplot.Figure)
+    assert ax1 is ax
+    assert fig1 is fig
 
 
 @pytest.fixture
