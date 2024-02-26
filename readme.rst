@@ -100,3 +100,16 @@ top level of the project directory, and add the following contents::
 After this, hitting ctrl+b in either text editor will run the test suite.
 
 .. _build: https://atom.io/packages/build
+
+
+On Releasing new versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two Github actions that are run when tags are pushed.
+The first builds and uploads to TestPyPI.
+The second builds, uploads to PyPI, then signs the release and creates a Github release with a buunch of different assets.
+
+To execute the test build, create a new tag that starts with the string ``test`` (i.e., ``test0.6.3``) and push that.
+
+If that works, create Yet Another tag that starts with ``v`` (i.e., ``v0.6.3``) and push that.
+The second tag will trigger the full release.
