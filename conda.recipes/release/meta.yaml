@@ -1,10 +1,10 @@
 package:
   name: wqio
-  version: "0.6.1"
+  version: "0.6.2"
 
 source:
   git_url: https://github.com/Geosyntec/wqio.git
-  git_tag: v0.6.1
+  git_tag: v0.6.2
 #  patches:
    # List any patch files here
    # - fix.patch

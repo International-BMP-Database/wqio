@@ -4,7 +4,7 @@ on:
   push:
     # Pattern matched against refs/tags
     tags:
-      - '*' # Push events to every tag not containing /
+      - 'test*' # Push events to every tag not containing /
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
 
     environment:
       name: test
-      url: https://test.pypi.org/p/paramnormal
+      url: https://test.pypi.org/p/wqio
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
