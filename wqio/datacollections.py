@@ -430,7 +430,7 @@ class DataCollection:
         statname : string, optional
             Name of the statistic. Included as a column name in the
             final dataframe.
-        apired : bool, optional
+        paired : bool, optional
             Set to ``True`` if ``statfxn`` requires paired data.
         **statopts : optional kwargs
             Additional keyword arguments that will be passed to

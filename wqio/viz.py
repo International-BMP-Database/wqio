@@ -200,7 +200,7 @@ def jointplot(
     return jg
 
 
-def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
+def whiskers_and_fliers(x, q1=None, q3=None, flierfactor=1.5, transformout=None):
     """Computes extent of whiskers and fliers on optionally transformed
     data for box and whisker plots.
 
@@ -210,6 +210,8 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
         Sequence of optionally transformed data.
     q1, q3 : floats, optional
         First and third quartiles of the optionally transformed data.
+    flierfactor : float, optional (default=1.5)
+        multiplier by which outliers are compared to the IQR
     transformout : callable, optional
         Function to un-transform the results back into the original
         space of the data.
@@ -243,12 +245,12 @@ def whiskers_and_fliers(x, q1=None, q3=None, transformout=None):
 
     iqr = q3 - q1
     # get low extreme
-    loval = q1 - (1.5 * iqr)
+    loval = q1 - (flierfactor * iqr)
     whislo = numpy.compress(x >= loval, x)
     whislo = q1 if len(whislo) == 0 or numpy.min(whislo) > q1 else numpy.min(whislo)
 
     # get high extreme
-    hival = q3 + (1.5 * iqr)
+    hival = q3 + (flierfactor * iqr)
     whishi = numpy.compress(x <= hival, x)
     whishi = q3 if len(whishi) == 0 or numpy.max(whishi) < q3 else numpy.max(whishi)
 

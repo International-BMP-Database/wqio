@@ -1,6 +1,5 @@
 import warnings
-
-from pkg_resources import resource_filename
+from importlib import resources
 
 from wqio.tests.helpers import requires
 
@@ -12,7 +11,7 @@ except ImportError:
 
 @requires(pytest, "pytest")
 def test(*args):
-    options = [resource_filename("wqio", "")]
+    options = [str(resources.files("wqio"))]
     options.extend(list(args))
     return pytest.main(options)
 
