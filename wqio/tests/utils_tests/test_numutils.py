@@ -685,6 +685,50 @@ def test__comp_stat_generator_single_group_col():
     )
 
 
+@pytest.mark.parametrize(
+    ("control", "statfxn"),
+    [(None, helpers.group_statfxn), ("Reference", helpers.group_statfxn_with_control)],
+)
+def test__group_comp_stat_generator(control, statfxn):
+    df = helpers.make_dc_data_complex().reset_index().loc[lambda df: df["state"].isin(["CA", "OR"])]
+    gen = numutils._group_comp_stat_generator(
+        df, ["bmp", "state"], "loc", "res", statfxn, statname="max_of_max", control=control
+    )
+
+    assert isinstance(gen, types.GeneratorType)
+    result = pandas.DataFrame(gen).sort_values(by=["bmp", "state"]).reset_index(drop=True)
+
+    expected_vals = [
+        10.50949742,
+        14.77713121,
+        23.29366747,
+        25.31733815,
+        15.0478646,
+        163.01000855,
+        81.9363735,
+        12.89370847,
+        16.76919938,
+        5.25222615,
+        8.75794985,
+        24.71916248,
+        13.87664484,
+        15.05442994,
+    ]
+    expected = (
+        pandas.DataFrame(
+            {
+                "bmp": list(map(str, range(1, 8))) * 2,
+                "state": (["CA"] * 7) + (["OR"] * 7),
+                "max_of_max": expected_vals,
+                "pvalue": [0.25] * 14,
+            }
+        )
+        .sort_values(by=["bmp", "state"])
+        .reset_index(drop=True)
+    )
+    pandas.testing.assert_frame_equal(result, expected, rtol=0.01)
+
+
 def test__paired_stat_generator():
     df = helpers.make_dc_data_complex().unstack(level="loc")
     gen = numutils._paired_stat_generator(df, ["param"], "loc", "res", helpers.comp_statfxn)

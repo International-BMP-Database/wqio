@@ -1,8 +1,10 @@
 import itertools
 from collections import namedtuple
+from collections.abc import Callable
 from textwrap import dedent
 
 import numpy
+import pandas
 import statsmodels.api as sm
 from probscale.algo import _estimate_from_fit
 from scipy import stats
@@ -625,7 +627,14 @@ def remove_outliers(x, factor=1.5):
 
 
 def _comp_stat_generator(
-    df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
+    df: pandas.DataFrame,
+    groupcols: list[str],
+    pivotcol: str,
+    rescol: str,
+    statfxn: Callable,
+    statname: str | None = None,
+    pbarfxn: Callable | None = None,
+    **statopts,
 ):
     """Generator of records containing results of comparitive
     statistical functions.
@@ -682,8 +691,48 @@ def _comp_stat_generator(
             yield row
 
 
+def _group_comp_stat_generator(
+    df: pandas.DataFrame,
+    groupcols: list[str],
+    pivotcol: str,
+    rescol: str,
+    statfxn: Callable,
+    pbarfxn: Callable | None = misc.no_op,
+    statname: str | None = "stat :(",
+    control: str | None = None,
+    **statopts,
+):
+    groupcols = validate.at_least_empty_list(groupcols)
+
+    for names, main_group in df.groupby(by=groupcols):
+        subsets = {
+            pivot: subgroup[rescol].to_numpy()
+            for pivot, subgroup in main_group.groupby(by=pivotcol)
+        }
+
+        _pivots = list(subsets.keys())
+        _samples = list(subsets.values())
+
+        if control is not None:
+            control_sample = _samples.pop(_pivots.index(control))
+            result = statfxn(*_samples, control=control_sample, **statopts)
+
+        else:
+            result = statfxn(*_samples, **statopts)
+
+        row = {**dict(zip(groupcols, names)), statname: result.statistic, "pvalue": result.pvalue}
+        yield row
+
+
 def _paired_stat_generator(
-    df, groupcols, pivotcol, rescol, statfxn, statname=None, pbarfxn=None, **statopts
+    df: pandas.DataFrame,
+    groupcols: list[str],
+    pivotcol: str,
+    rescol: str,
+    statfxn: Callable,
+    statname: str | None = None,
+    pbarfxn: Callable | None = None,
+    **statopts,
 ):
     """Generator of records containing results of comparitive
     statistical functions specifically for paired data.
@@ -740,3 +789,71 @@ def _paired_stat_generator(
             stat = statfxn(x, y, **statopts)
             row.update({statname: stat[0], "pvalue": stat.pvalue})
             yield row
+
+
+"""
+def do_kruskal(groups, pocs):
+    results = {}
+    for p in pocs:
+        subset_keys = list(filter(lambda x: x[1] == p, groups.keys()))
+        # subset_names = {n: name[0] for n, name in enumerate(subset_keys)}
+        subset = {
+            key[0]: groups[key].to_numpy() for key in subset_keys
+        }
+
+        samps = [v for v in subset.values()]
+        res = stats.kruskal(*samps)
+        results[p] = res
+
+    return results
+
+groups_all = {loc: g["res"] for loc, g in sediment.groupby(by=["location", "chemical_name"])}
+_, kw_res_all = do_kruskal(groups_all, POCs_sediment)
+
+
+def do_F_test(groups, pocs):
+    scores = {}
+    for p in pocs:
+        subset_keys = list(filter(lambda x: x[1] == p, groups.keys()))
+        # subset_names = {n: name[0] for n, name in enumerate(subset_keys)}
+        subset = {
+            key[0]: groups[key].to_numpy() for key in subset_keys
+        }
+        res = stats.f_oneway(*[v for v in subset.values()])
+        scores[p] = {"F": res.statistic, "pvalue": res.pvalue}
+
+    return (
+        pandas.DataFrame(scores)
+        .T
+        .assign(pval=lambda df:
+            df["pvalue"].map(wqio.utils.process_p_vals)
+        )
+    )
+
+groups_all = {loc: g["res"] for loc, g in water.groupby(by=["location", "chemical_name"])}
+scores_all = do_F_test(groups_all, pocs)
+
+def do_tukey_hsd(groups, pocs):
+    scores = {}
+    for p in pocs:
+        subset_keys = list(filter(lambda x: x[1] == p, groups.keys()))
+        subset_names = {n: name[0] for n, name in enumerate(subset_keys)}
+        subset = {
+            key[0]: groups[key].to_numpy() for key in subset_keys
+        }
+        res = stats.tukey_hsd(*[v for v in subset.values()])
+        df = tukey_res_to_df(subset_names, res)
+        scores[p] = df.assign(
+            is_diff=lambda df: df["p-value"].lt(0.05).astype(int),
+            sign_of_diff=lambda df: -1 * numpy.sign(df["HSD Stat"]).astype(int),
+            score=lambda df: df["is_diff"] * df["sign_of_diff"]
+        )["score"].unstack(level="Loc 2").fillna(0).sum(axis="index")
+
+    scores_df = pandas.DataFrame(scores).T.loc[pocs]
+    return scores_df
+
+
+
+groups_all = {loc: g["res"] for loc, g in water.groupby(by=["location", "chemical_name"])}
+scores_all = do_tukey_hsd(groups_all, pocs)
+"""
