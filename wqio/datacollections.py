@@ -20,10 +20,11 @@ from wqio.ros import ROS
 _Stat = namedtuple("_stat", ["stat", "pvalue"])
 
 
-def _dist_compare(x, y, stat_comp_func):
+def _dist_compare(x, y, stat_comp_func, **test_opts):
     if (len(x) == len(y)) and numpy.equal(x, y).all():
         return _Stat(numpy.nan, numpy.nan)
-    return stat_comp_func(x, y, alternative="two-sided")
+
+    return stat_comp_func(x, y, **test_opts)
 
 
 class DataCollection:
@@ -323,7 +324,7 @@ class DataCollection:
 
     @cache_readonly
     def std_dev(self):
-        return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False)
+        return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False, ddof=1)
 
     def percentile(self, percentile):
         """Return the percentiles (0 - 100) for the data."""
@@ -342,7 +343,7 @@ class DataCollection:
     @cache_readonly
     def logstd_dev(self):
         return self.generic_stat(
-            lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+            lambda x, axis=0: numpy.std(numpy.log(x), axis=axis, ddof=1),
             use_bootstrap=False,
             statname="Log-std. dev.",
         )
@@ -359,62 +360,90 @@ class DataCollection:
         geostd.columns.names = ["station", "Geo-std. dev."]
         return geostd
 
-    @cache_readonly
-    def shapiro(self):
+    def shapiro(self, **opts):
+        """
+        Run the Shapiro-Wilk test for normality on the datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `scipy.stats.shapiro` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             stats.shapiro,
             use_bootstrap=False,
             has_pvalue=True,
             statname="shapiro",
             filterfxn=lambda x: x.shape[0] > 3,
+            **opts,
         )
 
-    @cache_readonly
-    def shapiro_log(self):
+    def shapiro_log(self, **opts):
+        """
+        Run the Shapiro-Wilk test for normality on log-transformed datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `scipy.stats.shapiro` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             lambda x: stats.shapiro(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             filterfxn=lambda x: x.shape[0] > 3,
             statname="log-shapiro",
+            **opts,
         )
 
-    @cache_readonly
-    def lilliefors(self):
+    def lilliefors(self, **opts):
+        """
+        Run the Lilliefors test for normality on the datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `statsmodels.api.stats.lilliefors` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             sm.stats.lilliefors,
             use_bootstrap=False,
             has_pvalue=True,
             statname="lilliefors",
+            **opts,
         )
 
-    @cache_readonly
-    def lilliefors_log(self):
+    def lilliefors_log(self, **opts):
+        """
+        Run the Lilliefors test for normality on the log-transformed datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `statsmodels.api.stats.lilliefors` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             lambda x: sm.stats.lilliefors(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             statname="log-lilliefors",
+            **opts,
         )
 
-    @cache_readonly
-    def anderson_darling(self):
+    def anderson_darling(self, **opts):
         raise NotImplementedError
         return self.generic_stat(
             utils.anderson_darling,
             use_bootstrap=False,
             has_pvalue=True,
             statname="anderson-darling",
+            **opts,
         )
 
-    @cache_readonly
-    def anderson_darling_log(self):
+    def anderson_darling_log(self, **opts):
         raise NotImplementedError
         return self.generic_stat(
             lambda x: utils.anderson_darling(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             statname="log-anderson-darling",
+            **opts,
         )
 
     def comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
@@ -479,42 +508,70 @@ class DataCollection:
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
 
-    @cache_readonly
-    def mann_whitney(self):
+    def mann_whitney(self, **opts):
+        """
+        Run the Mann-Whitney U test across datasets.
+
+        See `scipy.stats.mannwhitneyu` for available options.
+        """
         return self.comparison_stat(
-            partial(_dist_compare, stat_comp_func=stats.mannwhitneyu),
+            partial(_dist_compare, stat_comp_func=stats.mannwhitneyu, **opts),
             statname="mann_whitney",
         )
 
-    @cache_readonly
-    def ranksums(self):
-        return self.comparison_stat(stats.ranksums, statname="rank_sums")
+    def ranksums(self, **opts):
+        """
+        Run the unpaired Wilcoxon rank-sum test across datasets.
 
-    @cache_readonly
-    def t_test(self):
-        return self.comparison_stat(stats.ttest_ind, statname="t_test", equal_var=False)
+        See `scipy.stats.ranksums` for available options.
+        """
+        return self.comparison_stat(stats.ranksums, statname="rank_sums", **opts)
 
-    @cache_readonly
-    def levene(self):
-        return self.comparison_stat(stats.levene, statname="levene", center="median")
+    def t_test(self, **opts):
+        """
+        Run the T-test for independent scores.
 
-    @cache_readonly
-    def wilcoxon(self):
+        See `scipy.stats.ttest_ind` for available options.
+        """
+        return self.comparison_stat(stats.ttest_ind, statname="t_test", **opts)
+
+    def levene(self, **opts):
+        """
+        Run the Levene test for equal variances
+
+        See `scipy.stats.levene` for available options.
+        """
+        return self.comparison_stat(stats.levene, statname="levene", **opts)
+
+    def wilcoxon(self, **opts):
+        """
+        Run the paired Wilcoxon rank-sum test across paired dataset.
+
+        See `scipy.stats.wilcoxon` for available options.
+        """
         return self.comparison_stat(
             partial(_dist_compare, stat_comp_func=stats.wilcoxon),
             statname="wilcoxon",
             paired=True,
+            **opts,
         )
 
-    @cache_readonly
-    def kendall(self):
-        return self.comparison_stat(stats.kendalltau, statname="kendalltau", paired=True)
+    def kendall(self, **opts):
+        """
+        Run the paired Kendall-tau test across paired dataset.
 
-    @cache_readonly
-    def spearman(self):
-        return self.comparison_stat(stats.spearmanr, statname="spearmanrho", paired=True)
+        See `scipy.stats.kendalltau` for available options.
+        """
+        return self.comparison_stat(stats.kendalltau, statname="kendalltau", paired=True, **opts)
 
-    @cache_readonly
+    def spearman(self, **opts):
+        """
+        Run the paired Spearman-rho test across paired dataset.
+
+        See `scipy.stats.spearmanr` for available options.
+        """
+        return self.comparison_stat(stats.spearmanr, statname="spearmanrho", paired=True, **opts)
+
     def theilslopes(self, logs=False):
         raise NotImplementedError
 
