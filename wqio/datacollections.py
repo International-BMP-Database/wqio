@@ -446,7 +446,7 @@ class DataCollection:
             **opts,
         )
 
-    def comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
+    def comparison_stat_twoway(self, statfxn, statname=None, paired=False, **statopts):
         """Generic function to apply comparative hypothesis tests to
         the groups of the ``DataCollection``.
 
@@ -504,9 +504,30 @@ class DataCollection:
         index_cols = meta_columns + station_columns
 
         results = generator(
-            data, meta_columns, self.stationcol, rescol, statfxn, statname=statname, **statopts
+            data,
+            meta_columns,
+            self.stationcol,
+            rescol,
+            statfxn,
+            statname=statname,
+            pbarfxn=tqdm if self.showpbar else None,
+            **statopts,
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
+
+    def comparison_stat_allway(self, statfxn, statname, control=None, **statopts):
+        results = utils.numutils._group_comp_stat_generator(
+            self.tidy,
+            self.groupcols_comparison,
+            self.stationcol,
+            self.rescol,
+            statfxn,
+            statname=statname,
+            control=control,
+            pbarfxn=tqdm if self.showpbar else None,
+            **statopts,
+        )
+        return pandas.DataFrame.from_records(results).set_index(self.groupcols_comparison)
 
     def mann_whitney(self, **opts):
         """
@@ -514,7 +535,7 @@ class DataCollection:
 
         See `scipy.stats.mannwhitneyu` for available options.
         """
-        return self.comparison_stat(
+        return self.comparison_stat_twoway(
             partial(_dist_compare, stat_comp_func=stats.mannwhitneyu, **opts),
             statname="mann_whitney",
         )
@@ -525,7 +546,7 @@ class DataCollection:
 
         See `scipy.stats.ranksums` for available options.
         """
-        return self.comparison_stat(stats.ranksums, statname="rank_sums", **opts)
+        return self.comparison_stat_twoway(stats.ranksums, statname="rank_sums", **opts)
 
     def t_test(self, **opts):
         """
@@ -533,7 +554,7 @@ class DataCollection:
 
         See `scipy.stats.ttest_ind` for available options.
         """
-        return self.comparison_stat(stats.ttest_ind, statname="t_test", **opts)
+        return self.comparison_stat_twoway(stats.ttest_ind, statname="t_test", **opts)
 
     def levene(self, **opts):
         """
@@ -541,7 +562,7 @@ class DataCollection:
 
         See `scipy.stats.levene` for available options.
         """
-        return self.comparison_stat(stats.levene, statname="levene", **opts)
+        return self.comparison_stat_twoway(stats.levene, statname="levene", **opts)
 
     def wilcoxon(self, **opts):
         """
@@ -549,7 +570,7 @@ class DataCollection:
 
         See `scipy.stats.wilcoxon` for available options.
         """
-        return self.comparison_stat(
+        return self.comparison_stat_twoway(
             partial(_dist_compare, stat_comp_func=stats.wilcoxon),
             statname="wilcoxon",
             paired=True,
@@ -562,7 +583,9 @@ class DataCollection:
 
         See `scipy.stats.kendalltau` for available options.
         """
-        return self.comparison_stat(stats.kendalltau, statname="kendalltau", paired=True, **opts)
+        return self.comparison_stat_twoway(
+            stats.kendalltau, statname="kendalltau", paired=True, **opts
+        )
 
     def spearman(self, **opts):
         """
@@ -570,7 +593,25 @@ class DataCollection:
 
         See `scipy.stats.spearmanr` for available options.
         """
-        return self.comparison_stat(stats.spearmanr, statname="spearmanrho", paired=True, **opts)
+        return self.comparison_stat_twoway(
+            stats.spearmanr, statname="spearmanrho", paired=True, **opts
+        )
+
+    def kruskal_wallis(self, **opts):
+        """
+        Run the paired Kruskal-Wallos H-test across paired dataset.
+
+        See `scipy.stats.kruskal` for available options.
+        """
+        return self.comparison_stat_allway(stats.kruskal, statname="K-W H", control=None, **opts)
+
+    def f_test(self, **opts):
+        """
+        One-way ANOVA test across datasets
+
+        See `scipy.stats.f_oneway` for available options.
+        """
+        return self.comparison_stat_allway(stats.f_oneway, statname="f-test", control=None, **opts)
 
     def theilslopes(self, logs=False):
         raise NotImplementedError

@@ -60,6 +60,26 @@ def dc():
 
 
 @pytest.fixture
+def dc_small():
+    df = helpers.make_dc_data_complex()
+    dc = DataCollection(
+        df,
+        rescol="res",
+        qualcol="qual",
+        stationcol="loc",
+        paramcol="param",
+        ndval="<",
+        othergroups=None,
+        pairgroups=["state", "bmp"],
+        useros=True,
+        filterfxn=lambda g: g.name[1] in ["A", "B", "C"],
+        bsiter=10000,
+    )
+
+    return dc
+
+
+@pytest.fixture
 def dc_noNDs():
     df = helpers.make_dc_data_complex()
     dc = DataCollection(
@@ -574,6 +594,36 @@ def test_spearman(dc):
         F,Reference,0.6759971848,0.0560590794,,0.1348767061,0.5028571429
     """
     check_stat(known_csv, dc.spearman(), comp=True)
+
+
+@helpers.seed
+def test_kruskal_wallis(dc):
+    result = dc.kruskal_wallis()
+    _expected = [
+        {"K-W H": 1.798578, "pvalue": 0.406859, "param": "A"},
+        {"K-W H": 5.421338, "pvalue": 0.066492, "param": "B"},
+        {"K-W H": 0.29261, "pvalue": 0.863894, "param": "C"},
+        {"K-W H": 0.39957, "pvalue": 0.818907, "param": "D"},
+        {"K-W H": 0.585441, "pvalue": 0.746231, "param": "E"},
+        {"K-W H": 1.483048, "pvalue": 0.476387, "param": "F"},
+    ]
+    expected = pandas.DataFrame(_expected).set_index("param")
+    pandas.testing.assert_frame_equal(result, expected)
+
+
+@helpers.seed
+def test_f_test(dc):
+    result = dc.f_test()
+    _expected = [
+        {"f-test": 0.861339, "pvalue": 0.427754, "param": "A"},
+        {"f-test": 0.343445, "pvalue": 0.710663, "param": "B"},
+        {"f-test": 1.653142, "pvalue": 0.198833, "param": "C"},
+        {"f-test": 0.526782, "pvalue": 0.592927, "param": "D"},
+        {"f-test": 1.114655, "pvalue": 0.335738, "param": "E"},
+        {"f-test": 0.738629, "pvalue": 0.482134, "param": "F"},
+    ]
+    expected = pandas.DataFrame(_expected).set_index("param")
+    pandas.testing.assert_frame_equal(result, expected)
 
 
 @helpers.seed
