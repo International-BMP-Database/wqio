@@ -633,8 +633,8 @@ def _comp_stat_generator(
     pivotcol: str,
     rescol: str,
     statfxn: Callable,
-    statname: str | None = None,
-    pbarfxn: Callable | None = None,
+    statname: str = "stat",
+    pbarfxn: Callable = misc.no_op,
     **statopts,
 ):
     """Generator of records containing results of comparitive
@@ -698,14 +698,14 @@ def _group_comp_stat_generator(
     pivotcol: str,
     rescol: str,
     statfxn: Callable,
-    pbarfxn: Callable | None = misc.no_op,
-    statname: str | None = "stat :(",
+    pbarfxn: Callable = misc.no_op,
+    statname: str = "stat",
     control: str | None = None,
     **statopts,
 ):
     groupcols = validate.at_least_empty_list(groupcols)
 
-    for names, main_group in df.groupby(by=groupcols):
+    for names, main_group in pbarfxn(df.groupby(by=groupcols)):
         subsets = {
             pivot: subgroup[rescol].to_numpy()
             for pivot, subgroup in main_group.groupby(by=pivotcol)
@@ -731,8 +731,8 @@ def _paired_stat_generator(
     pivotcol: str,
     rescol: str,
     statfxn: Callable,
-    statname: str | None = None,
-    pbarfxn: Callable | None = None,
+    statname: str = "stat",
+    pbarfxn: Callable = misc.no_op,
     **statopts,
 ):
     """Generator of records containing results of comparitive
