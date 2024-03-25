@@ -131,6 +131,8 @@ class DataCollection:
             **{self.cencol: dataframe[self.qualcol].isin(self.ndval)}
         ).reset_index()
 
+        self.pbarfxn = tqdm if (self.showpbar and tqdm) else utils.misc.no_op
+
     @cache_readonly
     def tidy(self):
         if self.useros:
@@ -510,7 +512,7 @@ class DataCollection:
             rescol,
             statfxn,
             statname=statname,
-            pbarfxn=tqdm if self.showpbar else None,
+            pbarfxn=self.pbarfxn,
             **statopts,
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
@@ -524,7 +526,7 @@ class DataCollection:
             statfxn,
             statname=statname,
             control=control,
-            pbarfxn=tqdm if self.showpbar else None,
+            pbarfxn=self.pbarfxn,
             **statopts,
         )
         return pandas.DataFrame.from_records(results).set_index(self.groupcols_comparison)

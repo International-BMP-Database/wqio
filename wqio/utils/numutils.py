@@ -667,8 +667,6 @@ def _comp_stat_generator(
     comp_stats : pandas.DataFrame
 
     """
-    if not pbarfxn:
-        pbarfxn = misc.no_op
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
@@ -765,8 +763,6 @@ def _paired_stat_generator(
     comp_stats : pandsa.DataFrame
 
     """
-    if not pbarfxn:
-        pbarfxn = misc.no_op
 
     groupcols = validate.at_least_empty_list(groupcols)
     if statname is None:
