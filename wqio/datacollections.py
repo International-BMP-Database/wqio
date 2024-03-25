@@ -615,6 +615,13 @@ class DataCollection:
         """
         return self.comparison_stat_allway(stats.f_oneway, statname="f-test", control=None, **opts)
 
+    def tukey_hsd(self) -> tuple[pandas.DataFrame, pandas.DataFrame]:
+        hsd = utils.tukey_hsd(
+            self.tidy, self.rescol, self.stationcol, self.paramcol, *self.othergroups
+        )
+        scores = utils.process_tukey_hsd_scores(hsd, self.stationcol, self.paramcol)
+        return hsd, scores
+
     def theilslopes(self, logs=False):
         raise NotImplementedError
 

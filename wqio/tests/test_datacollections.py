@@ -626,6 +626,26 @@ def test_f_test(dc):
     pandas.testing.assert_frame_equal(result, expected)
 
 
+def test_tukey_hsd_smoke_test(dc):
+    hsd, scores = dc.tukey_hsd()
+    assert isinstance(hsd, pandas.DataFrame)
+    assert isinstance(scores, pandas.DataFrame)
+
+    assert hsd.index.names == ["loc 1", "loc 2", "param"]
+    assert hsd.columns.tolist() == [
+        "HSD Stat",
+        "p-value",
+        "CI-Low",
+        "CI-High",
+        "is_diff",
+        "sign_of_diff",
+        "score",
+    ]
+
+    assert scores.index.names == ["param"]
+    assert scores.columns.tolist() == ["Inflow", "Outflow", "Reference"]
+
+
 @helpers.seed
 def test_theilslopes(dc):
     with helpers.raises(NotImplementedError):

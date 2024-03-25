@@ -2,6 +2,7 @@ import types
 from collections import namedtuple
 from io import StringIO
 from textwrap import dedent
+from typing import Any, Literal
 
 import numpy
 import numpy.testing as nptest
@@ -9,6 +10,8 @@ import pandas
 import pandas.testing as pdtest
 import pytest
 import statsmodels.api as sm
+from numpy._typing._array_like import NDArray
+from pandas import DataFrame
 from scipy import stats
 
 from wqio.tests import helpers
@@ -92,7 +95,7 @@ def test_process_p_vals(fxn, pval, expected, error_to_raise):
         (1.01, (None, None), ValueError),
     ],
 )
-def test_translate_p_vals(pval, expected, as_emoji, error_to_raise):
+def test_translate_p_vals(pval, expected, as_emoji: bool, error_to_raise):
     with helpers.raises(error_to_raise):
         result = numutils.translate_p_vals(pval, as_emoji=as_emoji)
         assert result == expected[as_emoji]
@@ -125,7 +128,7 @@ def test_anderson_darling():
 
 
 @pytest.mark.parametrize("which", ["good", "bad"])
-def test_processAndersonDarlingResults(which):
+def test_processAndersonDarlingResults(which: Literal["good"] | Literal["bad"]):
     fieldnames = ["statistic", "critical_values", "significance_level"]
     AndersonResult = namedtuple("AndersonResult", fieldnames)
     ARs = {
@@ -215,7 +218,7 @@ def units_norm_data():
     return raw, expected
 
 
-def test_normalize_units(units_norm_data):
+def test_normalize_units(units_norm_data: tuple[DataFrame, DataFrame]):
     unitsmap = {"ug/L": 1e-6, "mg/L": 1e-3, "g/L": 1e0}
 
     targetunits = {"Lead, Total": "ug/L", "Cadmium, Total": "mg/L"}
@@ -226,7 +229,7 @@ def test_normalize_units(units_norm_data):
     pdtest.assert_frame_equal(result, expected)
 
 
-def test_normalize_units_bad_targetunits(units_norm_data):
+def test_normalize_units_bad_targetunits(units_norm_data: tuple[DataFrame, DataFrame]):
     unitsmap = {"ug/L": 1e-6, "mg/L": 1e-3, "g/L": 1e0}
 
     targetunits = {"Lead, Total": "ug/L"}
@@ -243,7 +246,7 @@ def test_normalize_units_bad_targetunits(units_norm_data):
         )
 
 
-def test_normalize_units_bad_normalization(units_norm_data):
+def test_normalize_units_bad_normalization(units_norm_data: tuple[DataFrame, DataFrame]):
     unitsmap = {"mg/L": 1e-3, "g/L": 1e0}
 
     targetunits = {"Lead, Total": "ug/L", "Cadmium, Total": "mg/L"}
@@ -260,7 +263,7 @@ def test_normalize_units_bad_normalization(units_norm_data):
         )
 
 
-def test_normalize_units_bad_conversion(units_norm_data):
+def test_normalize_units_bad_conversion(units_norm_data: tuple[DataFrame, DataFrame]):
     unitsmap = {"ug/L": 1e-6, "mg/L": 1e-3, "g/L": 1e0}
 
     targetunits = {"Lead, Total": "ng/L", "Cadmium, Total": "mg/L"}
@@ -292,7 +295,7 @@ def test_test_pH2concentration(pH, expected, error):
 
 @helpers.seed
 @pytest.mark.parametrize("error", [None, ValueError])
-def test_compute_theilslope_default(error):
+def test_compute_theilslope_default(error: types.NoneType | type[ValueError]):
     with helpers.raises(error):
         y = helpers.getTestROSData()["res"].values
         x = numpy.arange(len(y) - 1) if error else None
@@ -443,7 +446,7 @@ def fit_data():
         (None, "junk", ValueError),
     ],
 )
-def test_fit_line(fit_data, fitlogs, fitprobs, error):
+def test_fit_line(fit_data: dict[str, NDArray[Any]], fitlogs, fitprobs, error):
     xy = {
         (None, None): (fit_data["zscores"], fit_data["data"]),
         ("y", None): (fit_data["zscores"], fit_data["data"]),
@@ -483,13 +486,13 @@ def test_fit_line(fit_data, fitlogs, fitprobs, error):
         assert isinstance(res, sm.regression.linear_model.RegressionResultsWrapper)
 
 
-def test_fit_line_through_origin(fit_data):
+def test_fit_line_through_origin(fit_data: dict[str, NDArray[Any]]):
     x, y = fit_data["zscores"], fit_data["data"]
     x_, y_, res = numutils.fit_line(x, y, through_origin=True)
     assert res.params[0] == 0
 
 
-def test_fit_line_with_xhat(fit_data):
+def test_fit_line_with_xhat(fit_data: dict[str, NDArray[Any]]):
     x, y = fit_data["zscores"], fit_data["data"]
     x_, y_, res = numutils.fit_line(x, y, xhat=[-2, -1, 0, 1, 2])
     expected = [-0.566018, 4.774419, 10.114857, 15.455295, 20.795733]
@@ -799,3 +802,93 @@ def test_remove_outliers():
     x = numpy.random.normal(0, 4, size=37)
 
     assert numutils.remove_outliers(x).shape == expected_shape
+
+
+def test_tukey_hsd_functions():
+    expected_records = [
+        {
+            "chemical_name": "Copper",
+            "Loc_0": -2.0,
+            "Loc_1": 6.0,
+            "Loc_2": -2.0,
+            "Loc_3": -4.0,
+            "Loc_4": 3.0,
+            "Loc_5": -1.0,
+            "Loc_6": 0.0,
+        },
+        {
+            "chemical_name": "Di(2-ethylhexyl)phthalate",
+            "Loc_0": 3.0,
+            "Loc_1": 5.0,
+            "Loc_2": -2.0,
+            "Loc_3": -2.0,
+            "Loc_4": -2.0,
+            "Loc_5": -1.0,
+            "Loc_6": -1.0,
+        },
+        {
+            "chemical_name": "Indeno(1,2,3-cd)pyrene",
+            "Loc_0": 2.0,
+            "Loc_1": 0.0,
+            "Loc_2": 6.0,
+            "Loc_3": -2.0,
+            "Loc_4": -2.0,
+            "Loc_5": -4.0,
+            "Loc_6": 0.0,
+        },
+        {
+            "chemical_name": "Lead",
+            "Loc_0": 0.0,
+            "Loc_1": 6.0,
+            "Loc_2": -2.0,
+            "Loc_3": -3.0,
+            "Loc_4": 4.0,
+            "Loc_5": -3.0,
+            "Loc_6": -2.0,
+        },
+        {
+            "chemical_name": "Phenanthrene",
+            "Loc_0": 1.0,
+            "Loc_1": 0.0,
+            "Loc_2": 1.0,
+            "Loc_3": -3.0,
+            "Loc_4": 0.0,
+            "Loc_5": 0.0,
+            "Loc_6": 1.0,
+        },
+        {
+            "chemical_name": "Pyrene",
+            "Loc_0": 0.0,
+            "Loc_1": -1.0,
+            "Loc_2": 3.0,
+            "Loc_3": -2.0,
+            "Loc_4": -2.0,
+            "Loc_5": -2.0,
+            "Loc_6": 4.0,
+        },
+        {
+            "chemical_name": "Total Suspended Solids",
+            "Loc_0": -1.0,
+            "Loc_1": -1.0,
+            "Loc_2": -1.0,
+            "Loc_3": -1.0,
+            "Loc_4": -1.0,
+            "Loc_5": -1.0,
+            "Loc_6": 6.0,
+        },
+        {
+            "chemical_name": "Zinc",
+            "Loc_0": 0.0,
+            "Loc_1": 1.0,
+            "Loc_2": -1.0,
+            "Loc_3": -6.0,
+            "Loc_4": -1.0,
+            "Loc_5": 4.0,
+            "Loc_6": 3.0,
+        },
+    ]
+    expected = pandas.DataFrame(expected_records).set_index("chemical_name")
+    wq = pandas.read_pickle(helpers.test_data_path("wq.pkl"))
+    hsd = numutils.tukey_hsd(wq, "res", "location", "chemical_name")
+    result = numutils.process_tukey_hsd_scores(hsd, "location", "chemical_name")
+    pandas.testing.assert_frame_equal(result, expected, check_names=False)

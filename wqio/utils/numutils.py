@@ -8,6 +8,7 @@ import pandas
 import statsmodels.api as sm
 from probscale.algo import _estimate_from_fit
 from scipy import stats
+from scipy.stats._hypotests import TukeyHSDResult
 
 from wqio import validate
 from wqio.utils import misc
@@ -786,3 +787,130 @@ def _paired_stat_generator(
             stat = statfxn(x, y, **statopts)
             row.update({statname: stat[0], "pvalue": stat.pvalue})
             yield row
+
+
+def _tukey_res_to_df(
+    names: list[str], hsd_res: list[TukeyHSDResult], group_prefix: str
+) -> pandas.DataFrame:
+    """Converts Scipy's TukeyHSDResult to a dataframe
+
+    Parameters
+    ----------
+    names : list of str
+        Name of the groups present in the Tukey HSD Results
+    hsd_res : list of TukeyHSDResult
+        List of Tukey results to be converted to a dateframe
+    group_prefix : str (default = "Loc")
+        Prefix that describes the nature of the groups
+
+    Returns
+    -------
+    hsd_df : pandas.DataFrame
+
+    """
+    rows = []
+    for i, n1 in enumerate(names):
+        for j, n2 in enumerate(names):
+            if i != j:
+                ci_bands = hsd_res.confidence_interval()
+                row = {
+                    f"{group_prefix} 1": names[n1],
+                    f"{group_prefix} 2": names[n2],
+                    "HSD Stat": hsd_res.statistic[i, j],
+                    "p-value": hsd_res.pvalue[i, j],
+                    "CI-Low": ci_bands.low[i, j],
+                    "CI-High": ci_bands.high[i, j],
+                }
+
+                rows.append(row)
+
+    df = pandas.DataFrame(rows).set_index([f"{group_prefix} 1", f"{group_prefix} 2"])
+    return df
+
+
+def tukey_hsd(
+    df: pandas.DataFrame,
+    rescol: str,
+    compcol: str,
+    paramcol: str,
+    *othergroups: str,
+):
+    """
+    Run the Tukey HSD Test on a dataframe based on groupings
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    rescol : str
+        Name of the column that contains the values of interest
+    compcol: str
+        Name of the column that defines the groups to be compared
+        (i.e., treatment vs control)
+    paramcol: str
+        Name of the column that contains the measured parameter
+    *othergroups : str
+        Names of any other columsn that need to considered when
+        defining the groups to be considered.
+
+    Returns
+    -------
+    hsd_df : pandas.DataFrame
+
+    """
+    groupcols = [paramcol, *othergroups]
+    scores = []
+    for name, g in df.groupby(by=groupcols):
+        locs = {loc: subg[rescol].values for loc, subg in g.groupby(compcol) if subg.shape[0] > 1}
+        subset_names = {n: loc for n, loc in enumerate(locs)}
+        res = stats.tukey_hsd(*[v for v in locs.values()])
+        df_res = _tukey_res_to_df(subset_names, res, group_prefix=compcol)
+
+        keys = {g: n for g, n in zip(groupcols, name)}
+        scores.append(
+            df_res.assign(
+                is_diff=lambda df: df["p-value"].lt(0.05).astype(int),
+                sign_of_diff=lambda df: numpy.sign(df["HSD Stat"]).astype(int),
+                score=lambda df: df["is_diff"] * df["sign_of_diff"],
+                **keys,
+            ).set_index(groupcols, append=True)
+        )
+
+    return pandas.concat(scores, ignore_index=False, axis="index")
+
+
+def process_tukey_hsd_scores(
+    hsd_df: pandas.DataFrame, compcol: str, paramcol: str
+) -> pandas.DataFrame:
+    """
+    Converts a Tukey HSD Results dataframe into scores that describe
+    the value of groups' magnitude relative to each other.
+
+    Generally speaking:
+    * -7 to -5 -> significantly lower
+    * -5 to -3 -> moderately lower
+    * -3 to -1 -> slightly lower
+    * -1 to +1 -> neutral
+    * +1 to +3 -> slightly higher
+    * +3 to +5 -> moderately higher
+    * +5 to +7 -> significantly higher
+
+    Parameters
+    ----------
+    hsd_df : pandas.DataFrame
+        Dataframe dumped by `tukey_hsd`
+    group_prefix : str (default = "Loc")
+        Prefix that describes the nature of the groups
+
+    Returns
+    -------
+    scores : pandas.DataFrame
+
+    """
+    return (
+        hsd_df["score"]
+        .unstack(level=f"{compcol} 2")
+        .fillna(0)
+        .groupby(level=paramcol, as_index=False, group_keys=False)
+        .apply(lambda g: g.sum(axis="columns"))
+        .unstack(level=f"{compcol} 1")
+    )
