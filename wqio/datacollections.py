@@ -484,9 +484,9 @@ class DataCollection:
         >>> dc = DataCollection(df, rescol='res', qualcol='qual',
         ...                     stationcol='loc', paramcol='param',
         ...                     ndval='<')
-        >>> mwht = dc.comparison_stat(stats.mannwhitneyu,
-        ...                           statname='mann_whitney',
-        ...                           alternative='two-sided')
+        >>> mwht = dc.comparison_stat_twoway(stats.mannwhitneyu,
+        ...                                  statname='mann_whitney',
+        ...                                  alternative='two-sided')
 
         """
 
