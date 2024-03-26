@@ -1599,20 +1599,18 @@ class Dataset:
                     raise ValueError(f"`eqn_pos` must be on of {list.positions.keys()}")
                 # annotate axes with stats
 
+                slope = utils.sig_figs(modelres.params[1], n=3)
+                icept = utils.sig_figs(modelres.params[0], n=3)
                 ax.annotate(
-                    r"$\log(y) = {} \, \log(x) + {}$".format(
-                        utils.sig_figs(modelres.params[1], n=3),
-                        utils.sig_figs(modelres.params[0], n=3),
-                    ),
+                    rf"$\log(y) = {slope} \, \log(x) + {icept}$",
                     (txt_x, txt_y),
                     xycoords="axes fraction",
                 )
 
+                slope_pval = utils.process_p_vals(modelres.pvalues[1])
+                icept_pval = utils.process_p_vals(modelres.pvalues[0])
                 ax.annotate(
-                    "Slope p-value: {}\nIntercept p-value: {}".format(
-                        utils.process_p_vals(modelres.pvalues[1]),
-                        utils.process_p_vals(modelres.pvalues[0]),
-                    ),
+                    f"Slope p-value: {slope_pval}\nIntercept p-value: {icept_pval}",
                     (txt_x, txt_y - vert_offset),
                     xycoords="axes fraction",
                 )

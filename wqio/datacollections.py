@@ -20,10 +20,11 @@ from wqio.ros import ROS
 _Stat = namedtuple("_stat", ["stat", "pvalue"])
 
 
-def _dist_compare(x, y, stat_comp_func):
+def _dist_compare(x, y, stat_comp_func, **test_opts):
     if (len(x) == len(y)) and numpy.equal(x, y).all():
         return _Stat(numpy.nan, numpy.nan)
-    return stat_comp_func(x, y, alternative="two-sided")
+
+    return stat_comp_func(x, y, **test_opts)
 
 
 class DataCollection:
@@ -129,6 +130,8 @@ class DataCollection:
         self.data = dataframe.assign(
             **{self.cencol: dataframe[self.qualcol].isin(self.ndval)}
         ).reset_index()
+
+        self.pbarfxn = tqdm if (self.showpbar and tqdm) else utils.misc.no_op
 
     @cache_readonly
     def tidy(self):
@@ -323,7 +326,7 @@ class DataCollection:
 
     @cache_readonly
     def std_dev(self):
-        return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False)
+        return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False, ddof=1)
 
     def percentile(self, percentile):
         """Return the percentiles (0 - 100) for the data."""
@@ -342,7 +345,7 @@ class DataCollection:
     @cache_readonly
     def logstd_dev(self):
         return self.generic_stat(
-            lambda x, axis=0: numpy.std(numpy.log(x), axis=axis),
+            lambda x, axis=0: numpy.std(numpy.log(x), axis=axis, ddof=1),
             use_bootstrap=False,
             statname="Log-std. dev.",
         )
@@ -359,65 +362,93 @@ class DataCollection:
         geostd.columns.names = ["station", "Geo-std. dev."]
         return geostd
 
-    @cache_readonly
-    def shapiro(self):
+    def shapiro(self, **opts):
+        """
+        Run the Shapiro-Wilk test for normality on the datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `scipy.stats.shapiro` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             stats.shapiro,
             use_bootstrap=False,
             has_pvalue=True,
             statname="shapiro",
             filterfxn=lambda x: x.shape[0] > 3,
+            **opts,
         )
 
-    @cache_readonly
-    def shapiro_log(self):
+    def shapiro_log(self, **opts):
+        """
+        Run the Shapiro-Wilk test for normality on log-transformed datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `scipy.stats.shapiro` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             lambda x: stats.shapiro(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             filterfxn=lambda x: x.shape[0] > 3,
             statname="log-shapiro",
+            **opts,
         )
 
-    @cache_readonly
-    def lilliefors(self):
+    def lilliefors(self, **opts):
+        """
+        Run the Lilliefors test for normality on the datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `statsmodels.api.stats.lilliefors` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             sm.stats.lilliefors,
             use_bootstrap=False,
             has_pvalue=True,
             statname="lilliefors",
+            **opts,
         )
 
-    @cache_readonly
-    def lilliefors_log(self):
+    def lilliefors_log(self, **opts):
+        """
+        Run the Lilliefors test for normality on the log-transformed datasets.
+
+        Requires at least 3 observations in each dataset.
+
+        See `statsmodels.api.stats.lilliefors` for info on kwargs you can pass.
+        """
         return self.generic_stat(
             lambda x: sm.stats.lilliefors(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             statname="log-lilliefors",
+            **opts,
         )
 
-    @cache_readonly
-    def anderson_darling(self):
+    def anderson_darling(self, **opts):
         raise NotImplementedError
         return self.generic_stat(
             utils.anderson_darling,
             use_bootstrap=False,
             has_pvalue=True,
             statname="anderson-darling",
+            **opts,
         )
 
-    @cache_readonly
-    def anderson_darling_log(self):
+    def anderson_darling_log(self, **opts):
         raise NotImplementedError
         return self.generic_stat(
             lambda x: utils.anderson_darling(numpy.log(x)),
             use_bootstrap=False,
             has_pvalue=True,
             statname="log-anderson-darling",
+            **opts,
         )
 
-    def comparison_stat(self, statfxn, statname=None, paired=False, **statopts):
+    def comparison_stat_twoway(self, statfxn, statname=None, paired=False, **statopts):
         """Generic function to apply comparative hypothesis tests to
         the groups of the ``DataCollection``.
 
@@ -430,7 +461,7 @@ class DataCollection:
         statname : string, optional
             Name of the statistic. Included as a column name in the
             final dataframe.
-        apired : bool, optional
+        paired : bool, optional
             Set to ``True`` if ``statfxn`` requires paired data.
         **statopts : optional kwargs
             Additional keyword arguments that will be passed to
@@ -455,9 +486,9 @@ class DataCollection:
         >>> dc = DataCollection(df, rescol='res', qualcol='qual',
         ...                     stationcol='loc', paramcol='param',
         ...                     ndval='<')
-        >>> mwht = dc.comparison_stat(stats.mannwhitneyu,
-        ...                           statname='mann_whitney',
-        ...                           alternative='two-sided')
+        >>> mwht = dc.comparison_stat_twoway(stats.mannwhitneyu,
+        ...                                  statname='mann_whitney',
+        ...                                  alternative='two-sided')
 
         """
 
@@ -475,46 +506,134 @@ class DataCollection:
         index_cols = meta_columns + station_columns
 
         results = generator(
-            data, meta_columns, self.stationcol, rescol, statfxn, statname=statname, **statopts
+            data,
+            meta_columns,
+            self.stationcol,
+            rescol,
+            statfxn,
+            statname=statname,
+            pbarfxn=self.pbarfxn,
+            **statopts,
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
 
-    @cache_readonly
-    def mann_whitney(self):
-        return self.comparison_stat(
-            partial(_dist_compare, stat_comp_func=stats.mannwhitneyu),
+    def comparison_stat_allway(self, statfxn, statname, control=None, **statopts):
+        results = utils.numutils._group_comp_stat_generator(
+            self.tidy,
+            self.groupcols_comparison,
+            self.stationcol,
+            self.rescol,
+            statfxn,
+            statname=statname,
+            control=control,
+            pbarfxn=self.pbarfxn,
+            **statopts,
+        )
+        return pandas.DataFrame.from_records(results).set_index(self.groupcols_comparison)
+
+    def mann_whitney(self, **opts):
+        """
+        Run the Mann-Whitney U test across datasets.
+
+        See `scipy.stats.mannwhitneyu` for available options.
+        """
+        return self.comparison_stat_twoway(
+            partial(_dist_compare, stat_comp_func=stats.mannwhitneyu, **opts),
             statname="mann_whitney",
         )
 
-    @cache_readonly
-    def ranksums(self):
-        return self.comparison_stat(stats.ranksums, statname="rank_sums")
+    def ranksums(self, **opts):
+        """
+        Run the unpaired Wilcoxon rank-sum test across datasets.
 
-    @cache_readonly
-    def t_test(self):
-        return self.comparison_stat(stats.ttest_ind, statname="t_test", equal_var=False)
+        See `scipy.stats.ranksums` for available options.
+        """
+        return self.comparison_stat_twoway(stats.ranksums, statname="rank_sums", **opts)
 
-    @cache_readonly
-    def levene(self):
-        return self.comparison_stat(stats.levene, statname="levene", center="median")
+    def t_test(self, **opts):
+        """
+        Run the T-test for independent scores.
 
-    @cache_readonly
-    def wilcoxon(self):
-        return self.comparison_stat(
+        See `scipy.stats.ttest_ind` for available options.
+        """
+        return self.comparison_stat_twoway(stats.ttest_ind, statname="t_test", **opts)
+
+    def levene(self, **opts):
+        """
+        Run the Levene test for equal variances
+
+        See `scipy.stats.levene` for available options.
+        """
+        return self.comparison_stat_twoway(stats.levene, statname="levene", **opts)
+
+    def wilcoxon(self, **opts):
+        """
+        Run the paired Wilcoxon rank-sum test across paired dataset.
+
+        See `scipy.stats.wilcoxon` for available options.
+        """
+        return self.comparison_stat_twoway(
             partial(_dist_compare, stat_comp_func=stats.wilcoxon),
             statname="wilcoxon",
             paired=True,
+            **opts,
         )
 
-    @cache_readonly
-    def kendall(self):
-        return self.comparison_stat(stats.kendalltau, statname="kendalltau", paired=True)
+    def kendall(self, **opts):
+        """
+        Run the paired Kendall-tau test across paired dataset.
 
-    @cache_readonly
-    def spearman(self):
-        return self.comparison_stat(stats.spearmanr, statname="spearmanrho", paired=True)
+        See `scipy.stats.kendalltau` for available options.
+        """
+        return self.comparison_stat_twoway(
+            stats.kendalltau, statname="kendalltau", paired=True, **opts
+        )
 
-    @cache_readonly
+    def spearman(self, **opts):
+        """
+        Run the paired Spearman-rho test across paired dataset.
+
+        See `scipy.stats.spearmanr` for available options.
+        """
+        return self.comparison_stat_twoway(
+            stats.spearmanr, statname="spearmanrho", paired=True, **opts
+        )
+
+    def kruskal_wallis(self, **opts):
+        """
+        Run the paired Kruskal-Wallos H-test across paired dataset.
+
+        See `scipy.stats.kruskal` for available options.
+        """
+        return self.comparison_stat_allway(stats.kruskal, statname="K-W H", control=None, **opts)
+
+    def f_test(self, **opts):
+        """
+        One-way ANOVA test across datasets
+
+        See `scipy.stats.f_oneway` for available options.
+        """
+        return self.comparison_stat_allway(stats.f_oneway, statname="f-test", control=None, **opts)
+
+    def tukey_hsd(self) -> tuple[pandas.DataFrame, pandas.DataFrame]:
+        """
+        Tukey Honestly Significant Difference (HSD) test across stations + other groups
+        for each parameter
+        """
+        hsd = utils.tukey_hsd(
+            self.tidy, self.rescol, self.stationcol, self.paramcol, *self.othergroups
+        )
+        scores = utils.process_tukey_hsd_scores(hsd, self.stationcol, self.paramcol)
+        return hsd, scores
+
+    def dunn(self):
+        """
+        Dunn test across the different stations for each pollutant
+        """
+        return self.tidy.groupby(by=[self.paramcol]).apply(
+            lambda g: utils.dunn_test(g, self.rescol, self.stationcol, *self.othergroups).scores
+        )
+
     def theilslopes(self, logs=False):
         raise NotImplementedError
 

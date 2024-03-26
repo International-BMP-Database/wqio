@@ -6,13 +6,13 @@ import sys
 from collections import namedtuple
 from contextlib import contextmanager
 from functools import wraps
+from importlib import resources
 from io import StringIO
 
 import numpy
 import pandas
 import pytest
 from packaging.version import Version
-from pkg_resources import resource_filename
 
 
 def get_img_tolerance():
@@ -154,8 +154,21 @@ def comp_statfxn(x, y):
     return stat(result, result * 0.25)
 
 
+def group_statfxn(*x):
+    stat = namedtuple("teststat", ("statistic", "pvalue"))
+    result = max([max(_) for _ in x])
+    return stat(result, 0.25)
+
+
+def group_statfxn_with_control(*x, control):
+    stat = namedtuple("teststat", ("statistic", "pvalue"))
+    x = [*x, control]
+    result = max([max(_) for _ in x])
+    return stat(result, 0.25)
+
+
 def test_data_path(filename):
-    path = resource_filename("wqio.tests._data", filename)
+    path = resources.files("wqio.tests._data").joinpath(filename)
     return path
 
 

@@ -60,6 +60,26 @@ def dc():
 
 
 @pytest.fixture
+def dc_small():
+    df = helpers.make_dc_data_complex()
+    dc = DataCollection(
+        df,
+        rescol="res",
+        qualcol="qual",
+        stationcol="loc",
+        paramcol="param",
+        ndval="<",
+        othergroups=None,
+        pairgroups=["state", "bmp"],
+        useros=True,
+        filterfxn=lambda g: g.name[1] in ["A", "B", "C"],
+        bsiter=10000,
+    )
+
+    return dc
+
+
+@pytest.fixture
 def dc_noNDs():
     df = helpers.make_dc_data_complex()
     dc = DataCollection(
@@ -196,12 +216,12 @@ def test_std_dev(dc):
         station,Inflow,Outflow,Reference
         result,std. dev.,std. dev.,std. dev.
         param,,,
-        A,3.58649,8.719371,5.527633
-        B,12.360099,13.60243,10.759285
-        C,0.353755,1.691208,0.493325
-        D,4.811938,2.849393,2.248178
-        E,2.55038,1.096698,2.789238
-        F,34.447565,5.361033,3.398367
+        A,3.675059,8.92456,5.671232
+        B,12.625938,13.922531,11.054115
+        C,0.361364,1.727582,0.503498
+        D,4.915433,2.90815,2.303697
+        E,2.620266,1.132665,2.861698
+        F,35.298251,5.476337,3.502956
     """
     check_stat(known_csv, dc.std_dev)
 
@@ -260,12 +280,12 @@ def test_logstd_dev(dc):
         station,Inflow,Outflow,Reference
         result,Log-std. dev.,Log-std. dev.,Log-std. dev.
         param,,,
-        A,1.374026,1.343662,1.225352
-        B,1.430381,2.07646,1.662001
-        C,0.818504,1.263631,1.057177
-        D,1.530871,1.187246,1.277927
-        E,1.264403,1.121038,1.474431
-        F,2.324063,1.516331,1.701596
+        A,1.407957,1.375282,1.257185
+        B,1.461146,2.125324,1.707543
+        C,0.836108,1.290809,1.078977
+        D,1.563796,1.211728,1.309485
+        E,1.29905,1.157803,1.512734
+        F,2.381456,1.548944,1.753965
     """
     check_stat(known_csv, dc.logstd_dev)
 
@@ -292,12 +312,12 @@ def test_geostd_dev(dc):
         station,Inflow,Outflow,Reference
         Geo-std. dev.,Log-std. dev.,Log-std. dev.,Log-std. dev.
         param,,,
-        A,3.951225,3.833055,3.405365
-        B,4.180294,7.976181,5.269843
-        C,2.267105,3.538244,2.878234
-        D,4.622199,3.278041,3.589191
-        E,3.540977,3.068036,4.368548
-        F,10.217099,4.55548,5.48269
+        A,4.087597,3.956193,3.515511
+        B,4.310897,8.375613,5.515395
+        C,2.30737,3.635725,2.941668
+        D,4.776921,3.359284,3.704266
+        E,3.665813,3.182932,4.539124
+        F,10.820642,4.706498,5.777465
     """
     check_stat(known_csv, dc.geostd_dev)
 
@@ -315,7 +335,7 @@ def test_shapiro(dc):
         E,1.7e-05,0.654137,0.004896,0.818813,0.000165,0.74917
         F,0.0,0.292916,2e-06,0.634671,0.000167,0.713968
     """
-    check_stat(known_csv, dc.shapiro)
+    check_stat(known_csv, dc.shapiro())
 
 
 @helpers.seed
@@ -331,7 +351,7 @@ def test_shapiro_log(dc):
         E,0.955088913,0.479993254,0.95211035,0.523841977,0.963425279,0.61430341
         F,0.97542423,0.847370088,0.982230783,0.933124721,0.966197193,0.749036908
     """
-    check_stat(known_csv, dc.shapiro_log)
+    check_stat(known_csv, dc.shapiro_log())
 
 
 @helpers.seed
@@ -347,7 +367,7 @@ def test_lilliefors(dc):
         E,0.341398,0.001,0.239314,0.016156,0.233773,0.005575
         F,0.419545,0.001,0.331315,0.001,0.284249,0.001
     """
-    check_stat(known_csv, dc.lilliefors)
+    check_stat(known_csv, dc.lilliefors())
 
 
 @helpers.seed
@@ -363,19 +383,19 @@ def test_lilliefors_log(dc):
         E,0.135066,0.471868,0.145523,0.477979,0.091649,0.928608
         F,0.144208,0.306945,0.084633,0.927419,0.085869,0.980029
     """
-    check_stat(known_csv, dc.lilliefors_log)
+    check_stat(known_csv, dc.lilliefors_log())
 
 
 @helpers.seed
 def test_anderson_darling(dc):
     with helpers.raises(NotImplementedError):
-        _ = dc.anderson_darling
+        _ = dc.anderson_darling()
 
 
 @helpers.seed
 def test_anderson_darling_log(dc):
     with helpers.raises(NotImplementedError):
-        _ = dc.anderson_darling_log
+        _ = dc.anderson_darling_log()
 
 
 @helpers.seed
@@ -403,35 +423,35 @@ def test_mann_whitney(dc):
         F,Outflow,303.0,,236.0,0.2505911218,,0.4045186043
         F,Reference,185.0,172.0,,0.8601783903,0.4045186043
     """
-    check_stat(known_csv, dc.mann_whitney, comp=True)
+    check_stat(known_csv, dc.mann_whitney(), comp=True)
 
 
 @helpers.seed
 def test_t_test(dc):
     known_csv = """\
-        ,,pvalue,pvalue,pvalue,t_test,t_test,t_test
-        loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
-        param,loc_1,,,,,,
-        A,Inflow,,0.2178424157,0.4563196599,,-1.2604458127,-0.7539785777
-        A,Outflow,0.2178424157,,0.5240147979,1.2604458127,,0.643450194
-        A,Reference,0.4563196599,0.5240147979,,0.7539785777,-0.643450194,
-        B,Inflow,,0.8430007638,0.3898358794,,0.1992705833,0.869235357
-        B,Outflow,0.8430007638,,0.5491097882,-0.1992705833,,0.6043850808
-        B,Reference,0.3898358794,0.5491097882,,-0.869235357,-0.6043850808,
-        C,Inflow,,0.1847386316,0.8191392537,,-1.3639360123,-0.2300373632
-        C,Outflow,0.1847386316,,0.2179907667,1.3639360123,,1.2615982727
-        C,Reference,0.8191392537,0.2179907667,,0.2300373632,-1.2615982727,
-        D,Inflow,,0.5484265023,0.344783812,,0.6056706932,0.9582600001
-        D,Outflow,0.5484265023,,0.6299742693,-0.6056706932,,0.4851636024
-        D,Reference,0.344783812,0.6299742693,,-0.9582600001,-0.4851636024,
-        E,Inflow,,0.2304569921,0.6770414622,,1.2287029977,-0.4198288251
-        E,Outflow,0.2304569921,,0.1023435465,-1.2287029977,,-1.6935358498
-        E,Reference,0.6770414622,0.1023435465,,0.4198288251,1.6935358498,
-        F,Inflow,,0.422008391,0.3549979666,,0.8190789273,0.9463539528
-        F,Outflow,0.422008391,,0.4988994144,-0.8190789273,,0.6826435968
-        F,Reference,0.3549979666,0.4988994144,,-0.9463539528,-0.6826435968
+    ,,t_test,t_test,t_test,pvalue,pvalue,pvalue
+    loc_2,,Inflow,Outflow,Reference,Inflow,Outflow,Reference
+    param,loc_1,,,,,,
+    A,Inflow,,-1.239311,-0.761726,,0.222278,0.450806
+    A,Outflow,1.239311,,0.630254,0.222278,,0.532113
+    A,Reference,0.761726,-0.630254,,0.450806,0.532113,
+    B,Inflow,,0.200136,0.855661,,0.842296,0.397158
+    B,Outflow,-0.200136,,0.594193,0.842296,,0.555814
+    B,Reference,-0.855661,-0.594193,,0.397158,0.555814,
+    C,Inflow,,-1.363936,-0.228508,,0.179225,0.820243
+    C,Outflow,1.363936,,1.283982,0.179225,,0.205442
+    C,Reference,0.228508,-1.283982,,0.820243,0.205442,
+    D,Inflow,,0.61178,0.917349,,0.543631,0.364076
+    D,Outflow,-0.61178,,0.475391,0.543631,,0.63686
+    D,Reference,-0.917349,-0.475391,,0.364076,0.63686,
+    E,Inflow,,1.156605,-0.418858,,0.255738,0.677741
+    E,Outflow,-1.156605,,-1.558039,0.255738,,0.128485
+    E,Reference,0.418858,1.558039,,0.677741,0.128485,
+    F,Inflow,,0.874261,0.851029,,0.386833,0.400379
+    F,Outflow,-0.874261,,0.63432,0.386833,,0.529575
+    F,Reference,-0.851029,-0.63432,,0.400379,0.529575,
     """
-    check_stat(known_csv, dc.t_test, comp=True)
+    check_stat(known_csv, dc.t_test(), comp=True)
 
 
 @helpers.seed
@@ -459,7 +479,7 @@ def test_levene(dc):
         F,Outflow,0.841984453,,0.25881357,0.363948105,,0.613802541
         F,Reference,0.734809611,0.25881357,,0.396999375,0.613802541,
     """
-    check_stat(known_csv, dc.levene, comp=True)
+    check_stat(known_csv, dc.levene(), comp=True)
 
 
 @helpers.seed
@@ -488,7 +508,7 @@ def test_wilcoxon(dc):
         F,Reference,22.0,28.0,,0.952765,0.656642,
     """
     with pytest.warns(UserWarning):
-        check_stat(known_csv, dc.wilcoxon, comp=True)
+        check_stat(known_csv, dc.wilcoxon(), comp=True)
 
 
 @helpers.seed
@@ -516,7 +536,7 @@ def test_ranksums(dc):
         F,Outflow,0.2459307,,0.3971011,1.1602902,,0.8468098
         F,Reference,0.8486619,0.3971011,,0.190826,-0.8468098,
     """
-    check_stat(known_csv, dc.ranksums, comp=True)
+    check_stat(known_csv, dc.ranksums(), comp=True)
 
 
 @helpers.seed
@@ -545,7 +565,7 @@ def test_kendall(dc):
         F,Outflow,0.0,,0.388889,1.0,,0.063
         F,Reference,0.07231,0.388889,,0.763851,0.063,
     """
-    check_stat(known_csv, dc.kendall, comp=True)
+    check_stat(known_csv, dc.kendall(), comp=True)
 
 
 @helpers.seed
@@ -573,13 +593,69 @@ def test_spearman(dc):
         F,Outflow,0.9645303744,,0.0560590794,-0.0106277141,,0.5028571429
         F,Reference,0.6759971848,0.0560590794,,0.1348767061,0.5028571429
     """
-    check_stat(known_csv, dc.spearman, comp=True)
+    check_stat(known_csv, dc.spearman(), comp=True)
+
+
+@helpers.seed
+def test_kruskal_wallis(dc):
+    result = dc.kruskal_wallis()
+    _expected = [
+        {"K-W H": 1.798578, "pvalue": 0.406859, "param": "A"},
+        {"K-W H": 5.421338, "pvalue": 0.066492, "param": "B"},
+        {"K-W H": 0.29261, "pvalue": 0.863894, "param": "C"},
+        {"K-W H": 0.39957, "pvalue": 0.818907, "param": "D"},
+        {"K-W H": 0.585441, "pvalue": 0.746231, "param": "E"},
+        {"K-W H": 1.483048, "pvalue": 0.476387, "param": "F"},
+    ]
+    expected = pandas.DataFrame(_expected).set_index("param")
+    pandas.testing.assert_frame_equal(result, expected)
+
+
+@helpers.seed
+def test_f_test(dc):
+    result = dc.f_test()
+    _expected = [
+        {"f-test": 0.861339, "pvalue": 0.427754, "param": "A"},
+        {"f-test": 0.343445, "pvalue": 0.710663, "param": "B"},
+        {"f-test": 1.653142, "pvalue": 0.198833, "param": "C"},
+        {"f-test": 0.526782, "pvalue": 0.592927, "param": "D"},
+        {"f-test": 1.114655, "pvalue": 0.335738, "param": "E"},
+        {"f-test": 0.738629, "pvalue": 0.482134, "param": "F"},
+    ]
+    expected = pandas.DataFrame(_expected).set_index("param")
+    pandas.testing.assert_frame_equal(result, expected)
+
+
+def test_tukey_hsd_smoke_test(dc):
+    hsd, scores = dc.tukey_hsd()
+    assert isinstance(hsd, pandas.DataFrame)
+    assert isinstance(scores, pandas.DataFrame)
+
+    assert hsd.index.names == ["loc 1", "loc 2", "param"]
+    assert hsd.columns.tolist() == [
+        "HSD Stat",
+        "p-value",
+        "CI-Low",
+        "CI-High",
+        "is_diff",
+        "sign_of_diff",
+        "score",
+    ]
+
+    assert scores.index.names == ["param"]
+    assert scores.columns.tolist() == ["Inflow", "Outflow", "Reference"]
+
+
+def test_dunn(dc):
+    dunnres = dc.dunn()
+    assert dunnres.index.tolist() == list("ABCDEF")
+    assert dunnres.columns.tolist() == ["Inflow", "Outflow", "Reference"]
 
 
 @helpers.seed
 def test_theilslopes(dc):
     with helpers.raises(NotImplementedError):
-        _ = dc.theilslopes
+        _ = dc.theilslopes()
 
 
 def test_inventory(dc):
@@ -765,7 +841,7 @@ def test_selectDatasets(dc):
 def test_dist_compare_wrapper(x, all_same, func):
     y = [5, 5, 5, 5, 5]
     with mock.patch.object(stats, func.__name__) as _test:
-        result = _dist_compare(x, y, _test)
+        result = _dist_compare(x, y, _test, alternative="two-sided")
         if all_same:
             assert numpy.isnan(result.stat)
             assert numpy.isnan(result.pvalue)
