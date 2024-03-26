@@ -14,6 +14,7 @@ from wqio import validate
 from wqio.utils import misc
 
 TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_slope"))
+DunnResult = namedtuple("DunnResult", ("rank_stats", "results", "scores"))
 
 
 def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
@@ -914,3 +915,68 @@ def process_tukey_hsd_scores(
         .apply(lambda g: g.sum(axis="columns"))
         .unstack(level=f"{compcol} 1")
     )
+
+
+def rank_stats(
+    df: pandas.DataFrame,
+    rescol: str,
+    compcol: str,
+    *othergroups: str,
+) -> pandas.DataFrame:
+    """
+    Compute basic rank statistics (count, mean, sum) of a dataframe
+    based on logical groupings. Assumes a single parameter is in the
+    dataframe
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+    rescol : str
+        Name of the column that contains the values of interest
+    compcol: str
+        Name of the column that defines the groups to be compared
+        (i.e., treatment vs control)
+
+    *othergroups : str
+        Names of any other columsn that need to considered when
+        defining the groups to be considered.
+
+    """
+
+    return (
+        df.assign(rank=lambda df: df[rescol].rank())
+        .groupby([compcol, *othergroups])["rank"]
+        .agg(["count", "sum", "mean"])
+        .reset_index()
+    )
+
+
+def _dunn_result(rs: pandas.DataFrame, group_prefix: str):
+    threshold = stats.norm.isf(0.001667 / 2)
+    N = rs["count"].sum()
+    results = (
+        rs.join(rs, how="cross", lsuffix="_1", rsuffix="_2")
+        .assign(
+            diff=lambda df: df["mean_1"] - df["mean_2"],
+            scale=lambda df: ((N * (N + 1) / 12) * (1 / df["count_1"] + 1 / df["count_2"])) ** 0.5,
+            dunn_z=lambda df: df["diff"] / df["scale"],
+            score=lambda df: numpy.where(
+                numpy.abs(df["dunn_z"]) <= threshold, 0, numpy.sign(df["dunn_z"])
+            ).astype(int),
+        )
+        .loc[:, [f"{group_prefix}_1", f"{group_prefix}_2", "dunn_z", "score"]]
+    )
+
+    return results
+
+
+def _dunn_scores(dr: pandas.DataFrame, group_prefix: str) -> pandas.DataFrame:
+    scores = dr.pivot(index=f"{group_prefix}_2", columns=f"{group_prefix}_1", values="score").sum()
+    return scores
+
+
+def dunn_test(df: pandas.DataFrame, rescol: str, compcol: str, *othergroups: str) -> DunnResult:
+    rs = rank_stats(df, rescol, compcol, *othergroups)
+    results = _dunn_result(rs, compcol)
+    scores = _dunn_scores(results, compcol)
+    return DunnResult(rs, results, scores)

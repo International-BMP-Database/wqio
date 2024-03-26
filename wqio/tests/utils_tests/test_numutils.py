@@ -892,3 +892,32 @@ def test_tukey_hsd_functions():
     hsd = numutils.tukey_hsd(wq, "res", "location", "chemical_name")
     result = numutils.process_tukey_hsd_scores(hsd, "location", "chemical_name")
     pandas.testing.assert_frame_equal(result, expected, check_names=False)
+
+
+def test_rank_stats():
+    copper = pandas.read_pickle(helpers.test_data_path("sed.pkl")).loc[
+        lambda df: df["chemical_name"] == "Copper"
+    ]
+    result = numutils.rank_stats(copper, "res", "location")
+    expected = pandas.DataFrame(
+        [
+            {"location": "Loc_0", "count": 8, "sum": 178.0, "mean": 22.25},
+            {"location": "Loc_1", "count": 11, "sum": 459.5, "mean": 41.77272727272727},
+            {"location": "Loc_2", "count": 10, "sum": 248.0, "mean": 24.8},
+            {"location": "Loc_3", "count": 11, "sum": 78.0, "mean": 7.090909090909091},
+            {"location": "Loc_4", "count": 9, "sum": 503.0, "mean": 55.888888888888886},
+            {"location": "Loc_5", "count": 12, "sum": 424.5, "mean": 35.375},
+        ]
+    )
+    pandas.testing.assert_frame_equal(result, expected)
+
+
+def test_dunn_scores():
+    copper = pandas.read_pickle(helpers.test_data_path("sed.pkl")).loc[
+        lambda df: df["chemical_name"] == "Copper"
+    ]
+    dunnres = numutils.dunn_test(copper, "res", "location")
+    expected = pandas.Series(
+        data=[-1, 1, -1, -3, 3, 1], index=["Loc_0", "Loc_1", "Loc_2", "Loc_3", "Loc_4", "Loc_5"]
+    )
+    pandas.testing.assert_series_equal(dunnres.scores, expected, check_names=False)

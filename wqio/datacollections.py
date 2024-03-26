@@ -616,11 +616,23 @@ class DataCollection:
         return self.comparison_stat_allway(stats.f_oneway, statname="f-test", control=None, **opts)
 
     def tukey_hsd(self) -> tuple[pandas.DataFrame, pandas.DataFrame]:
+        """
+        Tukey Honestly Significant Difference (HSD) test across stations + other groups
+        for each parameter
+        """
         hsd = utils.tukey_hsd(
             self.tidy, self.rescol, self.stationcol, self.paramcol, *self.othergroups
         )
         scores = utils.process_tukey_hsd_scores(hsd, self.stationcol, self.paramcol)
         return hsd, scores
+
+    def dunn(self):
+        """
+        Dunn test across the different stations for each pollutant
+        """
+        return self.tidy.groupby(by=[self.paramcol]).apply(
+            lambda g: utils.dunn_test(g, self.rescol, self.stationcol, *self.othergroups).scores
+        )
 
     def theilslopes(self, logs=False):
         raise NotImplementedError

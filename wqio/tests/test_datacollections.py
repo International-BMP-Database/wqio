@@ -646,6 +646,12 @@ def test_tukey_hsd_smoke_test(dc):
     assert scores.columns.tolist() == ["Inflow", "Outflow", "Reference"]
 
 
+def test_dunn(dc):
+    dunnres = dc.dunn()
+    assert dunnres.index.tolist() == list("ABCDEF")
+    assert dunnres.columns.tolist() == ["Inflow", "Outflow", "Reference"]
+
+
 @helpers.seed
 def test_theilslopes(dc):
     with helpers.raises(NotImplementedError):
