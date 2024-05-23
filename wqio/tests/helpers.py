@@ -219,8 +219,8 @@ def _show_system_info():  # pragma: no cover
     import pytest
 
     pyversion = sys.version.replace("\n", "")
-    print("Python version %s" % pyversion)
-    print("pytest version %d.%d.%d" % pytest.__versioninfo__)
+    print(f"Python version {pyversion}")
+    print(f"pytest version {pytest.__versioninfo__}")
 
     import numpy
 
