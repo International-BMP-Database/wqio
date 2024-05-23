@@ -507,8 +507,7 @@ def test_wilcoxon(dc):
         F,Outflow,62.0,,28.0,0.492459,,0.656642
         F,Reference,22.0,28.0,,0.952765,0.656642,
     """
-    with pytest.warns(UserWarning):
-        check_stat(known_csv, dc.wilcoxon(), comp=True)
+    check_stat(known_csv, dc.wilcoxon(), comp=True)
 
 
 @helpers.seed

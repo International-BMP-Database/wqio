@@ -266,7 +266,7 @@ class Storm:
             },
             self.precipcol: {
                 "name": "Precip (mm)",
-                "ylabel": "%s Precip.\nDepth (mm)" % self.hydrofreq_label,
+                "ylabel": f"{self.hydrofreq_label} Precip.\nDepth (mm)",
                 "color": "DarkGreen",
                 "linewidth": 1.5,
                 "alpha": 0.4,

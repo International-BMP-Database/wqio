@@ -153,7 +153,7 @@ def process_p_vals(pval):
     elif pval > 1 or pval < 0:
         raise ValueError(f"p-values must be between 0 and 1 (not {pval})")
     else:
-        out = "%0.3f" % pval
+        out = f"{pval:0.3f}"
 
     return out
 
@@ -377,7 +377,7 @@ def pH_to_concentration(pH, *args):
 
     # check that we recieved a valid input:
     if pH < 0 or pH > 14:
-        raise ValueError("pH = %f but must be between 0 and 14" % pH)
+        raise ValueError(f"pH = {pH} but must be between 0 and 14")
 
     # avogadro's number (items/mole)
     avogadro = 6.0221413e23
