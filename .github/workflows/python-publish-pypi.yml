@@ -2,6 +2,9 @@ name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
   workflow_dispatch:
+  push:
+    tags:  # Pattern matched against refs/tags
+      - 'v*/release' # Push events to every that ends in /release
 
 jobs:
   build:
