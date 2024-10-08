@@ -1,3 +1,5 @@
+import warnings
+
 import numpy
 import pandas
 import seaborn
@@ -193,8 +195,8 @@ class Location:
         return self._dataframe
 
     @property
-    @numpy.deprecate
     def full_data(self):
+        warnings.warn("Use DataCollection.dataframe instead", DeprecationWarning)
         return self.dataframe
 
     @property

@@ -244,15 +244,8 @@ def _show_system_info():  # pragma: no cover
 
 
 def checkdep_tex():  # pragma: no cover
-    if sys.version_info[0] >= 3:
-
-        def byte2str(b):
-            return b.decode("ascii")
-
-    else:  # pragma: no cover
-
-        def byte2str(b):
-            return b
+    def byte2str(b):
+        return b.decode("ascii")
 
     try:
         s = subprocess.Popen(["tex", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
