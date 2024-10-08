@@ -46,14 +46,17 @@ python check_wqio.py
 
 ## Releases
 
+*First*, you need to bump all of the versions like in [this PR](https://github.com/International-BMP-Database/wqio/pull/194).
+
+After that is pushed/merged/fetched, it's time to tag the test and final releases.
 There are two Github actions that are run when tags are pushed.
 The first builds and uploads to TestPyPI if the tag is in the form `v<major>.<minor>.<micro>/*/test`.
 
 The second builds, uploads to PyPI, then signs the release and creates a Github release with a bunch of different assets if the tag is in the form `v<major>.<minor>.<micro>/release`.
 
-To execute the builda, create a new tag ends with e.g.,  `/test` (i.e., `v0.6.3/test`) and push that.
+To execute the builds, create a new tag ends with e.g.,  `/test` (i.e., `v0.6.3/test`) and push that.
 
-If that works, create Yet Another tag that ends with `/release` (i.e., `v0.6.3/release`) and push that.
+If that works, create Yet Another Tag that ends with `/release` (i.e., `v0.6.3/release`) and push that.
 
 All in all, that workflow looks like this:
 
@@ -62,9 +65,9 @@ All in all, that workflow looks like this:
 git switch main
 git fetch upstream
 git merge --ff-only upstream/main
-git tag -a "v0.6.4/test"  # add comment in text editor
+git tag -a "v0.6.4/test"  # adjust version + add comment in text editor
 git push upstream --tags
 # watch, wait for CI to sucessfully build on TestPyPI
-git tag -a "v0.6.4/release"  # add comment in text editor
+git tag -a "v0.6.4/release"  # adjust version + add comment in text editor
 # watch, wait for CI to sucessfully build on actual PyPI
 ```
