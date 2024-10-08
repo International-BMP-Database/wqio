@@ -7,14 +7,14 @@ from setuptools import find_packages, setup
 DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
 NAME = "wqio"
-VERSION = "0.6.2"
+VERSION = "0.7.0"
 AUTHOR = "Paul Hobson (Herrera Environmental Consultants)"
 AUTHOR_EMAIL = "phobson@herrerainc.com"
 URL = "https://github.com/International-BMP-Database/wqio"
 DOWNLOAD_URL = "https://github.com/International-BMP-Database/wqio/archive/main.zip"
 LICENSE = "BSD 3-clause"
 PACKAGES = find_packages()
-PLATFORMS = "Python 3.9 and later."
+PLATFORMS = "Python 3.10 and later."
 CLASSIFIERS = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
