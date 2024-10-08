@@ -99,3 +99,8 @@ temp/*
 *.pyproj
 *.sln
 *.suo
+
+
+# misc
+*scratch*
+cov*.xml
