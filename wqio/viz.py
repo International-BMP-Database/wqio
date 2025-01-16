@@ -55,16 +55,14 @@ def log_formatter(use_1x=True, threshold=5):
         """Formats log axes as `1 x 10^N` when N > 4 or N < -4."""
 
         if 10**threshold >= tick > 1:
-            tick = f"{int(tick):,d}"
+            _tick = f"{int(tick):,d}"
         elif tick > 10**threshold or tick < 10 ** (-1 * threshold):
-            if use_1x:
-                tick = r"$1 \times 10 ^ {%d}$" % int(numpy.log10(tick))
-            else:
-                tick = r"$10 ^ {%d}$" % int(numpy.log10(tick))
+            int_log = int(numpy.log10(tick))
+            _tick = rf"$1 \times 10 ^ {int_log:d}$" if use_1x else rf"$10 ^ {int_log:d}$"
         else:
-            tick = utils.sig_figs(tick, n=1)
+            _tick = utils.sig_figs(tick, n=1)
 
-        return str(tick)
+        return str(_tick)
 
     func = partial(_formatter, use_1x=use_1x, threshold=threshold)
     return ticker.FuncFormatter(func)
