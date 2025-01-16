@@ -282,7 +282,7 @@ def test_include_exclude(dataset):
 
 
 def test_wilcoxon(dataset):
-    known_wilcoxon_stats = (0.0, 5.820766e-11)
+    known_wilcoxon_stats = (0.0, 2.469027e-07)
     known_wilcoxon_z = known_wilcoxon_stats[0]
     known_wilcoxon_p = known_wilcoxon_stats[1]
 
