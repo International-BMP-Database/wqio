@@ -1,4 +1,4 @@
-name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+name: Publish 🐍📦 to PyPI
 
 on:
   workflow_dispatch:
