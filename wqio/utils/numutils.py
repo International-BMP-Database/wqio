@@ -72,7 +72,7 @@ def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
 
         # logic to do all of the rounding
         elif x != 0.0:
-            order = numpy.floor(numpy.log10(numpy.abs(x)))
+            order = int(numpy.floor(numpy.log10(numpy.abs(x))))
 
             if -1.0 * expthresh <= order <= expthresh:
                 decimal_places = int(n - 1 - order)
@@ -81,16 +81,16 @@ def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
                     out = f"{round(x, decimal_places):,.0f}"
 
                 else:
-                    fmt = "{0:,.%df}" % decimal_places
+                    fmt = f"{{0:,.{decimal_places:d}f}}"
                     out = fmt.format(x)
 
             else:
-                decimal_places = n - 1
+                decimal_places = int(n - 1)
                 if tex:
-                    fmt = r"$%%0.%df \times 10 ^ {%d}$" % (decimal_places, order)
+                    fmt = rf"$%0.{decimal_places:d}f \times 10 ^ {{{order:d}}}$"
                     out = fmt % round(x / 10**order, decimal_places)
                 else:
-                    fmt = "{0:.%de}" % decimal_places
+                    fmt = f"{{0:.{decimal_places:d}e}}"
                     out = fmt.format(x)
 
         else:
