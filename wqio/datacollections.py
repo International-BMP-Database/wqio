@@ -169,7 +169,7 @@ class DataCollection:
             def make_tidy(df):
                 return df.groupby(self.groupcols).apply(fxn, include_groups=False)
 
-        keep_cols = self.tidy_columns + [self.roscol]
+        keep_cols = self.tidy_columns + [self.rescol]
         with warnings.catch_warnings():
             warnings.simplefilter("once")
             _tidy = (
@@ -837,13 +837,11 @@ class DataCollection:
         stat_df : pandas.DataFrame
 
         """
-
-        col = self.roscol if useros else self.rescol
         groupcols = validate.at_least_empty_list(groupcols) or self.groupcols
         ptiles = percentiles or [0.1, 0.25, 0.5, 0.75, 0.9]
         summary = (
             self.tidy.groupby(by=groupcols)
-            .apply(lambda g: g[col].describe(percentiles=ptiles).T)
+            .apply(lambda g: g[self.rescol].describe(percentiles=ptiles).T)
             .drop("count", axis="columns")
         )
         return self.inventory.join(summary).unstack(level=self.stationcol)
