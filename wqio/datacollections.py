@@ -124,7 +124,7 @@ class DataCollection:
         self.pairgroups = self.pairgroups + [self.stationcol, self.paramcol]
 
         # final column list of the tidy dataframe
-        self.tidy_columns = self.groupcols + [self._raw_rescol, self.cencol]
+        self.tidy_columns = self.groupcols + list({self._raw_rescol, self.rescol, self.cencol})
 
         # the "raw" data with the censorship column added
         self.data = dataframe.assign(
@@ -169,11 +169,11 @@ class DataCollection:
             def make_tidy(df):
                 return df.groupby(self.groupcols).apply(fxn, include_groups=False)
 
-        keep_cols = self.tidy_columns + [self.rescol]
+        # keep_cols = self.tidy_columns
         with warnings.catch_warnings():
             warnings.simplefilter("once")
             _tidy = (
-                self.data.reset_index()[self.tidy_columns]
+                self.data.reset_index()  # [self.tidy_columns]
                 .groupby(by=self.groupcols)
                 .filter(self.filterfxn)
                 .pipe(make_tidy)
@@ -181,7 +181,7 @@ class DataCollection:
                 .sort_values(by=self.groupcols)
             )
 
-        return _tidy[keep_cols]
+        return _tidy[self.tidy_columns]
 
     @cache_readonly
     def paired(self):
