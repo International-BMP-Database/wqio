@@ -11,7 +11,7 @@ import statsmodels.api as sm
 from scipy import stats
 
 try:
-    from tqdm import tqdm
+    from tqdm import tqdm  # ty:ignore[unresolved-import]
 except ImportError:  # pragma: no cover
     tqdm = None
 
@@ -19,7 +19,7 @@ from wqio import bootstrap, utils, validate
 from wqio.features import Dataset, Location
 from wqio.ros import ROS
 
-_Stat = namedtuple("_stat", ["stat", "pvalue"])
+_Stat = namedtuple("_Stat", ["stat", "pvalue"])
 
 
 def _dist_compare(

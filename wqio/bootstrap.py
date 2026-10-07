@@ -12,9 +12,7 @@ from wqio import utils
 
 _logger = logging.getLogger(__name__)
 
-fitestimate = namedtuple(
-    "BootstrappedFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"]
-)
+BSFitEstimate = namedtuple("BSFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"])
 
 __all__ = ["BCA", "percentile", "fit"]
 
@@ -212,7 +210,7 @@ def fit(
     xlog: bool = False,
     ylog: bool = False,
     **kwargs: Any,
-) -> fitestimate:
+) -> BSFitEstimate:
     """
     Perform a percentile bootstrap estimate on a linear regression.
 
@@ -307,4 +305,4 @@ def fit(
     # lower, upper bounds
     bounds = numpy.percentile(bs_estimates, percentiles, axis=1)
 
-    return fitestimate(x, yhat, bounds[0], bounds[1], xlog, ylog)
+    return BSFitEstimate(x, yhat, bounds[0], bounds[1], xlog, ylog)
