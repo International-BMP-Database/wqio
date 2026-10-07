@@ -1,14 +1,17 @@
 import warnings
 from collections import namedtuple
+from collections.abc import Callable, Generator, Iterable, Sequence
 from functools import cached_property, partial
+from typing import Any, NoReturn
 
 import numpy
+import numpy.typing
 import pandas
 import statsmodels.api as sm
 from scipy import stats
 
 try:
-    from tqdm import tqdm
+    from tqdm import tqdm  # ty:ignore[unresolved-import]
 except ImportError:  # pragma: no cover
     tqdm = None
 
@@ -16,10 +19,15 @@ from wqio import bootstrap, utils, validate
 from wqio.features import Dataset, Location
 from wqio.ros import ROS
 
-_Stat = namedtuple("_stat", ["stat", "pvalue"])
+_Stat = namedtuple("_Stat", ["stat", "pvalue"])
 
 
-def _dist_compare(x, y, stat_comp_func, **test_opts):
+def _dist_compare(
+    x: Sequence[float] | numpy.typing.NDArray[Any],
+    y: Sequence[float] | numpy.typing.NDArray[Any],
+    stat_comp_func: Callable[..., Any],
+    **test_opts: Any,
+) -> Any:
     if (len(x) == len(y)) and numpy.equal(x, y).all():
         return _Stat(numpy.nan, numpy.nan)
 
@@ -72,25 +80,25 @@ class DataCollection:
     """
 
     # column that stores the censorsip status of an observation
-    cencol = "__censorship"
+    cencol: str = "__censorship"
 
     def __init__(
         self,
-        dataframe,
-        rescol="res",
-        qualcol="qual",
-        stationcol="station",
-        paramcol="parameter",
-        ndval="ND",
-        othergroups=None,
-        pairgroups=None,
-        useros=True,
-        filterfxn=None,
-        bsiter=10000,
-        showpbar=True,
-    ):
+        dataframe: pandas.DataFrame,
+        rescol: str = "res",
+        qualcol: str = "qual",
+        stationcol: str = "station",
+        paramcol: str = "parameter",
+        ndval: str | list[str] = "ND",
+        othergroups: list[str] | None = None,
+        pairgroups: list[str] | None = None,
+        useros: bool = True,
+        filterfxn: Callable[..., bool] | None = None,
+        bsiter: int = 10000,
+        showpbar: bool = True,
+    ) -> None:
         # cache for all of the properties
-        self._cache = {}
+        self._cache: dict[str, Any] = {}
 
         # basic input
         self.raw_data = dataframe
@@ -98,18 +106,19 @@ class DataCollection:
         self.qualcol = qualcol
         self.stationcol = stationcol
         self.paramcol = paramcol
-        self.ndval = validate.at_least_empty_list(ndval)
-        self.othergroups = validate.at_least_empty_list(othergroups)
-        self.pairgroups = validate.at_least_empty_list(pairgroups)
+        self.ndval: list[str] = validate.at_least_empty_list(ndval)
+        self.othergroups: list[str] = validate.at_least_empty_list(othergroups)
+        self.pairgroups: list[str] = validate.at_least_empty_list(pairgroups)
         self.useros = useros
         self.filterfxn = filterfxn or utils.non_filter
         self.bsiter = bsiter
         self.showpbar = showpbar
 
         # column that stores ROS'd values
-        self.roscol = "ros_" + rescol
+        self.roscol: str = "ros_" + rescol
 
         # column stators "final" values
+        self.rescol: str
         if self.useros:
             self.rescol = self.roscol
         else:
@@ -130,13 +139,13 @@ class DataCollection:
             **{self.cencol: dataframe[self.qualcol].isin(self.ndval)}
         ).reset_index()
 
-        self.pbarfxn = tqdm if (self.showpbar and tqdm) else utils.misc.no_op
+        self.pbarfxn: Callable[..., Any] = tqdm if (self.showpbar and tqdm) else utils.misc.no_op
 
     @cached_property
-    def tidy(self):
+    def tidy(self) -> pandas.DataFrame:
         if self.useros:
 
-            def fxn(g):
+            def fxn(g: pandas.DataFrame) -> pandas.DataFrame:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     rosdf = (
@@ -153,19 +162,19 @@ class DataCollection:
 
         else:
 
-            def fxn(g):
+            def fxn(g: pandas.DataFrame) -> pandas.DataFrame:
                 g[self.roscol] = numpy.nan
                 return g
 
         if tqdm and self.showpbar:
 
-            def make_tidy(df):
-                tqdm.pandas(desc="Tidying the DataCollection")
+            def make_tidy(df: pandas.DataFrame) -> pandas.DataFrame:
+                tqdm.pandas(desc="Tidying the DataCollection")  # ty: ignore[unresolved-attribute]
                 return df.groupby(self.groupcols).progress_apply(fxn, include_groups=False)
 
         else:
 
-            def make_tidy(df):
+            def make_tidy(df: pandas.DataFrame) -> pandas.DataFrame:
                 return df.groupby(self.groupcols).apply(fxn, include_groups=False)
 
         # keep_cols = self.tidy_columns
@@ -183,7 +192,7 @@ class DataCollection:
         return _tidy[self.tidy_columns]
 
     @cached_property
-    def paired(self):
+    def paired(self) -> pandas.DataFrame:
         _pairs = (
             self.data.reset_index()
             .groupby(by=self.groupcols)
@@ -196,13 +205,13 @@ class DataCollection:
 
     def generic_stat(
         self,
-        statfxn,
-        use_bootstrap=True,
-        statname=None,
-        has_pvalue=False,
-        filterfxn=None,
-        **statopts,
-    ):
+        statfxn: Callable[..., Any],
+        use_bootstrap: bool = True,
+        statname: str | None = None,
+        has_pvalue: bool = False,
+        filterfxn: Callable[..., bool] | None = None,
+        **statopts: Any,
+    ) -> pandas.DataFrame:
         """Generic function to estimate a statistic and its CIs.
 
         Parameters
@@ -257,7 +266,7 @@ class DataCollection:
         if filterfxn is None:
             filterfxn = utils.non_filter
 
-        def fxn(x):
+        def fxn(x: pandas.DataFrame) -> pandas.Series:
             data = x[self.rescol].values
             if use_bootstrap:
                 stat = statfxn(data)
@@ -291,7 +300,7 @@ class DataCollection:
         return results
 
     @cached_property
-    def count(self):
+    def count(self) -> pandas.DataFrame:
         return (
             self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname="Count")
             .fillna(0)
@@ -299,7 +308,7 @@ class DataCollection:
         )
 
     @cached_property
-    def inventory(self):
+    def inventory(self) -> pandas.DataFrame:
         counts = (
             self.tidy.groupby(by=self.groupcols + [self.cencol])
             .size()
@@ -316,18 +325,18 @@ class DataCollection:
         return counts[["Count", "Non-Detect"]]
 
     @cached_property
-    def median(self):
+    def median(self) -> pandas.DataFrame:
         return self.generic_stat(numpy.median, statname="median")
 
     @cached_property
-    def mean(self):
+    def mean(self) -> pandas.DataFrame:
         return self.generic_stat(numpy.mean, statname="mean")
 
     @cached_property
-    def std_dev(self):
+    def std_dev(self) -> pandas.DataFrame:
         return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False, ddof=1)
 
-    def percentile(self, percentile):
+    def percentile(self, percentile: float) -> pandas.DataFrame:
         """Return the percentiles (0 - 100) for the data."""
         return self.generic_stat(
             lambda x: numpy.percentile(x, percentile),
@@ -336,13 +345,13 @@ class DataCollection:
         )
 
     @cached_property
-    def logmean(self):
+    def logmean(self) -> pandas.DataFrame:
         return self.generic_stat(
             lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname="Log-mean"
         )
 
     @cached_property
-    def logstd_dev(self):
+    def logstd_dev(self) -> pandas.DataFrame:
         return self.generic_stat(
             lambda x, axis=0: numpy.std(numpy.log(x), axis=axis, ddof=1),
             use_bootstrap=False,
@@ -350,18 +359,18 @@ class DataCollection:
         )
 
     @cached_property
-    def geomean(self):
-        geomean = numpy.exp(self.logmean)
+    def geomean(self) -> pandas.DataFrame:
+        geomean: Any = numpy.exp(self.logmean)
         geomean.columns.names = ["station", "Geo-mean"]
         return geomean
 
     @cached_property
-    def geostd_dev(self):
-        geostd = numpy.exp(self.logstd_dev)
+    def geostd_dev(self) -> pandas.DataFrame:
+        geostd: Any = numpy.exp(self.logstd_dev)
         geostd.columns.names = ["station", "Geo-std. dev."]
         return geostd
 
-    def shapiro(self, **opts):
+    def shapiro(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Shapiro-Wilk test for normality on the datasets.
 
@@ -378,7 +387,7 @@ class DataCollection:
             **opts,
         )
 
-    def shapiro_log(self, **opts):
+    def shapiro_log(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Shapiro-Wilk test for normality on log-transformed datasets.
 
@@ -395,7 +404,7 @@ class DataCollection:
             **opts,
         )
 
-    def lilliefors(self, **opts):
+    def lilliefors(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Lilliefors test for normality on the datasets.
 
@@ -411,7 +420,7 @@ class DataCollection:
             **opts,
         )
 
-    def lilliefors_log(self, **opts):
+    def lilliefors_log(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Lilliefors test for normality on the log-transformed datasets.
 
@@ -427,7 +436,7 @@ class DataCollection:
             **opts,
         )
 
-    def anderson_darling(self, **opts):
+    def anderson_darling(self, **opts: Any) -> NoReturn:
         raise NotImplementedError
         return self.generic_stat(
             utils.anderson_darling,
@@ -437,7 +446,7 @@ class DataCollection:
             **opts,
         )
 
-    def anderson_darling_log(self, **opts):
+    def anderson_darling_log(self, **opts: Any) -> NoReturn:
         raise NotImplementedError
         return self.generic_stat(
             lambda x: utils.anderson_darling(numpy.log(x)),
@@ -447,7 +456,13 @@ class DataCollection:
             **opts,
         )
 
-    def comparison_stat_twoway(self, statfxn, statname=None, paired=False, **statopts):
+    def comparison_stat_twoway(
+        self,
+        statfxn: Callable[..., Any],
+        statname: str | None = None,
+        paired: bool = False,
+        **statopts: Any,
+    ) -> pandas.DataFrame:
         """Generic function to apply comparative hypothesis tests to
         the groups of the ``DataCollection``.
 
@@ -510,13 +525,19 @@ class DataCollection:
             self.stationcol,
             rescol,
             statfxn,
-            statname=statname,
+            statname=statname,  # ty: ignore[invalid-argument-type]
             pbarfxn=self.pbarfxn,
             **statopts,
         )
         return pandas.DataFrame.from_records(results).set_index(index_cols)
 
-    def comparison_stat_allway(self, statfxn, statname, control=None, **statopts):
+    def comparison_stat_allway(
+        self,
+        statfxn: Callable[..., Any],
+        statname: str,
+        control: str | None = None,
+        **statopts: Any,
+    ) -> pandas.DataFrame:
         results = utils.numutils._group_comp_stat_generator(
             self.tidy,
             self.groupcols_comparison,
@@ -530,7 +551,7 @@ class DataCollection:
         )
         return pandas.DataFrame.from_records(results).set_index(self.groupcols_comparison)
 
-    def mann_whitney(self, **opts):
+    def mann_whitney(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Mann-Whitney U test across datasets.
 
@@ -541,7 +562,7 @@ class DataCollection:
             statname="mann_whitney",
         )
 
-    def ranksums(self, **opts):
+    def ranksums(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the unpaired Wilcoxon rank-sum test across datasets.
 
@@ -549,7 +570,7 @@ class DataCollection:
         """
         return self.comparison_stat_twoway(stats.ranksums, statname="rank_sums", **opts)
 
-    def t_test(self, **opts):
+    def t_test(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the T-test for independent scores.
 
@@ -557,7 +578,7 @@ class DataCollection:
         """
         return self.comparison_stat_twoway(stats.ttest_ind, statname="t_test", **opts)
 
-    def levene(self, **opts):
+    def levene(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the Levene test for equal variances
 
@@ -565,7 +586,7 @@ class DataCollection:
         """
         return self.comparison_stat_twoway(stats.levene, statname="levene", **opts)
 
-    def wilcoxon(self, **opts):
+    def wilcoxon(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the paired Wilcoxon rank-sum test across paired dataset.
 
@@ -578,7 +599,7 @@ class DataCollection:
             **opts,
         )
 
-    def kendall(self, **opts):
+    def kendall(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the paired Kendall-tau test across paired dataset.
 
@@ -588,7 +609,7 @@ class DataCollection:
             stats.kendalltau, statname="kendalltau", paired=True, **opts
         )
 
-    def spearman(self, **opts):
+    def spearman(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the paired Spearman-rho test across paired dataset.
 
@@ -598,7 +619,7 @@ class DataCollection:
             stats.spearmanr, statname="spearmanrho", paired=True, **opts
         )
 
-    def kruskal_wallis(self, **opts):
+    def kruskal_wallis(self, **opts: Any) -> pandas.DataFrame:
         """
         Run the paired Kruskal-Wallos H-test across paired dataset.
 
@@ -606,7 +627,7 @@ class DataCollection:
         """
         return self.comparison_stat_allway(stats.kruskal, statname="K-W H", control=None, **opts)
 
-    def f_test(self, **opts):
+    def f_test(self, **opts: Any) -> pandas.DataFrame:
         """
         One-way ANOVA test across datasets
 
@@ -625,7 +646,7 @@ class DataCollection:
         scores = utils.process_tukey_hsd_scores(hsd, self.stationcol, self.paramcol)
         return hsd, scores
 
-    def dunn(self):
+    def dunn(self) -> pandas.DataFrame:
         """
         Dunn test across the different stations for each pollutant
         """
@@ -633,12 +654,12 @@ class DataCollection:
             lambda g: utils.dunn_test(g, self.rescol, self.stationcol, *self.othergroups).scores
         )
 
-    def theilslopes(self, logs=False):
+    def theilslopes(self, logs: bool = False) -> NoReturn:
         raise NotImplementedError
 
     @cached_property
-    def locations(self):
-        _locations = []
+    def locations(self) -> list[Location]:
+        _locations: list[Location] = []
         groups = (
             self.data.groupby(by=self.groupcols).filter(self.filterfxn).groupby(by=self.groupcols)
         )
@@ -664,7 +685,7 @@ class DataCollection:
 
         return _locations
 
-    def datasets(self, loc1, loc2):
+    def datasets(self, loc1: str, loc2: str) -> Generator[Dataset, None, None]:
         """Generate ``Dataset`` objects from the raw data of the
         ``DataColletion``.
 
@@ -689,7 +710,7 @@ class DataCollection:
         groupcols = list(filter(lambda g: g != self.stationcol, self.groupcols))
 
         for names, data in self.data.groupby(by=groupcols):
-            ds_dict = dict(zip(groupcols, names))
+            ds_dict = dict(zip(groupcols, names))  # ty: ignore[invalid-argument-type]
 
             ds_dict[self.stationcol] = loc1
             infl = self.selectLocations(squeeze=True, **ds_dict)
@@ -698,16 +719,23 @@ class DataCollection:
             effl = self.selectLocations(squeeze=True, **ds_dict)
 
             ds_dict.pop(self.stationcol)
-            dsname = "_".join(names).replace(", ", "")
+            dsname = "_".join(names)  # ty: ignore[no-matching-overload].replace(", ", "")
 
             if effl:
-                ds = Dataset(infl, effl, useros=self.useros, name=dsname)
+                ds = Dataset(
+                    infl,  # ty: ignore[invalid-argument-type]
+                    effl,  # ty: ignore[invalid-argument-type]
+                    useros=self.useros,
+                    name=dsname,
+                )
                 ds.definition = ds_dict
                 yield ds
 
     @staticmethod
-    def _filter_collection(collection, squeeze, **kwargs):
-        items = list(collection)
+    def _filter_collection[T: (Location, Dataset)](
+        collection: Iterable[T], squeeze: bool, **kwargs: Any
+    ) -> list[T] | T | None:
+        items: list[T] | T | None = list(collection)
         for key, value in kwargs.items():
             if numpy.isscalar(value):
                 items = [r for r in filter(lambda x: x.definition[key] == value, items)]
@@ -722,7 +750,9 @@ class DataCollection:
 
         return items
 
-    def selectLocations(self, squeeze=False, **conditions):
+    def selectLocations(
+        self, squeeze: bool = False, **conditions: Any
+    ) -> list[Location] | Location | None:
         """Select ``Location`` objects meeting specified criteria
         from the ``DataColletion``.
 
@@ -762,7 +792,9 @@ class DataCollection:
         locations = self._filter_collection(self.locations.copy(), squeeze=squeeze, **conditions)
         return locations
 
-    def selectDatasets(self, loc1, loc2, squeeze=False, **conditions):
+    def selectDatasets(
+        self, loc1: str, loc2: str, squeeze: bool = False, **conditions: Any
+    ) -> list[Dataset] | Dataset | None:
         """Select ``Dataset`` objects meeting specified criteria
         from the ``DataColletion``.
 
@@ -806,7 +838,7 @@ class DataCollection:
         datasets = self._filter_collection(self.datasets(loc1, loc2), squeeze=squeeze, **conditions)
         return datasets
 
-    def n_unique(self, column):
+    def n_unique(self, column: str) -> pandas.DataFrame:
         return (
             self.data.loc[:, self.groupcols + [column]]
             .drop_duplicates()
@@ -819,7 +851,12 @@ class DataCollection:
             .astype(int)
         )
 
-    def stat_summary(self, percentiles=None, groupcols=None, useros=True):
+    def stat_summary(
+        self,
+        percentiles: Sequence[float] | None = None,
+        groupcols: list[str] | None = None,
+        useros: bool = True,
+    ) -> pandas.DataFrame:
         """A generic, high-level summary of the data collection.
 
         Parameters

@@ -43,6 +43,7 @@ pip install -e .
 
 ```python
 import wqio
+
 wqio.test()
 ```
 

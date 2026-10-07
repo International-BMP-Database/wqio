@@ -1,22 +1,23 @@
 import logging
 from collections import namedtuple
+from collections.abc import Callable
+from typing import Any
 
 import numpy
 import scipy.stats as stats
+from numpy.typing import ArrayLike, NDArray
 from probscale.algo import _estimate_from_fit
 
 from wqio import utils
 
 _logger = logging.getLogger(__name__)
 
-fitestimate = namedtuple(
-    "BootstrappedFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"]
-)
+BSFitEstimate = namedtuple("BSFitEstimate", ["xhat", "yhat", "lower", "upper", "xlog", "ylog"])
 
 __all__ = ["BCA", "percentile", "fit"]
 
 
-def _acceleration(data):
+def _acceleration(data: NDArray[Any]) -> Any:
     """Compute the acceleration statistic.
 
     Parameters
@@ -41,7 +42,7 @@ def _acceleration(data):
     return sumcube_resids / (6 * sumsqr_resids**1.5)
 
 
-def _make_boot_index(elements, niter):
+def _make_boot_index(elements: int, niter: int) -> NDArray[numpy.int_]:
     """Generate an array of bootstrap sample sets
 
     Parameters
@@ -61,7 +62,14 @@ def _make_boot_index(elements, niter):
     return numpy.random.randint(low=0, high=elements, size=(niter, elements))
 
 
-def BCA(data, statfxn, niter=10000, alpha=0.05, log=True, warn=False):
+def BCA(
+    data: ArrayLike,
+    statfxn: Callable[..., Any],
+    niter: int = 10000,
+    alpha: float = 0.05,
+    log: bool = True,
+    warn: bool = False,
+) -> NDArray[numpy.float64]:
     """
     Estimates confidence intervals around a statistic using the
     Bias-Corrected and Accelerated method.
@@ -144,7 +152,12 @@ def BCA(data, statfxn, niter=10000, alpha=0.05, log=True, warn=False):
     return CI
 
 
-def percentile(data, statfxn, niter=10000, alpha=0.05):
+def percentile(
+    data: NDArray[Any],
+    statfxn: Callable[..., Any],
+    niter: int = 10000,
+    alpha: float = 0.05,
+) -> NDArray[numpy.float64]:
     """
     Estimates confidence intervals around a statistic using the
     percentile method.
@@ -188,7 +201,16 @@ def percentile(data, statfxn, niter=10000, alpha=0.05):
     return CI
 
 
-def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False, **kwargs):
+def fit(
+    x: NDArray[Any],
+    y: NDArray[Any],
+    fitfxn: Callable[..., Any],
+    niter: int = 10000,
+    alpha: float = 0.05,
+    xlog: bool = False,
+    ylog: bool = False,
+    **kwargs: Any,
+) -> BSFitEstimate:
     """
     Perform a percentile bootstrap estimate on a linear regression.
 
@@ -283,4 +305,4 @@ def fit(x, y, fitfxn, niter=10000, alpha=0.05, xlog=False, ylog=False, **kwargs)
     # lower, upper bounds
     bounds = numpy.percentile(bs_estimates, percentiles, axis=1)
 
-    return fitestimate(x, yhat, bounds[0], bounds[1], xlog, ylog)
+    return BSFitEstimate(x, yhat, bounds[0], bounds[1], xlog, ylog)
