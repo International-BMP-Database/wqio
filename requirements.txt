@@ -1,7 +1,0 @@
-numpy
-scipy
-pandas
-matplotlib
-statsmodels
-seaborn
-probscale

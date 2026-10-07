@@ -1,4 +1,5 @@
 import warnings
+from functools import cached_property
 
 import numpy
 import pandas
@@ -7,7 +8,6 @@ import statsmodels.api as sm
 from matplotlib import pyplot
 from probscale.algo import _estimate_from_fit
 from scipy import stats
-from statsmodels.tools.decorators import cache_readonly
 
 from wqio import bootstrap, utils, validate, viz
 from wqio.ros import ROS
@@ -237,150 +237,150 @@ class Location:
     def exclude(self):
         return not self.include
 
-    @cache_readonly
+    @cached_property
     def N(self):
         return self.data.shape[0]
 
-    @cache_readonly
+    @cached_property
     def hasData(self):
         return self.dataframe.shape[0] > 0
 
-    @cache_readonly
+    @cached_property
     def all_positive(self):
         if self.hasData:
             return self.min > 0
 
-    @cache_readonly
+    @cached_property
     def ND(self):
         return self.dataframe[self.cencol].sum()
 
-    @cache_readonly
+    @cached_property
     def NUnique(self):
         return pandas.unique(self.raw_data[self.rescol]).shape[0]
 
-    @cache_readonly
+    @cached_property
     def fractionND(self):
         return self.ND / self.N
 
-    @cache_readonly
+    @cached_property
     def shapiro(self):
         if self.hasData:
             return stats.shapiro(self.data)
 
-    @cache_readonly
+    @cached_property
     def shapiro_log(self):
         if self.hasData:
             return stats.shapiro(numpy.log(self.data))
 
-    @cache_readonly
+    @cached_property
     def lilliefors(self):
         if self.hasData:
             return sm.stats.lilliefors(self.data)
 
-    @cache_readonly
+    @cached_property
     def lilliefors_log(self):
         if self.hasData:
             return sm.stats.lilliefors(numpy.log(self.data))
 
-    @cache_readonly
+    @cached_property
     def anderson(self):
         if self.hasData:
             return utils.anderson_darling(self.data)
 
-    @cache_readonly
+    @cached_property
     def anderson_log(self):
         if self.hasData:
             return utils.anderson_darling(numpy.log(self.data))
 
-    @cache_readonly
+    @cached_property
     def analysis_space(self):
         if self.shapiro_log[1] >= self.shapiro[1] and self.shapiro_log[1] > 0.1:
             return "lognormal"
         else:
             return "normal"
 
-    @cache_readonly
+    @cached_property
     def cov(self):
         if self.hasData:
             return self.data.std() / self.data.mean()
 
-    @cache_readonly
+    @cached_property
     def min(self):
         if self.hasData:
             return self.data.min()
 
-    @cache_readonly
+    @cached_property
     def min_detect(self):
         if self.hasData:
             return self.raw_data[self.rescol][~self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
-    @cache_readonly
+    @cached_property
     def min_DL(self):
         if self.hasData:
             return self.raw_data[self.rescol][self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
-    @cache_readonly
+    @cached_property
     def max(self):
         if self.hasData:
             return self.data.max()
 
-    @cache_readonly
+    @cached_property
     def skew(self):
         if self.hasData:
             return stats.skew(self.data)
 
-    @cache_readonly
+    @cached_property
     def pctl10(self):
         if self.hasData:
             return numpy.percentile(self.data, 10)
 
-    @cache_readonly
+    @cached_property
     def pctl25(self):
         if self.hasData:
             return numpy.percentile(self.data, 25)
 
-    @cache_readonly
+    @cached_property
     def pctl75(self):
         if self.hasData:
             return numpy.percentile(self.data, 75)
 
-    @cache_readonly
+    @cached_property
     def pctl90(self):
         if self.hasData:
             return numpy.percentile(self.data, 90)
 
     # stats that we need
-    @cache_readonly
+    @cached_property
     def median(self):
         if self.hasData:
             return numpy.median(self.data)
 
-    @cache_readonly
+    @cached_property
     def median_conf_interval(self):
         if self.hasData:
             return bootstrap.BCA(self.data, numpy.median, niter=self.bsiter)
 
-    @cache_readonly
+    @cached_property
     def mean(self):
         if self.hasData:
             return numpy.mean(self.data)
 
-    @cache_readonly
+    @cached_property
     def mean_conf_interval(self):
         if self.hasData:
             return bootstrap.BCA(self.data, numpy.mean, niter=self.bsiter)
 
-    @cache_readonly
+    @cached_property
     def std(self):
         if self.hasData:
             return numpy.std(self.data)
 
-    @cache_readonly
+    @cached_property
     def logmean(self):
         if self.all_positive and self.hasData:
             return numpy.mean(numpy.log(self.data))
 
-    @cache_readonly
+    @cached_property
     def logmean_conf_interval(self):
         if self.all_positive and self.hasData:
 
@@ -389,22 +389,22 @@ class Location:
 
             return bootstrap.BCA(self.data, fxn, niter=self.bsiter)
 
-    @cache_readonly
+    @cached_property
     def logstd(self):
         if self.all_positive and self.hasData:
             return numpy.std(numpy.log(self.data))
 
-    @cache_readonly
+    @cached_property
     def geomean(self):
         if self.all_positive and self.hasData:
             return numpy.exp(self.logmean)
 
-    @cache_readonly
+    @cached_property
     def geomean_conf_interval(self):
         if self.all_positive and self.hasData:
             return numpy.exp(self.logmean_conf_interval)
 
-    @cache_readonly
+    @cached_property
     def geostd(self):
         if self.all_positive and self.hasData:
             return numpy.exp(self.logstd)
@@ -789,7 +789,7 @@ class Dataset:
         self._definition = {}
         self._cache = {}
 
-    @cache_readonly
+    @cached_property
     def data(self):
         if self.effluent.hasData:
             effl = self.effluent.raw_data.copy()
@@ -808,23 +808,23 @@ class Dataset:
         effl = utils.add_column_level(effl, "outflow", "station")
         return infl.join(effl, how="outer")
 
-    @cache_readonly
+    @cached_property
     def paired_data(self):
         if self.data is not None:
             return self.data.dropna()
 
-    @cache_readonly
+    @cached_property
     def n_pairs(self):
         if self.paired_data is not None:
             return self.paired_data.shape[0]
         else:
             return 0
 
-    @cache_readonly
+    @cached_property
     def _non_paired_stats(self):
         return self.influent.data is not None and self.effluent.data is not None
 
-    @cache_readonly
+    @cached_property
     def _paired_stats(self):
         return self._non_paired_stats and self.paired_data.shape[0] > 20
 
@@ -866,7 +866,7 @@ class Dataset:
         return not self.include
 
     # stats describing the dataset
-    @cache_readonly
+    @cached_property
     def medianCIsOverlap(self):
         overlap = True
         if self.influent.hasData and self.effluent.hasData:
@@ -877,7 +877,7 @@ class Dataset:
             )
         return overlap
 
-    @cache_readonly
+    @cached_property
     def wilcoxon_z(self):
         """The Wilcoxon Z-statistic.
 
@@ -896,7 +896,7 @@ class Dataset:
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[0]
 
-    @cache_readonly
+    @cached_property
     def wilcoxon_p(self):
         """Two-sided p-value of the Wilcoxon test
 
@@ -908,7 +908,7 @@ class Dataset:
         if self._wilcoxon_stats is not None:
             return self._wilcoxon_stats[1]
 
-    @cache_readonly
+    @cached_property
     def mannwhitney_u(self):
         """Mann-Whitney U-statistic.
 
@@ -926,7 +926,7 @@ class Dataset:
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[0]
 
-    @cache_readonly
+    @cached_property
     def mannwhitney_p(self):
         """Two-sided p-value of the Mann-Whitney test
 
@@ -942,7 +942,7 @@ class Dataset:
         if self._mannwhitney_stats is not None:
             return self._mannwhitney_stats[1]
 
-    @cache_readonly
+    @cached_property
     def kendall_tau(self):
         """The Kendall-Tau statistic.
 
@@ -961,7 +961,7 @@ class Dataset:
         if self._kendall_stats is not None:
             return self._kendall_stats[0]
 
-    @cache_readonly
+    @cached_property
     def kendall_p(self):
         """Two-sided p-value of the Kendall test
 
@@ -973,7 +973,7 @@ class Dataset:
         if self._kendall_stats is not None:
             return self._kendall_stats[1]
 
-    @cache_readonly
+    @cached_property
     def spearman_rho(self):
         """The Spearman's rho statistic.
 
@@ -992,7 +992,7 @@ class Dataset:
         if self._spearman_stats is not None:
             return self._spearman_stats[0]
 
-    @cache_readonly
+    @cached_property
     def spearman_p(self):
         """Two-sided p-value of the Spearman test
 
@@ -1004,40 +1004,40 @@ class Dataset:
         if self._spearman_stats is not None:
             return self._spearman_stats[1]
 
-    @cache_readonly
+    @cached_property
     def ttest_t(self):
         return self._ttest_stats[0]
 
-    @cache_readonly
+    @cached_property
     def ttest_p(self):
         return self._ttest_stats[1]
 
-    @cache_readonly
+    @cached_property
     def levene_ks(self):
         return self._levene_stats[0]
 
-    @cache_readonly
+    @cached_property
     def levene_p(self):
         return self._levene_stats[1]
 
-    @cache_readonly
+    @cached_property
     def theil_medslope(self):
         return self._theil_stats["medslope"]
 
-    @cache_readonly
+    @cached_property
     def theil_intercept(self):
         return self._theil_stats["intercept"]
 
-    @cache_readonly
+    @cached_property
     def theil_loslope(self):
         return self._theil_stats["loslope"]
 
-    @cache_readonly
+    @cached_property
     def theil_hislope(self):
         return self._theil_stats["hislope"]
 
     # helper objects for the stats
-    @cache_readonly
+    @cached_property
     def _wilcoxon_stats(self):
         if self._paired_stats:
             return stats.wilcoxon(
@@ -1045,36 +1045,36 @@ class Dataset:
                 numpy.log(self.paired_data.outflow.res),
             )
 
-    @cache_readonly
+    @cached_property
     def _mannwhitney_stats(self):
         if self._non_paired_stats:
             return stats.mannwhitneyu(
                 self.influent.data, self.effluent.data, alternative="two-sided"
             )
 
-    @cache_readonly
+    @cached_property
     def _kendall_stats(self):
         if self._paired_stats:
             return stats.kendalltau(self.paired_data.inflow.res, self.paired_data.outflow.res)
 
-    @cache_readonly
+    @cached_property
     def _spearman_stats(self):
         if self._paired_stats:
             return stats.spearmanr(
                 self.paired_data.inflow.res.values, self.paired_data.outflow.res.values
             )
 
-    @cache_readonly
+    @cached_property
     def _ttest_stats(self):
         if self._non_paired_stats:
             return stats.ttest_ind(self.influent.data, self.effluent.data, False)
 
-    @cache_readonly
+    @cached_property
     def _levene_stats(self):
         if self._non_paired_stats:
             return stats.levene(self.influent.data, self.effluent.data, center="median")
 
-    @cache_readonly
+    @cached_property
     def _theil_stats(self):
         return self.theilSlopes()
 

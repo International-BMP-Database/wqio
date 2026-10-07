@@ -1,6 +1,6 @@
 package:
   name: wqio
-  version: 0.7.2
+  version: 0.7.3
 
 source:
   path: ../../
@@ -9,29 +9,23 @@ source:
    # - fix.patch
 
 build:
-  script: python setup.py install
+  script: python -m pip install . --no-deps --no-build-isolation -vv
   number: 12
 
 requirements:
-  build:
-    - python
-    - setuptools
-    - pandas
-    - numpy
-    - scipy
-    - matplotlib
-    - statsmodels
-    - seaborn
-    - mpl-probscale
+  host:
+    - python >=3.12
+    - pip
+    - uv-build >=0.12,<0.13
 
   run:
-    - python
-    - setuptools
-    - pandas
+    - python >=3.12
+    - numpy
+    - scipy
+    - pandas <3
+    - matplotlib
     - seaborn
     - statsmodels
-    - xlrd
-    - six
     - mpl-probscale
 
 test:
