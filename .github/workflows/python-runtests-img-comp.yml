@@ -14,21 +14,14 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - name: Install uv and set up Python 3.13
+      uses: astral-sh/setup-uv@v6
       with:
-        python-version: 3.13
+        python-version: "3.13"
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install uv
-        uv venv
-        source .venv/bin/activate
-        uv pip install pytest
-        if [ -f requirements_dev.txt ]; then uv pip install -r requirements_dev.txt; fi
+      run: uv sync --locked
     - name: Test with pytest
       run: |
-        source .venv/bin/activate
         export MPL_IMGCOMP_TOLERANCE=20
-        python check_wqio.py --strict --verbose
+        uv run python check_wqio.py --strict --verbose

@@ -3,9 +3,18 @@ name = "wqio"
 version = "0.7.3"
 description = "wqio: Water Quality Inflow/Outflow"
 authors = [
-    { name = "Paul Hobson", email = "phobson@herrerainc.com" }
+    { name = "Paul Hobson (Herrera Environmental Consultants)", email = "phobson@herrerainc.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
@@ -18,6 +27,11 @@ dependencies = [
 readme = "readme.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://github.com/International-BMP-Database/wqio"
+Repository = "https://github.com/International-BMP-Database/wqio.git"
+Download = "https://github.com/International-BMP-Database/wqio/archive/main.zip"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
@@ -40,3 +54,12 @@ dev = [
 
 [tool.uv.build-backend]
 module-root = ""
+
+[tool.pytest.ini_options]
+markers = [
+    "mpl_image_compare",
+]
+
+[tool.isort]
+profile = "black"
+src_paths = ["wqio"]
