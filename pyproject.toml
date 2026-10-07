@@ -1,0 +1,39 @@
+[project]
+name = "wqio"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Paul Hobson", email = "phobson@herrerainc.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas<3",
+    "probscale>=0.2.5",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "statsmodels>=0.15.0",
+]
+
+[project.scripts]
+wqio = "wqio:main"
+
+[build-system]
+requires = ["uv_build>=0.11.24,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.16.2",
+    "docopt>=0.6.2",
+    "isort>=9.0.2",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-mpl>=0.19.0",
+    "pyyaml>=6.0.3",
+    "requests>=2.34.2",
+    "ruff>=0.16.10",
+    "ty>=0.0.85",
+]

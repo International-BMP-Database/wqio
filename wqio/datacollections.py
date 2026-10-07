@@ -1,12 +1,11 @@
 import warnings
 from collections import namedtuple
-from functools import partial
+from functools import cached_property, partial
 
 import numpy
 import pandas
 import statsmodels.api as sm
 from scipy import stats
-from statsmodels.tools.decorators import cache_readonly
 
 try:
     from tqdm import tqdm
@@ -133,7 +132,7 @@ class DataCollection:
 
         self.pbarfxn = tqdm if (self.showpbar and tqdm) else utils.misc.no_op
 
-    @cache_readonly
+    @cached_property
     def tidy(self):
         if self.useros:
 
@@ -183,7 +182,7 @@ class DataCollection:
 
         return _tidy[self.tidy_columns]
 
-    @cache_readonly
+    @cached_property
     def paired(self):
         _pairs = (
             self.data.reset_index()
@@ -291,7 +290,7 @@ class DataCollection:
         )
         return results
 
-    @cache_readonly
+    @cached_property
     def count(self):
         return (
             self.generic_stat(lambda x: x.shape[0], use_bootstrap=False, statname="Count")
@@ -299,7 +298,7 @@ class DataCollection:
             .astype(int)
         )
 
-    @cache_readonly
+    @cached_property
     def inventory(self):
         counts = (
             self.tidy.groupby(by=self.groupcols + [self.cencol])
@@ -316,15 +315,15 @@ class DataCollection:
 
         return counts[["Count", "Non-Detect"]]
 
-    @cache_readonly
+    @cached_property
     def median(self):
         return self.generic_stat(numpy.median, statname="median")
 
-    @cache_readonly
+    @cached_property
     def mean(self):
         return self.generic_stat(numpy.mean, statname="mean")
 
-    @cache_readonly
+    @cached_property
     def std_dev(self):
         return self.generic_stat(numpy.std, statname="std. dev.", use_bootstrap=False, ddof=1)
 
@@ -336,13 +335,13 @@ class DataCollection:
             use_bootstrap=False,
         )
 
-    @cache_readonly
+    @cached_property
     def logmean(self):
         return self.generic_stat(
             lambda x, axis=0: numpy.mean(numpy.log(x), axis=axis), statname="Log-mean"
         )
 
-    @cache_readonly
+    @cached_property
     def logstd_dev(self):
         return self.generic_stat(
             lambda x, axis=0: numpy.std(numpy.log(x), axis=axis, ddof=1),
@@ -350,13 +349,13 @@ class DataCollection:
             statname="Log-std. dev.",
         )
 
-    @cache_readonly
+    @cached_property
     def geomean(self):
         geomean = numpy.exp(self.logmean)
         geomean.columns.names = ["station", "Geo-mean"]
         return geomean
 
-    @cache_readonly
+    @cached_property
     def geostd_dev(self):
         geostd = numpy.exp(self.logstd_dev)
         geostd.columns.names = ["station", "Geo-std. dev."]
@@ -637,7 +636,7 @@ class DataCollection:
     def theilslopes(self, logs=False):
         raise NotImplementedError
 
-    @cache_readonly
+    @cached_property
     def locations(self):
         _locations = []
         groups = (
