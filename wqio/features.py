@@ -310,8 +310,11 @@ class Location:
     @cached_property
     def analysis_space(self) -> Literal["lognormal", "normal"]:
         if (
-            self.shapiro_log[1] >= self.shapiro[1] and self.shapiro_log[1] > 0.1
-        ):  # ty: ignore[not-subscriptable]
+            self.shapiro_log is not None
+            and self.shapiro is not None
+            and self.shapiro_log[1] >= self.shapiro[1]
+            and self.shapiro_log[1] > 0.1
+        ):
             return "lognormal"
         else:
             return "normal"

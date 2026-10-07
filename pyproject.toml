@@ -40,7 +40,6 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "coverage>=7.16.2",
-    "docopt>=0.6.2",
     "isort>=9.0.2",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",

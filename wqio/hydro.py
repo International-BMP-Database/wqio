@@ -594,11 +594,8 @@ class Storm:
         if numpy.isnan(centroid):
             return None
         else:
-            return pandas.Timestamp(
-                dates.num2date(centroid)
-            ).tz_convert(  # ty: ignore[invalid-return-type]
-                None
-            )
+            result = pandas.Timestamp(dates.num2date(centroid)).tz_convert(None)
+            return None if pandas.isna(result) else result  # ty: ignore[invalid-return-type]
 
     def _plot_centroids(self, ax: Axes, yfactor: float = 0.5) -> tuple[list[Artist], list[str]]:
         artists = []
