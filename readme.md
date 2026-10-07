@@ -52,6 +52,24 @@ wqio.test()
 uv run python check_wqio.py
 ```
 
+### Image comparison tests
+
+Run the image comparison tests with:
+
+```shell
+uv run pytest --mpl --mpl-generate-summary=html --mpl-results-path=figcomp
+```
+
+That will generate a `figcomp` folder with the results and an HTML file you can open up to view all of the failures.
+
+If the failures are all reasonable, general new baseline images for those tests with:
+
+```shell
+uv run pytest --mpl-generate-path=baseline
+```
+
+...and copy everything over to the right directory.
+
 ## Releases
 
 *First*, you need to bump all of the versions (`version` in `pyproject.toml` and the two `conda.recipes/*/meta.yaml` files) like in [this PR](https://github.com/International-BMP-Database/wqio/pull/194).

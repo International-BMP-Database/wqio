@@ -93,6 +93,8 @@ wqio/*/old/*
 wqio/bmp/data/old/*
 docs/*
 temp/*
+baseline/*
+figcomp/*
 
 # Visual Studio stuff #
 #######################
