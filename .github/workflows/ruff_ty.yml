@@ -1,9 +1,12 @@
-name: ruff 'n' stuff
+name: ruff 'n' ty
 on: [pull_request]
 
 jobs:
-    build:
+    lint:
       runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          tool: [ruff, ty]
       steps:
         - uses: actions/checkout@v4
         - name: Install uv
@@ -11,7 +14,5 @@ jobs:
         - name: Install dependencies
           run: uv sync --locked
         # Update output format to enable automatic inline annotations.
-        - name: Run Ruff
-          run: uv run ruff check --output-format=github .
-        # - name: Run Ty
-        #   run: uv run ty check --output-format=github .
+        - name: Run ${{ matrix.tool }}
+          run: uv run ${{ matrix.tool }} check --output-format=github .

@@ -1,15 +1,29 @@
+from collections.abc import Callable, Sequence
 from functools import partial
+from typing import Any, Literal, overload
 
 import numpy
+import pandas
 import probscale
 import seaborn
 from matplotlib import pyplot, ticker
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure, SubFigure
+from matplotlib.lines import Line2D
+from matplotlib.typing import ColorType
+from numpy.typing import ArrayLike, NDArray
 from pandas.api.types import CategoricalDtype
 
 from wqio import utils, validate
 
 
-def rotate_tick_labels(ax, rotation, which, rotation_mode="anchor", ha="right"):
+def rotate_tick_labels(
+    ax: Axes,
+    rotation: float,
+    which: Literal["x", "y", "both"],
+    rotation_mode: Literal["default", "anchor", "xtick", "ytick"] = "anchor",
+    ha: Literal["left", "center", "right"] = "right",
+) -> None:
     """Rotates the ticklabels of a matplotlib Axes
 
     Parameters
@@ -50,8 +64,10 @@ def rotate_tick_labels(ax, rotation, which, rotation_mode="anchor", ha="right"):
             t.set_rotation_mode(rotation_mode)
 
 
-def log_formatter(use_1x=True, threshold=5):
-    def _formatter(tick, pos=None, use_1x=True, threshold=3):
+def log_formatter(use_1x: bool = True, threshold: int = 5) -> ticker.FuncFormatter:
+    def _formatter(
+        tick: float, pos: int | None = None, use_1x: bool = True, threshold: int = 3
+    ) -> str:
         """Formats log axes as `1 x 10^N` when N > 4 or N < -4."""
 
         if 10**threshold >= tick > 1:
@@ -68,7 +84,15 @@ def log_formatter(use_1x=True, threshold=5):
     return ticker.FuncFormatter(func)
 
 
-def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=True, yminor=True):
+def gridlines(
+    ax: Axes,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    xscale: str | None = None,
+    yscale: str | None = None,
+    xminor: bool = True,
+    yminor: bool = True,
+) -> None:
     """Standard formatting for gridlines on a matplotlib Axes
 
     Parameters
@@ -115,15 +139,17 @@ def gridlines(ax, xlabel=None, ylabel=None, xscale=None, yscale=None, xminor=Tru
         ax.yaxis.grid(True, which="minor", ls="-", alpha=0.17)
 
 
-def one2one_line(ax, set_limits=True, set_aspect=True, **kwargs):
+def one2one_line(
+    ax: Axes, set_limits: bool = True, set_aspect: bool = True, **kwargs: Any
+) -> list[Line2D]:
     label = kwargs.pop("label", "1:1 Line")
     axis_limits = [
         numpy.min([ax.get_xlim(), ax.get_ylim()]),
         numpy.max([ax.get_xlim(), ax.get_ylim()]),
     ]
     if set_limits:
-        ax.set_xlim(axis_limits)
-        ax.set_ylim(axis_limits)
+        ax.set_xlim(axis_limits)  # ty: ignore[invalid-argument-type]
+        ax.set_ylim(axis_limits)  # ty: ignore[invalid-argument-type]
     if set_aspect:
         ax.set_aspect("equal")
 
@@ -131,15 +157,15 @@ def one2one_line(ax, set_limits=True, set_aspect=True, **kwargs):
 
 
 def jointplot(
-    x=None,
-    y=None,
-    data=None,
-    xlabel=None,
-    ylabel=None,
-    color=None,
-    zeromin=True,
-    one2one=True,
-):
+    x: str | ArrayLike | None = None,
+    y: str | ArrayLike | None = None,
+    data: pandas.DataFrame | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    color: ColorType | None = None,
+    zeromin: bool = True,
+    one2one: bool = True,
+) -> seaborn.JointGrid:
     """Plots the joint distribution of two variables via seaborn
 
     Parameters
@@ -198,7 +224,13 @@ def jointplot(
     return jg
 
 
-def whiskers_and_fliers(x, q1=None, q3=None, flierfactor=1.5, transformout=None):
+def whiskers_and_fliers(
+    x: NDArray[Any],
+    q1: float | None = None,
+    q3: float | None = None,
+    flierfactor: float = 1.5,
+    transformout: Callable[[Any], Any] | None = None,
+) -> dict[str, Any]:
     """Computes extent of whiskers and fliers on optionally transformed
     data for box and whisker plots.
 
@@ -265,16 +297,16 @@ def whiskers_and_fliers(x, q1=None, q3=None, flierfactor=1.5, transformout=None)
 
 
 def boxplot(
-    boxplot_stats,
-    ax=None,
-    position=None,
-    width=0.8,
-    shownotches=True,
-    color="b",
-    marker="o",
-    patch_artist=True,
-    showmean=False,
-):
+    boxplot_stats: list[dict[str, Any]],
+    ax: Axes | None = None,
+    position: int | Sequence[int] | NDArray[Any] | None = None,
+    width: float = 0.8,
+    shownotches: bool = True,
+    color: ColorType = "b",
+    marker: str = "o",
+    patch_artist: bool = True,
+    showmean: bool = False,
+) -> dict[str, Any]:
     """
     Draws a boxplot on an axes
 
@@ -315,7 +347,7 @@ def boxplot(
     if position is None:
         position = numpy.arange(len(boxplot_stats)) + 1
     elif numpy.isscalar(position):
-        position = [position]
+        position = [position]  # ty: ignore[invalid-assignment]
 
     meanprops = dict(marker=marker, markersize=6, markerfacecolor=color, markeredgecolor="Black")
 
@@ -358,18 +390,51 @@ def boxplot(
     return bp
 
 
+@overload
 def probplot(
-    data,
-    ax=None,
-    axtype="prob",
-    yscale="log",
-    xlabel=None,
-    ylabel=None,
-    bestfit=False,
-    scatter_kws=None,
-    line_kws=None,
-    return_results=False,
-):
+    data: ArrayLike,
+    ax: Axes | None = ...,
+    axtype: Literal["prob", "pp", "qq"] = ...,
+    yscale: Literal["log", "linear"] = ...,
+    xlabel: str | None = ...,
+    ylabel: str | None = ...,
+    bestfit: bool = ...,
+    scatter_kws: dict[str, Any] | None = ...,
+    line_kws: dict[str, Any] | None = ...,
+    return_results: Literal[False] = ...,
+) -> Figure | SubFigure:
+    ...
+
+
+@overload
+def probplot(
+    data: ArrayLike,
+    ax: Axes | None = ...,
+    axtype: Literal["prob", "pp", "qq"] = ...,
+    yscale: Literal["log", "linear"] = ...,
+    xlabel: str | None = ...,
+    ylabel: str | None = ...,
+    bestfit: bool = ...,
+    scatter_kws: dict[str, Any] | None = ...,
+    line_kws: dict[str, Any] | None = ...,
+    *,
+    return_results: Literal[True],
+) -> tuple[Figure | SubFigure, dict[str, Any]]:
+    ...
+
+
+def probplot(
+    data: ArrayLike,
+    ax: Axes | None = None,
+    axtype: Literal["prob", "pp", "qq"] = "prob",
+    yscale: Literal["log", "linear"] = "log",
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    bestfit: bool = False,
+    scatter_kws: dict[str, Any] | None = None,
+    line_kws: dict[str, Any] | None = None,
+    return_results: bool = False,
+) -> Figure | SubFigure | tuple[Figure | SubFigure, dict[str, Any]]:
     """Probability, percentile, and quantile plots.
 
     Parameters
@@ -425,7 +490,14 @@ def probplot(
     return output
 
 
-def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **line_kwds):
+def _connect_spines(
+    left_ax: Axes,
+    right_ax: Axes,
+    left_y: float,
+    right_y: float,
+    linestyle: str = "solid",
+    **line_kwds: Any,
+) -> Any:
     """Connects the y-spines between two Axes
 
     Parameters
@@ -473,7 +545,14 @@ def _connect_spines(left_ax, right_ax, left_y, right_y, linestyle="solid", **lin
     return connector
 
 
-def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=True, **subplot_kws):
+def parallel_coordinates(
+    dataframe: pandas.DataFrame,
+    hue: str,
+    cols: list[str] | None = None,
+    palette: str | None = None,
+    showlegend: bool = True,
+    **subplot_kws: Any,
+) -> Figure:
     """Produce a parallel coordinates plot from a dataframe.
 
     Parameters
@@ -539,7 +618,13 @@ def parallel_coordinates(dataframe, hue, cols=None, palette=None, showlegend=Tru
     return fig
 
 
-def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
+def categorical_histogram(
+    df: pandas.DataFrame,
+    valuecol: str,
+    bins: Sequence[float],
+    classifier: Callable[[float], str | float] | None = None,
+    **factoropts: Any,
+) -> seaborn.FacetGrid:
     """Plot a faceted, categorical histogram.
 
     Parameters
@@ -567,10 +652,10 @@ def categorical_histogram(df, valuecol, bins, classifier=None, **factoropts):
 
     """
 
-    def format_col(colname):
+    def format_col(colname: str) -> str:
         return colname.replace("_", " ").title()
 
-    def process_column(colname):
+    def process_column(colname: str | None) -> str | None:
         if colname is not None:
             return format_col(colname)
 

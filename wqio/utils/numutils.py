@@ -1,9 +1,11 @@
 import itertools
 from collections import namedtuple
-from collections.abc import Callable
+from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from textwrap import dedent
+from typing import Any, Literal
 
 import numpy
+import numpy.typing
 import pandas
 import statsmodels.api as sm
 from probscale.algo import _estimate_from_fit
@@ -17,7 +19,14 @@ TheilStats = namedtuple("TheilStats", ("slope", "intercept", "low_slope", "high_
 DunnResult = namedtuple("DunnResult", ("rank_stats", "results", "scores"))
 
 
-def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
+def sig_figs(
+    x: float | str | None,
+    n: int,
+    expthresh: int = 5,
+    tex: bool = False,
+    pval: bool = False,
+    forceint: bool = False,
+) -> str:
     """Formats a number with the correct number of sig figs.
 
     Parameters
@@ -103,7 +112,7 @@ def sig_figs(x, n, expthresh=5, tex=False, pval=False, forceint=False):
     return out
 
 
-def format_result(result, qualifier, sigfigs=3):
+def format_result(result: float | str | None, qualifier: str, sigfigs: int = 3) -> str:
     """Formats a results with its qualifier
 
     Parameters
@@ -130,7 +139,7 @@ def format_result(result, qualifier, sigfigs=3):
     return f"{qualifier}{sig_figs(result, sigfigs)}"
 
 
-def process_p_vals(pval):
+def process_p_vals(pval: float | None) -> str:
     """Processes p-values into nice strings to reporting. When the
     p-values are less than 0.001, "<0.001" is returned. Otherwise, a
     string with three decimal places is returned.
@@ -158,7 +167,7 @@ def process_p_vals(pval):
     return out
 
 
-def translate_p_vals(pval, as_emoji=True):
+def translate_p_vals(pval: float | None, as_emoji: bool = True) -> str:
     """Translates ambiguous p-values into more meaningful emoji.
 
     Parameters
@@ -189,7 +198,9 @@ def translate_p_vals(pval, as_emoji=True):
     return interpreted
 
 
-def anderson_darling(data):
+def anderson_darling(
+    data: Sequence[float] | numpy.typing.NDArray[Any] | pandas.Series,
+) -> Any:
     """
     Compute the Anderson-Darling Statistic and p-value
 
@@ -224,7 +235,9 @@ def anderson_darling(data):
     return ADResult(**values)
 
 
-def process_AD_result(ad_result):
+def process_AD_result(
+    ad_result: tuple[float, numpy.typing.NDArray[Any], numpy.typing.NDArray[Any]],
+) -> str:
     """Return a nice string of Anderson-Darling test results
 
     Parameters
@@ -248,7 +261,7 @@ def process_AD_result(ad_result):
         return f"<{ci:0.1f}%"
 
 
-def _anderson_darling_p_vals(ad_results, n_points):
+def _anderson_darling_p_vals(ad_results: tuple[float, Any, Any], n_points: int) -> float:
     """
     Computes the p-value of the Anderson-Darling Result
 
@@ -285,14 +298,14 @@ def _anderson_darling_p_vals(ad_results, n_points):
 
 
 def normalize_units(
-    df,
-    unitsmap,
-    targetunit,
-    paramcol="parameter",
-    rescol="res",
-    unitcol="units",
-    napolicy="ignore",
-):
+    df: pandas.DataFrame,
+    unitsmap: Mapping[str, float],
+    targetunit: Mapping[str, str],
+    paramcol: str = "parameter",
+    rescol: str = "res",
+    unitcol: str = "units",
+    napolicy: Literal["ignore", "raise"] = "ignore",
+) -> pandas.DataFrame:
     """
     Normalize units of measure in a dataframe.
 
@@ -360,7 +373,7 @@ def normalize_units(
     return normalized
 
 
-def pH_to_concentration(pH, *args):
+def pH_to_concentration(pH: float, *args: Any) -> float:
     """Converts pH values to proton concentrations in mg/L
 
     Parameters
@@ -394,12 +407,17 @@ def pH_to_concentration(pH, *args):
     return 10 ** (-1 * pH) * avogadro * proton_mass * kg2g * g2mg
 
 
-def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
+def compute_theilslope(
+    y: numpy.typing.ArrayLike,
+    x: numpy.typing.ArrayLike | None = None,
+    alpha: float = 0.95,
+    percentile: float = 50,
+) -> TheilStats:
     f""" Adapted from stats.mstats.theilslopes so that we can tweak the
     `percentile` parameter.
     https://goo.gl/nxPF54
     {dedent(stats.mstats.theilslopes.__doc__)}
-    """
+    """  # ty: ignore[invalid-argument-type]
 
     # We copy both x and y so we can use _find_repeats.
     y = numpy.array(y).flatten()
@@ -449,7 +467,15 @@ def compute_theilslope(y, x=None, alpha=0.95, percentile=50):
     return TheilStats(outslope, outinter, delta[0], delta[1])
 
 
-def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_origin=False):
+def fit_line(
+    x: numpy.typing.ArrayLike,
+    y: numpy.typing.ArrayLike,
+    xhat: numpy.typing.ArrayLike | None = None,
+    fitprobs: Literal["x", "y", "both"] | None = None,
+    fitlogs: Literal["x", "y", "both"] | None = None,
+    dist: Any = None,
+    through_origin: bool = False,
+) -> tuple[numpy.typing.ArrayLike, numpy.typing.NDArray[Any], Any]:
     """Fits a line to x-y data in various forms (raw, log, prob scales)
 
     Parameters
@@ -533,7 +559,12 @@ def fit_line(x, y, xhat=None, fitprobs=None, fitlogs=None, dist=None, through_or
     return xhat, yhat, results
 
 
-def check_interval_overlap(interval1, interval2, oneway=False, axis=None):
+def check_interval_overlap(
+    interval1: Sequence[float] | numpy.typing.NDArray[Any],
+    interval2: Sequence[float] | numpy.typing.NDArray[Any],
+    oneway: bool = False,
+    axis: int | None = None,
+) -> bool | numpy.bool_ | numpy.typing.NDArray[numpy.bool_]:
     """Checks if two numeric intervals overlaps.
 
     Parameters
@@ -568,7 +599,9 @@ def check_interval_overlap(interval1, interval2, oneway=False, axis=None):
         return first_check | check_interval_overlap(interval2, interval1, oneway=True, axis=axis)
 
 
-def winsorize_dataframe(df, **limits):
+def winsorize_dataframe(
+    df: pandas.DataFrame, **limits: float | tuple[float, float]
+) -> pandas.DataFrame:
     """Winsorizes columns in a dataframe
 
     Parameters
@@ -598,7 +631,9 @@ def winsorize_dataframe(df, **limits):
     return df.assign(**newcols)
 
 
-def remove_outliers(x, factor=1.5):
+def remove_outliers(
+    x: numpy.typing.NDArray[Any] | pandas.Series, factor: float = 1.5
+) -> numpy.typing.NDArray[Any] | pandas.Series:
     """Removes outliers from an array based on a scaling of the
     interquartile range (IQR).
 
@@ -634,11 +669,11 @@ def _comp_stat_generator(
     groupcols: list[str],
     pivotcol: str,
     rescol: str,
-    statfxn: Callable,
+    statfxn: Callable[..., Any],
     statname: str = "stat",
-    pbarfxn: Callable = misc.no_op,
-    **statopts,
-):
+    pbarfxn: Callable[[Any], Any] = misc.no_op,
+    **statopts: Any,
+) -> Iterator[dict[str, Any]]:
     """Generator of records containing results of comparitive
     statistical functions.
 
@@ -697,12 +732,12 @@ def _group_comp_stat_generator(
     groupcols: list[str],
     pivotcol: str,
     rescol: str,
-    statfxn: Callable,
-    pbarfxn: Callable = misc.no_op,
+    statfxn: Callable[..., Any],
+    pbarfxn: Callable[[Any], Any] = misc.no_op,
     statname: str = "stat",
     control: str | None = None,
-    **statopts,
-):
+    **statopts: Any,
+) -> Iterator[dict[str, Any]]:
     groupcols = validate.at_least_empty_list(groupcols)
 
     for names, main_group in pbarfxn(df.groupby(by=groupcols)):
@@ -730,11 +765,11 @@ def _paired_stat_generator(
     groupcols: list[str],
     pivotcol: str,
     rescol: str,
-    statfxn: Callable,
+    statfxn: Callable[..., Any],
     statname: str = "stat",
-    pbarfxn: Callable = misc.no_op,
-    **statopts,
-):
+    pbarfxn: Callable[[Any], Any] = misc.no_op,
+    **statopts: Any,
+) -> Iterator[dict[str, Any]]:
     """Generator of records containing results of comparitive
     statistical functions specifically for paired data.
 
@@ -791,7 +826,7 @@ def _paired_stat_generator(
 
 
 def _tukey_res_to_df(
-    names: list[str], hsd_res: list[TukeyHSDResult], group_prefix: str
+    names: Mapping[int, Hashable], hsd_res: TukeyHSDResult, group_prefix: str
 ) -> pandas.DataFrame:
     """Converts Scipy's TukeyHSDResult to a dataframe
 
@@ -835,7 +870,7 @@ def tukey_hsd(
     compcol: str,
     paramcol: str,
     *othergroups: str,
-):
+) -> pandas.DataFrame:
     """
     Run the Tukey HSD Test on a dataframe based on groupings
 
@@ -866,7 +901,7 @@ def tukey_hsd(
         res = stats.tukey_hsd(*[v for v in locs.values()])
         df_res = _tukey_res_to_df(subset_names, res, group_prefix=compcol)
 
-        keys = {g: n for g, n in zip(groupcols, name)}
+        keys = {g: n for g, n in zip(groupcols, name)}  # ty: ignore[invalid-argument-type]
         scores.append(
             df_res.assign(
                 is_diff=lambda df: df["p-value"].lt(0.05).astype(int),
@@ -951,7 +986,7 @@ def rank_stats(
     )
 
 
-def _dunn_result(rs: pandas.DataFrame, group_prefix: str):
+def _dunn_result(rs: pandas.DataFrame, group_prefix: str) -> pandas.DataFrame:
     threshold = stats.norm.isf(0.001667 / 2)
     N = rs["count"].sum()
     results = (

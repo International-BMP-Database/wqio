@@ -1,11 +1,15 @@
 import os
+from datetime import datetime
+from typing import Any, Literal
 
 import numpy
 import pandas
 from matplotlib import pyplot
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure, SubFigure
 
 
-def dataset(fname):
+def dataset(fname: str | os.PathLike[str]) -> str:
     valid_names = ["bmpdata", "cvc", "nsqd"]
     fname, ext = os.path.splitext(fname)
     if fname.lower() not in valid_names:
@@ -15,7 +19,7 @@ def dataset(fname):
     return fname.lower() + ".zip"
 
 
-def timestamp(datelike):
+def timestamp(datelike: datetime | str | pandas.Timestamp) -> pandas.Timestamp:
     """Converts datetime-like objects to pandas.Timestamp.
     Pretty miuch a direct pass through, but give a slighly
     more informative error message.
@@ -38,10 +42,12 @@ def timestamp(datelike):
         msg = f"{datelike} could not be coerced into a pandas.Timestamp"
         raise ValueError(msg)
 
-    return tstamp
+    return tstamp  # ty: ignore[invalid-return-type]
 
 
-def axes(ax, fallback="new"):
+def axes(
+    ax: Axes | None, fallback: Literal["new", "current"] = "new"
+) -> tuple[Figure | SubFigure, Axes]:
     """Checks if a value if an Axes. If None, a new one is created or
     the 'current' one is found.
 
@@ -80,7 +86,7 @@ def axes(ax, fallback="new"):
     return fig, ax
 
 
-def single_value_in_index(df, index_level):
+def single_value_in_index(df: pandas.DataFrame, index_level: int | str) -> Any:
     """Confirms that a given level of a dataframe's index only has
     one unique value. Useful for confirming consistent units. Raises
     error if level is not a single value. Returns unique value of the
@@ -108,7 +114,7 @@ def single_value_in_index(df, index_level):
     return index[0]
 
 
-def at_least_empty_list(value):
+def at_least_empty_list(value: Any) -> Any:
     if isinstance(value, numpy.ndarray):
         value = value.tolist()
     elif numpy.isscalar(value) and value != "":
@@ -119,7 +125,7 @@ def at_least_empty_list(value):
     return value
 
 
-def at_least_empty_dict(value, **kwargs):
+def at_least_empty_dict(value: dict[str, Any] | str | None, **kwargs: Any) -> dict[str, Any]:
     if value is None or value == "":
         value = {}
     elif not isinstance(value, dict):
@@ -132,7 +138,9 @@ def at_least_empty_dict(value, **kwargs):
     return value
 
 
-def fit_arguments(arg, argname):
+def fit_arguments(
+    arg: Literal["x", "y", "both"] | None, argname: str
+) -> Literal["x", "y", "both"] | None:
     valid_args = ["x", "y", "both", None]
     if arg not in valid_args:
         msg = "Valid value for {} ({}). Must be on of {}"

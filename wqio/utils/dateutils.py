@@ -1,4 +1,7 @@
 import logging
+from collections.abc import Hashable, Mapping
+from datetime import datetime
+from typing import Any
 
 import numpy
 import pandas
@@ -9,7 +12,7 @@ from wqio.utils import misc
 _logger = logging.getLogger(__name__)
 
 
-def get_season(date):
+def get_season(date: datetime | str | pandas.Timestamp) -> str:
     """Defines the season from a given date.
 
     Parameters
@@ -50,7 +53,12 @@ def get_season(date):
     return season
 
 
-def make_timestamp(row, datecol="sampledate", timecol="sampletime", issuewarnings=False):
+def make_timestamp(
+    row: Mapping[Hashable, Any] | pandas.Series,
+    datecol: str = "sampledate",
+    timecol: str = "sampletime",
+    issuewarnings: bool = False,
+) -> pandas.Timestamp:
     """Makes a pandas.Timestamp from separate date/time columns
 
     Parameters
@@ -95,12 +103,12 @@ def make_timestamp(row, datecol="sampledate", timecol="sampletime", issuewarning
     else:
         fb_time = False
         try:
-            time = pandas.Timestamp(row[timecol]).time()
+            time = pandas.Timestamp(row[timecol]).time()  # ty: ignore[unresolved-attribute]
         except ValueError:
             fb_time = True
 
     if fb_time:
-        time = fallback_datetime.time()
+        time = fallback_datetime.time()  # ty: ignore[unresolved-attribute]
         if issuewarnings:  # pragma: no cover
             misc.log_or_warn(
                 f"Using fallback time from {row[timecol]}",
@@ -111,10 +119,10 @@ def make_timestamp(row, datecol="sampledate", timecol="sampletime", issuewarning
     dtstring = f"{date} {time}"
     tstamp = pandas.Timestamp(dtstring)
 
-    return tstamp
+    return tstamp  # ty: ignore[invalid-return-type]
 
 
-def get_wateryear(date):
+def get_wateryear(date: datetime | pandas.Timestamp) -> str:
     """Returns the water year of a given date
 
     Parameters

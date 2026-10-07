@@ -1,8 +1,11 @@
 import logging
 import warnings
+from collections.abc import Callable
+from typing import Any, Literal, overload
 
 import numpy
 import pandas
+from numpy.typing import ArrayLike, NDArray
 from scipy import stats
 
 from wqio import utils
@@ -10,7 +13,13 @@ from wqio import utils
 _logger = logging.getLogger(__name__)
 
 
-def _ros_sort(df, result, censorship, log=True, warn=False):
+def _ros_sort(
+    df: pandas.DataFrame,
+    result: str,
+    censorship: str,
+    log: bool = True,
+    warn: bool = False,
+) -> pandas.DataFrame:
     """
     This function prepares a dataframe for ROS. It sorts ascending with
     left-censored observations on top. Censored results larger than the
@@ -50,9 +59,11 @@ def _ros_sort(df, result, censorship, log=True, warn=False):
         df[[censorship, result]]
         .sort_values(by=[censorship, result], ascending=[False, True])
         .where(
-            lambda df: (~df[censorship])
-            | (  # uncensored values
-                (df[result] <= max_uncensored) & df[censorship]
+            lambda df: (
+                (~df[censorship])
+                | (  # uncensored values
+                    (df[result] <= max_uncensored) & df[censorship]
+                )
             )  # censored values < max_uncen
         )
         .dropna(how="all")
@@ -62,7 +73,7 @@ def _ros_sort(df, result, censorship, log=True, warn=False):
     return df_sorted[[result, censorship]]
 
 
-def cohn_numbers(df, result, censorship):
+def cohn_numbers(df: pandas.DataFrame, result: str, censorship: str) -> pandas.DataFrame:
     r"""
     Computes the Cohn numbers for the detection limits in the dataset.
 
@@ -98,7 +109,7 @@ def cohn_numbers(df, result, censorship):
 
     """
 
-    def nuncen_above(row):
+    def nuncen_above(row: pandas.Series) -> int:
         """A, the number of uncensored obs above the given threshold."""
 
         # index of results above the lower_dl DL
@@ -113,7 +124,7 @@ def cohn_numbers(df, result, censorship):
         # return the number of results where all conditions are True
         return df[above & below & detect].shape[0]
 
-    def nobs_below(row):
+    def nobs_below(row: pandas.Series) -> int:
         """B, the number of observations (cen & uncen) below the given
         threshold
         """
@@ -137,7 +148,7 @@ def cohn_numbers(df, result, censorship):
         # return the sum
         return LTE_censored + LT_uncensored
 
-    def ncen_equal(row):
+    def ncen_equal(row: pandas.Series) -> Any:
         """C, the number of censored observations at the given
         threshold.
         """
@@ -147,14 +158,14 @@ def cohn_numbers(df, result, censorship):
         censored_below = censored_data == row["lower_dl"]
         return censored_below.sum()
 
-    def set_upper_limit(cohn):
+    def set_upper_limit(cohn: pandas.DataFrame) -> pandas.Series | list[float]:
         """Sets the upper_dl DL for each row of the Cohn dataframe."""
         if cohn.shape[0] > 1:
             return cohn["lower_dl"].shift(-1).fillna(value=numpy.inf)
         else:
             return [numpy.inf]
 
-    def compute_PE(A, B):
+    def compute_PE(A: pandas.Series, B: pandas.Series) -> NDArray[numpy.float64]:
         """Computes the probability of excedance for each row of the
         Cohn dataframe."""
         N = len(A)
@@ -178,7 +189,7 @@ def cohn_numbers(df, result, censorship):
 
         # create a dataframe
         cohn = (
-            pandas.DataFrame(DLs, columns=["lower_dl"])
+            pandas.DataFrame(DLs, columns=["lower_dl"])  # ty: ignore[invalid-argument-type]
             .assign(upper_dl=lambda df: set_upper_limit(df))
             .assign(nuncen_above=lambda df: df.apply(nuncen_above, axis=1))
             .assign(nobs_below=lambda df: df.apply(nobs_below, axis=1))
@@ -196,12 +207,15 @@ def cohn_numbers(df, result, censorship):
             "ncen_equal",
             "prob_exceedance",
         ]
-        cohn = pandas.DataFrame(numpy.empty((0, len(dl_cols))), columns=dl_cols)
+        cohn = pandas.DataFrame(
+            numpy.empty((0, len(dl_cols))),
+            columns=dl_cols,  # ty: ignore[invalid-argument-type]
+        )
 
     return cohn
 
 
-def _detection_limit_index(res, cohn):
+def _detection_limit_index(res: float, cohn: pandas.DataFrame) -> int:
     """Helper function to create an array of indices for the detection
     limits (cohn) corresponding to each data point.
 
@@ -232,7 +246,7 @@ def _detection_limit_index(res, cohn):
     return det_limit_index
 
 
-def _ros_group_rank(df, dl_idx, censorship):
+def _ros_group_rank(df: pandas.DataFrame, dl_idx: str, censorship: str) -> pandas.Series:
     """
     Ranks each result within the groups defined by the record's
     detection limit index and censorship.
@@ -261,7 +275,7 @@ def _ros_group_rank(df, dl_idx, censorship):
     return ranks
 
 
-def _ros_plot_pos(row, censorship, cohn):
+def _ros_plot_pos(row: pandas.Series, censorship: str, cohn: pandas.DataFrame) -> float:
     """
     Compute the ROS plotting position for a result based on its rank,
     censorship, detection limit index.
@@ -302,7 +316,7 @@ def _ros_plot_pos(row, censorship, cohn):
         ) * rank / (dl_1["nuncen_above"] + 1)
 
 
-def _norm_plot_pos(results):
+def _norm_plot_pos(results: ArrayLike) -> NDArray[numpy.float64]:
     """
     Computes standard normal (Gaussian) plotting positions using scipy.
 
@@ -320,7 +334,9 @@ def _norm_plot_pos(results):
     return stats.norm.cdf(ppos)
 
 
-def plotting_positions(df, censorship, cohn):
+def plotting_positions(
+    df: pandas.DataFrame, censorship: str, cohn: pandas.DataFrame
+) -> pandas.Series:
     """
     Compute the ROS plotting positions for results based on their rank,
     censorship, detection limit index.
@@ -355,7 +371,13 @@ def plotting_positions(df, censorship, cohn):
     return plot_pos
 
 
-def _ros_estimate(df, result, censorship, transform_in, transform_out):
+def _ros_estimate(
+    df: pandas.DataFrame,
+    result: str,
+    censorship: str,
+    transform_in: Callable[..., Any],
+    transform_out: Callable[..., Any],
+) -> pandas.DataFrame:
     """Computed the estimated censored from the best-fit line of a
     probability plot of the uncensored values.
 
@@ -407,15 +429,15 @@ def _ros_estimate(df, result, censorship, transform_in, transform_out):
 
 
 def _do_ros(
-    df,
-    result,
-    censorship,
-    transform_in,
-    transform_out,
-    floor=None,
-    log=True,
-    warn=False,
-):
+    df: pandas.DataFrame,
+    result: str,
+    censorship: str,
+    transform_in: Callable[..., Any],
+    transform_out: Callable[..., Any],
+    floor: float | None = None,
+    log: bool = True,
+    warn: bool = False,
+) -> pandas.DataFrame:
     """
     Prepares a dataframe for, and then esimates the values of a censored
     dataset using Regression on Order Statistics
@@ -473,7 +495,36 @@ def _do_ros(
     return modeled
 
 
-def is_valid_to_ros(df, censorship, max_fraction_censored=0.8, min_uncensored=2, as_obj=False):
+@overload
+def is_valid_to_ros(
+    df: pandas.DataFrame,
+    censorship: str,
+    max_fraction_censored: float = ...,
+    min_uncensored: int = ...,
+    as_obj: Literal[False] = ...,
+) -> bool:
+    ...
+
+
+@overload
+def is_valid_to_ros(
+    df: pandas.DataFrame,
+    censorship: str,
+    max_fraction_censored: float = ...,
+    min_uncensored: int = ...,
+    *,
+    as_obj: Literal[True],
+) -> dict[str, bool]:
+    ...
+
+
+def is_valid_to_ros(
+    df: pandas.DataFrame,
+    censorship: str,
+    max_fraction_censored: float = 0.8,
+    min_uncensored: int = 2,
+    as_obj: bool = False,
+) -> bool | dict[str, bool]:
     # basic counts/metrics of the dataset
     N_observations = df.shape[0]
     N_censored = df[censorship].astype(int).sum()
@@ -491,20 +542,57 @@ def is_valid_to_ros(df, censorship, max_fraction_censored=0.8, min_uncensored=2,
     return enough_uncensored and not_too_many_censored
 
 
+@overload
 def ROS(
-    result,
-    censorship,
-    df=None,
-    min_uncensored=2,
-    max_fraction_censored=0.8,
-    substitution_fraction=0.5,
-    transform_in=numpy.log,
-    transform_out=numpy.exp,
-    as_array=True,
-    floor=None,
-    log=True,
-    warn=False,
-):
+    result: str | ArrayLike,
+    censorship: str | ArrayLike,
+    df: pandas.DataFrame | None = ...,
+    min_uncensored: int = ...,
+    max_fraction_censored: float = ...,
+    substitution_fraction: float = ...,
+    transform_in: Callable[..., Any] = ...,
+    transform_out: Callable[..., Any] = ...,
+    as_array: Literal[True] = ...,
+    floor: float | None = ...,
+    log: bool = ...,
+    warn: bool = ...,
+) -> NDArray[Any]:
+    ...
+
+
+@overload
+def ROS(
+    result: str | ArrayLike,
+    censorship: str | ArrayLike,
+    df: pandas.DataFrame | None = ...,
+    min_uncensored: int = ...,
+    max_fraction_censored: float = ...,
+    substitution_fraction: float = ...,
+    transform_in: Callable[..., Any] = ...,
+    transform_out: Callable[..., Any] = ...,
+    *,
+    as_array: Literal[False],
+    floor: float | None = ...,
+    log: bool = ...,
+    warn: bool = ...,
+) -> pandas.DataFrame:
+    ...
+
+
+def ROS(
+    result: str | ArrayLike,
+    censorship: str | ArrayLike,
+    df: pandas.DataFrame | None = None,
+    min_uncensored: int = 2,
+    max_fraction_censored: float = 0.8,
+    substitution_fraction: float = 0.5,
+    transform_in: Callable[..., Any] = numpy.log,
+    transform_out: Callable[..., Any] = numpy.exp,
+    as_array: bool = True,
+    floor: float | None = None,
+    log: bool = True,
+    warn: bool = False,
+) -> NDArray[Any] | pandas.DataFrame:
     """
     Impute censored dataset using Regression on Order Statistics (ROS)
     or simple substitution if insufficient uncensored data exists.
@@ -582,7 +670,7 @@ def ROS(
         output = df[[result, censorship]].assign(final=df[result])
 
     # normal ROS stuff
-    elif is_valid_to_ros(
+    elif is_valid_to_ros(  # ty: ignore[no-matching-overload]
         df,
         censorship,
         max_fraction_censored=max_fraction_censored,
@@ -591,8 +679,8 @@ def ROS(
     ):
         output = _do_ros(
             df,
-            result,
-            censorship,
+            result,  # ty: ignore[invalid-argument-type]
+            censorship,  # ty: ignore[invalid-argument-type]
             transform_in,
             transform_out,
             floor=floor,

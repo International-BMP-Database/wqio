@@ -6,7 +6,12 @@ from zipfile import ZipFile
 from wqio import validate
 
 
-def download(dataset, year=None, redownload=True, data_dir=None):
+def download(
+    dataset: str,
+    year: int | None = None,
+    redownload: bool = True,
+    data_dir: str | os.PathLike[str] | None = None,
+) -> Path:
     fname = validate.dataset(dataset)
 
     tag = "main" if year is None else f"v{year:d}"

@@ -58,6 +58,9 @@ docs = [
     "sphinx>=9.1.0",
     "sphinx-rtd-theme>=3.1.0",
 ]
+extra = [
+    "tqdm>=4.70.1",
+]
 
 [tool.uv.build-backend]
 module-root = ""
@@ -70,3 +73,9 @@ markers = [
 [tool.isort]
 profile = "black"
 src_paths = ["wqio"]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+exclude = ["wqio/tests"]

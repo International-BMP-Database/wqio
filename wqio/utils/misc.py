@@ -1,16 +1,20 @@
+import logging
 import warnings
+from collections.abc import Callable, Hashable, Sequence
 from copy import copy
 from functools import wraps
+from typing import Any
 
 import numpy
+import numpy.typing
 import pandas
 
 
-def head_tail(df, N=5):
+def head_tail(df: pandas.DataFrame, N: int = 5) -> pandas.DataFrame:
     return pandas.concat([df.head(N), df.tail(N)])
 
 
-def add_column_level(df, levelvalue, levelname):
+def add_column_level(df: pandas.DataFrame, levelvalue: str, levelname: str) -> pandas.DataFrame:
     """Adds a second level to the column-index if a dataframe.
 
     Parameters
@@ -49,7 +53,9 @@ def add_column_level(df, levelvalue, levelname):
     )
 
 
-def swap_column_levels(df, level_1, level_2, sort=True):
+def swap_column_levels(
+    df: pandas.DataFrame, level_1: int | str, level_2: int | str, sort: bool = True
+) -> pandas.DataFrame:
     """Swaps columns levels in a dataframe with multi-level columns
 
     Parameters
@@ -93,14 +99,14 @@ def swap_column_levels(df, level_1, level_2, sort=True):
 
     """
 
-    df2 = df.swaplevel(level_1, level_2, axis="columns")
+    df2 = df.swaplevel(level_1, level_2, axis="columns")  # ty: ignore[invalid-argument-type]
     if sort:
         df2 = df2.sort_index(axis="columns")
 
     return df2
 
 
-def flatten_columns(df: pandas.DataFrame, sep: str = "_"):
+def flatten_columns(df: pandas.DataFrame, sep: str = "_") -> pandas.DataFrame:
     """Completely flattens a multi-level column index
 
     Parameters
@@ -120,7 +126,7 @@ def flatten_columns(df: pandas.DataFrame, sep: str = "_"):
     return df.set_axis(newcols, axis="columns")
 
 
-def expand_columns(df, names, sep="_"):
+def expand_columns(df: pandas.DataFrame, names: list[str], sep: str = "_") -> pandas.DataFrame:
     """
     Expands a dataframe's columns into a multi-level index
 
@@ -158,7 +164,13 @@ def expand_columns(df, names, sep="_"):
     return df.set_axis(newcols, axis="columns").rename_axis(names, axis="columns")
 
 
-def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
+def redefine_index_level(
+    df: pandas.DataFrame,
+    levelname: str,
+    value: str | int,
+    criteria: Callable[..., bool] | None = None,
+    dropold: bool = True,
+) -> pandas.DataFrame:
     """Redefine a index values in a dataframe.
 
     Parameters
@@ -208,7 +220,7 @@ def redefine_index_level(df, levelname, value, criteria=None, dropold=True):
     return pandas.concat([df, redefined]).sort_index()
 
 
-def categorize_columns(df, *columns):
+def categorize_columns(df: pandas.DataFrame, *columns: Hashable) -> pandas.DataFrame:
     newdf = df.copy()
     for c in columns:
         if newdf[c].dtype != object:
@@ -218,7 +230,7 @@ def categorize_columns(df, *columns):
     return newdf
 
 
-def nested_getattr(baseobject, attribute):
+def nested_getattr(baseobject: Any, attribute: str) -> Any:
     """Returns the value of an attribute of an object that is nested
     several layers deep.
 
@@ -251,7 +263,7 @@ def nested_getattr(baseobject, attribute):
     return baseobject
 
 
-def stringify(value, fmt, attribute=None):
+def stringify(value: Any, fmt: str, attribute: str | None = None) -> str:
     """Weird wrapper to format attributes of objects as strings
 
     Parameters
@@ -290,7 +302,7 @@ def stringify(value, fmt, attribute=None):
         return fmt % quantity
 
 
-def classifier(value, bins, units=None):
+def classifier(value: float, bins: Sequence[float], units: str | None = None) -> str | float:
     """
     An example classifier function for `storm_histogram`
 
@@ -345,7 +357,9 @@ def classifier(value, bins, units=None):
     return "{} {}".format(output, units or "").strip()
 
 
-def unique_categories(classifier, bins):
+def unique_categories(
+    classifier: Callable[[float], Any], bins: numpy.typing.ArrayLike
+) -> list[Any]:
     """
     Computs all of the unique category returned by a classifier.
 
@@ -380,7 +394,7 @@ def unique_categories(classifier, bins):
     return [classifier(value) for value in all_bins]
 
 
-def pop_many(some_dict, *args):
+def pop_many[K, V](some_dict: dict[K, V], *args: K) -> dict[K, V]:
     """Pop several key-values out of a dictionary and return a copy
 
     Parameters
@@ -408,7 +422,9 @@ def pop_many(some_dict, *args):
     return popped
 
 
-def selector(default, *cond_results):
+def selector(
+    default: Any, *cond_results: tuple[numpy.typing.ArrayLike, Any]
+) -> numpy.typing.NDArray[Any]:
     """Thin wrapper around numpy.select with a more convenient API (maybe).
 
     Parameters
@@ -434,15 +450,17 @@ def selector(default, *cond_results):
     return numpy.select(conditions, results, default)
 
 
-def non_filter(*args, **kwargs):
+def non_filter(*args: Any, **kwargs: Any) -> bool:
     return True
 
 
-def no_op(value):
+def no_op[T](value: T) -> T:
     return value
 
 
-def assign_multilevel_column(df, val_or_fxn, *collevels):
+def assign_multilevel_column(
+    df: pandas.DataFrame, val_or_fxn: Any, *collevels: Hashable
+) -> pandas.DataFrame:
     """Dataframe-pipeable function to assign new multi-level columns
 
     Parameters
@@ -471,7 +489,13 @@ def assign_multilevel_column(df, val_or_fxn, *collevels):
     return df
 
 
-def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=None):
+def symbolize_bools(
+    df: pandas.DataFrame,
+    true_symbol: str,
+    false_symbol: str,
+    other_symbol: str | None = None,
+    join_char: str | None = None,
+) -> pandas.DataFrame | pandas.Series:
     """Symbolize boolean values in a dataframe with strings
 
     Parameters
@@ -520,12 +544,14 @@ def symbolize_bools(df, true_symbol, false_symbol, other_symbol=None, join_char=
     return symbolized.apply(lambda r: join_char.join(r), axis=1)
 
 
-def log_df_shape(logger):  # pragma: no cover
+def log_df_shape(
+    logger: logging.Logger,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:  # pragma: no cover
     """Decorator to log the shape of a dataframe before and after a function."""
 
-    def decorate(func):
+    def decorate(func: Any) -> Callable[..., Any]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             shape_init = args[0].shape
             new_df = func(*args, **kwargs)
             shape_final = new_df.shape
@@ -537,7 +563,11 @@ def log_df_shape(logger):  # pragma: no cover
     return decorate
 
 
-def log_or_warn(msg, warning=None, logger=None):
+def log_or_warn(
+    msg: str,
+    warning: type[Warning] | None = None,
+    logger: Callable[[str], Any] | None = None,
+) -> None:
     if warning:
         warnings.warn(msg, warning)
 
