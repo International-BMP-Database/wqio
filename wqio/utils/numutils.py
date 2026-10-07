@@ -224,13 +224,11 @@ def anderson_darling(
     scipy.stats.anderson
 
     """
-    AD = stats.anderson(data)
+    AD = stats.anderson(data)  # get critical values/significance levels in old format
     # field_names = list(AD._fields) + ["pvalue"]
-
     p = _anderson_darling_p_vals(AD, len(data))
     values = AD._asdict()
     values["pvalue"] = p
-
     ADResult = namedtuple("ADResult", values)
     return ADResult(**values)
 
@@ -805,7 +803,10 @@ def _paired_stat_generator(
     if statname is None:
         statname = "stat"
 
-    groups = df.groupby(level=groupcols)[rescol]
+    if isinstance(groupcols, list) and len(groupcols) == 1:
+        groups = df.groupby(level=groupcols[0])[rescol]
+    else:
+        groups = df.groupby(level=groupcols)[rescol]
     for name, g in pbarfxn(groups):
         stations = g.columns.tolist()
         name = validate.at_least_empty_list(name)

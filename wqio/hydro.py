@@ -116,10 +116,10 @@ def parse_storm_events(
     cols_to_use = water_columns + [baseflowcol]
 
     agg_dict = {
-        precipcol: numpy.sum,
-        inflowcol: numpy.mean,
-        outflowcol: numpy.mean,
-        baseflowcol: numpy.any,
+        precipcol: "sum",
+        inflowcol: "mean",
+        outflowcol: "mean",
+        baseflowcol: "any",
     }
 
     freq = pandas.offsets.Minute(outputfreqMinutes)
@@ -1094,7 +1094,7 @@ class HydroRecord:
             storms = self.data.loc[lookback_time:timestamp, [self.stormcol]]
             storms = storms[storms > 0].dropna()
 
-            storm_number = None if storms.shape[0] == 0 else int(storms.iloc[-1])
+            storm_number = None if storms.shape[0] == 0 else int(storms.iloc[-1].item())
 
         # return storm_number and storms
         if smallstorms:
