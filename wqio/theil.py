@@ -1,11 +1,36 @@
+from collections.abc import Callable
+from typing import Any
+
 import numpy
+import pandas
+from numpy.typing import NDArray
 from probscale.algo import _estimate_from_fit
 
 from wqio import utils
 
+_Data = NDArray[Any] | pandas.Series
+
 
 class TheilSenFit:
-    def __init__(self, infl, effl, log_infl=False, log_effl=False, **theil_opts):
+    influent_data: _Data
+    effluent_data: _Data
+    log_infl: bool
+    log_effl: bool
+    theil_opts: dict[str, Any]
+    _infl_trans_in: Callable[[Any], Any]
+    _infl_trans_out: Callable[[Any], Any]
+    _effl_trans_in: Callable[[Any], Any]
+    _effl_trans_out: Callable[[Any], Any]
+    _theil_stats: Any
+
+    def __init__(
+        self,
+        infl: _Data,
+        effl: _Data,
+        log_infl: bool = False,
+        log_effl: bool = False,
+        **theil_opts: Any,
+    ) -> None:
         """Theil-Sen Fit object
 
         Parameters
@@ -44,15 +69,15 @@ class TheilSenFit:
         self._theil_stats = None
 
     @property
-    def infl(self):
+    def infl(self) -> Any:
         return self._infl_trans_in(self.influent_data)
 
     @property
-    def effl(self):
+    def effl(self) -> Any:
         return self._effl_trans_in(self.effluent_data)
 
     @property
-    def theil_stats(self):
+    def theil_stats(self) -> Any:
         if self._theil_stats is None:
             self._theil_stats = utils.compute_theilslope(
                 y=self.effl, x=self.infl, **self.theil_opts
@@ -61,23 +86,23 @@ class TheilSenFit:
         return self._theil_stats
 
     @property
-    def med_slope(self):
+    def med_slope(self) -> float:
         return self.theil_stats[0]
 
     @property
-    def intercept(self):
+    def intercept(self) -> float:
         return self.theil_stats[1]
 
     @property
-    def low_slope(self):
+    def low_slope(self) -> float:
         return self.theil_stats[2]
 
     @property
-    def high_slope(self):
+    def high_slope(self) -> float:
         return self.theil_stats[3]
 
     @property
-    def x_fit(self):
+    def x_fit(self) -> NDArray[numpy.float64]:
         xmin = self.influent_data.min()
         xmax = self.effluent_data.max()
         if self.log_infl:
@@ -86,7 +111,7 @@ class TheilSenFit:
             return numpy.linspace(xmin, xmax)
 
     @property
-    def med_estimate(self):
+    def med_estimate(self) -> Any:
         return _estimate_from_fit(
             self.influent_data,
             self.med_slope,
@@ -96,19 +121,19 @@ class TheilSenFit:
         )
 
     @property
-    def errors(self):
+    def errors(self) -> Any:
         return self._effl_trans_in(self.effluent_data) - self._effl_trans_in(self.med_estimate)
 
     @property
-    def MAD(self):
+    def MAD(self) -> Any:
         return numpy.median(self._effl_trans_out(numpy.abs(self.errors)))
 
     @property
-    def BCF(self):
+    def BCF(self) -> Any:
         return numpy.mean(self._effl_trans_out(utils.remove_outliers(self.errors)))
 
 
-def all_theil(infl, effl, **theil_opts):
+def all_theil(infl: _Data, effl: _Data, **theil_opts: Any) -> tuple[list[TheilSenFit], TheilSenFit]:
     """
     Convenience function to create the relevant TheilSenFits objects
     for a dataset in various log/linear spaces. The case with linear

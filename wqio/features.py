@@ -1,25 +1,39 @@
 import warnings
+from collections.abc import Sequence
 from functools import cached_property
+from typing import Any, Literal
 
 import numpy
+import numpy.typing
 import pandas
 import seaborn
 import statsmodels.api as sm
 from matplotlib import pyplot
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure, SubFigure
+from matplotlib.lines import Line2D
 from probscale.algo import _estimate_from_fit
 from scipy import stats
 
 from wqio import bootstrap, utils, validate, viz
 from wqio.ros import ROS
 
+FloatArray = numpy.typing.NDArray[numpy.float64]
+AxType = Literal["prob", "pp", "qq"]
+YScale = Literal["log", "linear"]
+
 # meta data mappings based on station
-station_names = {
+station_names: dict[str, str] = {
     "inflow": "Influent",
     "outflow": "Effluent",
     "reference": "Reference Flow",
 }
 
-markers = {"Influent": ["o", "v"], "Effluent": ["s", "<"], "Reference Flow": ["D", "d"]}
+markers: dict[str, list[str]] = {
+    "Influent": ["o", "v"],
+    "Effluent": ["s", "<"],
+    "Reference Flow": ["D", "d"],
+}
 
 palette = seaborn.color_palette(palette="deep", n_colors=3, desat=0.88)
 colors = {"Influent": palette[0], "Effluent": palette[1], "Reference Flow": palette[2]}
@@ -140,16 +154,16 @@ class Location:
 
     def __init__(
         self,
-        dataframe,
-        rescol="res",
-        qualcol="qual",
-        ndval="ND",
-        station_type="inflow",
-        useros=True,
-        cencol="cen",
-        bsiter=10000,
-        include=True,
-    ):
+        dataframe: pandas.DataFrame,
+        rescol: str = "res",
+        qualcol: str = "qual",
+        ndval: str | Sequence[str] = "ND",
+        station_type: str = "inflow",
+        useros: bool = True,
+        cencol: str = "cen",
+        bsiter: int = 10000,
+        include: bool = True,
+    ) -> None:
         # plotting symbology based on location type
         self.station_type = station_type
         self.station_name = station_names[station_type]
@@ -160,10 +174,10 @@ class Location:
         # basic stuff
         self._name = self.station_name
         self._include = include
-        self._definition = {}
+        self._definition: dict[str, Any] = {}
 
         # parameters of the stats analysis
-        self._cache = {}
+        self._cache: dict[str, Any] = {}
 
         # properties of the dataframe and analysis
         self.bsiter = bsiter
@@ -171,18 +185,19 @@ class Location:
         self.rescol = rescol
         self.qualcol = qualcol
         self.cencol = cencol
+        self.ndvals: Sequence[str]
         if numpy.isscalar(ndval):
-            self.ndvals = [ndval]
+            self.ndvals = [ndval]  # ty: ignore[invalid-assignment]
         else:
             self.ndvals = ndval
 
         # original data and quantity
         self.raw_data = dataframe.assign(**{self.cencol: dataframe[qualcol].isin(self.ndvals)})
-        self._dataframe = None
+        self._dataframe: pandas.DataFrame | None = None
         self._data = None
 
     @property
-    def dataframe(self):
+    def dataframe(self) -> pandas.DataFrame:
         if self.raw_data.shape[0] > 0 and self._dataframe is None:
             df = self.raw_data.assign(
                 **{self.cencol: lambda df: df[self.qualcol].isin(self.ndvals)}
@@ -192,15 +207,15 @@ class Location:
                 self._dataframe = ros[["final", self.cencol]]
             else:
                 self._dataframe = df[[self.rescol, self.cencol]]
-        return self._dataframe
+        return self._dataframe  # ty: ignore[invalid-return-type]
 
     @property
-    def full_data(self):
+    def full_data(self) -> pandas.DataFrame:
         warnings.warn("Use DataCollection.dataframe instead", DeprecationWarning)
         return self.dataframe
 
     @property
-    def data(self):
+    def data(self) -> FloatArray:  # ty: ignore[invalid-return-type]
         if self.hasData:
             if self.useros:
                 output = self.dataframe["final"].values
@@ -210,221 +225,226 @@ class Location:
             return output
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str) -> None:
         self._name = value
 
     @property
-    def definition(self):
+    def definition(self) -> dict[str, Any]:
         return self._definition
 
     @definition.setter
-    def definition(self, value):
+    def definition(self, value: dict[str, Any]) -> None:
         self._definition = value
 
     @property
-    def include(self):
+    def include(self) -> bool:
         return self._include
 
     @include.setter
-    def include(self, value):
+    def include(self, value: bool) -> None:
         self._include = value
 
     @property
-    def exclude(self):
+    def exclude(self) -> bool:
         return not self.include
 
     @cached_property
-    def N(self):
+    def N(self) -> int:
         return self.data.shape[0]
 
     @cached_property
-    def hasData(self):
+    def hasData(self) -> bool:
         return self.dataframe.shape[0] > 0
 
     @cached_property
-    def all_positive(self):
+    def all_positive(self) -> bool | None:
         if self.hasData:
-            return self.min > 0
+            return self.min > 0  # ty: ignore[unsupported-operator]
 
     @cached_property
-    def ND(self):
+    def ND(self) -> int:
         return self.dataframe[self.cencol].sum()
 
     @cached_property
-    def NUnique(self):
+    def NUnique(self) -> int:
         return pandas.unique(self.raw_data[self.rescol]).shape[0]
 
     @cached_property
-    def fractionND(self):
+    def fractionND(self) -> float:
         return self.ND / self.N
 
     @cached_property
-    def shapiro(self):
+    def shapiro(self) -> tuple[float, float] | None:
         if self.hasData:
             return stats.shapiro(self.data)
 
     @cached_property
-    def shapiro_log(self):
+    def shapiro_log(self) -> tuple[float, float] | None:
         if self.hasData:
             return stats.shapiro(numpy.log(self.data))
 
     @cached_property
-    def lilliefors(self):
+    def lilliefors(self) -> tuple[float, float] | None:
         if self.hasData:
             return sm.stats.lilliefors(self.data)
 
     @cached_property
-    def lilliefors_log(self):
+    def lilliefors_log(self) -> tuple[float, float] | None:
         if self.hasData:
             return sm.stats.lilliefors(numpy.log(self.data))
 
     @cached_property
-    def anderson(self):
+    def anderson(self) -> Any:
         if self.hasData:
             return utils.anderson_darling(self.data)
 
     @cached_property
-    def anderson_log(self):
+    def anderson_log(self) -> Any:
         if self.hasData:
             return utils.anderson_darling(numpy.log(self.data))
 
     @cached_property
-    def analysis_space(self):
-        if self.shapiro_log[1] >= self.shapiro[1] and self.shapiro_log[1] > 0.1:
+    def analysis_space(self) -> Literal["lognormal", "normal"]:
+        if (
+            self.shapiro_log is not None
+            and self.shapiro is not None
+            and self.shapiro_log[1] >= self.shapiro[1]
+            and self.shapiro_log[1] > 0.1
+        ):
             return "lognormal"
         else:
             return "normal"
 
     @cached_property
-    def cov(self):
+    def cov(self) -> float | None:
         if self.hasData:
             return self.data.std() / self.data.mean()
 
     @cached_property
-    def min(self):
+    def min(self) -> float | None:
         if self.hasData:
             return self.data.min()
 
     @cached_property
-    def min_detect(self):
+    def min_detect(self) -> float | None:
         if self.hasData:
             return self.raw_data[self.rescol][~self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cached_property
-    def min_DL(self):
+    def min_DL(self) -> float | None:
         if self.hasData:
             return self.raw_data[self.rescol][self.raw_data[self.qualcol].isin(self.ndvals)].min()
 
     @cached_property
-    def max(self):
+    def max(self) -> float | None:
         if self.hasData:
             return self.data.max()
 
     @cached_property
-    def skew(self):
+    def skew(self) -> float | None:
         if self.hasData:
             return stats.skew(self.data)
 
     @cached_property
-    def pctl10(self):
+    def pctl10(self) -> float | None:
         if self.hasData:
             return numpy.percentile(self.data, 10)
 
     @cached_property
-    def pctl25(self):
+    def pctl25(self) -> float | None:
         if self.hasData:
             return numpy.percentile(self.data, 25)
 
     @cached_property
-    def pctl75(self):
+    def pctl75(self) -> float | None:
         if self.hasData:
             return numpy.percentile(self.data, 75)
 
     @cached_property
-    def pctl90(self):
+    def pctl90(self) -> float | None:
         if self.hasData:
             return numpy.percentile(self.data, 90)
 
     # stats that we need
     @cached_property
-    def median(self):
+    def median(self) -> float | None:
         if self.hasData:
             return numpy.median(self.data)
 
     @cached_property
-    def median_conf_interval(self):
+    def median_conf_interval(self) -> FloatArray | None:
         if self.hasData:
             return bootstrap.BCA(self.data, numpy.median, niter=self.bsiter)
 
     @cached_property
-    def mean(self):
+    def mean(self) -> float | None:
         if self.hasData:
             return numpy.mean(self.data)
 
     @cached_property
-    def mean_conf_interval(self):
+    def mean_conf_interval(self) -> FloatArray | None:
         if self.hasData:
             return bootstrap.BCA(self.data, numpy.mean, niter=self.bsiter)
 
     @cached_property
-    def std(self):
+    def std(self) -> float | None:
         if self.hasData:
             return numpy.std(self.data)
 
     @cached_property
-    def logmean(self):
+    def logmean(self) -> float | None:
         if self.all_positive and self.hasData:
             return numpy.mean(numpy.log(self.data))
 
     @cached_property
-    def logmean_conf_interval(self):
+    def logmean_conf_interval(self) -> FloatArray | None:
         if self.all_positive and self.hasData:
 
-            def fxn(x, **kwds):
+            def fxn(x: FloatArray, **kwds: Any) -> Any:
                 return numpy.mean(numpy.log(x), **kwds)
 
             return bootstrap.BCA(self.data, fxn, niter=self.bsiter)
 
     @cached_property
-    def logstd(self):
+    def logstd(self) -> float | None:
         if self.all_positive and self.hasData:
             return numpy.std(numpy.log(self.data))
 
     @cached_property
-    def geomean(self):
+    def geomean(self) -> float | None:
         if self.all_positive and self.hasData:
-            return numpy.exp(self.logmean)
+            return numpy.exp(self.logmean)  # ty: ignore[no-matching-overload]
 
     @cached_property
-    def geomean_conf_interval(self):
+    def geomean_conf_interval(self) -> FloatArray | None:
         if self.all_positive and self.hasData:
-            return numpy.exp(self.logmean_conf_interval)
+            return numpy.exp(self.logmean_conf_interval)  # ty: ignore[no-matching-overload]
 
     @cached_property
-    def geostd(self):
+    def geostd(self) -> float | None:
         if self.all_positive and self.hasData:
-            return numpy.exp(self.logstd)
+            return numpy.exp(self.logstd)  # ty: ignore[no-matching-overload]
 
-    def boxplot_stats(self, log=True, bacteria=False):
+    def boxplot_stats(self, log: bool = True, bacteria: bool = False) -> list[dict[str, Any]]:
         bxpstats = {
             "label": self.name,
             "mean": self.geomean if bacteria else self.mean,
             "med": self.median,
             "q1": self.pctl25,
             "q3": self.pctl75,
-            "cilo": self.median_conf_interval[0],
-            "cihi": self.median_conf_interval[1],
+            "cilo": self.median_conf_interval[0],  # ty: ignore[not-subscriptable]
+            "cihi": self.median_conf_interval[1],  # ty: ignore[not-subscriptable]
         }
 
         if log:
             wnf = viz.whiskers_and_fliers(
                 numpy.log(self.data),
-                numpy.log(self.pctl25),
-                numpy.log(self.pctl75),
+                numpy.log(self.pctl25),  # ty: ignore[no-matching-overload]
+                numpy.log(self.pctl75),  # ty: ignore[no-matching-overload]
                 transformout=numpy.exp,
             )
         else:
@@ -436,18 +456,18 @@ class Location:
     # plotting methods
     def boxplot(
         self,
-        ax=None,
-        pos=1,
-        yscale="log",
-        shownotches=True,
-        showmean=True,
-        width=0.8,
-        bacteria=False,
-        ylabel=None,
-        xlabel=None,
-        patch_artist=False,
-        xlims=None,
-    ):
+        ax: Axes | None = None,
+        pos: float = 1,
+        yscale: YScale = "log",
+        shownotches: bool = True,
+        showmean: bool = True,
+        width: float = 0.8,
+        bacteria: bool = False,
+        ylabel: str | None = None,
+        xlabel: str | None = None,
+        patch_artist: bool = False,
+        xlims: dict[str, Any] | None = None,
+    ) -> Figure | SubFigure:
         """Draws a boxplot and whisker on a matplotlib figure
 
         Parameters
@@ -490,13 +510,13 @@ class Location:
         fig, ax = validate.axes(ax)
         y_log = yscale == "log"
         bxpstats = self.boxplot_stats(log=y_log, bacteria=bacteria)
-        if xlabel is not None:
+        if xlabel is not None and bxpstats:
             bxpstats[0]["label"] = xlabel
 
         viz.boxplot(
             bxpstats,
             ax=ax,
-            position=pos,
+            position=pos,  # ty: ignore[invalid-argument-type]
             width=width,
             color=self.color,
             marker=self.plot_marker,
@@ -525,15 +545,15 @@ class Location:
 
     def probplot(
         self,
-        ax=None,
-        yscale="log",
-        axtype="prob",
-        ylabel=None,
-        clearYLabels=False,
-        rotateticklabels=True,
-        bestfit=False,
-        **plotopts,
-    ):
+        ax: Axes | None = None,
+        yscale: YScale = "log",
+        axtype: AxType = "prob",
+        ylabel: str | None = None,
+        clearYLabels: bool = False,
+        rotateticklabels: bool = True,
+        bestfit: bool = False,
+        **plotopts: Any,
+    ) -> Figure | SubFigure:
         """Draws a probability plot on a matplotlib figure
 
         Parameters
@@ -576,7 +596,7 @@ class Location:
         scatter_kws["label"] = plotopts.get("label", self.name)
         scatter_kws["marker"] = plotopts.get("marker", self.plot_marker)
         scatter_kws["linestyle"] = plotopts.get("linestyle", "none")
-        fig = viz.probplot(
+        fig_out = viz.probplot(
             self.data,
             ax=ax,
             axtype=axtype,
@@ -584,6 +604,7 @@ class Location:
             bestfit=bestfit,
             scatter_kws=scatter_kws,
         )
+        fig = fig_out if isinstance(fig_out, Figure | SubFigure) else fig_out[0]
 
         if yscale == "log":
             pass
@@ -595,24 +616,24 @@ class Location:
             viz.rotate_tick_labels(ax, 45, "x", ha="right")
 
         if bestfit:
-            utils.fit_line()
+            utils.fit_line()  # ty: ignore[missing-argument]
 
         return fig
 
     def statplot(
         self,
-        pos=1,
-        yscale="log",
-        shownotches=True,
-        showmean=True,
-        width=0.8,
-        bacteria=False,
-        ylabel=None,
-        xlabel=None,
-        axtype="prob",
-        patch_artist=False,
-        **plotopts,
-    ):
+        pos: float = 1,
+        yscale: YScale = "log",
+        shownotches: bool = True,
+        showmean: bool = True,
+        width: float = 0.8,
+        bacteria: bool = False,
+        ylabel: str | None = None,
+        xlabel: str | None = None,
+        axtype: AxType = "prob",
+        patch_artist: bool = False,
+        **plotopts: Any,
+    ) -> Figure | SubFigure:
         """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
@@ -683,8 +704,14 @@ class Location:
         return fig
 
     def verticalScatter(
-        self, ax=None, pos=1, ylabel=None, yscale="log", ignoreROS=True, markersize=6
-    ):
+        self,
+        ax: Axes | None = None,
+        pos: float = 1,
+        ylabel: str | None = None,
+        yscale: YScale = "log",
+        ignoreROS: bool = True,
+        markersize: float = 6,
+    ) -> Figure | SubFigure:
         """Draws a clustered & jittered scatter plot of the data
 
         Parameters
@@ -779,18 +806,24 @@ class Dataset:
     # TODO: constructor should take dataframe, and build Location object,
     # not the other way around. This will allow Dataset.influent = None
     # by passing in a dataframe where df.shape[0] == 0
-    def __init__(self, influent, effluent, useros=True, name=None):
+    def __init__(
+        self,
+        influent: Location,
+        effluent: Location,
+        useros: bool = True,
+        name: str | None = None,
+    ) -> None:
         # basic attributes
         self.influent = influent
         self.effluent = effluent
         self._name = name
-        self._include = None
+        self._include: bool | None = None
         self.useros = useros
-        self._definition = {}
-        self._cache = {}
+        self._definition: dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     @cached_property
-    def data(self):
+    def data(self) -> pandas.DataFrame:
         if self.effluent.hasData:
             effl = self.effluent.raw_data.copy()
         else:
@@ -809,26 +842,26 @@ class Dataset:
         return infl.join(effl, how="outer")
 
     @cached_property
-    def paired_data(self):
+    def paired_data(self) -> pandas.DataFrame:
         if self.data is not None:
             return self.data.dropna()
 
     @cached_property
-    def n_pairs(self):
+    def n_pairs(self) -> int:
         if self.paired_data is not None:
             return self.paired_data.shape[0]
         else:
             return 0
 
     @cached_property
-    def _non_paired_stats(self):
+    def _non_paired_stats(self) -> bool:
         return self.influent.data is not None and self.effluent.data is not None
 
     @cached_property
-    def _paired_stats(self):
+    def _paired_stats(self) -> bool:
         return self._non_paired_stats and self.paired_data.shape[0] > 20
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         x = f"<wqio.Dataset>\n  N influent  {self.influent.N}\n  N effluent = {self.effluent.N}"
         if self.definition is not None:
             for k, v in self.definition.items():
@@ -836,49 +869,52 @@ class Dataset:
         return x
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self._name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str | None) -> None:
         self._name = value
 
     @property
-    def definition(self):
+    def definition(self) -> dict[str, Any]:
         return self._definition
 
     @definition.setter
-    def definition(self, value):
+    def definition(self, value: dict[str, Any]) -> None:
         self._definition = value
 
     @property
-    def include(self):
+    def include(self) -> bool:
         if self._include is None:
             self._include = self.influent.include and self.effluent.include
         return self._include
 
     @include.setter
-    def include(self, value):
+    def include(self, value: bool) -> None:
         self._include = value
 
     @property
-    def exclude(self):
+    def exclude(self) -> bool:
         return not self.include
 
     # stats describing the dataset
     @cached_property
-    def medianCIsOverlap(self):
+    def medianCIsOverlap(self) -> bool:
         overlap = True
         if self.influent.hasData and self.effluent.hasData:
-            overlap = utils.check_interval_overlap(
-                self.influent.median_conf_interval,
-                self.effluent.median_conf_interval,
-                oneway=False,
-            )
-        return overlap
+            infl_ci = self.influent.median_conf_interval
+            effl_ci = self.effluent.median_conf_interval
+            if infl_ci is not None and effl_ci is not None:
+                overlap = utils.check_interval_overlap(
+                    infl_ci,
+                    effl_ci,
+                    oneway=False,
+                )
+        return bool(overlap)
 
     @cached_property
-    def wilcoxon_z(self):
+    def wilcoxon_z(self) -> float | None:
         """The Wilcoxon Z-statistic.
 
         Tests the null hypothesis that the influent and effluent data are
@@ -897,7 +933,7 @@ class Dataset:
             return self._wilcoxon_stats[0]
 
     @cached_property
-    def wilcoxon_p(self):
+    def wilcoxon_p(self) -> float | None:
         """Two-sided p-value of the Wilcoxon test
 
         See also
@@ -909,7 +945,7 @@ class Dataset:
             return self._wilcoxon_stats[1]
 
     @cached_property
-    def mannwhitney_u(self):
+    def mannwhitney_u(self) -> float | None:
         """Mann-Whitney U-statistic.
 
         Performs a basic rank-sum test.
@@ -927,7 +963,7 @@ class Dataset:
             return self._mannwhitney_stats[0]
 
     @cached_property
-    def mannwhitney_p(self):
+    def mannwhitney_p(self) -> float | None:
         """Two-sided p-value of the Mann-Whitney test
 
         Notes
@@ -943,7 +979,7 @@ class Dataset:
             return self._mannwhitney_stats[1]
 
     @cached_property
-    def kendall_tau(self):
+    def kendall_tau(self) -> float | None:
         """The Kendall-Tau statistic.
 
         Measure of the correspondence between two the rankings of influent
@@ -962,7 +998,7 @@ class Dataset:
             return self._kendall_stats[0]
 
     @cached_property
-    def kendall_p(self):
+    def kendall_p(self) -> float | None:
         """Two-sided p-value of the Kendall test
 
         See also
@@ -974,7 +1010,7 @@ class Dataset:
             return self._kendall_stats[1]
 
     @cached_property
-    def spearman_rho(self):
+    def spearman_rho(self) -> float | None:
         """The Spearman's rho statistic.
 
         Tests for monotonicity of the relationship between influent and.
@@ -993,7 +1029,7 @@ class Dataset:
             return self._spearman_stats[0]
 
     @cached_property
-    def spearman_p(self):
+    def spearman_p(self) -> float | None:
         """Two-sided p-value of the Spearman test
 
         See also
@@ -1005,40 +1041,40 @@ class Dataset:
             return self._spearman_stats[1]
 
     @cached_property
-    def ttest_t(self):
+    def ttest_t(self) -> float:
         return self._ttest_stats[0]
 
     @cached_property
-    def ttest_p(self):
+    def ttest_p(self) -> float:
         return self._ttest_stats[1]
 
     @cached_property
-    def levene_ks(self):
+    def levene_ks(self) -> float:
         return self._levene_stats[0]
 
     @cached_property
-    def levene_p(self):
+    def levene_p(self) -> float:
         return self._levene_stats[1]
 
     @cached_property
-    def theil_medslope(self):
-        return self._theil_stats["medslope"]
+    def theil_medslope(self) -> float:
+        return self._theil_stats["medslope"]  # ty: ignore[not-subscriptable]
 
     @cached_property
-    def theil_intercept(self):
-        return self._theil_stats["intercept"]
+    def theil_intercept(self) -> float:
+        return self._theil_stats["intercept"]  # ty: ignore[not-subscriptable]
 
     @cached_property
-    def theil_loslope(self):
-        return self._theil_stats["loslope"]
+    def theil_loslope(self) -> float:
+        return self._theil_stats["loslope"]  # ty: ignore[not-subscriptable]
 
     @cached_property
-    def theil_hislope(self):
-        return self._theil_stats["hislope"]
+    def theil_hislope(self) -> float:
+        return self._theil_stats["hislope"]  # ty: ignore[not-subscriptable]
 
     # helper objects for the stats
     @cached_property
-    def _wilcoxon_stats(self):
+    def _wilcoxon_stats(self) -> Any:
         if self._paired_stats:
             return stats.wilcoxon(
                 numpy.log(self.paired_data.inflow.res),
@@ -1046,39 +1082,39 @@ class Dataset:
             )
 
     @cached_property
-    def _mannwhitney_stats(self):
+    def _mannwhitney_stats(self) -> Any:
         if self._non_paired_stats:
             return stats.mannwhitneyu(
                 self.influent.data, self.effluent.data, alternative="two-sided"
             )
 
     @cached_property
-    def _kendall_stats(self):
+    def _kendall_stats(self) -> Any:
         if self._paired_stats:
             return stats.kendalltau(self.paired_data.inflow.res, self.paired_data.outflow.res)
 
     @cached_property
-    def _spearman_stats(self):
+    def _spearman_stats(self) -> Any:
         if self._paired_stats:
             return stats.spearmanr(
                 self.paired_data.inflow.res.values, self.paired_data.outflow.res.values
             )
 
     @cached_property
-    def _ttest_stats(self):
+    def _ttest_stats(self) -> Any:
         if self._non_paired_stats:
             return stats.ttest_ind(self.influent.data, self.effluent.data, False)
 
     @cached_property
-    def _levene_stats(self):
+    def _levene_stats(self) -> Any:
         if self._non_paired_stats:
             return stats.levene(self.influent.data, self.effluent.data, center="median")
 
     @cached_property
-    def _theil_stats(self):
+    def _theil_stats(self) -> dict[str, Any] | None:
         return self.theilSlopes()
 
-    def theilSlopes(self, log_infl=False, log_effl=False):
+    def theilSlopes(self, log_infl: bool = False, log_effl: bool = False) -> dict[str, Any] | None:
         output = None
         # influent data
         infl = self.paired_data.inflow.res.values
@@ -1136,19 +1172,19 @@ class Dataset:
     # plotting methods
     def boxplot(
         self,
-        ax=None,
-        pos=1,
-        yscale="log",
-        shownotches=True,
-        showmean=True,
-        width=0.8,
-        bacteria=False,
-        ylabel=None,
-        xlims=None,
-        bothTicks=True,
-        offset=0.5,
-        patch_artist=False,
-    ):
+        ax: Axes | None = None,
+        pos: float = 1,
+        yscale: YScale = "log",
+        shownotches: bool = True,
+        showmean: bool = True,
+        width: float = 0.8,
+        bacteria: bool = False,
+        ylabel: str | None = None,
+        xlims: Sequence[float] | dict[str, Any] | None = None,
+        bothTicks: bool = True,
+        offset: float = 0.5,
+        patch_artist: bool = False,
+    ) -> Figure | SubFigure:
         """Adds a boxplot to a matplotlib figure
 
         Parameters
@@ -1200,7 +1236,7 @@ class Dataset:
                 viz.boxplot(
                     bxpstats,
                     ax=ax,
-                    position=pos + offset,
+                    position=pos + offset,  # ty: ignore[invalid-argument-type]
                     width=width,
                     color=loc.color,
                     marker=loc.plot_marker,
@@ -1210,19 +1246,20 @@ class Dataset:
                 )
 
         ax.set_yscale(yscale)
-        if y_log:
+        if yscale == "log":
             ax.yaxis.set_major_formatter(viz.log_formatter(use_1x=False))
 
         if ylabel:
             ax.set_ylabel(ylabel)
 
         if xlims is None:
-            ax.set_xlim([pos - 1, pos + 1])
+            ax.set_xlim(pos - 1, pos + 1)
         else:
             if isinstance(xlims, dict):
                 ax.set_xlim(**xlims)
             else:
-                ax.set_xlim(xlims)
+                xlim_vals = list(xlims)
+                ax.set_xlim(xlim_vals[0], xlim_vals[1] if len(xlim_vals) > 1 else xlim_vals[0])
 
         if bothTicks:
             ax.set_xticks([pos - offset, pos + offset])
@@ -1238,14 +1275,14 @@ class Dataset:
 
     def probplot(
         self,
-        ax=None,
-        yscale="log",
-        axtype="prob",
-        ylabel=None,
-        clearYLabels=False,
-        rotateticklabels=True,
-        bestfit=False,
-    ):
+        ax: Axes | None = None,
+        yscale: YScale = "log",
+        axtype: AxType = "prob",
+        ylabel: str | None = None,
+        clearYLabels: bool = False,
+        rotateticklabels: bool = True,
+        bestfit: bool = False,
+    ) -> Figure | SubFigure:
         """Adds probability plots to a matplotlib figure
 
         Parameters
@@ -1291,7 +1328,7 @@ class Dataset:
                     rotateticklabels=rotateticklabels,
                 )
 
-        xlabels = {
+        xlabels: dict[AxType, str] = {
             "pp": "Theoretical percentiles",
             "qq": "Theoretical quantiles",
             "prob": r"Non-exceedance probability (%)",
@@ -1310,16 +1347,16 @@ class Dataset:
 
     def statplot(
         self,
-        pos=1,
-        yscale="log",
-        shownotches=True,
-        showmean=True,
-        width=0.8,
-        bacteria=False,
-        ylabel=None,
-        axtype="qq",
-        patch_artist=False,
-    ):
+        pos: float = 1,
+        yscale: YScale = "log",
+        shownotches: bool = True,
+        showmean: bool = True,
+        width: float = 0.8,
+        bacteria: bool = False,
+        ylabel: str | None = None,
+        axtype: AxType = "qq",
+        patch_artist: bool = False,
+    ) -> Figure | SubFigure:
         """Creates a two-axis figure with a boxplot & probability plot.
 
         Parameters
@@ -1385,7 +1422,13 @@ class Dataset:
         fig.subplots_adjust(wspace=0.05)
         return fig
 
-    def jointplot(self, hist=False, kde=True, rug=True, **scatter_kws):
+    def jointplot(
+        self,
+        hist: bool = False,
+        kde: bool = True,
+        rug: bool = True,
+        **scatter_kws: Any,
+    ) -> seaborn.JointGrid:
         """Create a joint distribution plot for the dataset
 
         Parameters
@@ -1431,21 +1474,21 @@ class Dataset:
 
     def scatterplot(
         self,
-        ax=None,
-        xscale="log",
-        yscale="log",
-        showlegend=True,
-        xlabel=None,
-        ylabel=None,
-        one2one=False,
-        useros=False,
-        bestfit=False,
-        minpoints=3,
-        eqn_pos="lower right",
-        equal_scales=True,
-        fitopts=None,
-        **markeropts,
-    ):
+        ax: Axes | None = None,
+        xscale: YScale = "log",
+        yscale: YScale = "log",
+        showlegend: bool = True,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        one2one: bool = False,
+        useros: bool = False,
+        bestfit: bool = False,
+        minpoints: int = 3,
+        eqn_pos: str | None = "lower right",
+        equal_scales: bool = True,
+        fitopts: dict[str, Any] | None = None,
+        **markeropts: Any,
+    ) -> Figure | SubFigure:
         """Creates an influent/effluent scatter plot
 
         Parameters
@@ -1484,7 +1527,9 @@ class Dataset:
         ax.set_yscale(yscale)
 
         # common symbology
-        commonopts = dict(linestyle="none", markeredgewidth=0.5, markersize=6, zorder=10)
+        commonopts: dict[str, Any] = dict(
+            linestyle="none", markeredgewidth=0.5, markersize=6, zorder=10
+        )
 
         # plot the ROSd'd result, if requested
         if useros:
@@ -1492,7 +1537,7 @@ class Dataset:
 
         # plot the raw results, if requested
         else:
-            plot_params = [
+            plot_params: list[dict[str, Any]] = [
                 dict(
                     label="Detected data pairs",
                     which="neither",
@@ -1543,8 +1588,8 @@ class Dataset:
                 numpy.min([ax.get_xlim(), ax.get_ylim()]),
                 numpy.max([ax.get_xlim(), ax.get_ylim()]),
             ]
-            ax.set_ylim(axis_limits)
-            ax.set_xlim(axis_limits)
+            ax.set_ylim(axis_limits[0], axis_limits[1])
+            ax.set_xlim(axis_limits[0], axis_limits[1])
 
         elif yscale == "linear" or xscale == "linear":
             axis_limits = [
@@ -1596,9 +1641,9 @@ class Dataset:
                 }
                 vert_offset = 0.1
                 try:
-                    txt_x, txt_y = positions.get(eqn_pos.lower())
+                    txt_x, txt_y = positions.get(eqn_pos.lower())  # ty: ignore[not-iterable]
                 except KeyError:
-                    raise ValueError(f"`eqn_pos` must be on of {list.positions.keys()}")
+                    raise ValueError(f"`eqn_pos` must be on of {list(positions.keys())}")
                 # annotate axes with stats
 
                 slope = utils.sig_figs(modelres.params[1], n=3)
@@ -1635,7 +1680,13 @@ class Dataset:
 
         return fig
 
-    def _plot_nds(self, ax, which="both", label="_no_legend", **markerkwargs):
+    def _plot_nds(
+        self,
+        ax: Axes,
+        which: str = "both",
+        label: str = "_no_legend",
+        **markerkwargs: Any,
+    ) -> list[Line2D]:
         """
         Helper function for scatter plots -- plots various combinations
         of non-detect paired data
@@ -1656,7 +1707,7 @@ class Dataset:
         try:
             index = index_combos[which]
         except KeyError:
-            msg = '`which` must be "both", "influent", ' '"effluent", or "neighter"'
+            msg = '`which` must be "both", "influent", "effluent", or "neighter"'
             raise ValueError(msg)
 
         x = self.paired_data.loc[index][("inflow", "res")]
