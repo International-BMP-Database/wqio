@@ -1,4 +1,5 @@
-.. include:: ../readme.rst
+.. include:: ../readme.md
+   :parser: myst_parser.parsers.docutils_
 
 API and Source Reference
 ========================
