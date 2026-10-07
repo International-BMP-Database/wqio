@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 DESCRIPTION = "wqio: Water Quality Inflow/Outflow"
 LONG_DESCRIPTION = DESCRIPTION
 NAME = "wqio"
-VERSION = "0.7.2"
+VERSION = "0.7.3"
 AUTHOR = "Paul Hobson (Herrera Environmental Consultants)"
 AUTHOR_EMAIL = "phobson@herrerainc.com"
 URL = "https://github.com/International-BMP-Database/wqio"
@@ -21,10 +21,10 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Intended Audience :: Science/Research",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 INSTALL_REQUIRES = [
     "numpy",

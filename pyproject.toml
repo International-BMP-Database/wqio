@@ -1,7 +1,7 @@
 [project]
 name = "wqio"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.7.3"
+description = "wqio: Water Quality Inflow/Outflow"
 authors = [
     { name = "Paul Hobson", email = "phobson@herrerainc.com" }
 ]
@@ -15,12 +15,12 @@ dependencies = [
     "seaborn>=0.13.2",
     "statsmodels>=0.15.0",
 ]
-
-[project.scripts]
-wqio = "wqio:main"
+readme = "readme.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
 [build-system]
-requires = ["uv_build>=0.11.24,<0.12.0"]
+requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -37,3 +37,6 @@ dev = [
     "ruff>=0.16.10",
     "ty>=0.0.85",
 ]
+
+[tool.uv.build-backend]
+module-root = ""
