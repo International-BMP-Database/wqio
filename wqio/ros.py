@@ -502,8 +502,7 @@ def is_valid_to_ros(
     max_fraction_censored: float = ...,
     min_uncensored: int = ...,
     as_obj: Literal[False] = ...,
-) -> bool:
-    ...
+) -> bool: ...
 
 
 @overload
@@ -514,8 +513,7 @@ def is_valid_to_ros(
     min_uncensored: int = ...,
     *,
     as_obj: Literal[True],
-) -> dict[str, bool]:
-    ...
+) -> dict[str, bool]: ...
 
 
 def is_valid_to_ros(
@@ -556,8 +554,7 @@ def ROS(
     floor: float | None = ...,
     log: bool = ...,
     warn: bool = ...,
-) -> NDArray[Any]:
-    ...
+) -> NDArray[Any]: ...
 
 
 @overload
@@ -575,8 +572,7 @@ def ROS(
     floor: float | None = ...,
     log: bool = ...,
     warn: bool = ...,
-) -> pandas.DataFrame:
-    ...
+) -> pandas.DataFrame: ...
 
 
 def ROS(

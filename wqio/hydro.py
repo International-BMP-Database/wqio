@@ -665,8 +665,7 @@ class Storm:
         *,
         otherlabels: list[str],
         artists: list[Artist],
-    ) -> tuple[Figure | SubFigure, list[str], list[Artist]]:
-        ...
+    ) -> tuple[Figure | SubFigure, list[str], list[Artist]]: ...
 
     @overload
     def plot_hydroquantity(
@@ -676,8 +675,7 @@ class Storm:
         label: str | None = None,
         otherlabels: list[str] | None = None,
         artists: list[Artist] | None = None,
-    ) -> tuple[Figure | SubFigure, list[str] | None, list[Artist] | None]:
-        ...
+    ) -> tuple[Figure | SubFigure, list[str] | None, list[Artist] | None]: ...
 
     def plot_hydroquantity(
         self,

@@ -19,6 +19,7 @@ dependencies = [
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
     "pandas<3",
+    "polars>=2.0.0",
     "probscale>=0.2.5",
     "scipy>=1.18.1",
     "seaborn>=0.13.2",
@@ -59,6 +60,9 @@ docs = [
 ]
 extra = [
     "tqdm>=4.70.1",
+]
+extras = [
+    "marimo>=0.25.1",
 ]
 
 [tool.uv.build-backend]
