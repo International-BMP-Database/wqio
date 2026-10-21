@@ -1,5 +1,7 @@
 line-length = 100
 target-version = "py312"
+extend-exclude = ["docs"]
+force-exclude = true
 
 [lint]
 select = [
@@ -7,8 +9,12 @@ select = [
     "E",
     # Pyflakes
     "F",
+    # isort
+    "I",
     # pyupgrade
     "UP",
+    # absolute imports only
+    "TID252",
     ## flake8-bugbear
     # "B",
     # flake8-simplify

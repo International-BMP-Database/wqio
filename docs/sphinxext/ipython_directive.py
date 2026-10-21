@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Sphinx directive to support embedded IPython code.
 
@@ -98,40 +97,38 @@ Authors
 - VáclavŠmilauer <eudoxos-AT-arcig.cz>: Prompt generalizations.
 - Skipper Seabold, refactoring, cleanups, pure python addition
 """
-from __future__ import print_function
-from __future__ import unicode_literals
 
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 
 # Stdlib
+import ast
 import os
 import re
 import sys
 import tempfile
-import ast
-from pandas.compat import zip, range, map, lmap, u, cStringIO as StringIO
 import warnings
+
+from pandas.compat import cStringIO as StringIO
+from pandas.compat import range
 
 # To keep compatibility with various python versions
 try:
     from hashlib import md5
 except ImportError:
-    from md5 import md5
+    pass
 
 # Third-party
-import sphinx
 from docutils.parsers.rst import directives
-from docutils import nodes
-from sphinx.util.compat import Directive
-
-# Our own
-from traitlets.config import Config
 from IPython import InteractiveShell
 from IPython.core.profiledir import ProfileDir
 from IPython.utils import io
 from IPython.utils.py3compat import PY3
+from sphinx.util.compat import Directive
+
+# Our own
+from traitlets.config import Config
 
 if PY3:
     from io import StringIO
@@ -180,7 +177,6 @@ def block_parser(part, rgxin, rgxout, fmtin, fmtout):
     i = 0
     decorator = None
     while 1:
-
         if i == N:
             # nothing left to parse -- the last line
             break
@@ -215,7 +211,6 @@ def block_parser(part, rgxin, rgxout, fmtin, fmtout):
 
             rest = []
             while i < N:
-
                 # look ahead; if the next line is blank, or a comment, or
                 # an output line, we're done
 
@@ -252,9 +247,9 @@ def block_parser(part, rgxin, rgxout, fmtin, fmtout):
     return block
 
 
-class DecodingStringIO(StringIO, object):
+class DecodingStringIO(StringIO):
     def __init__(self, buf="", encodings=("utf8",), *args, **kwds):
-        super(DecodingStringIO, self).__init__(buf, *args, **kwds)
+        super().__init__(buf, *args, **kwds)
         self.set_encodings(encodings)
 
     def set_encodings(self, encodings):
@@ -262,19 +257,19 @@ class DecodingStringIO(StringIO, object):
 
     def write(self, data):
         if isinstance(data, text_type):
-            return super(DecodingStringIO, self).write(data)
+            return super().write(data)
         else:
             for enc in self.encodings:
                 try:
                     data = data.decode(enc)
-                    return super(DecodingStringIO, self).write(data)
+                    return super().write(data)
                 except:
                     pass
             # default to brute utf8 if no encoding succeded
-            return super(DecodingStringIO, self).write(data.decode("utf8", "replace"))
+            return super().write(data.decode("utf8", "replace"))
 
 
-class EmbeddedSphinxShell(object):
+class EmbeddedSphinxShell:
     """An embedded IPython instance to run inside Sphinx"""
 
     def __init__(self, exec_lines=None, state=None):
@@ -396,9 +391,7 @@ class EmbeddedSphinxShell(object):
         image_directive = None
 
         is_verbatim = decorator == "@verbatim" or self.is_verbatim
-        is_doctest = (
-            decorator is not None and decorator.startswith("@doctest")
-        ) or self.is_doctest
+        is_doctest = (decorator is not None and decorator.startswith("@doctest")) or self.is_doctest
         is_suppress = decorator == "@suppress" or self.is_suppress
         is_okexcept = decorator == "@okexcept" or self.is_okexcept
         is_okwarning = decorator == "@okwarning" or self.is_okwarning
@@ -492,9 +485,7 @@ class EmbeddedSphinxShell(object):
                 sys.stdout.write("\n\n>>>" + ("-" * 73))
                 sys.stdout.write(s)
                 sys.stdout.write("-" * 76 + "\n")
-                s = warnings.formatwarning(
-                    w.message, w.category, w.filename, w.lineno, w.line
-                )
+                s = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
                 sys.stdout.write(s)
                 sys.stdout.write("<<<" + ("-" * 73) + "\n")
 
@@ -526,7 +517,6 @@ class EmbeddedSphinxShell(object):
         TAB = " " * 4
 
         if is_doctest and output is not None:
-
             found = output
             found = found.strip()
             submitted = data.strip()
@@ -550,9 +540,7 @@ class EmbeddedSphinxShell(object):
                     "Input line(s):\n{TAB}{2}\n\n"
                     "Output line(s):\n{TAB}{3}\n\n"
                 )
-                e = e.format(
-                    source, content, "\n".join(input_lines), repr(found), TAB=TAB
-                )
+                e = e.format(source, content, "\n".join(input_lines), repr(found), TAB=TAB)
                 raise RuntimeError(e)
             found = found[len(output_prompt) :].strip()
 
@@ -590,9 +578,7 @@ class EmbeddedSphinxShell(object):
         Saves the image file to disk.
         """
         self.ensure_pyplot()
-        command = (
-            'plt.gcf().savefig("%s", bbox_inches="tight", ' "dpi=100)" % image_file
-        )
+        command = 'plt.gcf().savefig("%s", bbox_inches="tight", dpi=100)' % image_file
 
         # print 'SAVEFIG', command  # dbg
         self.process_input_line("bookmark ipy_thisdir", store_history=False)
@@ -671,9 +657,7 @@ class EmbeddedSphinxShell(object):
                 matplotlib.use("agg")
 
             # Always import pyplot into embedded shell.
-            self.process_input_line(
-                "import matplotlib.pyplot as plt", store_history=False
-            )
+            self.process_input_line("import matplotlib.pyplot as plt", store_history=False)
             self._pyplot_imported = True
 
     def process_pure_python(self, content):
@@ -693,7 +677,6 @@ class EmbeddedSphinxShell(object):
         ct = 0
 
         for lineno, line in enumerate(content):
-
             line_stripped = line.strip()
             if not len(line):
                 output.append(line)
@@ -765,12 +748,11 @@ class EmbeddedSphinxShell(object):
         if doctest_type in doctests:
             doctests[doctest_type](self, args, input_lines, found, submitted)
         else:
-            e = "Invalid option to @doctest: {0}".format(doctest_type)
+            e = f"Invalid option to @doctest: {doctest_type}"
             raise Exception(e)
 
 
 class IPythonDirective(Directive):
-
     has_content = True
     required_arguments = 0
     optional_arguments = 4  # python, suppress, verbatim, doctest
@@ -860,7 +842,7 @@ class IPythonDirective(Directive):
         # reset the execution count if we haven't processed this doc
         # NOTE: this may be borked if there are multiple seen_doc tmp files
         # check time stamp?
-        if not self.state.document.current_source in self.seen_docs:
+        if self.state.document.current_source not in self.seen_docs:
             self.shell.IP.history_manager.reset()
             self.shell.IP.execution_count = 1
             self.shell.IP.prompt_manager.width = 0
@@ -876,9 +858,7 @@ class IPythonDirective(Directive):
         self.shell.hold_count = hold_count
 
         # setup bookmark for saving figures directory
-        self.shell.process_input_line(
-            "bookmark ipy_savedir %s" % savefig_dir, store_history=False
-        )
+        self.shell.process_input_line("bookmark ipy_savedir %s" % savefig_dir, store_history=False)
         self.shell.clear_cout()
 
         return rgxin, rgxout, promptin, promptout
@@ -936,9 +916,7 @@ class IPythonDirective(Directive):
                 # This has to do with input, not output. But if we comment
                 # these lines out, then no IPython code will appear in the
                 # final output.
-                self.state_machine.insert_input(
-                    lines, self.state_machine.input_lines.source(0)
-                )
+                self.state_machine.insert_input(lines, self.state_machine.input_lines.source(0))
 
         # cleanup
         self.teardown()

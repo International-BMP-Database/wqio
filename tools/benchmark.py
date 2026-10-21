@@ -66,21 +66,23 @@ def main() -> None:
     print(f"{data.height:,} rows, backend={args.backend}")
 
     if args.backend == "pandas":
-        data = data.to_pandas()
+        dc = DataCollection(
+            data.to_pandas(),
+            rescol="res",
+            qualcol="qual",
+            stationcol="loc",
+            paramcol="param",
+            ndval="<",
+            othergroups=["state", "bmp"] if args.othergroups else None,
+            pairgroups=["state", "bmp"],
+            useros=True,
+            bsiter=500,
+            showpbar=False,
+        )
 
-    dc = DataCollection(
-        data,
-        rescol="res",
-        qualcol="qual",
-        stationcol="loc",
-        paramcol="param",
-        ndval="<",
-        othergroups=["state", "bmp"] if args.othergroups else None,
-        pairgroups=["state", "bmp"],
-        useros=True,
-        bsiter=500,
-        showpbar=False,
-    )
+    elif args.backend == "polars":
+        raise NotImplementedError("benchmarks only run on polars")
+
     timed("tidy (ROS)", lambda: dc.tidy)
     timed("paired", lambda: dc.paired)
     timed("count", lambda: dc.count)
