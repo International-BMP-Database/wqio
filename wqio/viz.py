@@ -402,8 +402,7 @@ def probplot(
     scatter_kws: dict[str, Any] | None = ...,
     line_kws: dict[str, Any] | None = ...,
     return_results: Literal[False] = ...,
-) -> Figure | SubFigure:
-    ...
+) -> Figure | SubFigure: ...
 
 
 @overload
@@ -419,8 +418,7 @@ def probplot(
     line_kws: dict[str, Any] | None = ...,
     *,
     return_results: Literal[True],
-) -> tuple[Figure | SubFigure, dict[str, Any]]:
-    ...
+) -> tuple[Figure | SubFigure, dict[str, Any]]: ...
 
 
 def probplot(

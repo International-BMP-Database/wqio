@@ -80,7 +80,7 @@ class DataCollection:
     """
 
     # column that stores the censorsip status of an observation
-    cencol: str = "__censorship"
+    cencol: str = "__censored"
 
     def __init__(
         self,

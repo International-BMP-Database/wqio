@@ -4,23 +4,20 @@ Sphinx plugin to run example scripts and create a gallery page.
 Lightly modified from the mpld3 project.
 
 """
-from __future__ import division
+
+import glob
 import os
 import os.path as op
 import re
-import glob
+import shutil
 import token
 import tokenize
-import shutil
-import json
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 from matplotlib import image
-
 
 RST_TEMPLATE = """
 .. _{sphinx_tag}:
@@ -117,9 +114,7 @@ Example gallery
 """
 
 
-def create_thumbnail(
-    infile, thumbfile, width=300, height=300, cx=0.5, cy=0.5, border=4
-):
+def create_thumbnail(infile, thumbfile, width=300, height=300, cx=0.5, cy=0.5, border=4):
     baseout, extout = op.splitext(thumbfile)
 
     im = image.imread(infile)
@@ -146,7 +141,7 @@ def indent(s, N=4):
     return s.replace("\n", "\n" + N * " ")
 
 
-class ExampleGenerator(object):
+class ExampleGenerator:
     """Tools for generating an example page from a file"""
 
     def __init__(self, filename, target_dir):
@@ -154,21 +149,17 @@ class ExampleGenerator(object):
         self.target_dir = target_dir
         self.thumbloc = 0.5, 0.5
         self.extract_docstring()
-        with open(filename, "r") as fid:
+        with open(filename) as fid:
             self.filetext = fid.read()
 
         outfilename = op.join(target_dir, self.rstfilename)
 
         # Only actually run it if the output RST file doesn't
         # exist or it was modified less recently than the example
-        if not op.exists(outfilename) or (
-            op.getmtime(outfilename) < op.getmtime(filename)
-        ):
-
+        if not op.exists(outfilename) or (op.getmtime(outfilename) < op.getmtime(filename)):
             self.exec_file()
         else:
-
-            print("skipping {0}".format(self.filename))
+            print(f"skipping {self.filename}")
 
     @property
     def dirname(self):
@@ -226,8 +217,7 @@ class ExampleGenerator(object):
         return ""
 
     def extract_docstring(self):
-        """ Extract a module-level docstring
-        """
+        """Extract a module-level docstring"""
         lines = open(self.filename).readlines()
         start_row = 0
         if lines[0].startswith("#!"):
@@ -245,9 +235,9 @@ class ExampleGenerator(object):
                 docstring = eval(tok_content)
                 # If the docstring is formatted with several paragraphs,
                 # extract the first one:
-                paragraphs = "\n".join(
-                    line.rstrip() for line in docstring.split("\n")
-                ).split("\n\n")
+                paragraphs = "\n".join(line.rstrip() for line in docstring.split("\n")).split(
+                    "\n\n"
+                )
                 if len(paragraphs) > 0:
                     first_par = paragraphs[0]
             break
@@ -260,16 +250,14 @@ class ExampleGenerator(object):
                 break
         if thumbloc is not None:
             self.thumbloc = thumbloc
-            docstring = "\n".join(
-                [l for l in docstring.split("\n") if not l.startswith("_thumb")]
-            )
+            docstring = "\n".join([l for l in docstring.split("\n") if not l.startswith("_thumb")])
 
         self.docstring = docstring
         self.short_desc = first_par
         self.end_line = erow + 1 + start_row
 
     def exec_file(self):
-        print("running {0}".format(self.filename))
+        print(f"running {self.filename}")
 
         plt.close("all")
         my_globals = {"pl": plt, "plt": plt}
@@ -292,15 +280,14 @@ class ExampleGenerator(object):
         return (
             ".. raw:: html\n\n"
             "    <div class='figure align-center'>\n"
-            "    <a href=./{0}>\n"
-            "    <img src=../_static/{1}>\n"
+            f"    <a href=./{self.htmlfilename}>\n"
+            f"    <img src=../_static/{self.thumbfilename}>\n"
             "    <span class='figure-label'>\n"
-            "    <p>{2}</p>\n"
+            f"    <p>{self.plotfunc}</p>\n"
             "    </span>\n"
             "    </a>\n"
             "    </div>\n\n"
             "\n\n"
-            "".format(self.htmlfilename, self.thumbfilename, self.plotfunc)
         )
 
 
@@ -327,12 +314,11 @@ def main(app):
 
     banner_data = []
 
-    toctree = "\n\n" ".. toctree::\n" "   :hidden:\n\n"
+    toctree = "\n\n.. toctree::\n   :hidden:\n\n"
     contents = "\n\n"
 
     # Write individual example files
     for filename in glob.glob(op.join(source_dir, "*.py")):
-
         ex = ExampleGenerator(filename, target_dir)
 
         banner_data.append(
@@ -363,9 +349,7 @@ def main(app):
     index_file = op.join(target_dir, "index.rst")
     with open(index_file, "w") as index:
         index.write(
-            INDEX_TEMPLATE.format(
-                sphinx_tag="example_gallery", toctree=toctree, contents=contents
-            )
+            INDEX_TEMPLATE.format(sphinx_tag="example_gallery", toctree=toctree, contents=contents)
         )
 
 

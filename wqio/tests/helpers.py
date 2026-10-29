@@ -11,6 +11,7 @@ from io import StringIO
 
 import numpy
 import pandas
+import polars
 import pytest
 from packaging.version import Version
 
@@ -172,6 +173,10 @@ def test_data_path(filename):
     return path
 
 
+def read_golden(name):
+    return polars.read_parquet(str(test_data_path(f"golden/{name}.parquet")))
+
+
 def getTestROSData():
     """
     Generates test data for an ROS estimate.
@@ -241,6 +246,10 @@ def _show_system_info():  # pragma: no cover
     import pandas
 
     _show_package_info(pandas, "pandas")
+
+    import polars
+
+    _show_package_info(polars, "polars")
 
 
 def checkdep_tex():  # pragma: no cover

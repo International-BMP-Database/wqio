@@ -110,7 +110,7 @@ def test_basic_attr(dc):
     assert dc.ndval == ["<"]
     assert dc.bsiter == 10000
     assert dc.groupcols == ["loc", "param"]
-    assert sorted(dc.tidy_columns) == sorted(["loc", "param", "res", "ros_res", "__censorship"])
+    assert sorted(dc.tidy_columns) == sorted(["loc", "param", "res", "ros_res", "__censored"])
     assert hasattr(dc, "filterfxn")
 
 
@@ -127,7 +127,7 @@ def test_tidy(dc, useros):
     assert dc.tidy.shape == (388, 5)
     assert "G" not in dc.tidy["param"].unique()
     assert "H" not in dc.tidy["param"].unique()
-    collist = ["loc", "param", "res", "__censorship", "ros_res"]
+    collist = ["loc", "param", "res", "__censored", "ros_res"]
     assert sorted(dc.tidy.columns.tolist()) == sorted(collist)
 
 
@@ -140,9 +140,9 @@ def test_paired(dc):
         ("res", "Inflow"),
         ("res", "Outflow"),
         ("res", "Reference"),
-        ("__censorship", "Inflow"),
-        ("__censorship", "Outflow"),
-        ("__censorship", "Reference"),
+        ("__censored", "Inflow"),
+        ("__censored", "Outflow"),
+        ("__censored", "Reference"),
     ]
 
 

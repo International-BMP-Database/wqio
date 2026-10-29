@@ -13,9 +13,8 @@ import re
 
 # Third party
 from pygments.lexer import Lexer, do_insertions
-from pygments.lexers.agile import PythonConsoleLexer, PythonLexer, PythonTracebackLexer
+from pygments.lexers.agile import PythonLexer, PythonTracebackLexer
 from pygments.token import Comment, Generic
-
 from sphinx import highlighting
 
 # -----------------------------------------------------------------------------
@@ -27,7 +26,6 @@ line_re = re.compile(".*?\n")
 
 
 class IPythonConsoleLexer(Lexer):
-
     """
     For IPython console output or doctests, such as:
 
@@ -72,36 +70,26 @@ class IPythonConsoleLexer(Lexer):
             if line.startswith("#"):
                 insertions.append((len(curcode), [(0, Comment, line)]))
             elif input_prompt is not None:
-                insertions.append(
-                    (len(curcode), [(0, Generic.Prompt, input_prompt.group())])
-                )
+                insertions.append((len(curcode), [(0, Generic.Prompt, input_prompt.group())]))
                 curcode += line[input_prompt.end() :]
             elif continue_prompt is not None:
-                insertions.append(
-                    (len(curcode), [(0, Generic.Prompt, continue_prompt.group())])
-                )
+                insertions.append((len(curcode), [(0, Generic.Prompt, continue_prompt.group())]))
                 curcode += line[continue_prompt.end() :]
             elif output_prompt is not None:
                 # Use the 'error' token for output.  We should probably make
                 # our own token, but error is typicaly in a bright color like
                 # red, so it works fine for our output prompts.
-                insertions.append(
-                    (len(curcode), [(0, Generic.Error, output_prompt.group())])
-                )
+                insertions.append((len(curcode), [(0, Generic.Error, output_prompt.group())]))
                 curcode += line[output_prompt.end() :]
             else:
                 if curcode:
-                    for item in do_insertions(
-                        insertions, pylexer.get_tokens_unprocessed(curcode)
-                    ):
+                    for item in do_insertions(insertions, pylexer.get_tokens_unprocessed(curcode)):
                         yield item
                         curcode = ""
                         insertions = []
                 yield match.start(), Generic.Output, line
         if curcode:
-            for item in do_insertions(
-                insertions, pylexer.get_tokens_unprocessed(curcode)
-            ):
+            for item in do_insertions(insertions, pylexer.get_tokens_unprocessed(curcode)):
                 yield item
 
 

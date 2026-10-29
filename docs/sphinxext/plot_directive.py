@@ -128,14 +128,18 @@ The plot directive has the following configuration options:
     plot_template
         Provide a customized template for preparing restructured text.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+
+import io
+import os
+import re
+import shutil
+import sys
+import textwrap
+import traceback
+from os.path import relpath
 
 import six
 from six.moves import xrange
-
-import sys, os, shutil, io, re, textwrap
-from os.path import relpath
-import traceback
 
 if not six.PY3:
     import cStringIO
@@ -220,9 +224,7 @@ def _option_format(arg):
 
 
 def _option_align(arg):
-    return directives.choice(
-        arg, ("top", "middle", "bottom", "left", "center", "right")
-    )
+    return directives.choice(arg, ("top", "middle", "bottom", "left", "center", "right"))
 
 
 def mark_plot_labels(app, document):
@@ -290,7 +292,7 @@ def setup(app):
     app.add_config_value("plot_working_directory", None, True)
     app.add_config_value("plot_template", None, True)
 
-    app.connect(str("doctree-read"), mark_plot_labels)
+    app.connect("doctree-read", mark_plot_labels)
 
 
 # ------------------------------------------------------------------------------
@@ -441,7 +443,7 @@ Exception occurred rendering plot.
 plot_context = dict()
 
 
-class ImageFile(object):
+class ImageFile:
     def __init__(self, basename, dirname):
         self.basename = basename
         self.dirname = dirname
@@ -460,8 +462,7 @@ def out_of_date(original, derived):
     both of which are full file paths.
     """
     return not os.path.exists(derived) or (
-        os.path.exists(original)
-        and os.stat(derived).st_mtime < os.stat(original).st_mtime
+        os.path.exists(original) and os.stat(derived).st_mtime < os.stat(original).st_mtime
     )
 
 
@@ -530,8 +531,7 @@ def run_code(code, code_path, ns=None, function_name=None):
                 if setup.config.plot_pre_code is None:
                     six.exec_(
                         six.text_type(
-                            "import numpy as np\n"
-                            + "from matplotlib import pyplot as plt\n"
+                            "import numpy as np\n" + "from matplotlib import pyplot as plt\n"
                         ),
                         ns,
                     )
@@ -544,7 +544,7 @@ def run_code(code, code_path, ns=None, function_name=None):
             six.exec_(code, ns)
             if function_name is not None:
                 six.exec_(function_name + "()", ns)
-        except (Exception, SystemExit) as err:
+        except (Exception, SystemExit):
             raise PlotError(traceback.format_exc())
     finally:
         os.chdir(pwd)
@@ -652,7 +652,6 @@ def render_figures(
     close_figs = not context or close_figs
 
     for i, code_piece in enumerate(code_pieces):
-
         if not context or config.plot_apply_rcparams:
             clear_state(config.plot_rcparams, close_figs)
         elif close_figs:
@@ -672,10 +671,8 @@ def render_figures(
             images.append(img)
             for format, dpi in formats:
                 try:
-                    figman.canvas.figure.savefig(
-                        img.filename(format), dpi=dpi, bbox_inches="tight"
-                    )
-                except Exception as err:
+                    figman.canvas.figure.savefig(img.filename(format), dpi=dpi, bbox_inches="tight")
+                except Exception:
                     raise PlotError(traceback.format_exc())
                 img.formats.append(format)
 
@@ -705,9 +702,7 @@ def run(arguments, content, options, state_machine, state, lineno):
 
     if len(arguments):
         if not config.plot_basedir:
-            source_file_name = os.path.join(
-                setup.app.builder.srcdir, directives.uri(arguments[0])
-            )
+            source_file_name = os.path.join(setup.app.builder.srcdir, directives.uri(arguments[0]))
         else:
             source_file_name = os.path.join(
                 setup.confdir, config.plot_basedir, directives.uri(arguments[0])
@@ -722,7 +717,7 @@ def run(arguments, content, options, state_machine, state, lineno):
         else:
             function_name = None
 
-        with io.open(source_file_name, "r", encoding="utf-8") as fd:
+        with open(source_file_name, encoding="utf-8") as fd:
             code = fd.read()
         output_base = os.path.basename(source_file_name)
     else:
@@ -776,9 +771,9 @@ def run(arguments, content, options, state_machine, state, lineno):
         os.makedirs(dest_dir)  # no problem here for me, but just use built-ins
 
     # how to link to files from the RST file
-    dest_dir_link = os.path.join(
-        relpath(setup.confdir, rst_dir), source_rel_dir
-    ).replace(os.path.sep, "/")
+    dest_dir_link = os.path.join(relpath(setup.confdir, rst_dir), source_rel_dir).replace(
+        os.path.sep, "/"
+    )
     build_dir_link = relpath(build_dir, rst_dir).replace(os.path.sep, "/")
     source_link = dest_dir_link + "/" + output_base + source_ext
 
@@ -879,7 +874,7 @@ def run(arguments, content, options, state_machine, state, lineno):
 
     # copy script (if necessary)
     target_name = os.path.join(dest_dir, output_base + source_ext)
-    with io.open(target_name, "w", encoding="utf-8") as f:
+    with open(target_name, "w", encoding="utf-8") as f:
         if source_file_name == rst_file:
             code_escaped = unescape_doctest(code)
         else:
